@@ -1,36 +1,59 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+## **README.md**
 
-## Getting Started
+### **E-commerce de Café Coffeemon com Deno e Fresh**
 
-First, run the development server:
+**Visão Geral**
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+Este projeto une o melhor de dois mundos: a agilidade do desenvolvimento fullstack com Deno e Fresh, e a experiência de usuário rica proporcionada pela gamificação com Coffeemons. 
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+**Tecnologias Utilizadas**
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+* **Deno & Fresh:** Utilizaremos Deno e Fresh para criar uma aplicação fullstack eficiente e escalável, com renderização de servidor (SSR) e hidratação.
+* **PostgreSQL:** Para armazenar dados de produtos, usuários, Coffeemons e outras informações relevantes.
+* **ORM:** Um ORM do Deno para facilitar a interação com o banco de dados PostgreSQL.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+**Funcionalidades**
 
-## Learn More
+* **E-commerce:**
+    * Catálogo de produtos de café
+    * Carrinho de compras
+    * Processamento de pagamentos
+    * Perfil de usuário
+* **Gamificação:**
+    * Criaturas Coffeemons com atributos únicos e habilidades especiais
+    * Batalhas para ganhar recompensas
+    * Coleção de Coffeemons
+    * Níveis e progressão
+* **Outras funcionalidades:**
+    * Comunidade
+    * Personalização
+    * SSR e hidratação para melhor desempenho e SEO
 
-To learn more about Next.js, take a look at the following resources:
+**Como executar o projeto**
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+1. **Clone o repositório:**
+   ```bash
+   git clone https://github.com/Gigio42/Coffeemon.git
+   ```
+2. **Instale as dependências:** 
+   * **Deno:** Certifique-se de ter o Deno instalado.
+3. **Configure o banco de dados:**
+   * Crie um banco de dados PostgreSQL e configure as credenciais no arquivo de configuração do projeto.
+   * Execute os scripts de migração para criar as tabelas.
+4. **Inicie o desenvolvimento:**
+   ```bash
+   deno task start
+   ```
+   Este comando irá iniciar o servidor de desenvolvimento, que cuidará tanto do backend quanto do frontend.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+**Contribuições**
 
-## Deploy on Vercel
+Contribuições são bem-vindas! Siga os mesmos passos descritos na versão anterior.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+**Licença**
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+GNU AFFERO
+
+**Agradecimentos**
+
+[Nenhuma colaboração feita ainda]
