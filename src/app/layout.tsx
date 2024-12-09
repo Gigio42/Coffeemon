@@ -4,6 +4,8 @@ import localFont from "next/font/local";
 import "./globals.css";
 import SessionWrapper from "@components/SessionWrapper";
 
+//teste
+
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff", variable: "--font-geist-sans", weight: "100 900",
 });
