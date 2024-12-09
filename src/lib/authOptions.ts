@@ -5,7 +5,6 @@ import CredentialsProvider from "next-auth/providers/credentials";
 import GoogleProvider from "next-auth/providers/google";
 import { prisma } from "./prisma";
 
-
 export const authOptions: NextAuthOptions = {
   adapter: PrismaAdapter(prisma),
   providers: [
@@ -31,7 +30,7 @@ export const authOptions: NextAuthOptions = {
         if (!user || !user.password) {
           return null;
         }
-        const isPasswordValid = bcrypt.compare(
+        const isPasswordValid = await bcrypt.compare(
           credentials.password,
           user.password,
         );
@@ -40,7 +39,7 @@ export const authOptions: NextAuthOptions = {
         }
 
         return {
-          id: user.id,
+          id: user.id.toString(),
           email: user.email,
           name: user.name,
           image: user.image,
@@ -61,6 +60,18 @@ export const authOptions: NextAuthOptions = {
     newUser: "/auth/new-user", // New users will be directed here on first sign in (leave the property out if not of interest)
   },
   callbacks: {
+    async jwt({ token, user }) {
+      if (user) {
+        token.id = user.id;
+      }
+      return token;
+    },
+    async session({ session, token }) {
+      if (session.user) {
+        (session.user as { id: string }).id = token.id as string;
+      }
+      return session;
+    },
   },
   secret: process.env.SECRET,
 };

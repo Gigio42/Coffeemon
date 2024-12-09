@@ -15,7 +15,7 @@ export default {
         foreground: "var(--foreground)",
       },
       animation: {
-        aurora: "aurora 60s linear infinite"
+        aurora: "aurora 60s linear infinite",
       },
       keyframes: {
         aurora: {
@@ -24,9 +24,9 @@ export default {
           },
           to: {
             backgroundPosition: "350% 50%, 350% 50%",
-          }
-        }
-      }
+          },
+        },
+      },
     },
   },
   plugins: [addVariablesForColors],
@@ -37,11 +37,10 @@ export default {
 function addVariablesForColors({ addBase, theme }: any) {
   const allColors = flattenColorPalette(theme("colors"));
   const newVars = Object.fromEntries(
-    Object.entries(allColors).map(([key, val]) => [`--${key}`, val])
+    Object.entries(allColors).map(([key, val]) => [`--${key}`, val]),
   );
- 
+
   addBase({
     ":root": newVars,
   });
 }
-
