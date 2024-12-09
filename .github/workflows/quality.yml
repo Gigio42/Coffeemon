@@ -1,7 +1,7 @@
 name: Code Quality Checks
 
 on:
-  pull_request:
+  pull_request_target:
     branches:
       - main
 
@@ -13,6 +13,9 @@ jobs:
     steps:
       - name: Checkout Code
         uses: actions/checkout@v3
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+          fetch-depth: 0
 
       - name: Set up Node.js
         uses: actions/setup-node@v3
@@ -29,7 +32,14 @@ jobs:
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           git add .
           git commit -m "style: Prettier formatting" || echo "No changes to commit"
-          git push
+
+      - name: Push changes to PR
+        env:
+          PERSONAL_ACCESS_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+        run: |
+          git remote set-url origin https://x-access-token:${PERSONAL_ACCESS_TOKEN}@github.com/${{ github.repository }}.git
+          git pull --rebase origin ${{ github.event.pull_request.base.ref }}
+          git push origin HEAD:${{ github.event.pull_request.head.ref }}
 
       - name: Run ESLint
         run: npm run lint
