@@ -38,7 +38,7 @@ jobs:
           PERSONAL_ACCESS_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
         run: |
           git remote set-url origin https://x-access-token:${PERSONAL_ACCESS_TOKEN}@github.com/${{ github.repository }}.git
-          git pull --rebase origin ${{ github.event.pull_request.base.ref }}
+          git pull origin ${{ github.event.pull_request.base.ref }} --no-rebase || true
           git push origin HEAD:${{ github.event.pull_request.head.ref }}
 
       - name: Run ESLint
