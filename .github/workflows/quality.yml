@@ -1,7 +1,7 @@
 name: Code Quality Checks
 
 on:
-  pull_request:
+  pull_request_target:
     branches:
       - main
 
@@ -14,7 +14,8 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v3
         with:
-          fetch-depth: 0 
+          ref: ${{ github.event.pull_request.head.ref }}
+          fetch-depth: 0
 
       - name: Set up Node.js
         uses: actions/setup-node@v3
@@ -37,6 +38,7 @@ jobs:
           PERSONAL_ACCESS_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
         run: |
           git remote set-url origin https://x-access-token:${PERSONAL_ACCESS_TOKEN}@github.com/${{ github.repository }}.git
+          git pull --rebase origin ${{ github.event.pull_request.base.ref }}
           git push origin HEAD:${{ github.event.pull_request.head.ref }}
 
       - name: Run ESLint
