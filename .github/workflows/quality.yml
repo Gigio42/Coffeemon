@@ -1,7 +1,7 @@
 name: Code Quality Checks
 
 on:
-  pull_request_target:
+  pull_request:
     branches:
       - main
 
@@ -14,8 +14,7 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v3
         with:
-          ref: ${{ github.event.pull_request.head.ref }}
-          fetch-depth: 0
+          fetch-depth: 0 # Necessário para trabalhar corretamente com branches
 
       - name: Set up Node.js
         uses: actions/setup-node@v3
@@ -35,10 +34,9 @@ jobs:
 
       - name: Push changes to PR
         env:
-          PERSONAL_ACCESS_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          git remote set-url origin https://x-access-token:${PERSONAL_ACCESS_TOKEN}@github.com/${{ github.repository }}.git
-          git pull origin ${{ github.event.pull_request.base.ref }} --no-rebase || true
+          git remote set-url origin https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}.git
           git push origin HEAD:${{ github.event.pull_request.head.ref }}
 
       - name: Run ESLint
