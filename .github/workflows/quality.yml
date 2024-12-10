@@ -35,10 +35,9 @@ jobs:
 
       - name: Push changes to PR
         env:
-          PERSONAL_ACCESS_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          git remote set-url origin https://x-access-token:${PERSONAL_ACCESS_TOKEN}@github.com/${{ github.repository }}.git
-          git pull --rebase origin ${{ github.event.pull_request.base.ref }}
+          git remote set-url origin https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}.git
           git push origin HEAD:${{ github.event.pull_request.head.ref }}
 
       - name: Run ESLint
