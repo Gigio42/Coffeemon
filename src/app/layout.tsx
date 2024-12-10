@@ -3,6 +3,7 @@ import { SpeedInsights } from "@vercel/speed-insights/next";
 import localFont from "next/font/local";
 import "./globals.css";
 import SessionWrapper from "@components/SessionWrapper";
+import { Providers } from "./providers";
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -31,8 +32,10 @@ export default function RootLayout({
         <body
           className={`${geistSans.variable} ${geistMono.variable} antialiased`}
         >
-          {children}
-          <SpeedInsights />
+          <Providers>
+            {children}
+            <SpeedInsights />
+          </Providers>
         </body>
       </html>
     </SessionWrapper>
