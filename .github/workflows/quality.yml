@@ -32,12 +32,12 @@ jobs:
         run: npm ci
 
       - name: Cache node_modules
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: backend(NestJS)/node_modules
           key: ${{ runner.os }}-node-${{ hashFiles('backend(NestJS)/package-lock.json') }}
 
-  formatter:
+  format:
     needs: setup
     runs-on: ubuntu-latest
     defaults:
@@ -58,7 +58,7 @@ jobs:
           cache-dependency-path: backend(NestJS)/package-lock.json
 
       - name: Restore node_modules
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: backend(NestJS)/node_modules
           key: ${{ runner.os }}-node-${{ hashFiles('backend(NestJS)/package-lock.json') }}
@@ -83,8 +83,8 @@ jobs:
           commit_user_email: "marvin@bot.noreply"
           file_pattern: "backend(NestJS)/src/**/*.ts backend(NestJS)/test/**/*.ts"
 
-  linter:
-    needs: formatter
+  lint:
+    needs: format
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -92,9 +92,6 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-          token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -104,7 +101,7 @@ jobs:
           cache-dependency-path: backend(NestJS)/package-lock.json
 
       - name: Restore node_modules
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: backend(NestJS)/node_modules
           key: ${{ runner.os }}-node-${{ hashFiles('backend(NestJS)/package-lock.json') }}
@@ -112,8 +109,8 @@ jobs:
       - name: Run ESLint
         run: npm run lint
 
-  unit-tests:
-    needs: [linter, formatter]
+  test:
+    needs: setup
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -130,7 +127,7 @@ jobs:
           cache-dependency-path: backend(NestJS)/package-lock.json
 
       - name: Restore node_modules
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: backend(NestJS)/node_modules
           key: ${{ runner.os }}-node-${{ hashFiles('backend(NestJS)/package-lock.json') }}
@@ -138,8 +135,8 @@ jobs:
       - name: Run Unit Tests
         run: npm run test
 
-  e2e-tests:
-    needs: [linter, formatter]
+  e2e:
+    needs: setup
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -156,7 +153,7 @@ jobs:
           cache-dependency-path: backend(NestJS)/package-lock.json
 
       - name: Restore node_modules
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: backend(NestJS)/node_modules
           key: ${{ runner.os }}-node-${{ hashFiles('backend(NestJS)/package-lock.json') }}
@@ -165,7 +162,7 @@ jobs:
         run: npm run test:e2e
 
   build:
-    needs: [unit-tests, e2e-tests]
+    needs: [lint, test, e2e]
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -182,7 +179,7 @@ jobs:
           cache-dependency-path: backend(NestJS)/package-lock.json
 
       - name: Restore node_modules
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: backend(NestJS)/node_modules
           key: ${{ runner.os }}-node-${{ hashFiles('backend(NestJS)/package-lock.json') }}
