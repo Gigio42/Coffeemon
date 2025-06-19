@@ -37,7 +37,7 @@ jobs:
           path: backend(NestJS)/node_modules
           key: ${{ runner.os }}-node-${{ hashFiles('backend(NestJS)/package-lock.json') }}
 
-  code-quality:
+  formatter:
     needs: setup
     runs-on: ubuntu-latest
     defaults:
@@ -75,9 +75,6 @@ jobs:
             echo "No formatting changes needed."
           fi
 
-      - name: Run ESLint
-        run: npm run lint
-
       - name: Commit formatting changes
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
@@ -86,8 +83,37 @@ jobs:
           commit_user_email: "marvin@bot.noreply"
           file_pattern: "backend(NestJS)/src/**/*.ts backend(NestJS)/test/**/*.ts"
 
+  linter:
+    needs: formatter
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend(NestJS)
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: backend(NestJS)/package-lock.json
+
+      - name: Restore node_modules
+        uses: actions/cache@v3
+        with:
+          path: backend(NestJS)/node_modules
+          key: ${{ runner.os }}-node-${{ hashFiles('backend(NestJS)/package-lock.json') }}
+
+      - name: Run ESLint
+        run: npm run lint
+
   unit-tests:
-    needs: code-quality
+    needs: [linter, formatter]
     runs-on: ubuntu-latest
     defaults:
       run:
