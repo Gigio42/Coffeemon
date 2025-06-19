@@ -110,7 +110,7 @@ jobs:
         run: npm run lint
 
   test:
-    needs: setup
+    needs: lint
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -136,7 +136,7 @@ jobs:
         run: npm run test
 
   e2e:
-    needs: setup
+    needs: lint
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -162,7 +162,7 @@ jobs:
         run: npm run test:e2e
 
   build:
-    needs: [lint, test, e2e]
+    needs: [test, e2e]
     runs-on: ubuntu-latest
     defaults:
       run:
