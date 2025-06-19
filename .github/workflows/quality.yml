@@ -37,7 +37,7 @@ jobs:
           path: backend(NestJS)/node_modules
           key: ${{ runner.os }}-node-${{ hashFiles('backend(NestJS)/package-lock.json') }}
 
-  format:
+  code-quality:
     needs: setup
     runs-on: ubuntu-latest
     defaults:
@@ -75,6 +75,9 @@ jobs:
             echo "No formatting changes needed."
           fi
 
+      - name: Run ESLint
+        run: npm run lint
+
       - name: Commit formatting changes
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
@@ -83,34 +86,8 @@ jobs:
           commit_user_email: "marvin@bot.noreply"
           file_pattern: "backend(NestJS)/src/**/*.ts backend(NestJS)/test/**/*.ts"
 
-  lint:
-    needs: format
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: backend(NestJS)
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'npm'
-          cache-dependency-path: backend(NestJS)/package-lock.json
-
-      - name: Restore node_modules
-        uses: actions/cache@v3
-        with:
-          path: backend(NestJS)/node_modules
-          key: ${{ runner.os }}-node-${{ hashFiles('backend(NestJS)/package-lock.json') }}
-
-      - name: Run ESLint
-        run: npm run lint
-
-  test:
-    needs: setup
+  unit-tests:
+    needs: code-quality
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -135,8 +112,8 @@ jobs:
       - name: Run Unit Tests
         run: npm run test
 
-  e2e-test:
-    needs: setup
+  e2e-tests:
+    needs: code-quality
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -162,7 +139,7 @@ jobs:
         run: npm run test:e2e
 
   build:
-    needs: [lint, test, e2e-test]
+    needs: [unit-tests, e2e-tests]
     runs-on: ubuntu-latest
     defaults:
       run:
