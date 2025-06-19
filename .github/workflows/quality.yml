@@ -17,9 +17,6 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-          token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -46,9 +43,6 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-          token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -63,28 +57,11 @@ jobs:
           path: backend(NestJS)/node_modules
           key: ${{ runner.os }}-node-${{ hashFiles('backend(NestJS)/package-lock.json') }}
 
-      - name: Format Files
-        run: npm run format
-
-      - name: Check for formatting changes
-        run: |
-          if ! git diff --quiet; then
-            echo "Code was formatted. Changes detected."
-            git status --porcelain
-          else
-            echo "No formatting changes needed."
-          fi
-
-      - name: Commit formatting changes
-        uses: stefanzweifel/git-auto-commit-action@v5
-        with:
-          commit_message: "Marvin: formatando arquivos"
-          commit_user_name: "Marvin"
-          commit_user_email: "marvin@bot.noreply"
-          file_pattern: "backend(NestJS)/src/**/*.ts backend(NestJS)/test/**/*.ts"
+      - name: Check Code Formatting
+        run: npx prettier --check "src/**/*.ts" "test/**/*.ts"
 
   lint:
-    needs: format
+    needs: setup
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -110,7 +87,7 @@ jobs:
         run: npm run lint
 
   test:
-    needs: lint
+    needs: [lint, format]
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -136,7 +113,7 @@ jobs:
         run: npm run test
 
   e2e:
-    needs: lint
+    needs: test
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -162,7 +139,7 @@ jobs:
         run: npm run test:e2e
 
   build:
-    needs: [test, e2e]
+    needs: e2e
     runs-on: ubuntu-latest
     defaults:
       run:
