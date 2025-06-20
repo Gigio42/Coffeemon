@@ -13,8 +13,8 @@ import { AuthService } from './auth.service';
       signOptions: { expiresIn: '7d' },
     }),
   ],
-  providers: [AuthService],
+  providers: [AuthService, AuthGuard],
   controllers: [AuthController],
-  exports: [AuthGuard],
+  exports: [AuthGuard, AuthService],
 })
 export class AuthModule {}
