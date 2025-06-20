@@ -9,6 +9,7 @@ Um backend construído com NestJS para o projeto Coffeemon, fornecendo serviços
   - [🔧 Instalação](#-instalação)
   - [⚙️ Configuração do Ambiente](#️-configuração-do-ambiente)
   - [🏃‍♂️ Executando a Aplicação](#️-executando-a-aplicação)
+  - [🩺 Monitoramento de Saúde](#-monitoramento-de-saúde)
   - [📝 Documentação da API](#-documentação-da-api)
   - [🧪 Testes](#-testes)
   - [📁 Estrutura do Projeto](#-estrutura-do-projeto)
@@ -49,6 +50,19 @@ npm run start:debug
 # Executar em modo de produção
 npm run start:prod
 ```
+
+## 🩺 Monitoramento de Saúde
+A aplicação possui um sistema de monitoramento de saúde integrado utilizando o módulo @nestjs/terminus. Você pode verificar a saúde do sistema através do endpoint:
+
+```bash
+http://localhost:3000/health
+```
+
+Este endpoint fornece informações em tempo real sobre:
+
+Conexão com o banco de dados: Verifica se o banco de dados está acessível e funcionando corretamente
+Utilização de memória: Monitora o consumo de memória da aplicação para evitar problemas de desempenho
+O sistema de saúde foi projetado para ser facilmente extensível. No futuro, pode ser expandido para monitorar outras coisas.
 
 ## 📝 Documentação da API
 A API é documentada usando Swagger. Após iniciar a aplicação, acesse a documentação em:
