@@ -26,9 +26,29 @@ export class OrdersService {
     });
 
     const total = products.reduce((acc, product) => {
-      const item = createOrderDto.products.find((p) => p.productId === product.id);
+      const item = createOrderDto.products.find((p) => p.productId === product.id)!;
       return acc + product.price * item.quantity;
     }, 0);
+
+    const order = this.ordersRepository.create({
+      total,
+      userId: createOrderDto.userId,
+    });
+
+    await this.ordersRepository.save(order);
+
+    const items = products.map((product) => {
+      const item = createOrderDto.products.find((p) => p.productId === product.id)!;
+      return this.orderItemsRepository.create({
+        quantity: item.quantity,
+        price: product.price,
+        total: product.price * item.quantity,
+        orderId: order.id,
+        productId: product.id,
+      });
+    });
+
+    await this.orderItemsRepository.save(items);
   }
 
   update(id: number, updateOrderDto: UpdateOrderDto) {
@@ -36,7 +56,9 @@ export class OrdersService {
   }
 
   findAll() {
-    return `This action returns all orders`;
+    return this.ordersRepository.find({
+      relations: ['items', 'items.product'],
+    });
   }
 
   findOne(id: number) {
