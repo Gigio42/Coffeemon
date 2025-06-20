@@ -42,13 +42,13 @@ describe('UsersService', () => {
   });
 
   describe('create', () => {
-    it('should create a new user', async () => {
-      const createUserDto: CreateUserDto = {
-        email: 'test@email.com',
-        password: 'password123',
-        username: 'Test User',
-      };
+    const createUserDto: CreateUserDto = {
+      email: 'test@email.com',
+      password: 'password123',
+      username: 'Test User',
+    };
 
+    it('should create a new user', async () => {
       const hashedPassword = 'hashedPassword';
       jest.spyOn(bcrypt, 'hash').mockResolvedValue(hashedPassword as never);
 
@@ -58,6 +58,12 @@ describe('UsersService', () => {
 
       const result = await service.create(createUserDto);
       expect(result).toEqual(user);
+    });
+
+    it('should throw ConflictException if email already exists', async () => {
+      mockRepository.findOneBy.mockResolvedValue({ email: createUserDto.email } as User);
+
+      await expect(service.create(createUserDto)).rejects.toThrow('Email already exists');
     });
   });
 
