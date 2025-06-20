@@ -26,10 +26,10 @@ export class ProductsService {
   }
 
   findOne(id: number) {
-    return `This action returns a #${id} product`;
+    return this.productsRepository.findOneBy({ id });
   }
 
   remove(id: number) {
-    return `This action removes a #${id} product`;
+    return this.productsRepository.delete(id);
   }
 }
