@@ -1,12 +1,15 @@
 import { Injectable, CanActivate, ExecutionContext } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
+import { Request } from 'express';
 
 interface JwtPayload {
   email: string;
   id: number;
+  role: string;
 }
+
 interface RequestWithUser extends Request {
-  user?: any;
+  user?: JwtPayload;
 }
 
 @Injectable()
@@ -15,11 +18,13 @@ export class AuthGuard implements CanActivate {
 
   canActivate(context: ExecutionContext): boolean {
     const request = context.switchToHttp().getRequest<RequestWithUser>();
-    const authHeader = request.headers.get('authorization');
+    const authHeader = request.headers.authorization;
     const token = authHeader?.replace('Bearer ', '');
+
     if (!token) {
       return false;
     }
+
     try {
       const payload = this.jwtService.verify<JwtPayload>(token);
       request.user = payload;
