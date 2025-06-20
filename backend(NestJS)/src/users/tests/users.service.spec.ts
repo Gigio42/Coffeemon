@@ -80,6 +80,15 @@ describe('UsersService', () => {
     });
   });
 
+  describe('findOne', () => {
+    it('should return a user by id', async () => {
+      const user = { id: 1, email: 'test1@test.com', name: 'Test 1' };
+      mockRepository.findOneBy.mockResolvedValue(user);
+      const result = await service.findOne(1);
+      expect(result).toEqual(user);
+    });
+  });
+
   describe('findOneByEmail', () => {
     it('should return a user by email', async () => {
       const user = { id: 1, email: 'test@test.com', name: 'Test' };
