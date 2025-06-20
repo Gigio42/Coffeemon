@@ -1,3 +1,5 @@
+[![Backend Status](https://github.com/Gigio42/Coffeemon/actions/workflows/quality.yml/badge.svg)](https://github.com/Gigio42/Coffeemon/actions/workflows/quality.yml)
+
 ## **README.md**
 
 ### **E-commerce de Café Coffeemon com Deno e Fresh**
