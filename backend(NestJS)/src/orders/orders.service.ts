@@ -51,10 +51,6 @@ export class OrdersService {
     await this.orderItemsRepository.save(items);
   }
 
-  update(id: number, updateOrderDto: UpdateOrderDto) {
-    return this.ordersRepository.update(id, updateOrderDto);
-  }
-
   findAll() {
     return this.ordersRepository.find({
       relations: ['items', 'items.product'],
@@ -62,10 +58,13 @@ export class OrdersService {
   }
 
   findOne(id: number) {
-    return `This action returns a #${id} order`;
+    return this.ordersRepository.findOne({
+      where: { id },
+      relations: ['items', 'items.product'],
+    });
   }
 
   remove(id: number) {
-    return `This action removes a #${id} order`;
+    return this.ordersRepository.delete(id);
   }
 }

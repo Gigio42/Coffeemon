@@ -1,9 +1,9 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { UsersController } from '../users.controller';
-import { UsersService } from '../users.service';
+import { AuthGuard } from 'src/auth/guards/auth.guard';
 import { CreateUserDto } from '../dto/create-user.dto';
 import { UpdateUserDto } from '../dto/update-user.dto';
-import { AuthGuard } from 'src/auth/auth.guard';
+import { UsersController } from '../users.controller';
+import { UsersService } from '../users.service';
 
 describe('UsersController', () => {
   let controller: UsersController;

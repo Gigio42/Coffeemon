@@ -1,15 +1,12 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { ProductsService } from '../products.service';
-import { Product } from '../entities/product.entity';
 import { CreateProductDto } from '../dto/create-product.dto';
 import { UpdateProductDto } from '../dto/update-product.dto';
+import { Product } from '../entities/product.entity';
+import { ProductsService } from '../products.service';
 
 describe('ProductsService', () => {
   let service: ProductsService;
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  let repository: Repository<Product>;
 
   const mockRepository = {
     create: jest.fn(),
@@ -32,7 +29,6 @@ describe('ProductsService', () => {
     }).compile();
 
     service = module.get<ProductsService>(ProductsService);
-    repository = module.get<Repository<Product>>(getRepositoryToken(Product));
 
     jest.clearAllMocks();
   });
