@@ -54,6 +54,24 @@ describe('ProductsService', () => {
       expect(mockRepository.save).toHaveBeenCalledWith(newProduct);
       expect(result).toEqual(newProduct);
     });
+
+    it('should throw a ConflictException if product with the same name already exists', async () => {
+      const createProductDto: CreateProductDto = {
+        name: 'Existing Product',
+        price: 100,
+      };
+
+      mockRepository.findOneBy.mockResolvedValue({ id: 1, name: 'Existing Product' });
+
+      await expect(service.create(createProductDto)).rejects.toThrow(
+        'Product with this name already exists'
+      );
+
+      expect(mockRepository.findOneBy).toHaveBeenCalledWith({ name: createProductDto.name });
+
+      expect(mockRepository.create).not.toHaveBeenCalled();
+      expect(mockRepository.save).not.toHaveBeenCalled();
+    });
   });
 
   describe('update', () => {
