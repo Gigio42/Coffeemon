@@ -1,0 +1,124 @@
+{
+  "coffeemons": [
+    {
+      "name": "Plumora",
+      "type": "fruity",
+      "baseHp": 85,
+      "baseAttack": 55,
+      "baseDefense": 40,
+      "imageUrl": "https://example.com/plumora.png",
+      "moves": [
+        {
+          "id": 1,
+          "name": "Berry Pulse",
+          "power": 40,
+          "type": "fruity",
+          "description": "Unleashes a pulsing wave of sweet berry essence."
+        },
+        {
+          "id": 2,
+          "name": "Zest Jolt",
+          "power": 50,
+          "type": "neutral",
+          "description": "A citrus-charged strike with energetic kick."
+        }
+      ]
+    },
+    {
+      "name": "Burnabean",
+      "type": "roasted",
+      "baseHp": 100,
+      "baseAttack": 60,
+      "baseDefense": 45,
+      "imageUrl": "https://example.com/burnabean.png",
+      "moves": [
+        {
+          "id": 3,
+          "name": "Char Brew",
+          "power": 55,
+          "type": "roasted",
+          "description": "Scalding roast brewed to scorch enemies."
+        },
+        {
+          "id": 4,
+          "name": "Smoky Veil",
+          "power": 0,
+          "type": "defense",
+          "description": "Cloaks in roasted smoke, raising defense."
+        }
+      ]
+    },
+    {
+      "name": "Cardaflare",
+      "type": "spicy",
+      "baseHp": 90,
+      "baseAttack": 65,
+      "baseDefense": 30,
+      "imageUrl": "https://example.com/cardaflare.png",
+      "moves": [
+        {
+          "id": 5,
+          "name": "Spice Inferno",
+          "power": 60,
+          "type": "spicy",
+          "description": "Unleashes a fiery blast of cardamom and heat."
+        },
+        {
+          "id": 6,
+          "name": "Heat Drift",
+          "power": 35,
+          "type": "spicy",
+          "description": "A drifting mist of warmth that lowers accuracy."
+        }
+      ]
+    },
+    {
+      "name": "Hazelynn",
+      "type": "nutty",
+      "baseHp": 95,
+      "baseAttack": 50,
+      "baseDefense": 50,
+      "imageUrl": "https://example.com/hazelynn.png",
+      "moves": [
+        {
+          "id": 7,
+          "name": "Hazel Crash",
+          "power": 45,
+          "type": "nutty",
+          "description": "Nut-powered strike that cracks through defenses."
+        },
+        {
+          "id": 8,
+          "name": "Cream Shell",
+          "power": 0,
+          "type": "defense",
+          "description": "Nut cream forms a dense shield of protection."
+        }
+      ]
+    },
+    {
+      "name": "Jasminelle",
+      "type": "floral",
+      "baseHp": 80,
+      "baseAttack": 40,
+      "baseDefense": 60,
+      "imageUrl": "https://example.com/jasminelle.png",
+      "moves": [
+        {
+          "id": 9,
+          "name": "Jasmine Flow",
+          "power": 35,
+          "type": "floral",
+          "description": "Floral breeze that soothes while attacking."
+        },
+        {
+          "id": 10,
+          "name": "Bloom Mist",
+          "power": 0,
+          "type": "heal",
+          "description": "Restores HP with fragrant healing mist."
+        }
+      ]
+    }
+  ]
+}

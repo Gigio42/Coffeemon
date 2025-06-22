@@ -9,6 +9,7 @@ import { ProductsModule } from './products/products.module';
 import { UsersModule } from './users/users.module';
 import { ConfigModule } from '@nestjs/config';
 import { HealthModule } from './health/health.module';
+import { GameModule } from './game/game.module';
 
 @Module({
   imports: [
@@ -19,6 +20,7 @@ import { HealthModule } from './health/health.module';
     OrdersModule,
     AuthModule,
     HealthModule,
+    GameModule,
   ],
   controllers: [AppController],
   providers: [AppService],
