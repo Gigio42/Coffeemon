@@ -1,4 +1,3 @@
-import { ValidationPipe } from '@nestjs/common';
 import {
   ConnectedSocket,
   MessageBody,
@@ -8,55 +7,38 @@ import {
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
 import { BattleService } from './battles.service';
-import { FindMatchDto } from './dto/find-match.dto';
-import { MatchmakingService } from './matchmaking.service';
+import { BattleActionUnion } from './types/batlle.types';
 import { BattleStatus } from './types/batlle.types';
 
 @WebSocketGateway({ cors: { origin: '*' } })
 export class BattleGateway {
   @WebSocketServer() server: Server;
-  constructor(
-    private matchMakingService: MatchmakingService,
-    private battleService: BattleService
-  ) {}
+  constructor(private battleService: BattleService) {}
 
-  @SubscribeMessage('ping')
-  ping(@ConnectedSocket() c: Socket) {
-    c.emit('pong', { message: "I'm alive" });
-  }
-
-  @SubscribeMessage('findMatch')
-  async findMatch(
+  @SubscribeMessage('battleAction')
+  async battleAction(
     @ConnectedSocket() c: Socket,
-    @MessageBody(new ValidationPipe({ transform: true })) dto: FindMatchDto
+    @MessageBody()
+    { battleId, actionType, payload }: BattleActionUnion
   ) {
     try {
-      const res = await this.matchMakingService.enqueue(dto.userId, c.id);
-      if (res.status === 'waiting') {
-        c.emit('matchStatus', res);
-      } else {
-        this.server.to(res.player1SocketId).to(res.player2SocketId).emit('matchFound', res);
-      }
-    } catch (e: unknown) {
-      const message = e instanceof Error ? e.message : 'Unknown error';
-      c.emit('battleError', { message });
-    }
-  }
+      console.log(`Battle action received: ${actionType} with payload:`, payload);
+      const { battleState, events } = await this.battleService.executeTurn(
+        battleId,
+        c.id,
+        actionType,
+        payload
+      );
+      this.server
+        .to(battleState.player1SocketId)
+        .to(battleState.player2SocketId)
+        .emit('battleUpdate', { battleState, events });
 
-  @SubscribeMessage('battleMove')
-  async battleMove(
-    @ConnectedSocket() c: Socket,
-    @MessageBody() { battleId, moveId }: { battleId: string; moveId: number }
-  ) {
-    try {
-      const state = await this.battleService.move(battleId, c.id, moveId);
-      this.server.to(state.player1SocketId).to(state.player2SocketId).emit('battleUpdate', state);
-
-      if (state.battleState.battleStatus === BattleStatus.FINISHED) {
+      if (battleState.battleStatus === BattleStatus.FINISHED) {
         this.server
-          .to(state.player1SocketId)
-          .to(state.player2SocketId)
-          .emit('battleEnd', { winnerId: state.winnerId });
+          .to(battleState.player1SocketId)
+          .to(battleState.player2SocketId)
+          .emit('battleEnd', { winnerId: battleState.winnerId });
       }
     } catch (e: unknown) {
       const message = e instanceof Error ? e.message : 'Unknown error';

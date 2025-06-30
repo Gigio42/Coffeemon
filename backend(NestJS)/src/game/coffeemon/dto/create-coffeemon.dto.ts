@@ -3,6 +3,30 @@ import { IsArray, IsBoolean, IsEnum, IsNumber, IsOptional, IsString } from 'clas
 import { CoffeemonType } from '../entities/coffeemon.entity';
 import { Type } from 'class-transformer';
 
+export class MoveEffectDto {
+  @ApiProperty({ description: 'Effect type', example: 'burn' })
+  @IsString()
+  type: string;
+
+  @ApiProperty({ description: 'Chance to apply the effect (0~1)', example: 0.3 })
+  @IsNumber()
+  chance: number;
+
+  @ApiProperty({ description: 'Duration in turns', required: false, example: 3 })
+  @IsNumber()
+  @IsOptional()
+  duration?: number;
+
+  @ApiProperty({ description: 'Effect value', required: false, example: 10 })
+  @IsNumber()
+  @IsOptional()
+  value?: number;
+
+  @ApiProperty({ description: 'Effect target', example: 'enemy', enum: ['self', 'enemy'] })
+  @IsString()
+  target: 'self' | 'enemy' | 'ally';
+}
+
 export class MoveDto {
   @ApiProperty({
     description: 'Unique identifier for the move',
@@ -30,7 +54,7 @@ export class MoveDto {
 
   @ApiProperty({
     description: 'Type of the move',
-    example: 'espresso',
+    example: 'attack',
   })
   @IsString()
   @Type(() => String)
@@ -43,6 +67,20 @@ export class MoveDto {
   @IsString()
   @Type(() => String)
   description: string;
+
+  @ApiProperty({
+    description: 'Secondary effects of the move',
+    type: [MoveEffectDto],
+    required: false,
+    example: [
+      { type: 'burn', chance: 0.3, duration: 3, target: 'enemy' },
+      { type: 'buff-attack', chance: 0.5, value: 2, target: 'self' },
+    ],
+  })
+  @IsArray()
+  @IsOptional()
+  @Type(() => MoveEffectDto)
+  effects?: MoveEffectDto[];
 }
 
 export class CreateCoffeemonDto {
@@ -116,15 +154,4 @@ export class CreateCoffeemonDto {
   })
   @IsArray()
   moves: MoveDto[];
-
-  @ApiProperty({
-    description: 'Indicates if this Coffeemon is a starter option for new players',
-    required: false,
-    default: false,
-    example: true,
-  })
-  @IsBoolean()
-  @IsOptional()
-  @Type(() => Boolean)
-  isStarter?: boolean;
 }

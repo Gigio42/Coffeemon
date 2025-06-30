@@ -1,122 +1,229 @@
 {
   "coffeemons": [
     {
-      "name": "Plumora",
-      "type": "fruity",
-      "baseHp": 85,
-      "baseAttack": 55,
-      "baseDefense": 40,
-      "imageUrl": "https://example.com/plumora.png",
+      "name": "Jasminelle",
+      "type": "floral",
+      "baseHp": 90,
+      "baseAttack": 40,
+      "baseDefense": 50,
+      "imageUrl": "https://coffeemon.com/images/jasminelle.png",
       "moves": [
         {
           "id": 1,
-          "name": "Berry Pulse",
-          "power": 40,
-          "type": "fruity",
-          "description": "Unleashes a pulsing wave of sweet berry essence."
+          "name": "Petal Breeze",
+          "power": 30,
+          "type": "attack",
+          "description": "A gentle breeze of jasmine petals that damages enemies.",
+          "effects": [
+            {
+              "type": "defenseUp",
+              "chance": 0.5,
+              "duration": 2,
+              "target": "self",
+              "value": 1.3
+            }
+          ]
         },
         {
           "id": 2,
-          "name": "Zest Jolt",
-          "power": 50,
-          "type": "neutral",
-          "description": "A citrus-charged strike with energetic kick."
+          "name": "Fragrant Shield",
+          "power": 0,
+          "type": "attack",
+          "description": "Emits a jasmine scent that boosts defense.",
+          "effects": [
+            {
+              "type": "defenseUp",
+              "chance": 1,
+              "duration": 3,
+              "target": "self",
+              "value": 1.5
+            }
+          ]
         }
       ]
     },
     {
-      "name": "Burnabean",
-      "type": "roasted",
-      "baseHp": 100,
-      "baseAttack": 60,
-      "baseDefense": 45,
-      "imageUrl": "https://example.com/burnabean.png",
+      "name": "Limonetto",
+      "type": "fruity",
+      "baseHp": 80,
+      "baseAttack": 55,
+      "baseDefense": 35,
+      "imageUrl": "https://coffeemon.com/images/limonetto.png",
       "moves": [
         {
           "id": 3,
-          "name": "Char Brew",
-          "power": 55,
-          "type": "roasted",
-          "description": "Scalding roast brewed to scorch enemies."
+          "name": "Zesty Burst",
+          "power": 50,
+          "type": "attack",
+          "description": "A sharp burst of citrus flavor that stuns the opponent.",
+          "effects": [
+            {
+              "type": "sleep",
+              "chance": 0.2,
+              "duration": 1,
+              "target": "enemy"
+            }
+          ]
         },
         {
           "id": 4,
-          "name": "Smoky Veil",
-          "power": 0,
-          "type": "defense",
-          "description": "Cloaks in roasted smoke, raising defense."
+          "name": "Ristretto Flame",
+          "power": 40,
+          "type": "attack",
+          "description": "A quick, fiery espresso shot that burns the enemy.",
+          "effects": [
+            {
+              "type": "burn",
+              "chance": 0.3,
+              "duration": 3,
+              "target": "enemy",
+              "value": 5
+            }
+          ]
         }
       ]
     },
     {
-      "name": "Cardaflare",
-      "type": "spicy",
-      "baseHp": 90,
-      "baseAttack": 65,
-      "baseDefense": 30,
-      "imageUrl": "https://example.com/cardaflare.png",
+      "name": "Maprion",
+      "type": "fruity",
+      "baseHp": 100,
+      "baseAttack": 45,
+      "baseDefense": 40,
+      "imageUrl": "https://coffeemon.com/images/maprion.png",
       "moves": [
         {
           "id": 5,
-          "name": "Spice Inferno",
-          "power": 60,
-          "type": "spicy",
-          "description": "Unleashes a fiery blast of cardamom and heat."
+          "name": "Maple Splash",
+          "power": 35,
+          "type": "attack",
+          "description": "A sweet splash of maple syrup that soothes allies.",
+          "effects": []
         },
         {
           "id": 6,
-          "name": "Heat Drift",
-          "power": 35,
-          "type": "spicy",
-          "description": "A drifting mist of warmth that lowers accuracy."
+          "name": "Sticky Trap",
+          "power": 20,
+          "type": "attack",
+          "description": "Traps enemies with sticky maple syrup, lowering their speed.",
+          "effects": [
+            {
+              "type": "attackUp",
+              "chance": 0.5,
+              "duration": 2,
+              "target": "self",
+              "value": 1.3
+            }
+          ]
         }
       ]
     },
     {
-      "name": "Hazelynn",
+      "name": "Cocoly",
       "type": "nutty",
-      "baseHp": 95,
+      "baseHp": 85,
       "baseAttack": 50,
-      "baseDefense": 50,
-      "imageUrl": "https://example.com/hazelynn.png",
+      "baseDefense": 45,
+      "imageUrl": "https://coffeemon.com/images/cocoly.png",
       "moves": [
         {
           "id": 7,
-          "name": "Hazel Crash",
-          "power": 45,
-          "type": "nutty",
-          "description": "Nut-powered strike that cracks through defenses."
+          "name": "Cocoa Whip",
+          "power": 40,
+          "type": "attack",
+          "description": "Whips up a creamy cocoa blast that deals damage.",
+          "effects": [
+            {
+              "type": "burn",
+              "chance": 0.2,
+              "duration": 3,
+              "target": "enemy",
+              "value": 4
+            }
+          ]
         },
         {
           "id": 8,
-          "name": "Cream Shell",
+          "name": "Warm Hug",
           "power": 0,
-          "type": "defense",
-          "description": "Nut cream forms a dense shield of protection."
+          "type": "attack",
+          "description": "Heals allies with a warm cocoa embrace.",
+          "effects": []
         }
       ]
     },
     {
-      "name": "Jasminelle",
-      "type": "floral",
-      "baseHp": 80,
-      "baseAttack": 40,
-      "baseDefense": 60,
-      "imageUrl": "https://example.com/jasminelle.png",
+      "name": "Espressaur",
+      "type": "roasted",
+      "baseHp": 95,
+      "baseAttack": 60,
+      "baseDefense": 40,
+      "imageUrl": "https://coffeemon.com/images/espressaur.png",
       "moves": [
         {
           "id": 9,
-          "name": "Jasmine Flow",
-          "power": 35,
-          "type": "floral",
-          "description": "Floral breeze that soothes while attacking."
+          "name": "Espresso Shot",
+          "power": 55,
+          "type": "attack",
+          "description": "A powerful concentrated coffee shot that deals medium damage.",
+          "effects": [
+            {
+              "type": "burn",
+              "chance": 0.3,
+              "duration": 3,
+              "target": "enemy",
+              "value": 6
+            }
+          ]
         },
         {
           "id": 10,
-          "name": "Bloom Mist",
+          "name": "Bean Blast",
+          "power": 45,
+          "type": "attack",
+          "description": "A blast of coffee beans that damages the enemy.",
+          "effects": []
+        }
+      ]
+    },
+    {
+      "name": "Cinnara",
+      "type": "spicy",
+      "baseHp": 80,
+      "baseAttack": 55,
+      "baseDefense": 40,
+      "imageUrl": "https://coffeemon.com/images/cinnara.png",
+      "moves": [
+        {
+          "id": 11,
+          "name": "Cinnamon Whirl",
+          "power": 50,
+          "type": "attack",
+          "description": "A spicy swirl of cinnamon that burns and confuses enemies.",
+          "effects": [
+            {
+              "type": "burn",
+              "chance": 0.3,
+              "duration": 3,
+              "target": "enemy",
+              "value": 5
+            }
+          ]
+        },
+        {
+          "id": 12,
+          "name": "Clove Guard",
           "power": 0,
-          "type": "heal",
-          "description": "Restores HP with fragrant healing mist."
+          "type": "attack",
+          "description": "Raises defense by enveloping itself in clove aroma.",
+          "effects": [
+            {
+              "type": "defenseUp",
+              "chance": 1,
+              "duration": 3,
+              "target": "self",
+              "value": 1.4
+            }
+          ]
         }
       ]
     }

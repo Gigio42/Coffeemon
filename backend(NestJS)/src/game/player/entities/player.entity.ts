@@ -20,9 +20,6 @@ export class Player {
   @Column()
   experience: number;
 
-  @Column({ default: false })
-  isInParty: boolean;
-
   @OneToMany(() => PlayerCoffeemon, (playerCoffeemon) => playerCoffeemon.player)
   coffeemons: PlayerCoffeemon[];
 }

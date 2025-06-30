@@ -1,9 +1,11 @@
-import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
+import { Move } from 'src/game/battles/types/batlle.types';
+import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 
 export enum CoffeemonType {
   FRUITY = 'fruity',
   ROASTED = 'roasted',
   SPICY = 'spicy',
+  SOUR = 'sour',
   NUTTY = 'nutty',
   FLORAL = 'floral',
 }
@@ -35,11 +37,5 @@ export class Coffeemon {
   imageUrl: string;
 
   @Column({ type: 'simple-json' })
-  moves: {
-    id: number;
-    name: string;
-    power: number;
-    type: string;
-    description: string;
-  }[];
+  moves: Move[];
 }

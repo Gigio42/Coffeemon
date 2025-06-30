@@ -4,6 +4,7 @@ import { Repository } from 'typeorm';
 import { CreateCoffeemonDto } from './dto/create-coffeemon.dto';
 import { UpdateCoffeemonDto } from './dto/update-coffeemon.dto';
 import { Coffeemon } from './entities/coffeemon.entity';
+import { moveType } from './Types/coffeemon.types';
 
 @Injectable()
 export class CoffeemonService {
@@ -25,12 +26,26 @@ export class CoffeemonService {
   }
 
   async create(createCoffeemonDto: CreateCoffeemonDto): Promise<Coffeemon> {
-    const coffeemon = this.coffeemonRepository.create(createCoffeemonDto);
+    const mappedMoves = createCoffeemonDto.moves.map((move) => ({
+      ...move,
+      type: move.type as moveType,
+    }));
+    const coffeemon = this.coffeemonRepository.create({
+      ...createCoffeemonDto,
+      moves: mappedMoves,
+    });
     return this.coffeemonRepository.save(coffeemon);
   }
 
   async createMany(dtos: CreateCoffeemonDto[]): Promise<Coffeemon[]> {
-    return this.coffeemonRepository.save(dtos);
+    const mappedDtos = dtos.map((dto) => ({
+      ...dto,
+      moves: dto.moves.map((move) => ({
+        ...move,
+        type: move.type as moveType,
+      })),
+    }));
+    return this.coffeemonRepository.save(mappedDtos);
   }
 
   async update(id: number, updateCoffeemonDto: UpdateCoffeemonDto): Promise<Coffeemon> {

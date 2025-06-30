@@ -138,8 +138,9 @@ export class PlayerService {
       },
     });
 
-    if (partyCount >= 6) {
-      throw new BadRequestException('You can only have 6 Coffeemons in your party');
+    const maxPartySize = 3;
+    if (partyCount >= maxPartySize) {
+      throw new BadRequestException(`You can only have ${maxPartySize} Coffeemons in your party`);
     }
 
     playerCoffeemon.isInParty = true;
@@ -170,31 +171,32 @@ export class PlayerService {
     return this.playerCoffeemonRepository.save(playerCoffeemon);
   }
 
-  async updatePlayerExperience(playerId: number, amount: number): Promise<Player> {
-    const player = await this.findOne(playerId);
+  // TODO implementar logica de ganhar xp, moedas e coffeemons
+  // async updatePlayerExperience(playerId: number, amount: number): Promise<Player> {
+  //   const player = await this.findOne(playerId);
 
-    player.experience += amount;
+  //   player.experience += amount;
 
-    const xpNeededForNextLevel = player.level * 100;
+  //   const xpNeededForNextLevel = player.level * 100;
 
-    if (player.experience >= xpNeededForNextLevel) {
-      player.level += 1;
-      player.experience -= xpNeededForNextLevel;
-      // TODO Bonuses
-    }
+  //   if (player.experience >= xpNeededForNextLevel) {
+  //     player.level += 1;
+  //     player.experience -= xpNeededForNextLevel;
+  //     // TODO Bonuses
+  //   }
 
-    return this.playerRepository.save(player);
-  }
+  //   return this.playerRepository.save(player);
+  // }
 
-  async updatePlayerCoins(playerId: number, amount: number): Promise<Player> {
-    const player = await this.findOne(playerId);
+  // async updatePlayerCoins(playerId: number, amount: number): Promise<Player> {
+  //   const player = await this.findOne(playerId);
 
-    player.coins += amount;
+  //   player.coins += amount;
 
-    if (player.coins < 0) {
-      player.coins = 0;
-    }
+  //   if (player.coins < 0) {
+  //     player.coins = 0;
+  //   }
 
-    return this.playerRepository.save(player);
-  }
+  //   return this.playerRepository.save(player);
+  // }
 }
