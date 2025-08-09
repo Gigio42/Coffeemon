@@ -8,6 +8,7 @@ export enum CoffeemonType {
   SOUR = 'sour',
   NUTTY = 'nutty',
   FLORAL = 'floral',
+  SWEET = 'sweet',
 }
 
 @Entity()

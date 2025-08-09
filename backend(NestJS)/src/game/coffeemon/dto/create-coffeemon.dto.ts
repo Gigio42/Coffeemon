@@ -1,7 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsArray, IsBoolean, IsEnum, IsNumber, IsOptional, IsString } from 'class-validator';
-import { CoffeemonType } from '../entities/coffeemon.entity';
 import { Type } from 'class-transformer';
+import { IsArray, IsEnum, IsNumber, IsOptional, IsString } from 'class-validator';
+import { CoffeemonType } from '../entities/coffeemon.entity';
 
 export class MoveEffectDto {
   @ApiProperty({ description: 'Effect type', example: 'burn' })

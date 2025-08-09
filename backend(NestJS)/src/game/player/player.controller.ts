@@ -5,7 +5,7 @@ import { AuthGuard } from '../../auth/guards/auth.guard';
 import { AddCoffeemonToPartyDto } from './dto/add-coffeemon-to-party.dto';
 import { CreatePlayerDto } from './dto/create-player.dto';
 import { Player } from './entities/player.entity';
-import { PlayerCoffeemon } from './entities/playercoffeemon.entity';
+import { PlayerCoffeemons } from './entities/playerCoffeemons.entity';
 import { PlayerService } from './player.service';
 
 @ApiTags('players')
@@ -38,13 +38,13 @@ export class PlayerController {
 
   @UseGuards(AuthGuard)
   @Get(':playerId/coffeemons')
-  async getPlayerCoffeemons(@Param('playerId') playerId: string): Promise<PlayerCoffeemon[]> {
+  async getPlayerCoffeemons(@Param('playerId') playerId: string): Promise<PlayerCoffeemons[]> {
     return this.playerService.getPlayerCoffeemons(+playerId);
   }
 
   @UseGuards(AuthGuard)
   @Get('me/party')
-  async getMyParty(@GetUser('id') userId: number): Promise<PlayerCoffeemon[]> {
+  async getMyParty(@GetUser('id') userId: number): Promise<PlayerCoffeemons[]> {
     const player = await this.playerService.findByUserId(userId);
     return this.playerService.getPlayerParty(player.id);
   }
@@ -54,7 +54,7 @@ export class PlayerController {
   async addCoffeemon(
     @GetUser('id') userId: number,
     @Param('coffeemonId') coffeemonId: string
-  ): Promise<PlayerCoffeemon> {
+  ): Promise<PlayerCoffeemons> {
     const player = await this.playerService.findByUserId(userId);
     return this.playerService.addCoffeemonToPlayer(player.id, +coffeemonId);
   }
@@ -64,7 +64,7 @@ export class PlayerController {
   async addToParty(
     @GetUser('id') userId: number,
     @Body() dto: AddCoffeemonToPartyDto
-  ): Promise<PlayerCoffeemon> {
+  ): Promise<PlayerCoffeemons> {
     const player = await this.playerService.findByUserId(userId);
     return this.playerService.addCoffeemonToParty(player.id, dto.playerCoffeemonId);
   }
@@ -74,7 +74,7 @@ export class PlayerController {
   async removeFromParty(
     @GetUser('id') userId: number,
     @Param('playerCoffeemonId') playerCoffeemonId: string
-  ): Promise<PlayerCoffeemon> {
+  ): Promise<PlayerCoffeemons> {
     const player = await this.playerService.findByUserId(userId);
     return this.playerService.removeCoffeemonFromParty(player.id, +playerCoffeemonId);
   }

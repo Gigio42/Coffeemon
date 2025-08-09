@@ -13,9 +13,10 @@ import { SwitchAction } from './engine/actions/switch.action';
 import { BattleTurnManager } from './engine/battle-turn-manager';
 import { StatusEffectsService } from './engine/effects/status-effects.service';
 import { EventManager } from './engine/events/event-manager';
+import { UsersModule } from 'src/users/users.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Battle]), PlayerModule, AuthModule, CacheModule],
+  imports: [TypeOrmModule.forFeature([Battle]), PlayerModule, AuthModule, CacheModule, UsersModule],
   providers: [
     BattleService,
     BattleGateway,

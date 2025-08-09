@@ -1,22 +1,23 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { AuthModule } from '../../auth/auth.module';
+import { UsersModule } from '../../users/users.module';
+import { CoffeemonModule } from '../coffeemon/coffeemon.module';
+import { Player } from './entities/player.entity';
+import { PlayerCoffeemons } from './entities/playerCoffeemons.entity';
+import { WsPlayerGuard } from './guards/ws-player.guard';
 import { PlayerController } from './player.controller';
 import { PlayerService } from './player.service';
-import { Player } from './entities/player.entity';
-import { PlayerCoffeemon } from './entities/playercoffeemon.entity';
-import { UsersModule } from '../../users/users.module';
-import { AuthModule } from '../../auth/auth.module';
-import { CoffeemonModule } from '../coffeemon/coffeemon.module';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Player, PlayerCoffeemon]),
+    TypeOrmModule.forFeature([Player, PlayerCoffeemons]),
     UsersModule,
     AuthModule,
     CoffeemonModule,
   ],
   controllers: [PlayerController],
-  providers: [PlayerService],
-  exports: [PlayerService],
+  providers: [PlayerService, WsPlayerGuard],
+  exports: [PlayerService, WsPlayerGuard],
 })
 export class PlayerModule {}

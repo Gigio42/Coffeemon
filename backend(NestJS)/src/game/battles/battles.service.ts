@@ -2,13 +2,12 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { BattleCacheService } from '../cache/battle-cache.service';
-import { PlayerCoffeemon } from '../player/entities/playercoffeemon.entity';
+import { PlayerCoffeemons } from '../player/entities/playerCoffeemons.entity';
 import { PlayerService } from '../player/player.service';
 import { BattleTurnManager } from './engine/battle-turn-manager';
 import { Battle } from './entities/battle.entity';
 import {
   BattleActionType,
-  BattleEvent,
   BattleState,
   BattleStatus,
   CoffeemonState,
@@ -24,7 +23,17 @@ export class BattleService {
     private battleTurnManager: BattleTurnManager
   ) {}
 
-  async createBattle(p1: number, p2: number, s1: string, s2: string): Promise<Battle> {
+  async createBattle(
+    u1: number,
+    u2: number,
+    s1: string,
+    s2: string
+  ): Promise<{
+    savedBattle: Battle;
+    state: BattleState;
+  }> {
+    const p1 = (await this.playerService.findByUserId(u1)).id;
+    const p2 = (await this.playerService.findByUserId(u2)).id;
     const battle = this.repo.create({
       player1Id: p1,
       player2Id: p2,
@@ -37,7 +46,7 @@ export class BattleService {
     const state = await this.buildInitialState(p1, p2, s1, s2);
     this.battleCache.set(savedBattle.id, state);
     console.log(`Battles: ${JSON.stringify(this.battleCache.getAll(), null, 2)} battles in cache`);
-    return savedBattle;
+    return { savedBattle, state };
   }
 
   private async buildInitialState(
@@ -64,7 +73,7 @@ export class BattleService {
     };
   }
 
-  private mapTeam(team: PlayerCoffeemon[]): {
+  private mapTeam(team: PlayerCoffeemons[]): {
     activeCoffeemonIndex: number;
     coffeemons: CoffeemonState[];
   } {
@@ -103,21 +112,20 @@ export class BattleService {
 
   async executeTurn<T extends BattleActionType>(
     battleId: string,
-    socketId: string,
+    playerId: number,
     actionType: T,
     payload: ExtractPayload<T>
-  ): Promise<{ battleState: BattleState; events: BattleEvent[] }> {
+  ): Promise<{ battleState: BattleState }> {
     const battleState = this.battleCache.get(battleId);
     if (!battleState) {
       throw new Error(`Battle with ID ${battleId} not found in cache`);
     }
 
-    const isPlayer1 = battleState.player1SocketId === socketId;
-    const isPlayer2 = battleState.player2SocketId === socketId;
+    const isPlayer1 = battleState.player1Id === playerId;
+    const isPlayer2 = battleState.player2Id === playerId;
     if (!isPlayer1 && !isPlayer2) {
       throw new Error('You are not part of this battle');
     }
-    const playerId = isPlayer1 ? battleState.player1Id : battleState.player2Id;
 
     const updatedState = await this.battleTurnManager.runTurn({
       battleState,
@@ -140,6 +148,24 @@ export class BattleService {
       this.battleCache.set(battleId, updatedState);
     }
 
-    return { battleState: updatedState, events: updatedState.events };
+    return { battleState: updatedState };
+  }
+
+  updatePlayerSocketId(battleId: string, playerId: number, socketId: string): void {
+    const battleState = this.battleCache.get(battleId);
+    if (!battleState) return;
+
+    let updated = false;
+    if (battleState.player1Id === playerId && battleState.player1SocketId !== socketId) {
+      battleState.player1SocketId = socketId;
+      updated = true;
+    }
+    if (battleState.player2Id === playerId && battleState.player2SocketId !== socketId) {
+      battleState.player2SocketId = socketId;
+      updated = true;
+    }
+    if (updated) {
+      this.battleCache.set(battleId, battleState);
+    }
   }
 }

@@ -21,7 +21,7 @@ export class QueueCacheService {
     return this.queue.find((p) => p.socketId === socketId);
   }
 
-  findOpponent(userId: number, socketId: string): QueuePlayer | undefined {
-    return this.queue.find((p) => p.userId !== userId && p.socketId !== socketId);
+  findOpponent(userId: number): QueuePlayer | undefined {
+    return this.queue.find((p) => p.userId !== userId);
   }
 }

@@ -1,32 +1,34 @@
-import { ValidationPipe } from '@nestjs/common';
 import {
   ConnectedSocket,
-  MessageBody,
   SubscribeMessage,
   WebSocketGateway,
   WebSocketServer,
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
-import { FindMatchDto } from './dto/find-match.dto';
+import { GetUserWs } from 'src/auth/decorators/get-user-ws.decorator';
 import { MatchmakingService } from './matchmaking.service';
+import { UseGuards } from '@nestjs/common';
+import { WsAuthGuard } from 'src/auth/guards/ws-auth.guard';
 
 @WebSocketGateway({ cors: { origin: '*' } })
+@UseGuards(WsAuthGuard)
 export class MatchmakingGateway {
   @WebSocketServer() server: Server;
 
   constructor(private matchmakingService: MatchmakingService) {}
 
   @SubscribeMessage('findMatch')
-  async findMatch(
-    @ConnectedSocket() c: Socket,
-    @MessageBody(new ValidationPipe({ transform: true })) dto: FindMatchDto
-  ) {
+  async findMatch(@ConnectedSocket() c: Socket, @GetUserWs('id') userId: number) {
     try {
-      const res = await this.matchmakingService.enqueue(dto.userId, c.id);
+      console.log('a');
+      const res = await this.matchmakingService.enqueue(userId, c.id);
       if (res.status === 'waiting') {
         c.emit('matchStatus', res);
       } else {
-        this.server.to(res.player1SocketId).to(res.player2SocketId).emit('matchFound', res);
+        this.server
+          .to(res.battleState.player1SocketId)
+          .to(res.battleState.player2SocketId)
+          .emit('matchFound', res);
       }
     } catch (e: unknown) {
       const message = e instanceof Error ? e.message : 'Unknown error';

@@ -5,9 +5,9 @@ import { RolesGuard } from '../../auth/guards/roles.guard';
 import { UserRole } from '../../users/entities/user.entity';
 import { CoffeemonService } from './coffeemon.service';
 import { CreateCoffeemonDto } from './dto/create-coffeemon.dto';
+import { CreateManyCoffeemonDto } from './dto/createMany-cofeemon.dto';
 import { UpdateCoffeemonDto } from './dto/update-coffeemon.dto';
 import { Coffeemon } from './entities/coffeemon.entity';
-import { CreateManyCoffeemonDto } from './dto/createMany-cofeemon.dto';
 
 @Controller('game/coffeemons')
 export class CoffeemonController {

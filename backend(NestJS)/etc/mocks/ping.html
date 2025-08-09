@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Socket.IO Ping Test</title>
+  <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+</head>
+<body>
+  <h1>Socket.IO Ping Test</h1>
+  <input type="text" id="token" placeholder="Insira seu JWT aqui" style="width:400px;">
+  <button onclick="connect()">Conectar e pingar</button>
+  <pre id="log"></pre>
+  <script>
+    let socket;
+
+    function log(msg) {
+      document.getElementById('log').textContent += msg + '\n';
+    }
+
+    function connect() {
+      const token = document.getElementById('token').value;
+      if (!token) {
+        log('Por favor, insira um JWT.');
+        return;
+      }
+      if (socket && socket.connected) {
+        socket.disconnect();
+      }
+      socket = io('http://10.53.224.137:3000', {
+        extraHeaders: {
+          authorization: 'Bearer ' + token
+        }
+      });
+
+      socket.on('connect', () => {
+        log('Conectado!');
+        socket.emit('ping');
+      });
+
+      socket.on('pong', (data) => {
+        log('Recebido pong: ' + JSON.stringify(data));
+      });
+
+      socket.on('connect_error', (err) => {
+        log('Erro de conexão: ' + err.message);
+      });
+
+      socket.on('disconnect', () => {
+        log('Desconectado.');
+      });
+    }
+  </script>
+</body>
+</html>

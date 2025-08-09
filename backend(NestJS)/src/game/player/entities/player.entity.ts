@@ -1,6 +1,6 @@
 import { Column, Entity, JoinColumn, OneToOne, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 import { User } from '../../../users/entities/user.entity';
-import { PlayerCoffeemon } from './playercoffeemon.entity';
+import { PlayerCoffeemons } from './playerCoffeemons.entity';
 
 @Entity()
 export class Player {
@@ -20,6 +20,6 @@ export class Player {
   @Column()
   experience: number;
 
-  @OneToMany(() => PlayerCoffeemon, (playerCoffeemon) => playerCoffeemon.player)
-  coffeemons: PlayerCoffeemon[];
+  @OneToMany(() => PlayerCoffeemons, (playerCoffeemon) => playerCoffeemon.player)
+  coffeemons: PlayerCoffeemons[];
 }

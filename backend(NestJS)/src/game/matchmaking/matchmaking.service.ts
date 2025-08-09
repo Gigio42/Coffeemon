@@ -12,9 +12,7 @@ export class MatchmakingService {
 
   // Matchmaking aleatório
   async enqueue(userId: number, socketId: string): Promise<EnqueueResult> {
-    const queue = this.queueCache.getQueue();
-    console.log('Current queue:', queue);
-    const opponent = this.queueCache.findOpponent(userId, socketId);
+    const opponent = this.queueCache.findOpponent(userId);
     if (!opponent) {
       this.queueCache.addToQueue(userId, socketId);
       return { status: 'waiting' };
@@ -30,9 +28,8 @@ export class MatchmakingService {
 
     return {
       status: 'matched',
-      player1SocketId: battle.player1SocketId,
-      player2SocketId: battle.player2SocketId,
-      battleId: battle.id,
+      battleId: battle.savedBattle.id,
+      battleState: battle.state,
     };
   }
 

@@ -4,7 +4,7 @@ import { Coffeemon } from '../../coffeemon/entities/coffeemon.entity';
 import { Player } from './player.entity';
 
 @Entity()
-export class PlayerCoffeemon {
+export class PlayerCoffeemons {
   @PrimaryGeneratedColumn()
   id: number;
 

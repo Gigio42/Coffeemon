@@ -5,15 +5,15 @@ import { UsersService } from '../../users/users.service';
 import { CoffeemonService } from '../coffeemon/coffeemon.service';
 import { CreatePlayerDto } from './dto/create-player.dto';
 import { Player } from './entities/player.entity';
-import { PlayerCoffeemon } from './entities/playercoffeemon.entity';
+import { PlayerCoffeemons } from './entities/playerCoffeemons.entity';
 
 @Injectable()
 export class PlayerService {
   constructor(
     @InjectRepository(Player)
     private playerRepository: Repository<Player>,
-    @InjectRepository(PlayerCoffeemon)
-    private playerCoffeemonRepository: Repository<PlayerCoffeemon>,
+    @InjectRepository(PlayerCoffeemons)
+    private playerCoffeemonRepository: Repository<PlayerCoffeemons>,
     private usersService: UsersService,
     private coffeemonService: CoffeemonService
   ) {}
@@ -69,7 +69,7 @@ export class PlayerService {
     return player;
   }
 
-  async getPlayerCoffeemons(playerId: number): Promise<PlayerCoffeemon[]> {
+  async getPlayerCoffeemons(playerId: number): Promise<PlayerCoffeemons[]> {
     await this.findOne(playerId);
 
     return this.playerCoffeemonRepository.find({
@@ -78,7 +78,7 @@ export class PlayerService {
     });
   }
 
-  async getPlayerParty(playerId: number): Promise<PlayerCoffeemon[]> {
+  async getPlayerParty(playerId: number): Promise<PlayerCoffeemons[]> {
     await this.findOne(playerId);
 
     return this.playerCoffeemonRepository.find({
@@ -90,7 +90,7 @@ export class PlayerService {
     });
   }
 
-  async addCoffeemonToPlayer(playerId: number, coffeemonId: number): Promise<PlayerCoffeemon> {
+  async addCoffeemonToPlayer(playerId: number, coffeemonId: number): Promise<PlayerCoffeemons> {
     await this.findOne(playerId);
 
     const coffeemon = await this.coffeemonService.findOne(coffeemonId);
@@ -109,7 +109,7 @@ export class PlayerService {
     return this.playerCoffeemonRepository.save(playerCoffeemon);
   }
 
-  async addCoffeemonToParty(playerId: number, playerCoffeemonId: number): Promise<PlayerCoffeemon> {
+  async addCoffeemonToParty(playerId: number, playerCoffeemonId: number): Promise<PlayerCoffeemons> {
     await this.findOne(playerId);
 
     const playerCoffeemon = await this.playerCoffeemonRepository.findOne({
@@ -150,7 +150,7 @@ export class PlayerService {
   async removeCoffeemonFromParty(
     playerId: number,
     playerCoffeemonId: number
-  ): Promise<PlayerCoffeemon> {
+  ): Promise<PlayerCoffeemons> {
     await this.findOne(playerId);
 
     const playerCoffeemon = await this.playerCoffeemonRepository.findOne({

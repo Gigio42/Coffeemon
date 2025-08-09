@@ -10,12 +10,12 @@ export class EventManager {
 
     if (!eventBuilder) {
       console.error(
-        `[EventManager] Tentativa de criar evento com chave inválida: ${notification.eventKey}`
+        `[EventManager] Attempted to create event with invalid key: ${notification.eventKey}`
       );
       return {
         type: 'UnknownEventError',
         payload: { eventKey: notification.eventKey },
-        message: 'Um evento desconhecido e não catalogado ocorreu.',
+        message: 'An unknown and uncatalogued event occurred.',
       };
     }
 

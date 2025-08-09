@@ -3,6 +3,7 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { UsersService } from './users.service';
 import { AuthGuard } from '../auth/guards/auth.guard';
+import { GetUser } from 'src/auth/decorators/get-user.decorator';
 
 @Controller('users')
 export class UsersController {
@@ -17,6 +18,12 @@ export class UsersController {
   @UseGuards(AuthGuard)
   findAll() {
     return this.usersService.findAll();
+  }
+
+  @Get('me')
+  @UseGuards(AuthGuard)
+  findMe(@GetUser('id') userId: number) {
+    return this.usersService.findOne(userId);
   }
 
   @Get(':id')
