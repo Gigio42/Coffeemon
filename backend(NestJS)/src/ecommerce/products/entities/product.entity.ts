@@ -1,5 +1,5 @@
-import { OrderItem } from 'src/orders/entities/orderitem.entity';
-import { Entity, Column, PrimaryGeneratedColumn, OneToMany } from 'typeorm';
+import { OrderItem } from '../../orders/entities/orderitem.entity';
+import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity()
 export class Product {
@@ -8,6 +8,9 @@ export class Product {
 
   @Column()
   name: string;
+
+  @Column()
+  description: string;
 
   @Column()
   price: number;

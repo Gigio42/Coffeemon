@@ -1,9 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Product } from 'src/products/entities/product.entity';
+import { Product } from '../products/entities/product.entity';
 import { In, Repository } from 'typeorm';
 import { CreateOrderDto } from './dto/create-order.dto';
-import { UpdateOrderDto } from './dto/update-order.dto';
 import { Order } from './entities/order.entity';
 import { OrderItem } from './entities/orderitem.entity';
 
@@ -52,16 +51,11 @@ export class OrdersService {
   }
 
   findAll() {
-    return this.ordersRepository.find({
-      relations: ['items', 'items.product'],
-    });
+    return this.ordersRepository.find();
   }
 
   findOne(id: number) {
-    return this.ordersRepository.findOne({
-      where: { id },
-      relations: ['items', 'items.product'],
-    });
+    return this.ordersRepository.findOne({ where: { id } });
   }
 
   remove(id: number) {

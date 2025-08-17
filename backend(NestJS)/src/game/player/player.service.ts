@@ -1,7 +1,7 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { UsersService } from '../../users/users.service';
+import { UsersService } from '../../ecommerce/users/users.service';
 import { CoffeemonService } from '../coffeemon/coffeemon.service';
 import { CreatePlayerDto } from './dto/create-player.dto';
 import { Player } from './entities/player.entity';

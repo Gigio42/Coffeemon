@@ -31,7 +31,7 @@
             messageDiv.textContent = 'Autenticando...';
 
             try {
-                const loginResponse = await fetch('http://10.53.224.137:3000/auth/login', {
+                const loginResponse = await fetch('http://localhost:3000/auth/login', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ email, password }),
@@ -46,7 +46,7 @@
 
                 // <<< PASSO ADICIONAL E CRÍTICO >>>
                 // Usar o token para buscar os dados do jogador
-                const playerResponse = await fetch(`http://10.53.224.137:3000/game/players/me`, {
+                const playerResponse = await fetch(`http://localhost:3000/game/players/me`, {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
 

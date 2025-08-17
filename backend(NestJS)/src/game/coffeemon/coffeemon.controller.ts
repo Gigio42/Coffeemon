@@ -2,7 +2,7 @@ import { Body, Controller, Delete, Get, Param, Post, Put, UseGuards } from '@nes
 import { Roles } from '../../auth/decorators/roles.decorator';
 import { AuthGuard } from '../../auth/guards/auth.guard';
 import { RolesGuard } from '../../auth/guards/roles.guard';
-import { UserRole } from '../../users/entities/user.entity';
+import { UserRole } from '../../ecommerce/users/entities/user.entity';
 import { CoffeemonService } from './coffeemon.service';
 import { CreateCoffeemonDto } from './dto/create-coffeemon.dto';
 import { CreateManyCoffeemonDto } from './dto/createMany-cofeemon.dto';

@@ -1,6 +1,6 @@
 import { Request } from 'express';
 import { Socket } from 'socket.io';
-import { User } from 'src/users/entities/user.entity';
+import { User } from '../../ecommerce/users/entities/user.entity';
 
 export interface RequestWithUser extends Request {
   user?: JwtPayload;

@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { AuthModule } from 'src/auth/auth.module';
+import { AuthModule } from '../../auth/auth.module'; // Caminho correto
 import { PlayerModule } from '../player/player.module';
 import { BattleGateway } from './battle.gateway';
 import { BattleService } from './battles.service';
@@ -13,7 +13,7 @@ import { SwitchAction } from './engine/actions/switch.action';
 import { BattleTurnManager } from './engine/battle-turn-manager';
 import { StatusEffectsService } from './engine/effects/status-effects.service';
 import { EventManager } from './engine/events/event-manager';
-import { UsersModule } from 'src/users/users.module';
+import { UsersModule } from '../../ecommerce/users/users.module';
 
 @Module({
   imports: [TypeOrmModule.forFeature([Battle]), PlayerModule, AuthModule, CacheModule, UsersModule],

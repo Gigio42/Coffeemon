@@ -1,9 +1,9 @@
 import { UseGuards } from '@nestjs/common';
 import { ConnectedSocket, SubscribeMessage, WebSocketGateway } from '@nestjs/websockets';
 import { Socket } from 'socket.io';
-import { GetUserWs } from 'src/auth/decorators/get-user-ws.decorator';
-import { WsAuthGuard } from 'src/auth/guards/ws-auth.guard';
-import { User } from 'src/users/entities/user.entity';
+import { GetUserWs } from '../auth/decorators/get-user-ws.decorator';
+import { WsAuthGuard } from '../auth/guards/ws-auth.guard';
+import { User } from '../ecommerce/users/entities/user.entity';
 
 @UseGuards(WsAuthGuard)
 @WebSocketGateway({

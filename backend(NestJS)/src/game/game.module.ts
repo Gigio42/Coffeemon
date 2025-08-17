@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
-import { AuthModule } from 'src/auth/auth.module';
-import { UsersModule } from 'src/users/users.module';
+import { AuthModule } from '../auth/auth.module';
+import { UsersModule } from '../ecommerce/users/users.module';
 import { BattlesModule } from './battles/battles.module';
 import { CoffeemonModule } from './coffeemon/coffeemon.module';
 import { GameGateway } from './game.gateway';
