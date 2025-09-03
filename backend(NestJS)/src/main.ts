@@ -1,6 +1,7 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
+import * as morgan from 'morgan';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 
 async function bootstrap() {
@@ -14,18 +15,22 @@ async function bootstrap() {
       transform: true,
     })
   );
+  app.use(morgan('dev'));
 
   // SWAGGER
   const config = new DocumentBuilder()
-    .setTitle('Cats example')
+    .setTitle('SWAGGER API')
     .setDescription('The cats API description')
     .setVersion('1.0')
     .addTag('cats')
     .build();
-  const documentFactory = () => SwaggerModule.createDocument(app, config);
+  const documentFactory = () =>
+    SwaggerModule.createDocument(app, config, {
+      deepScanRoutes: true,
+    });
   SwaggerModule.setup('api', app, documentFactory);
 
   await app.listen(process.env.PORT ?? 3000);
 }
 
-bootstrap();
+void bootstrap();

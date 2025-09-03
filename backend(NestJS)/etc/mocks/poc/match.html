@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Teste de Jogo - Procurar Partida</title>
+    <style>
+        body { font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; flex-direction: column; }
+        .container { padding: 20px; border: 1px solid #ccc; border-radius: 5px; width: 500px; text-align: center; }
+        .info { background-color: #f0f0f0; padding: 10px; margin-bottom: 15px; border-radius: 4px; }
+        .log { border: 1px solid #eee; height: 150px; overflow-y: scroll; text-align: left; padding: 10px; margin-top: 15px; }
+        #status { font-weight: bold; }
+    </style>
+    <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <h2>Procurar Partida</h2>
+        <div class="info">
+            <strong>User ID:</strong> <span id="userId"></span><br>
+            <strong>Socket ID:</strong> <span id="socketId"></span><br>
+            <strong>Status:</strong> <span id="status">Desconectado</span>
+        </div>
+        <button id="findMatchBtn">Procurar Partida</button>
+        <div class="log" id="log-area"></div>
+    </div>
+
+    <script>
+        const statusSpan = document.getElementById('status');
+        const userIdSpan = document.getElementById('userId');
+        const socketIdSpan = document.getElementById('socketId');
+        const logArea = document.getElementById('log-area');
+        const token = localStorage.getItem('jwt_token');
+
+        if (!token) {
+            window.location.href = 'login.html';
+        }
+
+        function logMessage(msg) {
+            logArea.innerHTML += `<p>${new Date().toLocaleTimeString()}: ${msg}</p>`;
+            logArea.scrollTop = logArea.scrollHeight;
+        }
+        
+        try {
+            const payload = JSON.parse(atob(token.split('.')[1]));
+            userIdSpan.textContent = payload.id;
+        } catch(e) {
+            logMessage('Erro ao decodificar token JWT.');
+            localStorage.removeItem('jwt_token');
+            window.location.href = 'login.html';
+        }
+
+        // ---------- LINHA CORRIGIDA ----------
+        const socket = io('http://localhost:3000', {
+            extraHeaders: {
+              'Authorization': `Bearer ${token}`
+            }
+        });
+        // ------------------------------------
+
+        socket.on('connect', () => {
+            statusSpan.textContent = 'Conectado';
+            socketIdSpan.textContent = socket.id;
+            logMessage('Conectado ao servidor. Você pode procurar uma partida.');
+        });
+
+        socket.on('connect_error', (err) => {
+            statusSpan.textContent = `Erro de conexão`;
+            logMessage(`Erro: ${err.message}. Verifique o console. Redirecionando para login...`);
+            console.error('Connection error:', err);
+            // Removendo o token antigo caso ele seja inválido
+            localStorage.removeItem('jwt_token');
+            setTimeout(() => window.location.href = 'login.html', 3000);
+        });
+
+        document.getElementById('findMatchBtn').addEventListener('click', () => {
+            logMessage('Enviando evento "findMatch"...');
+            statusSpan.textContent = 'Procurando...';
+            socket.emit('findMatch');
+        });
+
+        socket.on('matchStatus', (data) => {
+            if (data.status === 'waiting') {
+                statusSpan.textContent = 'Aguardando oponente...';
+                logMessage('Fila de matchmaking: Aguardando outro jogador.');
+            }
+        });
+
+        socket.on('matchFound', (data) => {
+            statusSpan.textContent = `Partida encontrada!`;
+            logMessage(`Partida encontrada! Batalha ID: ${data.battleId}. Redirecionando...`);
+            logMessage(`Dados recebidos: <pre>${JSON.stringify(data, null, 2)}</pre>`);
+            sessionStorage.setItem('battle_data', JSON.stringify(data));
+            window.location.href = 'battle.html';
+        });
+
+        socket.on('battleError', (error) => {
+            statusSpan.textContent = `Erro!`;
+            logMessage(`Erro do servidor: ${error.message}`);
+            console.error('Battle Error:', error);
+        });
+    </script>
+</body>
+</html>
