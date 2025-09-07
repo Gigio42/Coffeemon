@@ -8,6 +8,7 @@ import { ConfigModule } from '@nestjs/config';
 import { HealthModule } from './health/health.module';
 import { GameModule } from './game/game.module';
 import { EcommerceModule } from './ecommerce/ecommerce.module';
+import { ShoppingCartModule } from './ecommerce/shopping-cart/shopping-cart.module';
 
 @Module({
   imports: [
@@ -17,6 +18,7 @@ import { EcommerceModule } from './ecommerce/ecommerce.module';
     AuthModule,
     HealthModule,
     GameModule,
+    ShoppingCartModule,
   ],
   controllers: [AppController],
   providers: [AppService],

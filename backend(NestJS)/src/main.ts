@@ -29,8 +29,9 @@ async function bootstrap() {
       deepScanRoutes: true,
     });
   SwaggerModule.setup('api', app, documentFactory);
-
   await app.listen(process.env.PORT ?? 3000);
+  console.log(`Aplicação rodando na porta ${process.env.port ?? 3000}`)
+
 }
 
 void bootstrap();
