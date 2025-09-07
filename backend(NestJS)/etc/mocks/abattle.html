@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Batalha Coffeemon</title>
+    <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+    <style>
+        body { font-family: sans-serif; background-color: #e0e0e0; margin: 0; padding: 1rem; }
+        .header { text-align: center; padding: 1rem; background-color: #333; color: white; margin-bottom: 1rem; }
+        .battle-container { display: flex; flex-direction: column; max-width: 800px; margin: 0 auto; background: white; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
+        .arena { display: flex; justify-content: space-around; padding: 2rem; }
+        .coffeemon-card { width: 45%; padding: 1rem; border: 1px solid #ccc; border-radius: 8px; text-align: center; background-color: #f9f9f9; }
+        .coffeemon-card h2 { margin-top: 0; }
+        .coffeemon-card h3 { margin-bottom: 0.5rem; color: #555; font-size: 1rem; }
+        .hp-bar { background-color: #ddd; border-radius: 5px; overflow: hidden; margin: 0.5rem 0; }
+        .hp-bar-inner { height: 20px; background-color: #5cb85c; transition: width 0.5s; text-align: center; color: white; font-weight: bold; }
+        .fainted { background-color: #d9534f !important; }
+        .actions { padding: 1rem; border-top: 1px solid #ccc; background-color: #f5f5f5;}
+        .actions-grid { display: flex; flex-wrap: wrap; gap: 10px; }
+        .actions-grid button { padding: 0.8rem; border: none; border-radius: 5px; cursor: pointer; background-color: #f0ad4e; color: white; flex-grow: 1; }
+        .actions-grid button:hover { opacity: 0.9; }
+        .actions-grid button:disabled { background-color: #aaa; cursor: not-allowed; }
+        .switch-list button { background-color: #5bc0de; }
+        .log { padding: 1rem; border-top: 1px solid #ccc; height: 150px; overflow-y: scroll; background-color: #fafafa; }
+        .log p { margin: 0 0 5px 0; border-bottom: 1px solid #eee; padding-bottom: 5px; font-size: 0.9rem; }
+        .turn-indicator { padding: 1rem; text-align: center; font-weight: bold; font-size: 1.2rem; background-color: #337ab7; color: white; }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <h1 id="window-title">Arena de Batalha</h1>
+</div>
+
+<div id="battle-container" class="battle-container" style="display: none;">
+    <div id="turn-indicator" class="turn-indicator"></div>
+    <div class="arena">
+        <div id="player-card" class="coffeemon-card"></div>
+        <div id="opponent-card" class="coffeemon-card"></div>
+    </div>
+    <div id="actions" class="actions"></div>
+    <div id="log" class="log"></div>
+</div>
+
+<script>
+    const API_URL = 'http://localhost:3000';
+    const socket = io(API_URL);
+
+    const userId = parseInt(localStorage.getItem('user_id'));
+    const userEmail = localStorage.getItem('user_email');
+    const battleId = localStorage.getItem('battle_id');
+
+    document.title = `Batalha - ${userEmail}`;
+    document.getElementById('window-title').innerText = `Jogando como: ${userEmail}`;
+
+    if (!userId || !battleId) {
+        window.location.href = 'auth.html';
+    }
+
+    let battleState = null;
+    let isMyTurn = false;
+    
+    socket.on('connect', () => console.log('Conectado ao servidor de batalha!', socket.id));
+
+    socket.on('battleUpdate', (data) => {
+        console.log('Battle state atualizado:', data.battleState);
+        battleState = data.battleState;
+        document.getElementById('battle-container').style.display = 'flex';
+        renderBattleState(battleState);
+    });
+    
+    socket.on('battleEnd', (data) => {
+        const message = data.winnerId === userId ? "Você venceu! 🎉" : "Você perdeu. 😢";
+        alert(message);
+        setTimeout(() => window.location.href = 'matchmaking.html', 3000);
+    });
+
+    socket.on('battleError', (error) => alert(`Erro na batalha: ${error.message}`));
+
+    function renderCoffeemon(cardElement, coffeemon, title) {
+        const hpPercentage = (coffeemon.currentHp / coffeemon.maxHp) * 100;
+        cardElement.innerHTML = `
+            <h3>${title}</h3>
+            <h2>${coffeemon.name}</h2>
+            <div class="hp-bar">
+                <div class="hp-bar-inner ${coffeemon.isFainted ? 'fainted' : ''}" style="width: ${hpPercentage}%;">${Math.round(hpPercentage)}%</div>
+            </div>
+            <p>${coffeemon.currentHp} / ${coffeemon.maxHp} HP</p>
+        `;
+    }
+
+    function renderActions(playerState) {
+        const actionsDiv = document.getElementById('actions');
+        actionsDiv.innerHTML = ''; 
+
+        const activeCoffeemon = playerState.coffeemons[playerState.activeCoffeemonIndex];
+        
+        const canPerformAction = isMyTurn && !activeCoffeemon.isFainted;
+
+        // Se o Coffeemon está desmaiado, a única ação é trocar
+        if (isMyTurn && activeCoffeemon.isFainted) {
+             actionsDiv.innerHTML = '<h3>Seu Coffeemon desmaiou! Você precisa trocar.</h3>';
+        } else {
+            actionsDiv.innerHTML = '<h3>Ataques:</h3>';
+            const attackGrid = document.createElement('div');
+            attackGrid.className = 'actions-grid';
+            activeCoffeemon.moves.forEach(move => {
+                const button = document.createElement('button');
+                button.innerText = `${move.name} (Poder: ${move.power})`;
+                button.onclick = () => sendAction('attack', { moveId: move.id });
+                button.disabled = !canPerformAction;
+                attackGrid.appendChild(button);
+            });
+            actionsDiv.appendChild(attackGrid);
+        }
+        
+        actionsDiv.innerHTML += '<h3 style="width: 100%; margin-top: 1rem;">Trocar para:</h3>';
+        const switchGrid = document.createElement('div');
+        switchGrid.className = 'actions-grid switch-list';
+        playerState.coffeemons.forEach((coffeemon, index) => {
+            if (index !== playerState.activeCoffeemonIndex && !coffeemon.isFainted) {
+                 const button = document.createElement('button');
+                 button.innerText = coffeemon.name;
+                 button.onclick = () => sendAction('switch', { newIndex: index });
+                 button.disabled = !isMyTurn;
+                 switchGrid.appendChild(button);
+            }
+        });
+        actionsDiv.appendChild(switchGrid);
+    }
+    
+    function renderLog(events) {
+        const logDiv = document.getElementById('log');
+        events.forEach(event => {
+            const p = document.createElement('p');
+            p.innerText = `[${event.type}] ${event.message}`;
+            logDiv.prepend(p);
+        });
+    }
+
+    function renderBattleState(state) {
+        const isPlayer1 = state.player1Id === userId;
+        const playerState = isPlayer1 ? state.player1 : state.player2;
+        const opponentState = isPlayer1 ? state.player2 : state.player1;
+
+        isMyTurn = state.currentPlayerId === userId;
+        
+        document.getElementById('turn-indicator').innerText = isMyTurn ? "É a sua vez!" : "Vez do oponente...";
+
+        renderCoffeemon(document.getElementById('player-card'), playerState.coffeemons[playerState.activeCoffeemonIndex], 'Seu Coffeemon');
+        renderCoffeemon(document.getElementById('opponent-card'), opponentState.coffeemons[opponentState.activeCoffeemonIndex], 'Oponente');
+
+        renderActions(playerState);
+        if (state.events && state.events.length > 0) {
+            renderLog(state.events);
+        }
+    }
+
+    function sendAction(actionType, payload) {
+        if (!isMyTurn) {
+            alert("Não é sua vez de jogar!");
+            return;
+        }
+        socket.emit('battleAction', { battleId, actionType, payload });
+    }
+
+</script>
+
+</body>
+</html>
