@@ -44,8 +44,11 @@ export class BattleService {
     });
     const savedBattle = await this.repo.save(battle);
     const state = await this.buildInitialState(p1, p2, s1, s2);
-    this.battleCache.set(savedBattle.id, state);
-    console.log(`Battles: ${JSON.stringify(this.battleCache.getAll(), null, 2)} battles in cache`);
+    await this.battleCache.set(savedBattle.id, state);
+
+    const allBattles = await this.battleCache.getAll();
+    console.log(`Battles: ${allBattles.length} battles in Redis cache`);
+
     return { savedBattle, state };
   }
 
@@ -116,7 +119,7 @@ export class BattleService {
     actionType: T,
     payload: ExtractPayload<T>
   ): Promise<{ battleState: BattleState }> {
-    const battleState = this.battleCache.get(battleId);
+    const battleState = await this.battleCache.get(battleId);
     if (!battleState) {
       throw new Error(`Battle with ID ${battleId} not found in cache`);
     }
@@ -143,16 +146,16 @@ export class BattleService {
       battle.winnerId = updatedState.winnerId;
       battle.endedAt = new Date();
       await this.repo.save(battle);
-      this.battleCache.delete(battleId);
+      await this.battleCache.delete(battleId);
     } else {
-      this.battleCache.set(battleId, updatedState);
+      await this.battleCache.set(battleId, updatedState);
     }
 
     return { battleState: updatedState };
   }
 
-  updatePlayerSocketId(battleId: string, playerId: number, socketId: string): void {
-    const battleState = this.battleCache.get(battleId);
+  async updatePlayerSocketId(battleId: string, playerId: number, socketId: string): Promise<void> {
+    const battleState = await this.battleCache.get(battleId);
     if (!battleState) return;
 
     let updated = false;
@@ -165,7 +168,7 @@ export class BattleService {
       updated = true;
     }
     if (updated) {
-      this.battleCache.set(battleId, battleState);
+      await this.battleCache.set(battleId, battleState);
     }
   }
 }

@@ -12,19 +12,22 @@ export class MatchmakingService {
 
   // Matchmaking aleatório
   async enqueue(userId: number, socketId: string): Promise<EnqueueResult> {
-    const opponent = this.queueCache.findOpponent(userId);
+    const opponent = await this.queueCache.findOpponent(userId);
     if (!opponent) {
-      this.queueCache.addToQueue(userId, socketId);
+      await this.queueCache.addToQueue(userId, socketId);
       return { status: 'waiting' };
     }
-    this.queueCache.removeFromQueue(socketId);
-    this.queueCache.removeFromQueue(opponent.socketId);
+    await this.queueCache.removeFromQueue(socketId);
+    await this.queueCache.removeFromQueue(opponent.socketId);
     const battle = await this.battleService.createBattle(
       userId,
       opponent.userId,
       socketId,
       opponent.socketId
     );
+
+    console.log(`Battle created between user ${userId} and opponent ${opponent.userId}`);
+    console.log('Battle state:', JSON.stringify(battle.state, null, 2));
 
     return {
       status: 'matched',
@@ -34,9 +37,9 @@ export class MatchmakingService {
   }
 
   async handleDisconnect(socketId: string): Promise<DisconnectResult> {
-    const player = this.queueCache.findBySocketId(socketId);
+    const player = await this.queueCache.findBySocketId(socketId);
     if (!player) {
-      this.queueCache.removeFromQueue(socketId);
+      await this.queueCache.removeFromQueue(socketId);
     }
     const battle = await this.battleService.findActiveBattleBySocketId?.(socketId);
     if (battle) {
