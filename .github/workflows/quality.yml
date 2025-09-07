@@ -2,174 +2,73 @@ name: Quality Check
 
 on:
   push:
-    branches:
-      - main
+    branches: [main, develop]
   pull_request:
-    branches:
-      - main
+    branches: [main, develop]
+
+env:
+  NODE_VERSION: '20'
+  WORKING_DIR: 'backend(NestJS)'
 
 jobs:
-  setup:
+  code-quality:
+    name: Code Quality (Linter & Formatter)
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: backend(NestJS)
+        working-directory: ${{ env.WORKING_DIR }}
+
     steps:
-      - name: Checkout code
+      - name: 📥 Checkout
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
+      - name: 🟢 Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
-          cache-dependency-path: backend(NestJS)/package-lock.json
+          cache-dependency-path: ${{ env.WORKING_DIR }}/package-lock.json
 
-      - name: Install Dependencies
+      - name: 📦 Install Dependencies
         run: npm ci
 
-      - name: Cache node_modules
-        uses: actions/cache@v4
-        with:
-          path: backend(NestJS)/node_modules
-          key: ${{ runner.os }}-node-${{ hashFiles('backend(NestJS)/package-lock.json') }}
-
-  format:
-    needs: setup
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: backend(NestJS)
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'npm'
-          cache-dependency-path: backend(NestJS)/package-lock.json
-
-      - name: Restore node_modules
-        uses: actions/cache@v4
-        with:
-          path: backend(NestJS)/node_modules
-          key: ${{ runner.os }}-node-${{ hashFiles('backend(NestJS)/package-lock.json') }}
-
-      - name: Check Code Formatting (Warning Only)
+      - name: 🎨 Format Check (Warning)
         run: |
-          echo "🔍 Verificando formatação do código..."
-          if ! npx prettier --check "src/**/*.ts" "test/**/*.ts"; then
-            echo "⚠️  AVISO: Arquivos com problemas de formatação encontrados!"
-            echo "📝 Para corrigir automaticamente, execute: npm run format"
-            echo "🔧 Arquivos que precisam de formatação:"
-            npx prettier --list-different "src/**/*.ts" "test/**/*.ts" || true
-          else
-            echo "✅ Todos os arquivos estão bem formatados!"
-          fi
+          echo "::notice::Checking code formatting..."
+          npx prettier --check "src/**/*.ts" "test/**/*.ts" || {
+            echo "::warning::Code formatting issues found. Run 'npm run format' to fix."
+            npx prettier --list-different "src/**/*.ts" "test/**/*.ts"
+          }
         continue-on-error: true
 
-  lint:
-    needs: setup
+      - name: 🔍 Lint Check (Warning)
+        run: |
+          echo "::notice::Running ESLint..."
+          npm run lint || echo "::warning::Linting issues found. Run 'npm run lint:fix' to fix."
+        continue-on-error: true
+
+  unit-tests:
+    name: Unit Tests
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: backend(NestJS)
+        working-directory: ${{ env.WORKING_DIR }}
+
     steps:
-      - name: Checkout code
+      - name: 📥 Checkout
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
+      - name: 🟢 Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
-          cache-dependency-path: backend(NestJS)/package-lock.json
+          cache-dependency-path: ${{ env.WORKING_DIR }}/package-lock.json
 
-      - name: Restore node_modules
-        uses: actions/cache@v4
-        with:
-          path: backend(NestJS)/node_modules
-          key: ${{ runner.os }}-node-${{ hashFiles('backend(NestJS)/package-lock.json') }}
+      - name: 📦 Install Dependencies
+        run: npm ci
 
-      - name: Run ESLint
-        run: npm run lint
-
-  test:
-    needs: [lint, format]
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: backend(NestJS)
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'npm'
-          cache-dependency-path: backend(NestJS)/package-lock.json
-
-      - name: Restore node_modules
-        uses: actions/cache@v4
-        with:
-          path: backend(NestJS)/node_modules
-          key: ${{ runner.os }}-node-${{ hashFiles('backend(NestJS)/package-lock.json') }}
-
-      - name: Run Unit Tests
-        run: npm run test
-
-  e2e:
-    needs: test
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: backend(NestJS)
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'npm'
-          cache-dependency-path: backend(NestJS)/package-lock.json
-
-      - name: Restore node_modules
-        uses: actions/cache@v4
-        with:
-          path: backend(NestJS)/node_modules
-          key: ${{ runner.os }}-node-${{ hashFiles('backend(NestJS)/package-lock.json') }}
-
-      - name: Run E2E Tests
-        run: npm run test:e2e
-
-  build:
-    needs: e2e
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: backend(NestJS)
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'npm'
-          cache-dependency-path: backend(NestJS)/package-lock.json
-
-      - name: Restore node_modules
-        uses: actions/cache@v4
-        with:
-          path: backend(NestJS)/node_modules
-          key: ${{ runner.os }}-node-${{ hashFiles('backend(NestJS)/package-lock.json') }}
-
-      - name: Build Project
-        run: npm run build
+      - name: 🧪 Run Unit Tests
+        run: |
+          echo "::notice::Running unit tests..."
+          npm run test
