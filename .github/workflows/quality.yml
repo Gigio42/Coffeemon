@@ -2,154 +2,149 @@ name: Quality Check
 
 on:
   push:
-    branches:
-      - main
+    branches: [main]
   pull_request:
-    branches:
-      - main
+    branches: [main]
+
+env:
+  NODE_VERSION: '20'
+  WORKING_DIR: 'backend(NestJS)'
 
 jobs:
   setup:
+    name: Setup Dependencies
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: backend(NestJS)
+        working-directory: ${{ env.WORKING_DIR }}
     steps:
-      - name: Checkout code
+      - name: 📥 Checkout
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
+      - name: 🟢 Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
-          cache-dependency-path: backend(NestJS)/package-lock.json
+          cache-dependency-path: ${{ env.WORKING_DIR }}/package-lock.json
 
-      - name: Install Dependencies
+      - name: 📦 Install Dependencies
         run: npm ci
 
-      - name: Cache node_modules
+      - name: 💾 Cache Dependencies
         uses: actions/cache@v4
         with:
-          path: backend(NestJS)/node_modules
+          path: ${{ env.WORKING_DIR }}/node_modules
           key: ${{ runner.os }}-node-${{ hashFiles('backend(NestJS)/package-lock.json') }}
 
   format:
+    name: Code Formatting
     needs: setup
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: backend(NestJS)
+        working-directory: ${{ env.WORKING_DIR }}
     steps:
-      - name: Checkout code
+      - name: 📥 Checkout
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
+      - name: 🟢 Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
-          cache-dependency-path: backend(NestJS)/package-lock.json
+          cache-dependency-path: ${{ env.WORKING_DIR }}/package-lock.json
 
-      - name: Restore node_modules
+      - name: 📂 Restore Dependencies
         uses: actions/cache@v4
         with:
-          path: backend(NestJS)/node_modules
+          path: ${{ env.WORKING_DIR }}/node_modules
           key: ${{ runner.os }}-node-${{ hashFiles('backend(NestJS)/package-lock.json') }}
 
-      - name: Check Code Formatting (Warning Only)
+      - name: 🎨 Check Formatting
         run: |
-          echo "🔍 Verificando formatação do código..."
-          if ! npx prettier --check "src/**/*.ts" "test/**/*.ts"; then
-            echo "⚠️  AVISO: Arquivos com problemas de formatação encontrados!"
-            echo "📝 Para corrigir automaticamente, execute: npm run format"
-            echo "🔧 Arquivos que precisam de formatação:"
-            npx prettier --list-different "src/**/*.ts" "test/**/*.ts" || true
-          else
-            echo "✅ Todos os arquivos estão bem formatados!"
-          fi
+          echo "::notice::Checking code formatting..."
+          npx prettier --check "src/**/*.ts" "test/**/*.ts" || {
+            echo "::warning::Formatting issues found. Run 'npm run format' to fix."
+            npx prettier --list-different "src/**/*.ts" "test/**/*.ts"
+          }
         continue-on-error: true
 
   lint:
+    name: Code Linting
     needs: setup
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: backend(NestJS)
+        working-directory: ${{ env.WORKING_DIR }}
     steps:
-      - name: Checkout code
+      - name: 📥 Checkout
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
+      - name: 🟢 Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
-          cache-dependency-path: backend(NestJS)/package-lock.json
+          cache-dependency-path: ${{ env.WORKING_DIR }}/package-lock.json
 
-      - name: Restore node_modules
+      - name: 📂 Restore Dependencies
         uses: actions/cache@v4
         with:
-          path: backend(NestJS)/node_modules
+          path: ${{ env.WORKING_DIR }}/node_modules
           key: ${{ runner.os }}-node-${{ hashFiles('backend(NestJS)/package-lock.json') }}
 
-      - name: Run ESLint (Warning Only)
+      - name: 🔍 Run Linter
         run: |
-          echo "🔍 Executando ESLint..."
-          if ! npm run lint; then
-            echo "⚠️  AVISO: Problemas de linting encontrados!"
-            echo "📝 Para corrigir automaticamente, execute: npm run lint:fix"
-          else
-            echo "✅ Código passou no linting!"
-          fi
+          echo "::notice::Running ESLint..."
+          npm run lint || echo "::warning::Linting issues found. Run 'npm run lint:fix' to fix."
         continue-on-error: true
 
-  test:
-    needs: [lint, format]
+  unit-tests:
+    name: Unit Tests
+    needs: [format, lint]
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: backend(NestJS)
+        working-directory: ${{ env.WORKING_DIR }}
     steps:
-      - name: Checkout code
+      - name: 📥 Checkout
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
+      - name: 🟢 Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
-          cache-dependency-path: backend(NestJS)/package-lock.json
+          cache-dependency-path: ${{ env.WORKING_DIR }}/package-lock.json
 
-      - name: Restore node_modules
+      - name: 📂 Restore Dependencies
         uses: actions/cache@v4
         with:
-          path: backend(NestJS)/node_modules
+          path: ${{ env.WORKING_DIR }}/node_modules
           key: ${{ runner.os }}-node-${{ hashFiles('backend(NestJS)/package-lock.json') }}
 
-      - name: Run Unit Tests
-        run: npm run test
+      - name: 🧪 Run Unit Tests
+        run: |
+          echo "::notice::Running unit tests..."
+          npm run test
 
   regressive-tests:
-    needs: test
+    name: Regressive Tests
+    needs: unit-tests
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: backend(NestJS)
     steps:
-      - name: Skip Regressive Tests
+      - name: 🚧 Skip Regressive Tests
         run: |
-          echo "🚧 Testes regressivos temporariamente desabilitados"
-          echo "✅ Job ignorado com sucesso"
+          echo "::notice::Regressive tests temporarily disabled"
+          echo "✅ Job skipped successfully"
 
   build:
+    name: Build Application
     needs: regressive-tests
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: backend(NestJS)
     steps:
-      - name: Skip Build
+      - name: 🚧 Skip Build
         run: |
-          echo "🚧 Build temporariamente desabilitado"
-          echo "✅ Job ignorado com sucesso"
+          echo "::notice::Build temporarily disabled"
+          echo "✅ Job skipped successfully"

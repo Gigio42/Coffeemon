@@ -51,11 +51,16 @@ export class OrdersService {
   }
 
   findAll() {
-    return this.ordersRepository.find();
+    return this.ordersRepository.find({
+      relations: ['items', 'items.product'],
+    });
   }
 
   findOne(id: number) {
-    return this.ordersRepository.findOne({ where: { id } });
+    return this.ordersRepository.findOne({
+      where: { id },
+      relations: ['items', 'items.product'],
+    });
   }
 
   remove(id: number) {
