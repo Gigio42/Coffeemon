@@ -98,7 +98,6 @@ jobs:
         run: |
           echo "::notice::Running ESLint..."
           npm run lint || echo "::warning::Linting issues found. Run 'npm run lint:fix' to fix."
-        continue-on-error: true
 
   unit-tests:
     name: Unit Tests
