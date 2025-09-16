@@ -1,64 +1,57 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Product } from '../products/entities/product.entity';
 import { In, Repository } from 'typeorm';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { Order } from './entities/order.entity';
-import { OrderItem } from './entities/orderitem.entity';
+import { OrderItem } from './entities/order_item.entity';
+import { OrderStatus } from 'src/Shared/enums/order_status';
+import { NotFoundError } from 'rxjs';
 
 @Injectable()
 export class OrdersService {
   constructor(
     @InjectRepository(Order)
     private ordersRepository: Repository<Order>,
+
     @InjectRepository(OrderItem)
     private orderItemsRepository: Repository<OrderItem>,
+
     @InjectRepository(Product)
     private productsRepository: Repository<Product>
   ) {}
-
-  async create(createOrderDto: CreateOrderDto) {
-    const products = await this.productsRepository.find({
+  findAll(userId: number) {
+    return this.ordersRepository.find({
       where: {
-        id: In(createOrderDto.products.map((item) => item.productId)),
+        user: { id: userId}
       },
     });
+  }
 
-    const total = products.reduce((acc, product) => {
-      const item = createOrderDto.products.find((p) => p.productId === product.id)!;
-      return acc + product.price * item.quantity;
-    }, 0);
+  findOne(userId: number, orderId: number) {
+    return this.ordersRepository.findOne({
+      where: { 
+        id: orderId,
+        user: { id: userId}
+      },
+      relations: ['orderItem', 'orderItem.product']
+    });
+  }
 
-    const order = this.ordersRepository.create({
-      total,
-      userId: createOrderDto.userId,
+  async checkout(userId: number) {
+    const shoppingCart = await this.ordersRepository.findOne({
+      where: {
+        user: { id: userId},
+        status: OrderStatus.SHOPPING_CART
+      }
     });
 
-    await this.ordersRepository.save(order);
+    if (!shoppingCart) throw new NotFoundException("Carrinho não encontrado");
 
-    const items = products.map((product) => {
-      const item = createOrderDto.products.find((p) => p.productId === product.id)!;
-      return this.orderItemsRepository.create({
-        quantity: item.quantity,
-        price: product.price,
-        total: product.price * item.quantity,
-        orderId: order.id,
-        productId: product.id,
-      });
-    });
-
-    await this.orderItemsRepository.save(items);
+    // await this.ordersRepository.update(shoppingCart.id, { status: OrderStatus.})
   }
 
-  findAll() {
-    return this.ordersRepository.find();
-  }
+  /* ### Funções Auxiliares ### */
 
-  findOne(id: number) {
-    return this.ordersRepository.findOne({ where: { id } });
-  }
-
-  remove(id: number) {
-    return this.ordersRepository.delete(id);
-  }
+  
 }
