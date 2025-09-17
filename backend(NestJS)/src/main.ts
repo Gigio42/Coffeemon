@@ -19,10 +19,13 @@ async function bootstrap() {
 
   // SWAGGER
   const config = new DocumentBuilder()
-    .setTitle('SWAGGER API')
-    .setDescription('The cats API description')
+    .setTitle('Coffeemon API')
+    .setDescription('E-commerce de Café + Jogo Coffeemon')
     .setVersion('1.0')
-    .addTag('cats')
+    .addTag('ecommerce')
+    .addTag('game')
+    .addTag('battle')
+    .addBearerAuth()
     .build();
   const documentFactory = () =>
     SwaggerModule.createDocument(app, config, {
