@@ -2,10 +2,10 @@ import { UseGuards } from '@nestjs/common';
 import { ConnectedSocket, SubscribeMessage, WebSocketGateway } from '@nestjs/websockets';
 import { Socket } from 'socket.io';
 import { GetUserWs } from '../auth/decorators/get-user-ws.decorator';
-import { WsAuthGuard } from '../auth/guards/ws-auth.guard';
 import { User } from '../ecommerce/users/entities/user.entity';
+import { WsGameAuthGuard } from './auth/guards/ws-game-auth-guard';
 
-@UseGuards(WsAuthGuard)
+@UseGuards(WsGameAuthGuard)
 @WebSocketGateway({
   cors: {
     origin: '*',

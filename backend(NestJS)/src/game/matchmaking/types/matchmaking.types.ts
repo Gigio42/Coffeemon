@@ -1,12 +1,27 @@
-import { BattleState } from 'src/game/battles/types/batlle.types';
-
-export interface QueuePlayer {
-  userId: number;
-  socketId: string;
+export interface MatchmakingInstructions {
+  status: 'waiting' | 'matched' | 'error';
+  data?: any;
+  roomMovements?: RoomMovement[];
+  emissions?: EmissionInstruction[];
+  updateStats?: string[];
 }
 
-export type EnqueueResult =
-  | { status: 'waiting' }
-  | { status: 'matched'; battleId: string; battleState: BattleState };
+export interface RoomMovement {
+  socketId: string;
+  playerId?: number;
+  action: 'join' | 'leave';
+  roomId: string;
+  roomType?: 'matchmaking' | 'battle';
+}
 
-export type DisconnectResult = { opponentSocketId: string } | undefined;
+export interface EmissionInstruction {
+  target: EmissionTarget;
+  event: string;
+  data: any;
+  exclude?: boolean;
+}
+
+export interface EmissionTarget {
+  type: 'socket' | 'room' | 'broadcast';
+  roomId?: string;
+}

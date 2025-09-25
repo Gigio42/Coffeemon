@@ -10,17 +10,22 @@ export class WsPlayerGuard implements CanActivate {
   async canActivate(context: ExecutionContext): Promise<boolean> {
     try {
       const socket: SocketWithUser = context.switchToWs().getClient();
-      const user = socket.data.user;
+      const userId = socket.data.userId;
 
-      if (!user) {
+      if (!userId) {
         throw new WsException('User not authenticated');
       }
 
-      const player = await this.playerService.findByUserId(user.id);
+      const player = await this.playerService.findByUserId(userId);
+      if (!player) {
+        throw new WsException('Player not found');
+      }
+
       socket.data.playerId = player.id;
 
       return true;
-    } catch {
+    } catch (error) {
+      console.error('WsPlayerGuard error:', error);
       throw new WsException('Player validation failed');
     }
   }

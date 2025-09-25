@@ -1,22 +1,20 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { AuthModule } from '../../auth/auth.module'; // Caminho correto
+import { GameAuthModule } from '../auth/game-auth.module';
+import { CacheModule } from '../cache/cache.module';
 import { PlayerModule } from '../player/player.module';
 import { BattleGateway } from './battle.gateway';
 import { BattleService } from './battles.service';
-import { Battle } from './entities/battle.entity';
-
-import { CacheModule } from '../cache/cache.module';
 import { AttackAction } from './engine/actions/attack.action';
 import { BattleActionFactory } from './engine/actions/battle-action-factory';
 import { SwitchAction } from './engine/actions/switch.action';
 import { BattleTurnManager } from './engine/battle-turn-manager';
 import { StatusEffectsService } from './engine/effects/status-effects.service';
 import { EventManager } from './engine/events/event-manager';
-import { UsersModule } from '../../ecommerce/users/users.module';
+import { Battle } from './entities/battle.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Battle]), PlayerModule, AuthModule, CacheModule, UsersModule],
+  imports: [TypeOrmModule.forFeature([Battle]), GameAuthModule, PlayerModule, CacheModule],
   providers: [
     BattleService,
     BattleGateway,
@@ -27,6 +25,6 @@ import { UsersModule } from '../../ecommerce/users/users.module';
     SwitchAction,
     StatusEffectsService,
   ],
-  exports: [BattleService, BattleGateway],
+  exports: [BattleService],
 })
 export class BattlesModule {}
