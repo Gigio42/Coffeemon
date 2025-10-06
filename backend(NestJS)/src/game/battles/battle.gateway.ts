@@ -57,17 +57,37 @@ export class BattleGateway {
         actionType,
         payload
       );
+      
+      // Log dos socket IDs antes de enviar
+      console.log(`[BattleGateway] Sending battleUpdate to:`, {
+        player1SocketId: battleState.player1SocketId,
+        player2SocketId: battleState.player2SocketId,
+        battleStatus: battleState.battleStatus
+      });
+      
       this.server
         .to([battleState.player1SocketId, battleState.player2SocketId])
         .emit('battleUpdate', { battleState });
 
       if (battleState.battleStatus === BattleStatus.FINISHED) {
+        console.log(`[BattleGateway] Battle FINISHED! Sending battleEnd to both players:`, {
+          winnerId: battleState.winnerId,
+          player1SocketId: battleState.player1SocketId,
+          player2SocketId: battleState.player2SocketId
+        });
+        
+        // Envia para ambos os sockets individualmente para garantir entrega
+        this.server.to(battleState.player1SocketId).emit('battleEnd', { winnerId: battleState.winnerId });
+        this.server.to(battleState.player2SocketId).emit('battleEnd', { winnerId: battleState.winnerId });
+        
+        // E também envia para o array (redundância intencional)
         this.server
           .to([battleState.player1SocketId, battleState.player2SocketId])
           .emit('battleEnd', { winnerId: battleState.winnerId });
       }
     } catch (e: unknown) {
       const message = e instanceof Error ? e.message : 'Unknown error';
+      console.error(`[BattleGateway] Error in battleAction:`, message);
       socket.emit('battleError', { message });
     }
   }
