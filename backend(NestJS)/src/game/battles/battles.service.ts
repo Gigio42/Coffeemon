@@ -24,28 +24,34 @@ export class BattleService {
   ) {}
 
   async createBattle(
-    u1: number,
-    u2: number,
-    s1: string,
-    s2: string
+    player1Id: number,
+    player2Id: number,
+    player1SocketId: string,
+    player2SocketId: string
   ): Promise<{
     savedBattle: Battle;
     state: BattleState;
   }> {
-    const p1 = (await this.playerService.findByUserId(u1)).id;
-    const p2 = (await this.playerService.findByUserId(u2)).id;
     const battle = this.repo.create({
-      player1Id: p1,
-      player2Id: p2,
-      player1SocketId: s1,
-      player2SocketId: s2,
+      player1Id,
+      player2Id,
+      player1SocketId,
+      player2SocketId,
       status: BattleStatus.ACTIVE,
       createdAt: new Date(),
     });
+
     const savedBattle = await this.repo.save(battle);
-    const state = await this.buildInitialState(p1, p2, s1, s2);
+    const state = await this.buildInitialState(
+      player1Id,
+      player2Id,
+      player1SocketId,
+      player2SocketId
+    );
+
     await this.battleCache.set(savedBattle.id, state);
 
+    //printando tds os battles no redis
     const allBattles = await this.battleCache.getAll();
     console.log(`Battles: ${allBattles.length} battles in Redis cache`);
 
@@ -169,6 +175,22 @@ export class BattleService {
     }
     if (updated) {
       await this.battleCache.set(battleId, battleState);
+    }
+  }
+
+  async getBattleState(battleId: string): Promise<BattleState | null> {
+    try {
+      const battleState = await this.battleCache.get(battleId);
+
+      if (!battleState) {
+        console.log(`Estado da batalha ${battleId} não encontrado no cache`);
+        return null;
+      }
+
+      return battleState;
+    } catch (error) {
+      console.error(`Erro ao buscar estado da batalha ${battleId}:`, error);
+      return null;
     }
   }
 }

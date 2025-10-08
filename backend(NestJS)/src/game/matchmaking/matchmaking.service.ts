@@ -1,74 +1,67 @@
 import { Injectable } from '@nestjs/common';
 import { BattleService } from '../battles/battles.service';
-import { DisconnectResult, EnqueueResult } from './types/matchmaking.types';
-import { QueueCacheService } from '../cache/queue-cache.service';
-
+import { RoomCacheService } from '../cache/room-cache.service';
 @Injectable()
 export class MatchmakingService {
   constructor(
     private battleService: BattleService,
-    private queueCache: QueueCacheService
+    private roomCache: RoomCacheService
   ) {}
 
-  // Matchmaking aleatório
-  async enqueue(userId: number, socketId: string): Promise<EnqueueResult> {
-    const opponent = await this.queueCache.findOpponent(userId);
+  async findMatch(
+    playerId: number,
+    socketId: string
+  ): Promise<{
+    status: 'waiting' | 'matched';
+    battleId?: string;
+    opponentSocketId?: string;
+  }> {
+    const matchmakingRoom = 'matchmaking:default';
+
+    const opponent = await this.roomCache.findOpponentInRoom(matchmakingRoom, playerId);
     if (!opponent) {
-      await this.queueCache.addToQueue(userId, socketId);
       return { status: 'waiting' };
     }
-    await this.queueCache.removeFromQueue(socketId);
-    await this.queueCache.removeFromQueue(opponent.socketId);
+
+    await this.roomCache.makeMatch(matchmakingRoom, playerId, opponent.playerId);
+
     const battle = await this.battleService.createBattle(
-      userId,
-      opponent.userId,
+      playerId,
+      opponent.playerId,
       socketId,
       opponent.socketId
     );
 
-    console.log(`Battle created between user ${userId} and opponent ${opponent.userId}`);
-    console.log('Battle state:', JSON.stringify(battle.state, null, 2));
-
     return {
       status: 'matched',
       battleId: battle.savedBattle.id,
-      battleState: battle.state,
+      opponentSocketId: opponent.socketId,
     };
   }
 
-  async handleDisconnect(socketId: string): Promise<DisconnectResult> {
-    const player = await this.queueCache.findBySocketId(socketId);
-    if (!player) {
-      await this.queueCache.removeFromQueue(socketId);
+  async leaveQueue(playerId: number): Promise<{ success: boolean; reason?: string }> {
+    const roomId = await this.roomCache.findRoomByPlayer(playerId);
+
+    if (!roomId) {
+      return { success: false, reason: 'You are not in any queue.' };
     }
-    const battle = await this.battleService.findActiveBattleBySocketId?.(socketId);
-    if (battle) {
-      // TODO: Cancelar batalha
-      const opponentSocketId =
-        battle.player1SocketId === socketId ? battle.player2SocketId : battle.player1SocketId;
-      return { opponentSocketId };
+    if (!roomId.startsWith('matchmaking:')) {
+      return { success: false, reason: 'Cannot leave queue while in battle.' };
     }
-    return undefined;
+
+    await this.roomCache.leaveRoom(roomId, playerId);
+    return { success: true };
   }
 
-  // TODO Desafio direto
-  // challenge(userId: number, socketId: string, targetUserId: number) {
-  //   this.challenges.set(targetUserId, { fromUserId: userId, fromSocketId: socketId });
-  //   return { status: 'challenge_sent', targetUserId };
-  // }
+  async getQueueStats(): Promise<{ count: number; avgWaitTime: number }> {
+    return this.roomCache.getQueueStats('matchmaking:default');
+  }
 
-  // TODO Aceitar desafio
-  // async acceptChallenge(userId: number, socketId: string) {
-  //   const challenge = this.challenges.get(userId);
-  //   if (!challenge) {
-  //     return { status: 'no_challenge' };
-  //   }
-  //   this.challenges.delete(userId);
-  //   return this.battleService.createBattle(
-  //     userId,
-  //     challenge.fromUserId,
-  //     socketId,
-  //     challenge.fromSocketId
-  //   );
-  // }
+  async handleDisconnection(playerId: number): Promise<void> {
+    const roomId = await this.roomCache.findRoomByPlayer(playerId);
+
+    if (roomId && roomId.startsWith('matchmaking:')) {
+      await this.roomCache.leaveRoom(roomId, playerId);
+    }
+  }
 }

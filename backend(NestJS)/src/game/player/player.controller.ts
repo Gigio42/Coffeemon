@@ -10,6 +10,7 @@ import { PlayerService } from './player.service';
 
 @ApiTags('players')
 @ApiBearerAuth()
+@UseGuards(AuthGuard)
 @Controller('game/players')
 export class PlayerController {
   constructor(private readonly playerService: PlayerService) {}
