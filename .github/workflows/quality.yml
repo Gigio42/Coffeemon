@@ -8,7 +8,7 @@ on:
 
 env:
   NODE_VERSION: '20'
-  WORKING_DIR: 'backend(NestJS)'
+  WORKING_DIR: 'backend-nestjs'
 
 jobs:
   setup:
@@ -35,7 +35,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ${{ env.WORKING_DIR }}/node_modules
-          key: ${{ runner.os }}-node-${{ hashFiles('backend(NestJS)/package-lock.json') }}
+          key: ${{ runner.os }}-node-${{ hashFiles('backend-nestjs/package-lock.json') }}
 
   format:
     name: Code Formatting
@@ -59,7 +59,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ${{ env.WORKING_DIR }}/node_modules
-          key: ${{ runner.os }}-node-${{ hashFiles('backend(NestJS)/package-lock.json') }}
+          key: ${{ runner.os }}-node-${{ hashFiles('backend-nestjs/package-lock.json') }}
 
       - name: 🎨 Check Formatting
         run: |
@@ -92,7 +92,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ${{ env.WORKING_DIR }}/node_modules
-          key: ${{ runner.os }}-node-${{ hashFiles('backend(NestJS)/package-lock.json') }}
+          key: ${{ runner.os }}-node-${{ hashFiles('backend-nestjs/package-lock.json') }}
 
       - name: 🔍 Run Linter
         run: |
@@ -121,7 +121,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ${{ env.WORKING_DIR }}/node_modules
-          key: ${{ runner.os }}-node-${{ hashFiles('backend(NestJS)/package-lock.json') }}
+          key: ${{ runner.os }}-node-${{ hashFiles('backend-nestjs/package-lock.json') }}
 
       - name: 🧪 Run Unit Tests
         run: |
