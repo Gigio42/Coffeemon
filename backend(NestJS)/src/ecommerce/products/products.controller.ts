@@ -16,7 +16,7 @@ export class ProductsController {
   constructor(private readonly productsService: ProductsService) {}
 
   @Post('/')
-  // @UseGuards(AuthGuard, RolesGuard)
+  @UseGuards(AuthGuard, RolesGuard)
   // @Roles(UserRole.ADMIN)
   @UseInterceptors(FileInterceptor('image', {
     storage: diskStorage({
