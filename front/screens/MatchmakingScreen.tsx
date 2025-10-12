@@ -52,6 +52,7 @@ interface PlayerCoffeemon {
 interface MatchmakingScreenProps {
   token: string;                  // Token JWT recebido do login
   playerId: number;               // ID do jogador
+  onNavigateToHome: () => void;   // Callback para voltar à Home
   onNavigateToLogin: () => void;  // Callback para voltar ao login
   onNavigateToBattle: (battleId: string, battleState: BattleState, socket: Socket) => void; // Callback para ir à batalha
 }
@@ -59,6 +60,7 @@ interface MatchmakingScreenProps {
 export default function MatchmakingScreen({ 
   token, 
   playerId, 
+  onNavigateToHome,
   onNavigateToLogin, 
   onNavigateToBattle 
 }: MatchmakingScreenProps) {
@@ -425,6 +427,10 @@ export default function MatchmakingScreen({
             <Text style={styles.findMatchButtonText}>Procurar Partida</Text>
           </TouchableOpacity>
           
+          <TouchableOpacity style={styles.homeButton} onPress={onNavigateToHome}>
+            <Text style={styles.homeButtonText}>🏠 Voltar para Home</Text>
+          </TouchableOpacity>
+          
           <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
             <Text style={styles.logoutButtonText}>Logout</Text>
           </TouchableOpacity>
@@ -615,6 +621,26 @@ const styles = StyleSheet.create({
   findMatchButtonText: {
     color: '#fff',
     fontSize: 16,
+    fontWeight: 'bold',
+  },
+  homeButton: {
+    width: '100%',
+    maxWidth: 300,
+    height: 45,
+    backgroundColor: '#D4A574',
+    borderRadius: 8,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 15,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  homeButtonText: {
+    color: '#fff',
+    fontSize: 15,
     fontWeight: 'bold',
   },
   logoutButton: {

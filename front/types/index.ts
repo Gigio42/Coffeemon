@@ -1,5 +1,6 @@
 export enum Screen {
   LOGIN = 'LOGIN',
+  HOME = 'HOME',
   MATCHMAKING = 'MATCHMAKING',
   BATTLE = 'BATTLE'
 }
