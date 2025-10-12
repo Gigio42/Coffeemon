@@ -1,17 +1,28 @@
-import { IsNumber, IsArray, ValidateNested, IsNotEmpty, IsPositive, Min } from 'class-validator';
+import { IsNumber, IsArray, ValidateNested } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class CreateOrderDto {
-  @IsNotEmpty({ message: 'O ID do produto é obrigatório'})
-  @IsNumber({}, { message: 'O ID do produto deve ser um número válido'})
-  @Min(1, {message: 'O ID do produto deve ser um número maior que 0'})
-  productId: number;
+  @ApiProperty({
+    description: 'Products in the order',
+    example: [
+      {
+        userId: 1,
+        products: [{ productId: 1, quantity: 2 }],
+      },
+    ],
+  })
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => CreateOrderItemDto)
+  products: CreateOrderItemDto[];
 
-  @IsNotEmpty({ message: 'A quantidade do produto é obrigatória'})
-  @IsNumber({}, { message: 'A quantidade do produto deve ser um número válido'})
-  @Min(1, {message: 'A quantidade do produto deve ser um número maior que 0'})
-  quantity: number;
+  @ApiProperty({
+    description: 'User ID who placed the order',
+    example: 1,
+  })
+  @IsNumber({}, { message: 'Usuário é obrigatório' })
+  userId: number;
 }
 
 export class CreateOrderItemDto {
