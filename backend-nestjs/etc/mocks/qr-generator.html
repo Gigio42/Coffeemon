@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Coffeemon QR Code Generator</title>
+    <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            color: white;
+            margin-bottom: 40px;
+        }
+
+        h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .subtitle {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+
+        .config-panel {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 30px;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+        }
+
+        .config-panel h2 {
+            margin-bottom: 15px;
+            color: #333;
+        }
+
+        .input-group {
+            margin-bottom: 15px;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: #555;
+            font-weight: 600;
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            font-size: 16px;
+        }
+
+        .input-group input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 25px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            transition: transform 0.3s, box-shadow 0.3s;
+            text-align: center;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+        }
+
+        .card-header {
+            margin-bottom: 15px;
+        }
+
+        .coffeemon-name {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .coffeemon-type {
+            display: inline-block;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            color: white;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .type-floral { background: #EC6EAD; }
+        .type-fruity { background: #F7B731; }
+        .type-roasted { background: #8B4513; }
+        .type-spicy { background: #E74C3C; }
+        .type-sour { background: #F1C40F; }
+        .type-nutty { background: #A0522D; }
+        .type-sweet { background: #FF6B9D; }
+
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            margin: 15px 0;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+
+        .stat {
+            text-align: center;
+        }
+
+        .stat-label {
+            font-size: 0.8em;
+            color: #666;
+            text-transform: uppercase;
+        }
+
+        .stat-value {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .qr-container {
+            margin: 20px 0;
+            display: flex;
+            justify-content: center;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+
+        .qr-info {
+            margin-top: 10px;
+            padding: 10px;
+            background: #e9ecef;
+            border-radius: 6px;
+            font-size: 0.85em;
+            color: #666;
+            word-break: break-all;
+        }
+
+        .button {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .button:hover {
+            transform: scale(1.05);
+        }
+
+        .button:active {
+            transform: scale(0.98);
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: white;
+            font-size: 1.2em;
+        }
+
+        .error {
+            background: #e74c3c;
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        @media (max-width: 768px) {
+            .grid {
+                grid-template-columns: 1fr;
+            }
+            
+            h1 {
+                font-size: 1.8em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🎮 Coffeemon QR Code Generator</h1>
+            <p class="subtitle">Gere QR codes para capturar Coffeemons!</p>
+        </header>
+
+        <div class="config-panel">
+            <h2>⚙️ Configuração</h2>
+            <div class="input-group">
+                <label for="serverUrl">URL do Servidor Backend</label>
+                <input 
+                    type="text" 
+                    id="serverUrl" 
+                    placeholder="http://localhost:3000 ou http://SEU_IP:3000"
+                    value="http://localhost:3000"
+                >
+            </div>
+            <button class="button" onclick="loadCoffeemons()">🔄 Recarregar Coffeemons</button>
+        </div>
+
+        <div id="loading" class="loading" style="display: none;">
+            Carregando Coffeemons...
+        </div>
+
+        <div id="error" class="error" style="display: none;"></div>
+
+        <div id="grid" class="grid"></div>
+    </div>
+
+    <script>
+        let coffeemons = [];
+        let serverUrl = 'http://localhost:3000';
+
+        // Carrega Coffeemons ao iniciar
+        window.addEventListener('DOMContentLoaded', () => {
+            loadCoffeemons();
+        });
+
+        // Atualiza URL do servidor
+        document.getElementById('serverUrl').addEventListener('change', (e) => {
+            serverUrl = e.target.value.trim();
+            if (serverUrl.endsWith('/')) {
+                serverUrl = serverUrl.slice(0, -1);
+            }
+        });
+
+        async function loadCoffeemons() {
+            const loading = document.getElementById('loading');
+            const error = document.getElementById('error');
+            const grid = document.getElementById('grid');
+
+            loading.style.display = 'block';
+            error.style.display = 'none';
+            grid.innerHTML = '';
+
+            try {
+                // Busca Coffeemons da API
+                const response = await fetch(`${serverUrl}/game/coffeemons`);
+                
+                if (!response.ok) {
+                    throw new Error(`Erro ao buscar Coffeemons: ${response.status}`);
+                }
+
+                coffeemons = await response.json();
+                
+                if (!coffeemons || coffeemons.length === 0) {
+                    throw new Error('Nenhum Coffeemon encontrado no banco de dados');
+                }
+
+                renderCoffeemons();
+            } catch (err) {
+                console.error('Erro:', err);
+                error.textContent = `❌ ${err.message}. Verifique se o backend está rodando e a URL está correta.`;
+                error.style.display = 'block';
+            } finally {
+                loading.style.display = 'none';
+            }
+        }
+
+        function renderCoffeemons() {
+            const grid = document.getElementById('grid');
+            grid.innerHTML = '';
+
+            coffeemons.forEach((coffeemon) => {
+                const card = createCoffeemonCard(coffeemon);
+                grid.appendChild(card);
+            });
+        }
+
+        function createCoffeemonCard(coffeemon) {
+            const card = document.createElement('div');
+            card.className = 'card';
+
+            // URL que será codificada no QR code
+            // Esta URL será lida pelo app e irá adicionar o Coffeemon ao jogador
+            const qrUrl = `coffeemon://add/${coffeemon.id}`;
+
+            card.innerHTML = `
+                <div class="card-header">
+                    <div class="coffeemon-name">${coffeemon.name}</div>
+                    <span class="coffeemon-type type-${coffeemon.type}">${coffeemon.type}</span>
+                </div>
+
+                <div class="stats">
+                    <div class="stat">
+                        <div class="stat-label">HP</div>
+                        <div class="stat-value">${coffeemon.baseHp}</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-label">ATK</div>
+                        <div class="stat-value">${coffeemon.baseAttack}</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-label">DEF</div>
+                        <div class="stat-value">${coffeemon.baseDefense}</div>
+                    </div>
+                </div>
+
+                <div class="qr-container">
+                    <div id="qr-${coffeemon.id}"></div>
+                </div>
+
+                <div class="qr-info">
+                    <strong>ID:</strong> ${coffeemon.id}<br>
+                    <strong>URL:</strong> ${qrUrl}
+                </div>
+
+                <button class="button" onclick="downloadQR(${coffeemon.id}, '${coffeemon.name}')">
+                    💾 Baixar QR Code
+                </button>
+            `;
+
+            // Gera o QR code após adicionar o card ao DOM
+            setTimeout(() => {
+                const qrContainer = document.getElementById(`qr-${coffeemon.id}`);
+                if (qrContainer) {
+                    new QRCode(qrContainer, {
+                        text: qrUrl,
+                        width: 200,
+                        height: 200,
+                        colorDark: '#000000',
+                        colorLight: '#ffffff',
+                        correctLevel: QRCode.CorrectLevel.H
+                    });
+                }
+            }, 100);
+
+            return card;
+        }
+
+        function downloadQR(coffeemonId, coffeemonName) {
+            const qrContainer = document.getElementById(`qr-${coffeemonId}`);
+            const canvas = qrContainer.querySelector('canvas');
+            
+            if (canvas) {
+                const url = canvas.toDataURL('image/png');
+                const link = document.createElement('a');
+                link.download = `coffeemon-${coffeemonName}-qr.png`;
+                link.href = url;
+                link.click();
+            }
+        }
+    </script>
+</body>
+</html>
