@@ -21,12 +21,32 @@ import {
   View, 
   TouchableOpacity, 
   SafeAreaView, 
-  ScrollView 
+  ScrollView,
+  Image,
+  ActivityIndicator,
+  Alert
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { io, Socket } from 'socket.io-client';
-import { SOCKET_URL } from '../utils/config';
+import { SOCKET_URL, getServerUrl, BASE_IMAGE_URL } from '../utils/config';
 import { BattleState } from '../types';
+
+// Interface para os Coffeemons do jogador
+interface PlayerCoffeemon {
+  id: number;
+  hp: number;
+  attack: number;
+  defense: number;
+  level: number;
+  experience: number;
+  isInParty: boolean;
+  coffeemon: {
+    id: number;
+    name: string;
+    type: string;
+    imageUrl?: string;
+  };
+}
 
 interface MatchmakingScreenProps {
   token: string;                  // Token JWT recebido do login
@@ -47,12 +67,16 @@ export default function MatchmakingScreen({
   const [socket, setSocket] = useState<Socket | null>(null);
   const [matchStatus, setMatchStatus] = useState<string>('');
   const [log, setLog] = useState<string[]>([]);
+  const [coffeemons, setCoffeemons] = useState<PlayerCoffeemon[]>([]);
+  const [loading, setLoading] = useState<boolean>(false);
+  const [partyLoading, setPartyLoading] = useState<number | null>(null);
 
   // ========================================
   // SETUP DO SOCKET AO INICIAR
   // ========================================
   useEffect(() => {
     setupSocket();
+    fetchPlayerCoffeemons(); // Buscar Coffeemons do jogador
     
     // Cleanup: desconecta socket quando componente é desmontado
     return () => {
@@ -61,6 +85,121 @@ export default function MatchmakingScreen({
       }
     };
   }, []);
+
+  /**
+   * FUNÇÃO: fetchPlayerCoffeemons
+   * Busca todos os Coffeemons do jogador da API
+   */
+  async function fetchPlayerCoffeemons() {
+    setLoading(true);
+    try {
+      // Primeiro busca o player (que já retorna os coffeemons incluídos)
+      const playerResponse = await fetch(`${getServerUrl()}/game/players/me`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (playerResponse.ok) {
+        const player = await playerResponse.json();
+        console.log('Player data:', player);
+        
+        // Agora busca todos os coffeemons desse player
+        const coffeemonsResponse = await fetch(
+          `${getServerUrl()}/game/players/${player.id}/coffeemons`,
+          {
+            method: 'GET',
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json',
+            },
+          }
+        );
+
+        if (coffeemonsResponse.ok) {
+          const data = await coffeemonsResponse.json();
+          console.log('Coffeemons data:', data);
+          setCoffeemons(data);
+          addLog(`${data.length} Coffeemons carregados`);
+        } else {
+          addLog('Erro ao carregar Coffeemons');
+        }
+      } else {
+        addLog('Erro ao carregar dados do jogador');
+      }
+    } catch (error) {
+      console.error('Error fetching coffeemons:', error);
+      addLog('Erro de conexão ao carregar Coffeemons');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  /**
+   * FUNÇÃO: toggleParty
+   * Adiciona ou remove um Coffeemon do time
+   */
+  async function toggleParty(coffeemon: PlayerCoffeemon) {
+    // Verifica limite do time (máximo 3)
+    const partyCount = coffeemons.filter(c => c.isInParty).length;
+    
+    if (!coffeemon.isInParty && partyCount >= 3) {
+      Alert.alert('Limite atingido', 'Você só pode ter 3 Coffeemons no time!');
+      return;
+    }
+
+    setPartyLoading(coffeemon.id);
+    
+    try {
+      let response;
+      
+      if (coffeemon.isInParty) {
+        // Remover do time
+        response = await fetch(
+          `${getServerUrl()}/game/players/me/party/remove/${coffeemon.id}`,
+          {
+            method: 'PUT',
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json',
+            },
+          }
+        );
+      } else {
+        // Adicionar ao time
+        response = await fetch(`${getServerUrl()}/game/players/me/party`, {
+          method: 'PUT',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ playerCoffeemonId: coffeemon.id }),
+        });
+      }
+
+      if (response.ok) {
+        // Atualiza o estado local
+        setCoffeemons(prev =>
+          prev.map(c =>
+            c.id === coffeemon.id ? { ...c, isInParty: !c.isInParty } : c
+          )
+        );
+        addLog(
+          `${coffeemon.coffeemon.name} ${!coffeemon.isInParty ? 'adicionado ao' : 'removido do'} time`
+        );
+      } else {
+        const error = await response.json();
+        Alert.alert('Erro', error.message || 'Erro ao alterar time');
+      }
+    } catch (error) {
+      console.error('Error toggling party:', error);
+      Alert.alert('Erro', 'Erro de conexão ao alterar time');
+    } finally {
+      setPartyLoading(null);
+    }
+  }
 
   /**
    * FUNÇÃO: setupSocket
@@ -153,34 +292,119 @@ export default function MatchmakingScreen({
   // ========================================
   // RENDERIZAÇÃO DA UI
   // ========================================
+  
+  // Separa Coffeemons em time e disponíveis
+  const partyMembers = coffeemons.filter(c => c.isInParty);
+  const availableCoffeemons = coffeemons.filter(c => !c.isInParty);
+
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.matchmakingContainer}>
-        <Text style={styles.matchTitle}>Procurar Partida</Text>
-        
-        <View style={styles.infoContainer}>
-          <Text style={styles.infoText}>User ID: {playerId}</Text>
-          <Text style={styles.infoText}>Socket ID: {socket?.id || 'Desconectado'}</Text>
-          <Text style={styles.infoText}>Status: {matchStatus || 'Conectado'}</Text>
+      <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+        <View style={styles.matchmakingContainer}>
+          <Text style={styles.matchTitle}>Procurar Partida</Text>
+          
+          <View style={styles.infoContainer}>
+            <Text style={styles.infoText}>User ID: {playerId}</Text>
+            <Text style={styles.infoText}>Socket ID: {socket?.id || 'Desconectado'}</Text>
+            <Text style={styles.infoText}>Status: {matchStatus || 'Conectado'}</Text>
+          </View>
+
+          {/* SEÇÃO: MEU TIME */}
+          <View style={styles.teamSection}>
+            <Text style={styles.sectionTitle}>🎮 Meu Time ({partyMembers.length}/3)</Text>
+            {loading ? (
+              <ActivityIndicator size="large" color="#2ecc71" />
+            ) : partyMembers.length === 0 ? (
+              <Text style={styles.emptyText}>Nenhum Coffeemon no time ainda</Text>
+            ) : (
+              <View style={styles.teamGrid}>
+                {partyMembers.map((pc) => (
+                  <View key={pc.id} style={styles.coffeemonCard}>
+                    <Image
+                      source={{ 
+                        uri: `${BASE_IMAGE_URL}${pc.coffeemon.name}/default.png` 
+                      }}
+                      style={styles.coffeemonImage}
+                      defaultSource={require('../assets/icon.png')}
+                    />
+                    <Text style={styles.coffeemonName}>{pc.coffeemon.name}</Text>
+                    <Text style={styles.coffeemonLevel}>Nv. {pc.level}</Text>
+                    <TouchableOpacity
+                      style={[styles.partyButton, styles.removeButton]}
+                      onPress={() => toggleParty(pc)}
+                      disabled={partyLoading === pc.id}
+                    >
+                      {partyLoading === pc.id ? (
+                        <ActivityIndicator size="small" color="#fff" />
+                      ) : (
+                        <Text style={styles.buttonText}>➖ Remover</Text>
+                      )}
+                    </TouchableOpacity>
+                  </View>
+                ))}
+              </View>
+            )}
+          </View>
+
+          {/* SEÇÃO: COFFEEMONS DISPONÍVEIS */}
+          <View style={styles.teamSection}>
+            <Text style={styles.sectionTitle}>📦 Disponíveis ({availableCoffeemons.length})</Text>
+            {loading ? (
+              <ActivityIndicator size="large" color="#3498db" />
+            ) : availableCoffeemons.length === 0 ? (
+              <Text style={styles.emptyText}>Todos os Coffeemons estão no time</Text>
+            ) : (
+              <ScrollView 
+                horizontal 
+                showsHorizontalScrollIndicator={false}
+                style={styles.availableScroll}
+              >
+                {availableCoffeemons.map((pc) => (
+                  <View key={pc.id} style={styles.coffeemonCardSmall}>
+                    <Image
+                      source={{ 
+                        uri: `${BASE_IMAGE_URL}${pc.coffeemon.name}/default.png` 
+                      }}
+                      style={styles.coffeemonImageSmall}
+                      defaultSource={require('../assets/icon.png')}
+                    />
+                    <Text style={styles.coffeemonNameSmall}>{pc.coffeemon.name}</Text>
+                    <Text style={styles.coffeemonLevelSmall}>Nv. {pc.level}</Text>
+                    <TouchableOpacity
+                      style={[styles.partyButton, styles.addButton]}
+                      onPress={() => toggleParty(pc)}
+                      disabled={partyLoading === pc.id || partyMembers.length >= 3}
+                    >
+                      {partyLoading === pc.id ? (
+                        <ActivityIndicator size="small" color="#fff" />
+                      ) : (
+                        <Text style={styles.buttonText}>➕</Text>
+                      )}
+                    </TouchableOpacity>
+                  </View>
+                ))}
+              </ScrollView>
+            )}
+          </View>
+          
+          <TouchableOpacity style={styles.findMatchButton} onPress={findMatch}>
+            <Text style={styles.findMatchButtonText}>Procurar Partida</Text>
+          </TouchableOpacity>
+          
+          <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+            <Text style={styles.logoutButtonText}>Logout</Text>
+          </TouchableOpacity>
+          
+          <View style={styles.logContainer}>
+            <Text style={styles.sectionTitle}>Log</Text>
+            <ScrollView style={{ maxHeight: 150 }} showsVerticalScrollIndicator={false}>
+              {log.map((msg, idx) => (
+                <Text key={idx} style={styles.logText}>{msg}</Text>
+              ))}
+            </ScrollView>
+          </View>
         </View>
-        
-        <TouchableOpacity style={styles.findMatchButton} onPress={findMatch}>
-          <Text style={styles.findMatchButtonText}>Procurar Partida</Text>
-        </TouchableOpacity>
-        
-        <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-          <Text style={styles.logoutButtonText}>Logout</Text>
-        </TouchableOpacity>
-        
-        <View style={styles.logContainer}>
-          <Text style={styles.sectionTitle}>Log</Text>
-          <ScrollView style={{ maxHeight: 150 }} showsVerticalScrollIndicator={false}>
-            {log.map((msg, idx) => (
-              <Text key={idx} style={styles.logText}>{msg}</Text>
-            ))}
-          </ScrollView>
-        </View>
-      </View>
+      </ScrollView>
     </SafeAreaView>
   );
 }
@@ -189,7 +413,9 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#f9f5ed',
-    padding: 16,
+  },
+  scrollView: {
+    flex: 1,
   },
   matchmakingContainer: {
     flex: 1,
@@ -215,6 +441,115 @@ const styles = StyleSheet.create({
     marginBottom: 5,
     color: '#333',
   },
+  // ESTILOS PARA SEÇÃO DE TIME
+  teamSection: {
+    width: '100%',
+    maxWidth: 400,
+    marginBottom: 20,
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    padding: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  sectionTitle: {
+    fontWeight: 'bold',
+    fontSize: 18,
+    marginBottom: 12,
+    color: '#333',
+  },
+  emptyText: {
+    fontSize: 14,
+    color: '#999',
+    fontStyle: 'italic',
+    textAlign: 'center',
+    paddingVertical: 20,
+  },
+  teamGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+  },
+  coffeemonCard: {
+    width: '48%',
+    backgroundColor: '#f8f9fa',
+    borderRadius: 12,
+    padding: 12,
+    marginBottom: 12,
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: '#2ecc71',
+  },
+  coffeemonImage: {
+    width: 80,
+    height: 80,
+    marginBottom: 8,
+  },
+  coffeemonName: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: '#333',
+    textAlign: 'center',
+  },
+  coffeemonLevel: {
+    fontSize: 12,
+    color: '#666',
+    marginBottom: 8,
+  },
+  // ESTILOS PARA DISPONÍVEIS (SCROLL HORIZONTAL)
+  availableScroll: {
+    maxHeight: 180,
+  },
+  coffeemonCardSmall: {
+    width: 100,
+    backgroundColor: '#f8f9fa',
+    borderRadius: 12,
+    padding: 10,
+    marginRight: 12,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#ddd',
+  },
+  coffeemonImageSmall: {
+    width: 60,
+    height: 60,
+    marginBottom: 6,
+  },
+  coffeemonNameSmall: {
+    fontSize: 12,
+    fontWeight: 'bold',
+    color: '#333',
+    textAlign: 'center',
+  },
+  coffeemonLevelSmall: {
+    fontSize: 11,
+    color: '#666',
+    marginBottom: 6,
+  },
+  // BOTÕES DE PARTY
+  partyButton: {
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 6,
+    minWidth: 80,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  addButton: {
+    backgroundColor: '#2ecc71',
+  },
+  removeButton: {
+    backgroundColor: '#e74c3c',
+  },
+  buttonText: {
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: 'bold',
+  },
+  // BOTÕES PRINCIPAIS
   findMatchButton: {
     width: '100%',
     maxWidth: 300,
@@ -255,12 +590,6 @@ const styles = StyleSheet.create({
     borderColor: '#e0e0e0',
     width: '100%',
     maxWidth: 400,
-  },
-  sectionTitle: {
-    fontWeight: 'bold',
-    fontSize: 16,
-    marginBottom: 8,
-    color: '#333',
   },
   logText: {
     fontSize: 13,
