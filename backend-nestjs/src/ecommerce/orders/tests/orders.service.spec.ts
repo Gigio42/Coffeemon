@@ -4,7 +4,7 @@ import { In } from 'typeorm';
 import { Product } from '../../products/entities/product.entity';
 import { CreateOrderDto } from '../dto/create-order.dto';
 import { Order } from '../entities/order.entity';
-import { OrderItem } from '../entities/orderitem.entity';
+import { OrderItem } from '../entities/order_item.entity';
 import { OrdersService } from '../orders.service';
 
 describe('OrdersService', () => {

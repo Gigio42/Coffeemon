@@ -1,8 +1,6 @@
-import { IsNumber, IsArray, ValidateNested, IsNotEmpty, IsPositive, Min } from 'class-validator';
-import { Type } from 'class-transformer';
-import { ApiProperty } from '@nestjs/swagger';
+import { IsNotEmpty, IsNumber, Min } from "class-validator";
 
-export class CreateOrderDto {
+export class AddItemToShoppingCartDto {
   @IsNotEmpty({ message: 'O ID do produto é obrigatório'})
   @IsNumber({}, { message: 'O ID do produto deve ser um número válido'})
   @Min(1, {message: 'O ID do produto deve ser um número maior que 0'})
@@ -12,12 +10,4 @@ export class CreateOrderDto {
   @IsNumber({}, { message: 'A quantidade do produto deve ser um número válido'})
   @Min(1, {message: 'A quantidade do produto deve ser um número maior que 0'})
   quantity: number;
-}
-
-export class CreateOrderItemDto {
-  @IsNumber({}, { message: 'Quantidade é obrigatória' })
-  quantity: number;
-
-  @IsNumber({}, { message: 'Produto é obrigatório' })
-  productId: number;
 }
