@@ -428,15 +428,6 @@ export default function MatchmakingScreen({
           <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
             <Text style={styles.logoutButtonText}>Logout</Text>
           </TouchableOpacity>
-          
-          <View style={styles.logContainer}>
-            <Text style={styles.sectionTitle}>Log</Text>
-            <ScrollView style={{ maxHeight: 150 }} showsVerticalScrollIndicator={false}>
-              {log.map((msg, idx) => (
-                <Text key={idx} style={styles.logText}>{msg}</Text>
-              ))}
-            </ScrollView>
-          </View>
         </View>
       </ScrollView>
 
@@ -512,14 +503,13 @@ const styles = StyleSheet.create({
   },
   teamGrid: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
     justifyContent: 'space-between',
   },
   coffeemonCard: {
-    width: '48%',
+    width: '31%',
     backgroundColor: '#f8f9fa',
     borderRadius: 12,
-    padding: 12,
+    padding: 8,
     marginBottom: 12,
     alignItems: 'center',
     borderWidth: 2,
@@ -641,21 +631,5 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 14,
     fontWeight: 'bold',
-  },
-  logContainer: {
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    padding: 15,
-    marginVertical: 16,
-    maxHeight: 200,
-    borderWidth: 1,
-    borderColor: '#e0e0e0',
-    width: '100%',
-    maxWidth: 400,
-  },
-  logText: {
-    fontSize: 13,
-    color: '#444',
-    marginBottom: 4,
   },
 });
