@@ -11,22 +11,11 @@ export class OrderItem {
   quantity: number;
 
   @Column()
-  price: number;
-
-  @Column()
-  total: number;
-
-  @Column()
-  orderId: number;
-
-  @Column()
-  productId: number;
+  unit_price: number;
 
   @ManyToOne(() => Order, (order) => order.orderItem)
-  @JoinColumn({ name: 'orderId' })
   order: Order;
 
   @ManyToOne(() => Product, (product) => product.items)
-  @JoinColumn({ name: 'productId' })
   product: Product;
 }
