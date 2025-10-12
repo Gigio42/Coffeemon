@@ -2,10 +2,10 @@ import { NotFoundException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { AddItemToShoppingCartDto } from '../dto/add-item-to-shopping_cart.dto';
 import { Order } from '../../orders/entities/order.entity';
 import { OrderItem } from '../../orders/entities/order_item.entity';
 import { ProductsService } from '../../products/products.service';
+import { AddItemToShoppingCartDto } from '../dto/add-item-to-shopping_cart.dto';
 import { ShoppingCartService } from '../shopping_cart.service';
 
 describe('ShoppingCartService', () => {
@@ -54,8 +54,8 @@ describe('ShoppingCartService', () => {
 
   describe('addItemToShoppingCart', () => {
     const userId = 1;
-    const addItemDto: AddItemToShoppingCartDto = { productId: 1, quantity: 2 };
     const product = { id: 1, name: 'Test Product', price: 10 };
+    const addItemDto: AddItemToShoppingCartDto = { productId: product.id, quantity: 2 };
 
     it('should add a new item to an empty cart', async () => {
       const order = { id: 1, orderItem: [] };
@@ -86,6 +86,27 @@ describe('ShoppingCartService', () => {
         quantity: addItemDto.quantity,
       });
       expect(result.message).toEqual('Quantidade do produto atualizada');
+    });
+
+    it('should add a new product to a cart that already has other items', async () => {
+      const newItemDto: AddItemToShoppingCartDto = { productId: 2, quantity: 1 };
+      const newProduct = { id: 2, name: 'New Product', price: 20 };
+      const existingItem = { id: 10, product: { id: 1 } }; // Item diferente já no carrinho
+      const order = { id: 1, orderItem: [existingItem] };
+
+      jest.spyOn(service, 'getOrCreateShoppingCart').mockResolvedValue(order as any);
+      mockProductsService.findProductById.mockResolvedValue(newProduct);
+      mockOrderItemRepository.create.mockImplementation((dto) => dto);
+
+      const result = await service.addItemToShoppingCart(userId, newItemDto);
+
+      expect(mockOrderItemRepository.save).toHaveBeenCalledWith({
+        product: newProduct,
+        order,
+        quantity: newItemDto.quantity,
+        unit_price: newProduct.price,
+      });
+      expect(result.message).toEqual('Produto adicionado ao carrinho');
     });
   });
 
@@ -162,6 +183,42 @@ describe('ShoppingCartService', () => {
       mockOrderItemRepository.findOne.mockResolvedValue(null);
 
       await expect(service.remove(1, 99)).rejects.toThrow(NotFoundException);
+    });
+  });
+
+  describe('getOrCreateShoppingCart', () => {
+    it('should return an existing cart', async () => {
+      const existingCart = { id: 1 };
+      mockShoppingCartRepository.findOne.mockResolvedValue(existingCart);
+      const cart = await service.getOrCreateShoppingCart(1);
+      expect(mockShoppingCartRepository.findOne).toHaveBeenCalled();
+      expect(mockShoppingCartRepository.save).not.toHaveBeenCalled();
+      expect(cart).toEqual(existingCart);
+    });
+
+    it('should create a new cart if none exists', async () => {
+      mockShoppingCartRepository.findOne.mockResolvedValue(null);
+      const newCart = { id: 2 };
+      mockShoppingCartRepository.create.mockReturnValue({});
+      mockShoppingCartRepository.save.mockResolvedValue(newCart);
+      const cart = await service.getOrCreateShoppingCart(1);
+      expect(mockShoppingCartRepository.findOne).toHaveBeenCalled();
+      expect(mockShoppingCartRepository.save).toHaveBeenCalled();
+      expect(cart).toEqual(newCart);
+    });
+  });
+
+  describe('findShoppingCartByUserId', () => {
+    it('should find and return a shopping cart', async () => {
+      const existingCart = { id: 1 };
+      mockShoppingCartRepository.findOne.mockResolvedValue(existingCart);
+      const cart = await service.findShoppingCartByUserId(1);
+      expect(cart).toEqual(existingCart);
+    });
+
+    it('should throw NotFoundException if cart is not found', async () => {
+      mockShoppingCartRepository.findOne.mockResolvedValue(null);
+      await expect(service.findShoppingCartByUserId(1)).rejects.toThrow(NotFoundException);
     });
   });
 });

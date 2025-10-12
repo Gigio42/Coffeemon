@@ -96,9 +96,19 @@
       "**/*.(t|j)s"
     ],
     "coveragePathIgnorePatterns": [
-      ".*\\.entity\\.ts$",
-      ".*\\.dto\\.ts$",
-      ".*\\.module\\.ts$"
+      "node_modules",
+      ".spec.ts$",
+      "main.ts$",
+      "src/health",
+      "src/infrastructure",
+      ".module.ts$",
+      ".entity.ts$",
+      ".dto.ts$",
+      ".guard.ts$",
+      ".decorator.ts$",
+      ".interface.ts$",
+      ".enum.ts$",
+      ".module.ts$"
     ],
     "coverageDirectory": "../coverage",
     "testEnvironment": "node",

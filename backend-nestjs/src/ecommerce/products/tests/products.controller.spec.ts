@@ -42,18 +42,29 @@ describe('ProductsController', () => {
   });
 
   describe('create', () => {
-    it('should create a new product', async () => {
-      const createProductDto: CreateProductDto = {
-        name: 'Café Expresso',
-        description: 'Um café forte e encorpado.',
-        price: 5.5,
-      };
-      const createdProduct = { id: 1, ...createProductDto };
-      mockProductsService.create.mockResolvedValue(createdProduct);
+    const createProductDto: CreateProductDto = {
+      name: 'Café Expresso',
+      description: 'Um café forte e encorpado.',
+      price: 5.5,
+    };
+
+    it('should create a new product without an image', async () => {
+      mockProductsService.create.mockResolvedValue({ id: 1, ...createProductDto });
       const result = await controller.create(createProductDto, undefined as any);
 
       expect(mockProductsService.create).toHaveBeenCalledWith(createProductDto);
-      expect(result).toEqual(createdProduct);
+      expect(result).toEqual({ id: 1, ...createProductDto });
+    });
+
+    it('should create a new product with an image', async () => {
+      const mockFile = { path: 'uploads/products/image.jpg' } as any;
+      const dtoWithImage = { ...createProductDto, image: mockFile.path };
+
+      mockProductsService.create.mockResolvedValue({ id: 1, ...dtoWithImage });
+      const result = await controller.create(createProductDto, mockFile);
+
+      expect(mockProductsService.create).toHaveBeenCalledWith(dtoWithImage);
+      expect(result).toEqual({ id: 1, ...dtoWithImage });
     });
   });
 
@@ -79,13 +90,26 @@ describe('ProductsController', () => {
   });
 
   describe('update', () => {
-    it('should update a product', async () => {
-      const productId = '1';
-      const updateProductDto: UpdateProductDto = { price: 6.0 };
+    const productId = '1';
+    const updateProductDto: UpdateProductDto = { price: 6.0 };
+
+    it('should update a product without an image', async () => {
       const updateResult = { message: 'Produto atualizado com sucesso' };
       mockProductsService.update.mockResolvedValue(updateResult);
       const result = await controller.update(productId, updateProductDto, undefined as any);
       expect(mockProductsService.update).toHaveBeenCalledWith(1, updateProductDto);
+      expect(result).toEqual(updateResult);
+    });
+
+    it('should update a product with an image', async () => {
+      const mockFile = { path: 'uploads/products/new-image.jpg' } as any;
+      const dtoWithImage = { ...updateProductDto, image: mockFile.path };
+      const updateResult = { message: 'Produto atualizado com sucesso' };
+
+      mockProductsService.update.mockResolvedValue(updateResult);
+      const result = await controller.update(productId, updateProductDto, mockFile);
+
+      expect(mockProductsService.update).toHaveBeenCalledWith(1, dtoWithImage);
       expect(result).toEqual(updateResult);
     });
   });
