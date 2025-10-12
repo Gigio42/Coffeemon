@@ -1,10 +1,11 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Query, UseGuards } from '@nestjs/common';
-import { ReportsService } from './reports.service';
-import { RolesGuard } from 'src/auth/guards/roles.guard';
-import { AuthGuard } from 'src/auth/guards/auth.guard';
-import { Roles } from 'src/auth/decorators/roles.decorator';
+import {
+  Controller,
+  Get,
+  Param,
+  Query
+} from '@nestjs/common';
 import { GetUser } from 'src/auth/decorators/get-user.decorator';
-import { UserRole } from '../users/entities/user.entity';
+import { ReportsService } from './reports.service';
 
 @Controller('reports')
 export class ReportsController {
@@ -16,7 +17,7 @@ export class ReportsController {
   getOrdersPerHour(@Query('intervalo') date: string) {
     return this.reportsService.getOrdersPerHour(date);
   }
-  
+
   @Get('clients')
   // @UseGuards(AuthGuard, RolesGuard)
   // @Roles(UserRole.ADMIN, UserRole.USER)
@@ -28,7 +29,7 @@ export class ReportsController {
   // @UseGuards(AuthGuard, RolesGuard)
   // @Roles(UserRole.ADMIN, UserRole.USER)
   getCardsInfo() {
-    return this.reportsService.getCardsInfo()
+    return this.reportsService.getCardsInfo();
   }
 
   @Get('total-by-store')
@@ -41,7 +42,7 @@ export class ReportsController {
   @Get(':orderId/order')
   // @UseGuards(AuthGuard, RolesGuard)
   // @Roles(UserRole.ADMIN, UserRole.USER)
-  getDetailsByOrderId(@Param('orderId') orderId: string, @GetUser('id') currentUserId: number) { 
+  getDetailsByOrderId(@Param('orderId') orderId: string, @GetUser('id') currentUserId: number) {
     return this.reportsService.getDetailsByOrderId(+orderId);
   }
 
@@ -49,7 +50,7 @@ export class ReportsController {
   // @UseGuards(AuthGuard, RolesGuard)
   // @Roles(UserRole.ADMIN, UserRole.USER)
   getFinishedOrders() {
-    return this.reportsService.getFinishedOrders()
+    return this.reportsService.getFinishedOrders();
   }
 
   @Get('/top-products')

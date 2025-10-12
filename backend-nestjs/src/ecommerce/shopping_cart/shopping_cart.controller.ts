@@ -1,9 +1,9 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Put } from '@nestjs/common';
-import { ShoppingCartService } from './shopping_cart.service';
+import { Body, Controller, Delete, Get, Param, Post, Put, UseGuards } from '@nestjs/common';
+import { GetUser } from 'src/auth/decorators/get-user.decorator';
+import { AuthGuard } from 'src/auth/guards/auth.guard';
 import { AddItemToShoppingCartDto } from './dto/add-item-to-shopping_cart.dto';
 import { UpdateShoppingCartDto } from './dto/update-shopping_cart.dto';
-import { AuthGuard } from 'src/auth/guards/auth.guard';
-import { GetUser } from 'src/auth/decorators/get-user.decorator';
+import { ShoppingCartService } from './shopping_cart.service';
 
 @UseGuards(AuthGuard)
 @Controller('shopping-cart')
@@ -11,7 +11,10 @@ export class ShoppingCartController {
   constructor(private readonly shoppingCartService: ShoppingCartService) {}
 
   @Post()
-  addItemToShoppingCart(@GetUser('id') userId: number, @Body() createShoppingCartDto: AddItemToShoppingCartDto) {
+  addItemToShoppingCart(
+    @GetUser('id') userId: number,
+    @Body() createShoppingCartDto: AddItemToShoppingCartDto
+  ) {
     return this.shoppingCartService.addItemToShoppingCart(userId, createShoppingCartDto);
   }
 
@@ -21,7 +24,10 @@ export class ShoppingCartController {
   }
 
   @Put()
-  updateQuantity(@GetUser('id') userId: number, @Body() updateShoppingCartDto: UpdateShoppingCartDto) {
+  updateQuantity(
+    @GetUser('id') userId: number,
+    @Body() updateShoppingCartDto: UpdateShoppingCartDto
+  ) {
     return this.shoppingCartService.updateQuantity(userId, updateShoppingCartDto);
   }
 

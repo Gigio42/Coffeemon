@@ -1,12 +1,10 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { OrderStatus } from 'src/Shared/enums/order_status';
+import { Repository } from 'typeorm';
 import { Product } from '../products/entities/product.entity';
-import { In, Repository } from 'typeorm';
-import { CreateOrderDto } from './dto/create-order.dto';
 import { Order } from './entities/order.entity';
 import { OrderItem } from './entities/order_item.entity';
-import { OrderStatus } from 'src/Shared/enums/order_status';
-import { NotFoundError } from 'rxjs';
 
 @Injectable()
 export class OrdersService {
@@ -23,41 +21,39 @@ export class OrdersService {
   findAll(userId: number) {
     return this.ordersRepository.find({
       where: {
-        user: { id: userId}
+        user: { id: userId },
       },
     });
   }
 
   findOne(userId: number, orderId: number) {
     return this.ordersRepository.findOne({
-      where: { 
+      where: {
         id: orderId,
-        user: { id: userId}
+        user: { id: userId },
       },
-      relations: ['orderItem', 'orderItem.product']
+      relations: ['orderItem', 'orderItem.product'],
     });
   }
 
   async checkout(userId: number) {
     const shoppingCart = await this.ordersRepository.findOne({
       where: {
-        user: { id: userId},
-        status: OrderStatus.SHOPPING_CART
-      }
+        user: { id: userId },
+        status: OrderStatus.SHOPPING_CART,
+      },
     });
 
-    if (!shoppingCart) throw new NotFoundException("Carrinho não encontrado");
+    if (!shoppingCart) throw new NotFoundException('Carrinho não encontrado');
 
     try {
-      await this.ordersRepository.update(shoppingCart.id, { status: OrderStatus.FINISHED});
+      await this.ordersRepository.update(shoppingCart.id, { status: OrderStatus.FINISHED });
 
-      return "Pedido finalizado";
-    } catch (error) { 
-      return "Erro ao tentar atualizar o status do pedido. \n Detalhes do erro: " + error
+      return 'Pedido finalizado';
+    } catch (error) {
+      return 'Erro ao tentar atualizar o status do pedido. \n Detalhes do erro: ' + error;
     }
   }
 
   /* ### Funções Auxiliares ### */
-
-  
 }

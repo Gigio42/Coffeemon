@@ -1,12 +1,12 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { OrderStatus } from 'src/Shared/enums/order_status';
+import { Repository } from 'typeorm';
+import { Order } from '../orders/entities/order.entity';
+import { OrderItem } from '../orders/entities/order_item.entity';
+import { ProductsService } from '../products/products.service';
 import { AddItemToShoppingCartDto } from './dto/add-item-to-shopping_cart.dto';
 import { UpdateShoppingCartDto } from './dto/update-shopping_cart.dto';
-import { InjectRepository } from '@nestjs/typeorm';
-import { ProductsService } from '../products/products.service';
-import { Order } from '../orders/entities/order.entity';
-import { Repository } from 'typeorm';
-import { OrderStatus } from 'src/Shared/enums/order_status';
-import { OrderItem } from '../orders/entities/order_item.entity';
 
 @Injectable()
 export class ShoppingCartService {
@@ -30,29 +30,33 @@ export class ShoppingCartService {
           order: order,
           product: product,
           quantity: addItemToShoppingCartDto.quantity,
-          unit_price: product.price
+          unit_price: product.price,
         })
-      )
-      message = "Produto adicionado ao carrinho";
+      );
+      message = 'Produto adicionado ao carrinho';
     } else {
-      const productExistInCart = order.orderItem.find((productInCart) => productInCart.product.id === product.id);
+      const productExistInCart = order.orderItem.find(
+        (productInCart) => productInCart.product.id === product.id
+      );
 
       if (productExistInCart) {
-        await this.orderItemRepository.update(productExistInCart.id, { quantity: addItemToShoppingCartDto.quantity});
-        message = "Quantidade do produto atualizada";
+        await this.orderItemRepository.update(productExistInCart.id, {
+          quantity: addItemToShoppingCartDto.quantity,
+        });
+        message = 'Quantidade do produto atualizada';
       } else {
         await this.orderItemRepository.save(
           this.orderItemRepository.create({
             product,
             order,
             quantity: addItemToShoppingCartDto.quantity,
-            unit_price: product.price
+            unit_price: product.price,
           })
-        )
-        message = "Produto adicionado ao carrinho";
+        );
+        message = 'Produto adicionado ao carrinho';
       }
     }
-    return {message};
+    return { message };
   }
 
   async findOne(userId: number) {
@@ -60,11 +64,11 @@ export class ShoppingCartService {
       .createQueryBuilder('orders')
       .innerJoinAndSelect('orders.orderItem', 'orderItem')
       .innerJoinAndSelect('orderItem.product', 'products')
-      .where('orders.status = :status', {status: OrderStatus.SHOPPING_CART})
-      .andWhere('orders.userId = userId', { userId })
-      .getMany()
+      .where('orders.status = :status', { status: OrderStatus.SHOPPING_CART })
+      .andWhere('orders.user.id = :userId', { userId })
+      .getMany();
 
-    return (shoppingCart.length <= 0) ? "Carrinho vázio": shoppingCart;
+    return shoppingCart.length <= 0 ? 'Carrinho vazio' : shoppingCart;
   }
 
   async updateQuantity(userId: number, updateShoppingCartDto: UpdateShoppingCartDto) {
@@ -74,15 +78,18 @@ export class ShoppingCartService {
     const item = await this.orderItemRepository.findOne({
       where: {
         order: shoppingCart,
-        product: { id: productId}
-      }
-    })
+        product: { id: productId },
+      },
+    });
 
-    if (!item) throw new NotFoundException(`Produto com o ID ${productId} não encontrado no carrinho do usuário`);
+    if (!item)
+      throw new NotFoundException(
+        `Produto com o ID ${productId} não encontrado no carrinho do usuário`
+      );
 
-    await this.orderItemRepository.update(item.id, { quantity: quantity});
+    await this.orderItemRepository.update(item.id, { quantity: quantity });
 
-    return { message: "Quantidade do produto alterada"};
+    return { message: 'Quantidade do produto alterada' };
   }
 
   async remove(userId: number, productId: number) {
@@ -91,15 +98,18 @@ export class ShoppingCartService {
     const item = await this.orderItemRepository.findOne({
       where: {
         order: shoppingCart,
-        product: {id: productId}
-      }
+        product: { id: productId },
+      },
     });
 
-    if (!item) throw new NotFoundException(`Produto com o ID ${productId} não encontrado no carrinho do usuário`);
-    
+    if (!item)
+      throw new NotFoundException(
+        `Produto com o ID ${productId} não encontrado no carrinho do usuário`
+      );
+
     await this.orderItemRepository.remove(item);
 
-    return { message: "Produto removido do carrinho"};
+    return { message: 'Produto removido do carrinho' };
   }
 
   /* ### Funções Auxiliares ### */
@@ -107,20 +117,20 @@ export class ShoppingCartService {
   async getOrCreateShoppingCart(userId: number) {
     let order = await this.shoppingCartRepository.findOne({
       where: {
-        user: { id: userId},
-        status: OrderStatus.SHOPPING_CART
+        user: { id: userId },
+        status: OrderStatus.SHOPPING_CART,
       },
-      relations: ['orderItem', 'orderItem.product']
-    })
+      relations: ['orderItem', 'orderItem.product'],
+    });
 
     if (!order) {
       order = await this.shoppingCartRepository.save(
-          this.shoppingCartRepository.create({
-          user: { id: userId},
-          status: OrderStatus.SHOPPING_CART
-        }),
+        this.shoppingCartRepository.create({
+          user: { id: userId },
+          status: OrderStatus.SHOPPING_CART,
+        })
       );
-    };
+    }
 
     return order;
   }
@@ -128,12 +138,13 @@ export class ShoppingCartService {
   async findShoppingCartByUserId(userId: number) {
     const shoppingCartExist = await this.shoppingCartRepository.findOne({
       where: {
-        user: { id: userId},
-        status: OrderStatus.SHOPPING_CART
-      }
-    })
+        user: { id: userId },
+        status: OrderStatus.SHOPPING_CART,
+      },
+    });
 
-    if (!shoppingCartExist) throw new NotFoundException(`Nenhum carrinho encontrado para este usuário`);
+    if (!shoppingCartExist)
+      throw new NotFoundException(`Nenhum carrinho encontrado para este usuário`);
 
     return shoppingCartExist;
   }

@@ -1,10 +1,10 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { ProductsController } from '../products.controller';
-import { ProductsService } from '../products.service';
-import { CreateProductDto } from '../dto/create-product.dto';
-import { UpdateProductDto } from '../dto/update-product.dto';
 import { AuthGuard } from 'src/auth/guards/auth.guard';
 import { RolesGuard } from 'src/auth/guards/roles.guard';
+import { CreateProductDto } from '../dto/create-product.dto';
+import { UpdateProductDto } from '../dto/update-product.dto';
+import { ProductsController } from '../products.controller';
+import { ProductsService } from '../products.service';
 
 describe('ProductsController', () => {
   let controller: ProductsController;
@@ -34,7 +34,6 @@ describe('ProductsController', () => {
       .compile();
 
     controller = module.get<ProductsController>(ProductsController);
-
     jest.clearAllMocks();
   });
 
@@ -46,12 +45,12 @@ describe('ProductsController', () => {
     it('should create a new product', async () => {
       const createProductDto: CreateProductDto = {
         name: 'Café Expresso',
+        description: 'Um café forte e encorpado.',
         price: 5.5,
       };
       const createdProduct = { id: 1, ...createProductDto };
       mockProductsService.create.mockResolvedValue(createdProduct);
-
-      const result = await controller.create(createProductDto);
+      const result = await controller.create(createProductDto, undefined as any);
 
       expect(mockProductsService.create).toHaveBeenCalledWith(createProductDto);
       expect(result).toEqual(createdProduct);
@@ -60,14 +59,9 @@ describe('ProductsController', () => {
 
   describe('findAll', () => {
     it('should return an array of products', async () => {
-      const products = [
-        { id: 1, name: 'Café Expresso', price: 5.5 },
-        { id: 2, name: 'Cappuccino', price: 7.25 },
-      ];
+      const products = [{ id: 1, name: 'Café Expresso', price: 5.5 }];
       mockProductsService.findAll.mockResolvedValue(products);
-
       const result = await controller.findAll();
-
       expect(mockProductsService.findAll).toHaveBeenCalled();
       expect(result).toEqual(products);
     });
@@ -78,9 +72,7 @@ describe('ProductsController', () => {
       const productId = '1';
       const product = { id: 1, name: 'Café Expresso', price: 5.5 };
       mockProductsService.findOne.mockResolvedValue(product);
-
       const result = await controller.findOne(productId);
-
       expect(mockProductsService.findOne).toHaveBeenCalledWith(1);
       expect(result).toEqual(product);
     });
@@ -90,11 +82,9 @@ describe('ProductsController', () => {
     it('should update a product', async () => {
       const productId = '1';
       const updateProductDto: UpdateProductDto = { price: 6.0 };
-      const updateResult = { affected: 1 };
+      const updateResult = { message: 'Produto atualizado com sucesso' };
       mockProductsService.update.mockResolvedValue(updateResult);
-
-      const result = await controller.update(productId, updateProductDto);
-
+      const result = await controller.update(productId, updateProductDto, undefined as any);
       expect(mockProductsService.update).toHaveBeenCalledWith(1, updateProductDto);
       expect(result).toEqual(updateResult);
     });
@@ -103,11 +93,9 @@ describe('ProductsController', () => {
   describe('remove', () => {
     it('should remove a product', async () => {
       const productId = '1';
-      const deleteResult = { affected: 1 };
+      const deleteResult = { message: 'Produto removido com sucesso' };
       mockProductsService.remove.mockResolvedValue(deleteResult);
-
       const result = await controller.remove(productId);
-
       expect(mockProductsService.remove).toHaveBeenCalledWith(1);
       expect(result).toEqual(deleteResult);
     });

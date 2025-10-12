@@ -1,5 +1,7 @@
+import { ConflictException, NotFoundException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 import { CreateProductDto } from '../dto/create-product.dto';
 import { UpdateProductDto } from '../dto/update-product.dto';
 import { Product } from '../entities/product.entity';
@@ -7,14 +9,15 @@ import { ProductsService } from '../products.service';
 
 describe('ProductsService', () => {
   let service: ProductsService;
+  let repository: Repository<Product>;
 
   const mockRepository = {
     create: jest.fn(),
     save: jest.fn(),
     find: jest.fn(),
     findOneBy: jest.fn(),
-    update: jest.fn(),
-    delete: jest.fn(),
+    merge: jest.fn(),
+    softDelete: jest.fn(),
   };
 
   beforeEach(async () => {
@@ -29,7 +32,7 @@ describe('ProductsService', () => {
     }).compile();
 
     service = module.get<ProductsService>(ProductsService);
-
+    repository = module.get<Repository<Product>>(getRepositoryToken(Product));
     jest.clearAllMocks();
   });
 
@@ -38,105 +41,100 @@ describe('ProductsService', () => {
   });
 
   describe('create', () => {
-    it('should create a new product', async () => {
-      const createProductDto: CreateProductDto = {
-        name: 'Test Product',
-        price: 100,
-      };
-      const newProduct = { id: 1, ...createProductDto };
+    const createProductDto: CreateProductDto = {
+      name: 'Café',
+      description: 'Café preto',
+      price: 5,
+    };
 
-      mockRepository.create.mockReturnValue(newProduct);
-      mockRepository.save.mockResolvedValue(newProduct);
-
+    it('should create a product', async () => {
+      mockRepository.findOneBy.mockResolvedValue(null);
+      mockRepository.create.mockReturnValue(createProductDto);
       const result = await service.create(createProductDto);
-
       expect(mockRepository.create).toHaveBeenCalledWith(createProductDto);
-      expect(mockRepository.save).toHaveBeenCalledWith(newProduct);
-      expect(result).toEqual(newProduct);
+      expect(mockRepository.save).toHaveBeenCalledWith(createProductDto);
+      expect(result).toEqual({ message: 'Produto criado com sucesso' });
     });
 
-    it('should throw a ConflictException if product with the same name already exists', async () => {
-      const createProductDto: CreateProductDto = {
-        name: 'Existing Product',
-        price: 100,
-      };
-
-      mockRepository.findOneBy.mockResolvedValue({ id: 1, name: 'Existing Product' });
-
-      await expect(service.create(createProductDto)).rejects.toThrow(
-        'Product with this name already exists'
-      );
-
-      expect(mockRepository.findOneBy).toHaveBeenCalledWith({ name: createProductDto.name });
-
-      expect(mockRepository.create).not.toHaveBeenCalled();
-      expect(mockRepository.save).not.toHaveBeenCalled();
-    });
-  });
-
-  describe('update', () => {
-    it('should update a product', async () => {
-      const productId = 1;
-      const updateProductDto: UpdateProductDto = { price: 150 };
-      const updateResult = { affected: 1 };
-
-      mockRepository.update.mockResolvedValue(updateResult);
-
-      const result = await service.update(productId, updateProductDto);
-
-      expect(mockRepository.update).toHaveBeenCalledWith(productId, updateProductDto);
-      expect(result).toEqual(updateResult);
+    it('should throw a conflict exception if product already exists', async () => {
+      mockRepository.findOneBy.mockResolvedValue(createProductDto);
+      await expect(service.create(createProductDto)).rejects.toThrow(ConflictException);
     });
   });
 
   describe('findAll', () => {
-    it('should return an array of products', async () => {
-      const products = [
-        { id: 1, name: 'Product 1', price: 100 },
-        { id: 2, name: 'Product 2', price: 200 },
-      ];
+    it('should return all products', async () => {
+      const products = [{ id: 1, name: 'Café', description: 'Café preto', price: 5 }];
       mockRepository.find.mockResolvedValue(products);
-
       const result = await service.findAll();
+      expect(result).toEqual({ products });
+    });
 
-      expect(mockRepository.find).toHaveBeenCalled();
-      expect(result).toEqual(products);
+    it('should return a message if no products are found', async () => {
+      mockRepository.find.mockResolvedValue([]);
+      const result = await service.findAll();
+      expect(result).toEqual({ message: 'Nenhum produto encontrado' });
     });
   });
 
   describe('findOne', () => {
-    it('should return a product by id', async () => {
-      const productId = 1;
-      const product = { id: productId, name: 'Test Product', price: 100 };
+    it('should return a product by calling findProductById', async () => {
+      const product = { id: 1, name: 'Café' };
+
+      const findByIdSpy = jest.spyOn(service, 'findProductById').mockResolvedValue(product as any);
+      const result = await service.findOne(1);
+      expect(findByIdSpy).toHaveBeenCalledWith(1);
+      expect(result).toEqual(product);
+    });
+  });
+
+  describe('findProductById', () => {
+    it('should return a product when found', async () => {
+      const product = { id: 1, name: 'Café' };
       mockRepository.findOneBy.mockResolvedValue(product);
-
-      const result = await service.findOne(productId);
-
-      expect(mockRepository.findOneBy).toHaveBeenCalledWith({ id: productId });
+      const result = await service.findProductById(1);
+      expect(mockRepository.findOneBy).toHaveBeenCalledWith({ id: 1 });
       expect(result).toEqual(product);
     });
 
-    it('should return null if product not found', async () => {
-      const productId = 999;
+    it('should throw NotFoundException if product does not exist', async () => {
       mockRepository.findOneBy.mockResolvedValue(null);
+      await expect(service.findProductById(999)).rejects.toThrow(NotFoundException);
+    });
+  });
 
-      const result = await service.findOne(productId);
+  describe('update', () => {
+    const updateProductDto: UpdateProductDto = { name: 'Café com Leite', price: 6 };
+    const product = { id: 1, name: 'Café', description: 'Café preto', price: 5 };
 
-      expect(mockRepository.findOneBy).toHaveBeenCalledWith({ id: productId });
-      expect(result).toBeNull();
+    it('should update a product', async () => {
+      const findByIdSpy = jest.spyOn(service, 'findProductById').mockResolvedValue(product as any);
+      mockRepository.merge.mockReturnValue({ ...product, ...updateProductDto });
+      const result = await service.update(1, updateProductDto);
+      expect(findByIdSpy).toHaveBeenCalledWith(1);
+      expect(mockRepository.save).toHaveBeenCalledWith({ ...product, ...updateProductDto });
+      expect(result).toEqual({ message: 'Produto atualizado com sucesso' });
+    });
+
+    it('should throw NotFoundException if product to update is not found', async () => {
+      jest.spyOn(service, 'findProductById').mockRejectedValue(new NotFoundException());
+      await expect(service.update(999, updateProductDto)).rejects.toThrow(NotFoundException);
     });
   });
 
   describe('remove', () => {
+    const product = { id: 1, name: 'Café', description: 'Café preto', price: 5 };
+
     it('should remove a product', async () => {
-      const productId = 1;
-      const deleteResult = { affected: 1 };
-      mockRepository.delete.mockResolvedValue(deleteResult);
+      jest.spyOn(service, 'findProductById').mockResolvedValue(product as any);
+      const result = await service.remove(1);
+      expect(mockRepository.softDelete).toHaveBeenCalledWith(product.id);
+      expect(result).toEqual({ message: 'Produto removido com sucesso' });
+    });
 
-      const result = await service.remove(productId);
-
-      expect(mockRepository.delete).toHaveBeenCalledWith(productId);
-      expect(result).toEqual(deleteResult);
+    it('should throw NotFoundException if product to remove is not found', async () => {
+      jest.spyOn(service, 'findProductById').mockRejectedValue(new NotFoundException());
+      await expect(service.remove(999)).rejects.toThrow(NotFoundException);
     });
   });
 });

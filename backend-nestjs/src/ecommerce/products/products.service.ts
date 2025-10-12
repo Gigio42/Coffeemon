@@ -1,10 +1,9 @@
 import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { IsNull, Repository } from 'typeorm';
+import { Repository } from 'typeorm';
 import { CreateProductDto } from './dto/create-product.dto';
-import { Product } from './entities/product.entity';
 import { UpdateProductDto } from './dto/update-product.dto';
-
+import { Product } from './entities/product.entity';
 
 @Injectable()
 export class ProductsService {
@@ -20,16 +19,18 @@ export class ProductsService {
 
     const product = this.productsRepository.create(createProductDto);
     this.productsRepository.save(product);
-  
-    return { message: "Produto criado com sucesso"};
+
+    return { message: 'Produto criado com sucesso' };
   }
 
   async findAll() {
     const products = await this.productsRepository.find({
-      select: ['id', 'name', 'description', 'image', 'price']
+      select: ['id', 'name', 'description', 'image', 'price'],
     });
 
-    return (products.length === 0) ? { message: 'Nenhum produto encontrado'} : { products: products};
+    return products.length === 0
+      ? { message: 'Nenhum produto encontrado' }
+      : { products: products };
   }
 
   async findOne(productId: number) {
@@ -39,11 +40,11 @@ export class ProductsService {
   async update(productId: number, updateProductDto: UpdateProductDto) {
     const product = await this.findProductById(productId);
 
-    const productUpdated = this.productsRepository.merge(product, updateProductDto)
+    const productUpdated = this.productsRepository.merge(product, updateProductDto);
 
-    await this.productsRepository.save(productUpdated)
-  
-    return { message: "Produto atualizado com sucesso"}
+    await this.productsRepository.save(productUpdated);
+
+    return { message: 'Produto atualizado com sucesso' };
   }
 
   async remove(productId: number) {
@@ -51,14 +52,14 @@ export class ProductsService {
 
     await this.productsRepository.softDelete(product.id);
 
-    return { message: "Produto removido com sucesso"}
+    return { message: 'Produto removido com sucesso' };
   }
 
   /* ### Funções Auxiliares ### */
 
   async findProductById(productId: number) {
-    const product = await this.productsRepository.findOneBy({id: productId});
-    
+    const product = await this.productsRepository.findOneBy({ id: productId });
+
     if (!product) {
       throw new NotFoundException(`Nenhum produto encontrado com o ID ${productId}`);
     }
