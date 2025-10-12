@@ -6,18 +6,18 @@ import { Roles } from 'src/auth/decorators/roles.decorator';
 import { GetUser } from 'src/auth/decorators/get-user.decorator';
 import { UserRole } from '../users/entities/user.entity';
 
-@Controller('relatorios')
+@Controller('reports')
 export class ReportsController {
   constructor(private readonly reportsService: ReportsService) {}
 
-  @Get('/pedidos-por-hora')
+  @Get('/orders-by-hour')
   // @UseGuards(AuthGuard, RolesGuard)
   // @Roles(UserRole.ADMIN, UserRole.USER)
   getOrdersPerHour(@Query('intervalo') date: string) {
     return this.reportsService.getOrdersPerHour(date);
   }
   
-  @Get('clientes')
+  @Get('clients')
   // @UseGuards(AuthGuard, RolesGuard)
   // @Roles(UserRole.ADMIN, UserRole.USER)
   findAllClientsByStoreId() {
@@ -31,28 +31,28 @@ export class ReportsController {
     return this.reportsService.getCardsInfo()
   }
 
-  @Get('total-da-loja')
+  @Get('total-by-store')
   // @UseGuards(AuthGuard, RolesGuard)
   // @Roles(UserRole.ADMIN, UserRole.USER)
   countTotalAmount() {
     return this.reportsService.countTotalAmount();
   }
 
-  @Get(':orderId/pedido')
+  @Get(':orderId/order')
   // @UseGuards(AuthGuard, RolesGuard)
   // @Roles(UserRole.ADMIN, UserRole.USER)
   getDetailsByOrderId(@Param('orderId') orderId: string, @GetUser('id') currentUserId: number) { 
     return this.reportsService.getDetailsByOrderId(+orderId);
   }
 
-  @Get('/pedidos-finalizados')
+  @Get('/finished-orders')
   // @UseGuards(AuthGuard, RolesGuard)
   // @Roles(UserRole.ADMIN, UserRole.USER)
   getFinishedOrders() {
     return this.reportsService.getFinishedOrders()
   }
 
-  @Get('/top-produtos')
+  @Get('/top-products')
   // @UseGuards(AuthGuard, RolesGuard)
   // @Roles(UserRole.ADMIN, UserRole.USER)
   getTopProductsPerDay() {

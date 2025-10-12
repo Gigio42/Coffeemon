@@ -1,4 +1,4 @@
-import { Entity, Column, PrimaryGeneratedColumn, OneToMany, ManyToOne, JoinColumn } from 'typeorm';
+import { Entity, Column, PrimaryGeneratedColumn, OneToMany, ManyToOne, JoinColumn, UpdateDateColumn } from 'typeorm';
 import { OrderItem } from './order_item.entity';
 import { User } from '../../users/entities/user.entity';
 import { OrderStatus } from 'src/Shared/enums/order_status';
@@ -22,4 +22,7 @@ export class Order {
 
   @OneToMany(() => OrderItem, (orderItem) => orderItem.order)
   orderItem: OrderItem[];
+
+  @UpdateDateColumn()
+  updated_at: Date;
 }

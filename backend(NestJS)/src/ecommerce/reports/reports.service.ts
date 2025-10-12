@@ -2,8 +2,8 @@ import { BadRequestException, ForbiddenException, Injectable, NotFoundException 
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Order } from 'src/ecommerce/orders/entities/order.entity';
-// import { Status } from 'src/shared/enums/enum';
 import { User } from '../users/entities/user.entity';
+import { OrderStatus } from 'src/Shared/enums/order_status';
 
 @Injectable()
 export class ReportsService {
@@ -30,10 +30,10 @@ export class ReportsService {
 
     const results = await this.orderRepository
       .createQueryBuilder('order')
-      .select(`DATE_FORMAT(order.updated_at, '%H:00')`, 'hour')
+      .select(`strftime('%H:00', order.updated_at)`, 'hour')
       .addSelect('COUNT(*)', 'total')
-      .where('DATE(order.updated_at) = :date', { date })
-      .andWhere('order.status = :status', { status: "PAGO"})
+      .where("DATE(order.updated_at) = :date", { date })
+      .andWhere("order.status = :status", { status: OrderStatus.FINISHED })
       .groupBy('hour')
       .orderBy('hour', 'ASC')
       .getRawMany();
@@ -54,20 +54,17 @@ export class ReportsService {
       .select('MAX(subOrder.id)', 'lastOrderId')
       .from('order', 'subOrder')
       .where('subOrder.userId = user.id')
-      .andWhere('subOrder.status IN (:...statuses)', { statuses: ["FINALIZADO", "PAGO"] }); 
+      .andWhere('subOrder.status IN (:...statuses)', { statuses: [OrderStatus.FINISHED] }); 
 
     const users = await this.userRepository
       .createQueryBuilder('user')  
-      .innerJoin('user.order', 'order')
+      .innerJoin('user.orders', 'order')
       .where(`order.id = (${lastOrderSubQuery.getQuery()})`)
       .setParameters(lastOrderSubQuery.getParameters())
       .select([
         'user.id',
-        'user.document',
-        'user.company_name',
-        'user.user_name',
+        'user.username',
         'user.email',
-        'user.cellphone',
        ])
       .getMany();
       
@@ -95,7 +92,7 @@ export class ReportsService {
       .createQueryBuilder('order')
       .select('COUNT(DISTINCT(order.id))', 'totalOrders')
       .addSelect('SUM(order.total_amount)', 'totalAmount')
-      .andWhere('order.status = :status', { status: "PAGO"})
+      .andWhere('order.status = :status', { status: OrderStatus.FINISHED})
       .andWhere('DATE(order.updated_at) = :date', { date: dateFormated })
       .getRawOne();
     
@@ -106,43 +103,44 @@ export class ReportsService {
   }
 
   async getDetailsByOrderId(orderId: number) {
-    const orders = await this.orderRepository
+    const order = await this.orderRepository
       .createQueryBuilder('order')
       .innerJoinAndSelect('order.user', 'user')
-      .innerJoinAndSelect('order.order_product', 'orderProduct')
-      .innerJoinAndSelect('orderProduct.product', 'product')
+      .innerJoinAndSelect('order.orderItem', 'orderItem')
+      .innerJoinAndSelect('orderItem.product', 'product')
       .where('order.id = :orderId', { orderId })
-      .getMany();
+      .getOne();
 
-    
-    const formattedOrders = orders.map(order => ({
+    console.log(order);  
+    if (!order) {
+      throw new NotFoundException(`Pedido com ID ${orderId} não encontrado`);
+    }
+
+    return {
       id: order.id,
       status: order.status,
-      total_items: order.orderItem.reduce((sum, item) => sum + item.quantity, 0),
       total_amount: order.total_amount,
-      order_product: order.orderItem.map(product => ({
-        id: product.id,
-        quantity: product.quantity,
-        unit_price: product.unit_price,
-          product: {
-            id: product.product.id,
-            name: product.product.name,
-            description: product.product.description,
-            image: product.product.image,
+      order_product: order.orderItem.map(item => ({
+        id: item.id,
+        quantity: item.quantity,
+        unit_price: item.unit_price,
+        product: {
+          id: item.product.id,
+          name: item.product.name,
+          description: item.product.description,
+          image: item.product.image,
         },
       })),
-    }));
-
-    return formattedOrders;
+    };
   }
 
   async getFinishedOrders() {
     const orders = await this.orderRepository
       .createQueryBuilder('order')
       .innerJoinAndSelect('order.user', 'user')
-      .innerJoinAndSelect('order.order_product', 'orderProduct')
-      .innerJoinAndSelect('orderProduct.product', 'product')
-      .where('order.status = :status', { status: "PAGO"})
+      .innerJoinAndSelect('order.orderItem', 'orderItem')
+      .innerJoinAndSelect('orderItem.product', 'product')
+      .where('order.status = :status', { status: OrderStatus.FINISHED})
       .getMany();
 
     const formattedOrders = orders.map(order => ({
@@ -172,16 +170,16 @@ export class ReportsService {
 
     const topProducts = await this.orderRepository
       .createQueryBuilder('order')
-      .innerJoin('order.order_product', 'orderProduct')
-      .innerJoin('orderProduct.product', 'product')
+      .innerJoin('order.orderItem', 'orderItem')
+      .innerJoin('orderItem.product', 'product')
       .select('product.name', 'name')
       .addSelect('product.image', 'image')
       .addSelect('product.id', 'id')
       .addSelect('product.price', 'price')
-      .addSelect('SUM(orderProduct.quantity)', 'totalQuantitySold')
+      .addSelect('SUM(orderItem.quantity)', 'totalQuantitySold')
       .where('DATE(order.updated_at) = :date', { date: dateFormated })
       .andWhere('order.status IN (:...statuses)', {
-        statuses: ["PAGO", "FINALIZADO"],
+        statuses: [ OrderStatus.FINISHED],
       })
       .groupBy('product.id')
       .addGroupBy('product.name')
@@ -211,7 +209,7 @@ export class ReportsService {
     const totalOrders = await this.orderRepository
         .createQueryBuilder('order')
         .select('COUNT(DISTINCT order.id)', 'total')
-        .where('order.status = :status', { status: "PAGO" })
+        .where('order.status = :status', { status: OrderStatus.FINISHED })
         .andWhere('DATE(order.updated_at) = :date', { date: dateFormated })
         .getRawOne();
 
@@ -228,11 +226,11 @@ export class ReportsService {
       .innerJoin('store.store_association', 'store_association')
       .select('order.status')
       .where('DATE(order.created_at) = :date', { date: dateFormated })
-      .andWhere('order.status = :status', {status: "PAGO"})
+      .andWhere('order.status = :status', {status: OrderStatus.FINISHED})
       .getRawMany();
     
     const totalOrdersDelivereds = orders
-      .filter(order => order.order_status === "FINALIZADO").length;
+      .filter(order => order.order_status === OrderStatus.FINISHED).length;
     const result = (totalOrdersDelivereds * 100) / orders.length;
 
     return result;
@@ -246,7 +244,7 @@ export class ReportsService {
     const totalOrders = await this.orderRepository
         .createQueryBuilder('order')
         .select('SUM(order.total_amount)', 'total' )
-        .where('order.status = :status', { status: "PAGO" })
+        .where('order.status = :status', { status: OrderStatus.FINISHED })
         .andWhere('DATE(order.updated_at) = :date', { date: dateFormated })
         .getRawOne();
 

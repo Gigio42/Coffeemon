@@ -48,7 +48,13 @@ export class OrdersService {
 
     if (!shoppingCart) throw new NotFoundException("Carrinho não encontrado");
 
-    // await this.ordersRepository.update(shoppingCart.id, { status: OrderStatus.})
+    try {
+      await this.ordersRepository.update(shoppingCart.id, { status: OrderStatus.FINISHED});
+
+      return "Pedido finalizado";
+    } catch (error) { 
+      return "Erro ao tentar atualizar o status do pedido. \n Detalhes do erro: " + error
+    }
   }
 
   /* ### Funções Auxiliares ### */

@@ -9,6 +9,7 @@ import { HealthModule } from './health/health.module';
 import { GameModule } from './game/game.module';
 import { EcommerceModule } from './ecommerce/ecommerce.module';
 import { ShoppingCartModule } from './ecommerce/shopping_cart/shopping_cart.module';
+import { ReportsModule } from './ecommerce/reports/reports.module';
 
 @Module({
   imports: [
@@ -19,6 +20,7 @@ import { ShoppingCartModule } from './ecommerce/shopping_cart/shopping_cart.modu
     HealthModule,
     GameModule,
     ShoppingCartModule,
+    ReportsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

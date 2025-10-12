@@ -64,7 +64,7 @@ export class ShoppingCartService {
       .andWhere('orders.userId = userId', { userId })
       .getMany()
 
-    return shoppingCart;
+    return (shoppingCart.length <= 0) ? "Carrinho vázio": shoppingCart;
   }
 
   async updateQuantity(userId: number, updateShoppingCartDto: UpdateShoppingCartDto) {
