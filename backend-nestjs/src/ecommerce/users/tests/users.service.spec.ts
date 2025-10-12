@@ -1,14 +1,16 @@
-import { NotFoundException } from '@nestjs/common';
+import { ConflictException, NotFoundException } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import * as bcrypt from 'bcrypt';
+import { Repository } from 'typeorm';
 import { CreateUserDto } from '../dto/create-user.dto';
 import { UpdateUserDto } from '../dto/update-user.dto';
-import { User } from '../entities/user.entity';
+import { User, UserRole } from '../entities/user.entity';
 import { UsersService } from '../users.service';
 
 describe('UsersService', () => {
   let service: UsersService;
+  let repository: Repository<User>;
 
   const mockRepository = {
     create: jest.fn(),
@@ -31,6 +33,8 @@ describe('UsersService', () => {
     }).compile();
 
     service = module.get<UsersService>(UsersService);
+    repository = module.get<Repository<User>>(getRepositoryToken(User));
+    jest.clearAllMocks();
   });
 
   it('should be defined', () => {
@@ -44,33 +48,44 @@ describe('UsersService', () => {
       username: 'Test User',
     };
 
-    it('should create a new user', async () => {
+    it('should create and return a new user', async () => {
       const hashedPassword = 'hashedPassword';
       jest.spyOn(bcrypt, 'hash').mockResolvedValue(hashedPassword as never);
-
-      const user = { id: 1, ...createUserDto, password: hashedPassword };
-      mockRepository.create.mockReturnValue(user);
-      mockRepository.save.mockResolvedValue(user);
+      mockRepository.findOneBy.mockResolvedValue(null);
+      mockRepository.create.mockReturnValue({ ...createUserDto, password: hashedPassword });
+      const savedUser = { id: 1, ...createUserDto, password: hashedPassword };
+      mockRepository.save.mockResolvedValue(savedUser);
 
       const result = await service.create(createUserDto);
-      expect(result).toEqual(user);
+      expect(bcrypt.hash).toHaveBeenCalledWith(createUserDto.password, 10);
+      expect(mockRepository.create).toHaveBeenCalledWith({
+        ...createUserDto,
+        password: hashedPassword,
+      });
+      expect(mockRepository.save).toHaveBeenCalled();
+      expect(result).toEqual(savedUser);
     });
 
     it('should throw ConflictException if email already exists', async () => {
-      mockRepository.findOneBy.mockResolvedValue({ email: createUserDto.email } as User);
-
-      await expect(service.create(createUserDto)).rejects.toThrow('Email already exists');
+      mockRepository.findOneBy.mockResolvedValue({ id: 1 } as User);
+      await expect(service.create(createUserDto)).rejects.toThrow(ConflictException);
     });
   });
 
   describe('findAll', () => {
     it('should return an array of users', async () => {
-      const users = [
-        { id: 1, email: 'test1@test.com', name: 'Test 1' },
-        { id: 2, email: 'test2@test.com', name: 'Test 2' },
+      const users: User[] = [
+        {
+          id: 1,
+          email: 'test1@test.com',
+          username: 'Test 1',
+          password: '123',
+          role: UserRole.USER,
+          orders: [],
+          player: null,
+        },
       ];
       mockRepository.find.mockResolvedValue(users);
-
       const result = await service.findAll();
       expect(result).toEqual(users);
     });
@@ -89,47 +104,66 @@ describe('UsersService', () => {
     it('should return a user by email', async () => {
       const user = { id: 1, email: 'test@test.com', name: 'Test' };
       mockRepository.findOneBy.mockResolvedValue(user);
-
       const result = await service.findOneByEmail('test@test.com');
       expect(result).toEqual(user);
     });
   });
 
   describe('update', () => {
-    it('should update a user', async () => {
+    it('should update a user successfully', async () => {
       const updateUserDto: UpdateUserDto = { username: 'Updated Name' };
-      const existingUser = { id: 1, email: 'test@test.com', name: 'Test' };
-      const updatedUser = { ...existingUser, ...updateUserDto };
+      const existingUser: User = {
+        id: 1,
+        email: 'test@test.com',
+        username: 'Test',
+        password: '123',
+        role: UserRole.USER,
+        orders: [],
+        player: null,
+      };
+      const expectedUpdatedUser = { ...existingUser, ...updateUserDto };
 
       mockRepository.findOneBy.mockResolvedValue(existingUser);
-      mockRepository.merge.mockReturnValue(updatedUser);
-      mockRepository.save.mockResolvedValue(updatedUser);
+      mockRepository.merge.mockImplementation((user, dto) => Object.assign(user, dto));
+      mockRepository.save.mockResolvedValue(expectedUpdatedUser);
 
       const result = await service.update(1, updateUserDto);
-      expect(result).toEqual(updatedUser);
+
+      expect(mockRepository.findOneBy).toHaveBeenCalledWith({ id: 1 });
+      expect(mockRepository.merge).toHaveBeenCalledWith(existingUser, updateUserDto);
+      expect(mockRepository.save).toHaveBeenCalledWith(existingUser);
+      expect(result).toEqual(expectedUpdatedUser);
     });
 
-    it('should throw NotFoundException if user not found', async () => {
+    it('should throw NotFoundException if user to update is not found', async () => {
       mockRepository.findOneBy.mockResolvedValue(null);
-
-      await expect(service.update(1, {})).rejects.toThrow(NotFoundException);
+      await expect(service.update(999, {})).rejects.toThrow(NotFoundException);
     });
   });
 
   describe('remove', () => {
-    it('should remove a user', async () => {
-      const user = { id: 1, email: 'test@test.com', name: 'Test' };
+    it('should remove a user and return it', async () => {
+      const user: User = {
+        id: 1,
+        email: 'test@test.com',
+        username: 'Test',
+        password: '123',
+        role: UserRole.USER,
+        orders: [],
+        player: null,
+      };
       mockRepository.findOneBy.mockResolvedValue(user);
       mockRepository.remove.mockResolvedValue(user);
 
       const result = await service.remove(1);
+      expect(mockRepository.findOneBy).toHaveBeenCalledWith({ id: 1 });
+      expect(mockRepository.remove).toHaveBeenCalledWith(user);
       expect(result).toEqual(user);
     });
 
-    it('should throw NotFoundException if user not found', async () => {
+    it('should throw NotFoundException if user to remove is not found', async () => {
       mockRepository.findOneBy.mockResolvedValue(null);
-
-      await expect(service.remove(1)).rejects.toThrow(NotFoundException);
+      await expect(service.remove(999)).rejects.toThrow(NotFoundException);
     });
   });
 });

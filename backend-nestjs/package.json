@@ -18,7 +18,7 @@
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "jest --config ./test/jest-e2e.json",
-    "redis:up": "docker-compose up -d redis",
+    "redis:up": "docker ps --filter name=coffeemon-redis --filter status=running | findstr coffeemon-redis || docker start coffeemon-redis || docker-compose up -d redis",
     "redis:down": "docker-compose down",
     "redis:logs": "docker-compose logs -f redis"
   },
@@ -29,6 +29,7 @@
     "@nestjs/config": "^4.0.2",
     "@nestjs/core": "^11.0.1",
     "@nestjs/cqrs": "^11.0.3",
+    "@nestjs/event-emitter": "^3.0.1",
     "@nestjs/jwt": "^11.0.0",
     "@nestjs/mapped-types": "*",
     "@nestjs/platform-express": "^11.0.1",
@@ -62,6 +63,7 @@
     "@types/express": "^5.0.0",
     "@types/ioredis": "^4.28.10",
     "@types/jest": "^29.5.14",
+    "@types/multer": "^2.0.0",
     "@types/node": "^22.10.7",
     "@types/supertest": "^6.0.2",
     "eslint": "^9.18.0",
@@ -94,9 +96,19 @@
       "**/*.(t|j)s"
     ],
     "coveragePathIgnorePatterns": [
-      ".*\\.entity\\.ts$",
-      ".*\\.dto\\.ts$",
-      ".*\\.module\\.ts$"
+      "node_modules",
+      ".spec.ts$",
+      "main.ts$",
+      "src/health",
+      "src/infrastructure",
+      ".module.ts$",
+      ".entity.ts$",
+      ".dto.ts$",
+      ".guard.ts$",
+      ".decorator.ts$",
+      ".interface.ts$",
+      ".enum.ts$",
+      ".module.ts$"
     ],
     "coverageDirectory": "../coverage",
     "testEnvironment": "node",

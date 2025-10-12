@@ -32,5 +32,5 @@ export class User {
   orders: Order[];
 
   @OneToOne(() => Player, (player) => player.user, { nullable: true })
-  player: Player;
+  player: Player | null;
 }
