@@ -30,6 +30,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { io, Socket } from 'socket.io-client';
 import { SOCKET_URL, getServerUrl, BASE_IMAGE_URL } from '../utils/config';
 import { BattleState } from '../types';
+import QRScanner from './QRScanner';
 
 // Interface para os Coffeemons do jogador
 interface PlayerCoffeemon {
@@ -70,6 +71,7 @@ export default function MatchmakingScreen({
   const [coffeemons, setCoffeemons] = useState<PlayerCoffeemon[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [partyLoading, setPartyLoading] = useState<number | null>(null);
+  const [qrScannerVisible, setQrScannerVisible] = useState<boolean>(false);
 
   // ========================================
   // SETUP DO SOCKET AO INICIAR
@@ -289,6 +291,31 @@ export default function MatchmakingScreen({
     onNavigateToLogin();
   }
 
+  /**
+   * FUNÇÃO: handleOpenQRScanner
+   * Abre o modal do scanner de QR code
+   */
+  function handleOpenQRScanner() {
+    setQrScannerVisible(true);
+  }
+
+  /**
+   * FUNÇÃO: handleCloseQRScanner
+   * Fecha o modal do scanner de QR code
+   */
+  function handleCloseQRScanner() {
+    setQrScannerVisible(false);
+  }
+
+  /**
+   * FUNÇÃO: handleCoffeemonAdded
+   * Callback chamado quando um Coffeemon é adicionado via QR code
+   * Recarrega a lista de Coffeemons
+   */
+  function handleCoffeemonAdded() {
+    fetchPlayerCoffeemons();
+  }
+
   // ========================================
   // RENDERIZAÇÃO DA UI
   // ========================================
@@ -387,6 +414,13 @@ export default function MatchmakingScreen({
             )}
           </View>
           
+          <TouchableOpacity 
+            style={styles.captureButton} 
+            onPress={handleOpenQRScanner}
+          >
+            <Text style={styles.captureButtonText}>📷 Capturar Coffeemon</Text>
+          </TouchableOpacity>
+
           <TouchableOpacity style={styles.findMatchButton} onPress={findMatch}>
             <Text style={styles.findMatchButtonText}>Procurar Partida</Text>
           </TouchableOpacity>
@@ -405,6 +439,14 @@ export default function MatchmakingScreen({
           </View>
         </View>
       </ScrollView>
+
+      {/* QR SCANNER MODAL */}
+      <QRScanner
+        visible={qrScannerVisible}
+        token={token}
+        onClose={handleCloseQRScanner}
+        onCoffeemonAdded={handleCoffeemonAdded}
+      />
     </SafeAreaView>
   );
 }
@@ -550,6 +592,26 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   // BOTÕES PRINCIPAIS
+  captureButton: {
+    width: '100%',
+    maxWidth: 300,
+    height: 50,
+    backgroundColor: '#9b59b6',
+    borderRadius: 8,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 15,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  captureButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
   findMatchButton: {
     width: '100%',
     maxWidth: 300,
