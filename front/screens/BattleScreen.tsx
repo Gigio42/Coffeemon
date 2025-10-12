@@ -319,22 +319,38 @@ export default function BattleScreen({
 
     return (
       <View style={styles.switchGrid}>
-        {availablePokemon.slice(0, 4).map((mon, idx) => (
-          <TouchableOpacity
-            key={idx}
-            style={[
-              styles.switchButton,
-              !canAct && styles.switchButtonDisabled
-            ]}
-            onPress={() => {
-              const originalIndex = playerState.coffeemons.findIndex((m) => m === mon);
-              canAct && sendAction('switch', { newIndex: originalIndex });
-            }}
-            disabled={!canAct}
-          >
-            <Text style={styles.switchButtonName}>{mon.name.toUpperCase()}</Text>
-          </TouchableOpacity>
-        ))}
+        {availablePokemon.slice(0, 4).map((mon, idx) => {
+          const imageUrl = `${BASE_IMAGE_URL}${mon.name}/default.png`;
+          const hpPercent = (mon.currentHp / mon.maxHp) * 100;
+          
+          return (
+            <TouchableOpacity
+              key={idx}
+              style={[
+                styles.switchButton,
+                !canAct && styles.switchButtonDisabled
+              ]}
+              onPress={() => {
+                const originalIndex = playerState.coffeemons.findIndex((m) => m === mon);
+                canAct && sendAction('switch', { newIndex: originalIndex });
+              }}
+              disabled={!canAct}
+            >
+              <Image 
+                source={{ uri: imageUrl }} 
+                style={styles.switchButtonImage}
+                resizeMode="contain"
+              />
+              <Text style={styles.switchButtonName}>{mon.name.toUpperCase()}</Text>
+              <View style={styles.switchButtonHpBar}>
+                <View style={[
+                  styles.switchButtonHpFill,
+                  { width: `${hpPercent}%` }
+                ]} />
+              </View>
+            </TouchableOpacity>
+          );
+        })}
       </View>
     );
   }
@@ -617,24 +633,48 @@ const styles = StyleSheet.create({
   },
   switchButton: {
     width: '48%',
-    backgroundColor: '#666',
-    borderRadius: 8,
-    paddingVertical: 16,
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    paddingVertical: 12,
     paddingHorizontal: 8,
     marginBottom: 8,
     alignItems: 'center',
     justifyContent: 'center',
-    minHeight: 60,
+    minHeight: 100,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+    borderWidth: 2,
+    borderColor: '#e0e0e0',
   },
   switchButtonDisabled: {
-    backgroundColor: '#bdc3c7',
-    opacity: 0.6,
+    backgroundColor: '#f5f5f5',
+    opacity: 0.5,
+  },
+  switchButtonImage: {
+    width: 60,
+    height: 60,
+    marginBottom: 6,
   },
   switchButtonName: {
-    color: '#fff',
-    fontSize: 12,
+    color: '#333',
+    fontSize: 13,
     fontWeight: 'bold',
     textAlign: 'center',
+    marginBottom: 6,
+  },
+  switchButtonHpBar: {
+    width: '90%',
+    height: 6,
+    backgroundColor: '#e0e0e0',
+    borderRadius: 3,
+    overflow: 'hidden',
+  },
+  switchButtonHpFill: {
+    height: '100%',
+    backgroundColor: '#4CAF50',
   },
   bottomButtonsContainer: {
     flexDirection: 'row',
