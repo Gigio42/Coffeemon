@@ -1,7 +1,22 @@
 import { Injectable } from '@nestjs/common';
+import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { BattleCacheService } from '../cache/battle-cache.service';
+import {
+  BattleActionCommand,
+  BattleCancelledEvent,
+  BattleCreatedEvent,
+  BattleEndedEvent,
+  BattleStateUpdatedEvent,
+  MatchPairFoundEvent,
+  OpponentDisconnectedEvent,
+  PlayerDisconnectedCommand,
+  PlayerLeftBattleEvent,
+  PlayerReconnectedEvent,
+  PlayerWantsToLeaveBattleCommand,
+  PlayerWantsToRejoinBattleCommand,
+} from '../events/game.events';
 import { PlayerCoffeemons } from '../player/entities/playerCoffeemons.entity';
 import { PlayerService } from '../player/player.service';
 import { BattleTurnManager } from './engine/battle-turn-manager';
@@ -12,50 +27,198 @@ import {
   BattleStatus,
   CoffeemonState,
   ExtractPayload,
+  PlayerBattleState,
 } from './types/batlle.types';
+import { RoomCacheService } from '../cache/room-cache.service';
 
 @Injectable()
 export class BattleService {
+  private disconnectionTimeouts = new Map<string, NodeJS.Timeout>();
+
   constructor(
     @InjectRepository(Battle) private repo: Repository<Battle>,
     private playerService: PlayerService,
     private battleCache: BattleCacheService,
-    private battleTurnManager: BattleTurnManager
+    private roomCache: RoomCacheService,
+    private battleTurnManager: BattleTurnManager,
+    private readonly eventEmitter: EventEmitter2
   ) {}
 
-  async createBattle(
-    player1Id: number,
-    player2Id: number,
-    player1SocketId: string,
-    player2SocketId: string
-  ): Promise<{
-    savedBattle: Battle;
-    state: BattleState;
-  }> {
+  @OnEvent('match.pair.found')
+  async createBattle(event: MatchPairFoundEvent): Promise<void> {
     const battle = this.repo.create({
-      player1Id,
-      player2Id,
-      player1SocketId,
-      player2SocketId,
+      player1Id: event.player1Id,
+      player2Id: event.player2Id,
+      player1SocketId: event.player1SocketId,
+      player2SocketId: event.player2SocketId,
       status: BattleStatus.ACTIVE,
       createdAt: new Date(),
     });
-
     const savedBattle = await this.repo.save(battle);
     const state = await this.buildInitialState(
-      player1Id,
-      player2Id,
-      player1SocketId,
-      player2SocketId
+      event.player1Id,
+      event.player2Id,
+      event.player1SocketId,
+      event.player2SocketId
     );
-
     await this.battleCache.set(savedBattle.id, state);
 
-    //printando tds os battles no redis
-    const allBattles = await this.battleCache.getAll();
-    console.log(`Battles: ${allBattles.length} battles in Redis cache`);
+    this.eventEmitter.emit('battle.created', new BattleCreatedEvent(savedBattle.id, state));
+  }
 
-    return { savedBattle, state };
+  @OnEvent('battle.action.command')
+  async handleBattleAction(command: BattleActionCommand): Promise<void> {
+    await this.updatePlayerSocketId(command.battleId, command.playerId, command.socketId);
+    const updatedState = await this.executeTurn(
+      command.battleId,
+      command.playerId,
+      command.actionType,
+      command.payload as ExtractPayload<typeof command.actionType>
+    );
+    if (updatedState) {
+      if (updatedState.battleStatus === BattleStatus.FINISHED) {
+        this.eventEmitter.emit(
+          'battle.ended',
+          new BattleEndedEvent(command.battleId, updatedState.winnerId!, updatedState)
+        );
+      } else {
+        this.eventEmitter.emit(
+          'battle.state.updated',
+          new BattleStateUpdatedEvent(command.battleId, updatedState)
+        );
+      }
+    }
+  }
+
+  @OnEvent('player.rejoin.command')
+  async handlePlayerRejoin(command: PlayerWantsToRejoinBattleCommand): Promise<void> {
+    const battleRoomId = `battle:${command.battleId}`;
+    await this.roomCache.joinRoom(battleRoomId, command.playerId, command.socketId, 'battle');
+    await this.updatePlayerSocketId(command.battleId, command.playerId, command.socketId);
+
+    const timeoutKey = `${command.battleId}:${command.playerId}`;
+    if (this.disconnectionTimeouts.has(timeoutKey)) {
+      clearTimeout(this.disconnectionTimeouts.get(timeoutKey));
+      this.disconnectionTimeouts.delete(timeoutKey);
+    }
+
+    const battleState = await this.getBattleState(command.battleId);
+    if (battleState) {
+      this.eventEmitter.emit(
+        'player.reconnected',
+        new PlayerReconnectedEvent(command.battleId, command.playerId, battleState)
+      );
+    }
+  }
+
+  @OnEvent('player.leave.command')
+  async handlePlayerLeave(command: PlayerWantsToLeaveBattleCommand): Promise<void> {
+    const battleRoomId = `battle:${command.battleId}`;
+    await this.roomCache.leaveRoom(battleRoomId, command.playerId);
+    this.eventEmitter.emit(
+      'player.left.battle',
+      new PlayerLeftBattleEvent(command.battleId, command.playerId, command.socketId)
+    );
+  }
+
+  @OnEvent('player.disconnected.command')
+  async handlePlayerDisconnect(command: PlayerDisconnectedCommand): Promise<void> {
+    const roomId = await this.roomCache.findRoomBySocket(command.socketId);
+    if (roomId && roomId.startsWith('battle:')) {
+      const battleId = roomId.split(':')[1];
+      await this.roomCache.markPlayerDisconnected(command.socketId);
+      this.eventEmitter.emit(
+        'opponent.disconnected',
+        new OpponentDisconnectedEvent(battleId, command.playerId)
+      );
+      this.scheduleDisconnectionTimeout(battleId, command.playerId);
+    }
+  }
+
+  private scheduleDisconnectionTimeout(battleId: string, playerId: number): void {
+    const timeoutKey = `${battleId}:${playerId}`;
+    const timeout = setTimeout(() => {
+      void this.handleDisconnectionTimeout(battleId, playerId);
+    }, 30000); // 30 segundos
+    this.disconnectionTimeouts.set(timeoutKey, timeout);
+  }
+
+  private async handleDisconnectionTimeout(battleId: string, playerId: number): Promise<void> {
+    const timeoutKey = `${battleId}:${playerId}`;
+    this.disconnectionTimeouts.delete(timeoutKey);
+
+    const roomData = await this.roomCache.getRoomData(`battle:${battleId}`);
+    const member = roomData?.members.find((m) => m.playerId === playerId);
+
+    if (member && member.status === 'disconnected') {
+      this.eventEmitter.emit('battle.cancelled', new BattleCancelledEvent(battleId, playerId));
+
+      if (roomData) {
+        for (const m of roomData.members) {
+          await this.roomCache.leaveRoom(roomData.roomId, m.playerId);
+        }
+      }
+      await this.battleCache.delete(battleId);
+    }
+  }
+
+  private async executeTurn<T extends BattleActionType>(
+    battleId: string,
+    playerId: number,
+    actionType: T,
+    payload: ExtractPayload<T>
+  ): Promise<BattleState | null> {
+    const battleState = await this.battleCache.get(battleId);
+    if (!battleState) throw new Error(`Battle with ID ${battleId} not found in cache`);
+    if (battleState.player1Id !== playerId && battleState.player2Id !== playerId)
+      throw new Error('You are not part of this battle');
+    const updatedState = await this.battleTurnManager.runTurn({
+      battleState,
+      playerId,
+      actionType,
+      payload,
+    });
+    if (updatedState.battleStatus === BattleStatus.FINISHED) {
+      await this.finalizeBattleInDb(battleId, updatedState);
+    } else {
+      await this.battleCache.set(battleId, updatedState);
+    }
+    return updatedState;
+  }
+
+  private async finalizeBattleInDb(battleId: string, state: BattleState): Promise<void> {
+    const battle = await this.repo.findOneByOrFail({ id: battleId });
+    battle.status = BattleStatus.FINISHED;
+    battle.winnerId = state.winnerId!;
+    battle.endedAt = new Date();
+    await this.repo.save(battle);
+    await this.battleCache.delete(battleId);
+  }
+
+  async getBattleState(battleId: string): Promise<BattleState | null> {
+    const battleState = await this.battleCache.get(battleId);
+    return battleState ?? null;
+  }
+
+  private async updatePlayerSocketId(
+    battleId: string,
+    playerId: number,
+    socketId: string
+  ): Promise<void> {
+    const battleState = await this.battleCache.get(battleId);
+    if (!battleState) return;
+    let updated = false;
+    if (battleState.player1Id === playerId && battleState.player1SocketId !== socketId) {
+      battleState.player1SocketId = socketId;
+      updated = true;
+    }
+    if (battleState.player2Id === playerId && battleState.player2SocketId !== socketId) {
+      battleState.player2SocketId = socketId;
+      updated = true;
+    }
+    if (updated) {
+      await this.battleCache.set(battleId, battleState);
+    }
   }
 
   private async buildInitialState(
@@ -76,121 +239,36 @@ export class BattleService {
       player1: this.mapTeam(team1),
       player2: this.mapTeam(team2),
       turn: 1,
-      currentPlayerId: p1, //Todo: Decidir de forma mais justa quem começa
+      currentPlayerId: p1,
       battleStatus: BattleStatus.ACTIVE,
       events: [],
     };
   }
 
-  private mapTeam(team: PlayerCoffeemons[]): {
-    activeCoffeemonIndex: number;
-    coffeemons: CoffeemonState[];
-  } {
+  private mapTeam(team: PlayerCoffeemons[]): PlayerBattleState {
     return {
       activeCoffeemonIndex: 0,
-      coffeemons: team.map((c) => ({
-        id: c.id,
-        name: c.coffeemon.name,
-        currentHp: c.coffeemon.baseHp,
-        isFainted: false,
-        canAct: true,
-        maxHp: c.coffeemon.baseHp,
-        attack: c.coffeemon.baseAttack,
-        defense: c.coffeemon.baseDefense,
-        modifiers: {
-          attackModifier: 1.0,
-          defenseModifier: 1.0,
-          dodgeChance: 0.0,
-          hitChance: 1.0,
-          critChance: 0.05,
-          blockChance: 0.0,
-        },
-        moves: [...(c.coffeemon.moves || []), ...(c.customMoves || [])],
-      })),
+      coffeemons: team.map(
+        (c): CoffeemonState => ({
+          id: c.id,
+          name: c.coffeemon.name,
+          currentHp: c.coffeemon.baseHp,
+          isFainted: false,
+          canAct: true,
+          maxHp: c.coffeemon.baseHp,
+          attack: c.coffeemon.baseAttack,
+          defense: c.coffeemon.baseDefense,
+          modifiers: {
+            attackModifier: 1.0,
+            defenseModifier: 1.0,
+            dodgeChance: 0.0,
+            hitChance: 1.0,
+            critChance: 0.05,
+            blockChance: 0.0,
+          },
+          moves: [...(c.coffeemon.moves || []), ...(c.customMoves || [])],
+        })
+      ),
     };
-  }
-
-  async findActiveBattleBySocketId(socketId: string): Promise<Battle | null> {
-    return this.repo.findOne({
-      where: [
-        { player1SocketId: socketId, status: 'ACTIVE' },
-        { player2SocketId: socketId, status: 'ACTIVE' },
-      ],
-    });
-  }
-
-  async executeTurn<T extends BattleActionType>(
-    battleId: string,
-    playerId: number,
-    actionType: T,
-    payload: ExtractPayload<T>
-  ): Promise<{ battleState: BattleState }> {
-    const battleState = await this.battleCache.get(battleId);
-    if (!battleState) {
-      throw new Error(`Battle with ID ${battleId} not found in cache`);
-    }
-
-    const isPlayer1 = battleState.player1Id === playerId;
-    const isPlayer2 = battleState.player2Id === playerId;
-    if (!isPlayer1 && !isPlayer2) {
-      throw new Error('You are not part of this battle');
-    }
-
-    const updatedState = await this.battleTurnManager.runTurn({
-      battleState,
-      playerId,
-      actionType,
-      payload,
-    });
-
-    if (updatedState.battleStatus === BattleStatus.FINISHED) {
-      if (updatedState.winnerId === undefined) {
-        throw new Error("winnerId didn't set in battle state");
-      }
-      const battle = await this.repo.findOneByOrFail({ id: battleId });
-      battle.status = BattleStatus.FINISHED;
-      battle.winnerId = updatedState.winnerId;
-      battle.endedAt = new Date();
-      await this.repo.save(battle);
-      await this.battleCache.delete(battleId);
-    } else {
-      await this.battleCache.set(battleId, updatedState);
-    }
-
-    return { battleState: updatedState };
-  }
-
-  async updatePlayerSocketId(battleId: string, playerId: number, socketId: string): Promise<void> {
-    const battleState = await this.battleCache.get(battleId);
-    if (!battleState) return;
-
-    let updated = false;
-    if (battleState.player1Id === playerId && battleState.player1SocketId !== socketId) {
-      battleState.player1SocketId = socketId;
-      updated = true;
-    }
-    if (battleState.player2Id === playerId && battleState.player2SocketId !== socketId) {
-      battleState.player2SocketId = socketId;
-      updated = true;
-    }
-    if (updated) {
-      await this.battleCache.set(battleId, battleState);
-    }
-  }
-
-  async getBattleState(battleId: string): Promise<BattleState | null> {
-    try {
-      const battleState = await this.battleCache.get(battleId);
-
-      if (!battleState) {
-        console.log(`Estado da batalha ${battleId} não encontrado no cache`);
-        return null;
-      }
-
-      return battleState;
-    } catch (error) {
-      console.error(`Erro ao buscar estado da batalha ${battleId}:`, error);
-      return null;
-    }
   }
 }

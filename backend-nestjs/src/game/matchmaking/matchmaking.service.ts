@@ -1,67 +1,73 @@
 import { Injectable } from '@nestjs/common';
-import { BattleService } from '../battles/battles.service';
+import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
 import { RoomCacheService } from '../cache/room-cache.service';
+import {
+  MatchPairFoundEvent,
+  PlayerDisconnectedCommand,
+  PlayerJoinedQueueEvent,
+  PlayerLeftQueueEvent,
+  PlayerWantsToJoinQueueCommand,
+  PlayerWantsToLeaveQueueCommand,
+} from '../events/game.events';
+
 @Injectable()
 export class MatchmakingService {
   constructor(
-    private battleService: BattleService,
-    private roomCache: RoomCacheService
+    private readonly roomCache: RoomCacheService,
+    private readonly eventEmitter: EventEmitter2
   ) {}
 
-  async findMatch(
-    playerId: number,
-    socketId: string
-  ): Promise<{
-    status: 'waiting' | 'matched';
-    battleId?: string;
-    opponentSocketId?: string;
-  }> {
+  @OnEvent('queue.join.command')
+  async handlePlayerJoinQueue(command: PlayerWantsToJoinQueueCommand): Promise<void> {
     const matchmakingRoom = 'matchmaking:default';
-
-    const opponent = await this.roomCache.findOpponentInRoom(matchmakingRoom, playerId);
-    if (!opponent) {
-      return { status: 'waiting' };
-    }
-
-    await this.roomCache.makeMatch(matchmakingRoom, playerId, opponent.playerId);
-
-    const battle = await this.battleService.createBattle(
-      playerId,
-      opponent.playerId,
-      socketId,
-      opponent.socketId
+    await this.roomCache.joinRoom(
+      matchmakingRoom,
+      command.playerId,
+      command.socketId,
+      'matchmaking'
+    );
+    this.eventEmitter.emit(
+      'queue.player.joined',
+      new PlayerJoinedQueueEvent(command.playerId, command.socketId)
     );
 
-    return {
-      status: 'matched',
-      battleId: battle.savedBattle.id,
-      opponentSocketId: opponent.socketId,
-    };
+    const opponent = await this.roomCache.findOpponentInRoom(matchmakingRoom, command.playerId);
+    if (!opponent) return;
+
+    await this.roomCache.makeMatch(matchmakingRoom, command.playerId, opponent.playerId);
+
+    this.eventEmitter.emit(
+      'match.pair.found',
+      new MatchPairFoundEvent(
+        command.playerId,
+        command.socketId,
+        opponent.playerId,
+        opponent.socketId
+      )
+    );
   }
 
-  async leaveQueue(playerId: number): Promise<{ success: boolean; reason?: string }> {
-    const roomId = await this.roomCache.findRoomByPlayer(playerId);
-
-    if (!roomId) {
-      return { success: false, reason: 'You are not in any queue.' };
-    }
-    if (!roomId.startsWith('matchmaking:')) {
-      return { success: false, reason: 'Cannot leave queue while in battle.' };
-    }
-
-    await this.roomCache.leaveRoom(roomId, playerId);
-    return { success: true };
-  }
-
-  async getQueueStats(): Promise<{ count: number; avgWaitTime: number }> {
-    return this.roomCache.getQueueStats('matchmaking:default');
-  }
-
-  async handleDisconnection(playerId: number): Promise<void> {
-    const roomId = await this.roomCache.findRoomByPlayer(playerId);
-
+  @OnEvent('queue.leave.command')
+  async handlePlayerLeaveQueue(command: PlayerWantsToLeaveQueueCommand): Promise<void> {
+    const roomId = await this.roomCache.findRoomByPlayer(command.playerId);
     if (roomId && roomId.startsWith('matchmaking:')) {
-      await this.roomCache.leaveRoom(roomId, playerId);
+      await this.roomCache.leaveRoom(roomId, command.playerId);
+      this.eventEmitter.emit(
+        'queue.player.left',
+        new PlayerLeftQueueEvent(command.playerId, command.socketId)
+      );
+    }
+  }
+
+  @OnEvent('player.disconnected.command')
+  async handlePlayerDisconnect(command: PlayerDisconnectedCommand): Promise<void> {
+    const roomId = await this.roomCache.findRoomBySocket(command.socketId);
+    if (roomId && roomId.startsWith('matchmaking:')) {
+      await this.roomCache.leaveRoom(roomId, command.playerId);
+      this.eventEmitter.emit(
+        'queue.player.left',
+        new PlayerLeftQueueEvent(command.playerId, command.socketId)
+      );
     }
   }
 }
