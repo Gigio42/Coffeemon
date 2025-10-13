@@ -7,9 +7,10 @@
  * 1. Verificar se usuário já está logado (checkAuthStatus)
  * 2. Exibir formulário de login (email e senha)
  * 3. Fazer requisição HTTP para /auth/login
- * 4. Buscar dados do jogador em /game/players/me
- * 5. Salvar token e playerId no AsyncStorage
- * 6. Navegar para tela de Matchmaking após login bem-sucedido
+ * 4. Buscar dados do usuário em /users/me
+ * 5. Buscar dados do jogador em /game/players/me
+ * 6. Salvar token, userId e playerId no AsyncStorage
+ * 7. Navegar para tela de E-commerce após login bem-sucedido
  * 
  * IMPORTANTE: Esta tela NÃO depende do App.tsx para lógica de login!
  */
@@ -21,14 +22,15 @@ import {
   View, 
   TouchableOpacity, 
   TextInput, 
-  SafeAreaView 
+  SafeAreaView,
+  Platform
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { SOCKET_URL } from '../utils/config';
 
 interface LoginScreenProps {
   // Callback para navegar para a tela de Matchmaking
-  onNavigateToMatchmaking: (token: string, playerId: number) => void;
+  onNavigateToMatchmaking: (token: string, playerId: number, userId: number) => void;
 }
 
 export default function LoginScreen({ onNavigateToMatchmaking }: LoginScreenProps) {
@@ -43,9 +45,13 @@ export default function LoginScreen({ onNavigateToMatchmaking }: LoginScreenProp
   // VERIFICAÇÃO DE AUTENTICAÇÃO AO INICIAR
   // ========================================
   // Verifica se já está autenticado ao abrir a tela
-  // Se sim, navega direto para Matchmaking
+  // Se sim, navega direto para Matchmaking (APENAS NO MOBILE)
+  // Na web, sempre mostra a tela de login
   useEffect(() => {
-    checkAuthStatus();
+    // Desabilitar auto-login na web
+    if (Platform.OS !== 'web') {
+      checkAuthStatus();
+    }
   }, []);
 
   /**
@@ -57,9 +63,10 @@ export default function LoginScreen({ onNavigateToMatchmaking }: LoginScreenProp
     try {
       const storedToken = await AsyncStorage.getItem('jwt_token');
       const storedPlayerId = await AsyncStorage.getItem('player_id');
+      const storedUserId = await AsyncStorage.getItem('user_id');
       
-      if (storedToken && storedPlayerId) {
-        onNavigateToMatchmaking(storedToken, parseInt(storedPlayerId));
+      if (storedToken && storedPlayerId && storedUserId) {
+        onNavigateToMatchmaking(storedToken, parseInt(storedPlayerId), parseInt(storedUserId));
       }
     } catch (error) {
       console.error('Erro ao verificar auth:', error);
@@ -72,9 +79,10 @@ export default function LoginScreen({ onNavigateToMatchmaking }: LoginScreenProp
    * Responsável por TODA a lógica de autenticação:
    * 1. Valida campos
    * 2. Faz POST para /auth/login
-   * 3. Busca dados do jogador em /game/players/me
-   * 4. Salva token e playerId no AsyncStorage
-   * 5. Navega para Matchmaking
+   * 3. Busca dados do usuário em /users/me
+   * 4. Busca dados do jogador em /game/players/me
+   * 5. Salva token, userId e playerId no AsyncStorage
+   * 6. Navega para E-commerce
    */
   async function handleLogin() {
     // Validação de campos
@@ -103,9 +111,24 @@ export default function LoginScreen({ onNavigateToMatchmaking }: LoginScreenProp
       const token = loginData.access_token;
       await AsyncStorage.setItem('jwt_token', token);
       
-      setLoginMessage('Usuário autenticado! Buscando dados do jogador...');
+      setLoginMessage('Usuário autenticado! Buscando dados do usuário...');
       
-      // ETAPA 2: Buscar dados do jogador (Player ID)
+      // ETAPA 2: Buscar dados do usuário (User ID)
+      const userResponse = await fetch(`${SOCKET_URL}/users/me`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      
+      if (!userResponse.ok) {
+        throw new Error('Erro ao buscar dados do usuário.');
+      }
+      
+      const userData = await userResponse.json();
+      const userId = userData.id;
+      await AsyncStorage.setItem('user_id', userId.toString());
+      
+      setLoginMessage('Buscando dados do jogador...');
+      
+      // ETAPA 3: Buscar dados do jogador (Player ID)
       const playerResponse = await fetch(`${SOCKET_URL}/game/players/me`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
@@ -117,9 +140,9 @@ export default function LoginScreen({ onNavigateToMatchmaking }: LoginScreenProp
       const playerData = await playerResponse.json();
       await AsyncStorage.setItem('player_id', playerData.id.toString());
       
-      // ETAPA 3: Login bem-sucedido! Navegar para Matchmaking
-      setLoginMessage(`Login bem-sucedido! Player ID: ${playerData.id}`);
-      setTimeout(() => onNavigateToMatchmaking(token, playerData.id), 1000);
+      // ETAPA 4: Login bem-sucedido! Navegar para E-commerce
+      setLoginMessage(`Login bem-sucedido! Bem-vindo!`);
+      setTimeout(() => onNavigateToMatchmaking(token, playerData.id, userId), 1000);
       
     } catch (error: any) {
       console.error('Erro de login:', error);
@@ -159,6 +182,19 @@ export default function LoginScreen({ onNavigateToMatchmaking }: LoginScreenProp
             {loginMessage}
           </Text>
         ) : null}
+
+        {/* Botão para limpar cache (útil na web) */}
+        {Platform.OS === 'web' && (
+          <TouchableOpacity 
+            style={styles.clearCacheButton} 
+            onPress={async () => {
+              await AsyncStorage.clear();
+              setLoginMessage('Cache limpo! Faça login novamente.');
+            }}
+          >
+            <Text style={styles.clearCacheText}>🗑️ Limpar Cache</Text>
+          </TouchableOpacity>
+        )}
       </View>
     </SafeAreaView>
   );
@@ -212,5 +248,15 @@ const styles = StyleSheet.create({
     marginTop: 15,
     fontSize: 14,
     textAlign: 'center',
+  },
+  clearCacheButton: {
+    marginTop: 30,
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+  },
+  clearCacheText: {
+    color: '#999',
+    fontSize: 12,
+    textDecorationLine: 'underline',
   },
 });

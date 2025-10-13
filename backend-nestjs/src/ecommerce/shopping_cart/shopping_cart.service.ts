@@ -5,6 +5,7 @@ import { Repository } from 'typeorm';
 import { Order } from '../orders/entities/order.entity';
 import { OrderItem } from '../orders/entities/order_item.entity';
 import { ProductsService } from '../products/products.service';
+import { UsersService } from '../users/users.service';
 import { AddItemToShoppingCartDto } from './dto/add-item-to-shopping_cart.dto';
 import { UpdateShoppingCartDto } from './dto/update-shopping_cart.dto';
 
@@ -17,7 +18,9 @@ export class ShoppingCartService {
     @InjectRepository(OrderItem)
     private readonly orderItemRepository: Repository<OrderItem>,
 
-    private readonly productsServices: ProductsService
+    private readonly productsServices: ProductsService,
+    
+    private readonly usersService: UsersService
   ) {}
   async addItemToShoppingCart(userId: number, addItemToShoppingCartDto: AddItemToShoppingCartDto) {
     const product = await this.productsServices.findProductById(addItemToShoppingCartDto.productId);
@@ -25,18 +28,26 @@ export class ShoppingCartService {
     let message: string;
 
     if (!order.orderItem || order.orderItem.length === 0) {
+      const unitPrice = product.price;
+      const quantity = addItemToShoppingCartDto.quantity;
+      const total = unitPrice * quantity;
+      
       await this.orderItemRepository.save(
         this.orderItemRepository.create({
           order: order,
           product: product,
-          quantity: addItemToShoppingCartDto.quantity,
-          unit_price: product.price,
+          quantity: quantity,
+          unit_price: unitPrice,
+          price: unitPrice,
+          total: total,
+          orderId: order.id,
+          productId: product.id,
         })
       );
       message = 'Produto adicionado ao carrinho';
     } else {
       const productExistInCart = order.orderItem.find(
-        (productInCart) => productInCart.product.id === product.id
+        (productInCart) => productInCart?.product?.id === product.id
       );
 
       if (productExistInCart) {
@@ -45,12 +56,20 @@ export class ShoppingCartService {
         });
         message = 'Quantidade do produto atualizada';
       } else {
+        const unitPrice = product.price;
+        const quantity = addItemToShoppingCartDto.quantity;
+        const total = unitPrice * quantity;
+        
         await this.orderItemRepository.save(
           this.orderItemRepository.create({
             product,
             order,
-            quantity: addItemToShoppingCartDto.quantity,
-            unit_price: product.price,
+            quantity: quantity,
+            unit_price: unitPrice,
+            price: unitPrice,
+            total: total,
+            orderId: order.id,
+            productId: product.id,
           })
         );
         message = 'Produto adicionado ao carrinho';
@@ -68,7 +87,7 @@ export class ShoppingCartService {
       .andWhere('orders.user.id = :userId', { userId })
       .getMany();
 
-    return shoppingCart.length <= 0 ? 'Carrinho vazio' : shoppingCart;
+    return shoppingCart.length <= 0 ? [] : shoppingCart;
   }
 
   async updateQuantity(userId: number, updateShoppingCartDto: UpdateShoppingCartDto) {
@@ -77,9 +96,10 @@ export class ShoppingCartService {
 
     const item = await this.orderItemRepository.findOne({
       where: {
-        order: shoppingCart,
+        order: { id: shoppingCart.id },
         product: { id: productId },
       },
+      relations: ['product'], // Precisamos carregar o produto para pegar o preço
     });
 
     if (!item)
@@ -87,7 +107,14 @@ export class ShoppingCartService {
         `Produto com o ID ${productId} não encontrado no carrinho do usuário`
       );
 
-    await this.orderItemRepository.update(item.id, { quantity: quantity });
+    // Recalcular o total baseado no preço unitário e nova quantidade
+    const unitPrice = item.product.price;
+    const newTotal = unitPrice * quantity;
+
+    await this.orderItemRepository.update(item.id, { 
+      quantity: quantity,
+      total: newTotal, // Atualizar o total também
+    });
 
     return { message: 'Quantidade do produto alterada' };
   }
@@ -97,7 +124,7 @@ export class ShoppingCartService {
 
     const item = await this.orderItemRepository.findOne({
       where: {
-        order: shoppingCart,
+        order: { id: shoppingCart.id },
         product: { id: productId },
       },
     });
@@ -124,9 +151,16 @@ export class ShoppingCartService {
     });
 
     if (!order) {
+      // Busca o usuário completo antes de criar o pedido
+      const user = await this.usersService.findOne(userId);
+      
+      if (!user) {
+        throw new NotFoundException(`Usuário com ID ${userId} não encontrado`);
+      }
+      
       order = await this.shoppingCartRepository.save(
         this.shoppingCartRepository.create({
-          user: { id: userId },
+          user: user,
           status: OrderStatus.SHOPPING_CART,
         })
       );

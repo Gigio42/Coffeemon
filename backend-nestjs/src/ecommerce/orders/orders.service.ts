@@ -42,12 +42,35 @@ export class OrdersService {
         user: { id: userId },
         status: OrderStatus.SHOPPING_CART,
       },
+      relations: ['orderItem'], // Carregar os itens do pedido
     });
 
     if (!shoppingCart) throw new NotFoundException('Carrinho não encontrado');
 
     try {
-      await this.ordersRepository.update(shoppingCart.id, { status: OrderStatus.FINISHED });
+      // Calcular o total do pedido somando todos os itens
+      let totalPrice = 0;
+      let totalQuantity = 0;
+      
+      if (shoppingCart.orderItem && shoppingCart.orderItem.length > 0) {
+        totalPrice = shoppingCart.orderItem.reduce((sum, item) => {
+          console.log(`Item: ${item.id}, Total: ${item.total}, Quantity: ${item.quantity}`);
+          return sum + (item.total || 0);
+        }, 0);
+        
+        totalQuantity = shoppingCart.orderItem.reduce((sum, item) => {
+          return sum + (item.quantity || 0);
+        }, 0);
+      }
+
+      console.log(`💰 Total calculado: ${totalPrice}, Quantidade total: ${totalQuantity}`);
+
+      // Atualizar o status, total_amount e total_quantity
+      await this.ordersRepository.update(shoppingCart.id, { 
+        status: OrderStatus.FINISHED,
+        total_amount: totalPrice,
+        total_quantity: totalQuantity,
+      });
 
       return 'Pedido finalizado';
     } catch (error) {
