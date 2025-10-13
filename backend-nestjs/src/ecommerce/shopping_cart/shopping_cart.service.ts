@@ -19,7 +19,7 @@ export class ShoppingCartService {
     private readonly orderItemRepository: Repository<OrderItem>,
 
     private readonly productsServices: ProductsService,
-    
+
     private readonly usersService: UsersService
   ) {}
   async addItemToShoppingCart(userId: number, addItemToShoppingCartDto: AddItemToShoppingCartDto) {
@@ -31,7 +31,7 @@ export class ShoppingCartService {
       const unitPrice = product.price;
       const quantity = addItemToShoppingCartDto.quantity;
       const total = unitPrice * quantity;
-      
+
       await this.orderItemRepository.save(
         this.orderItemRepository.create({
           order: order,
@@ -59,7 +59,7 @@ export class ShoppingCartService {
         const unitPrice = product.price;
         const quantity = addItemToShoppingCartDto.quantity;
         const total = unitPrice * quantity;
-        
+
         await this.orderItemRepository.save(
           this.orderItemRepository.create({
             product,
@@ -111,7 +111,7 @@ export class ShoppingCartService {
     const unitPrice = item.product.price;
     const newTotal = unitPrice * quantity;
 
-    await this.orderItemRepository.update(item.id, { 
+    await this.orderItemRepository.update(item.id, {
       quantity: quantity,
       total: newTotal, // Atualizar o total também
     });
@@ -153,11 +153,11 @@ export class ShoppingCartService {
     if (!order) {
       // Busca o usuário completo antes de criar o pedido
       const user = await this.usersService.findOne(userId);
-      
+
       if (!user) {
         throw new NotFoundException(`Usuário com ID ${userId} não encontrado`);
       }
-      
+
       order = await this.shoppingCartRepository.save(
         this.shoppingCartRepository.create({
           user: user,

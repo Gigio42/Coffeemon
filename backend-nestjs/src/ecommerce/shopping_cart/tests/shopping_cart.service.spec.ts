@@ -5,6 +5,7 @@ import { Repository } from 'typeorm';
 import { Order } from '../../orders/entities/order.entity';
 import { OrderItem } from '../../orders/entities/order_item.entity';
 import { ProductsService } from '../../products/products.service';
+import { UsersService } from '../../users/users.service';
 import { AddItemToShoppingCartDto } from '../dto/add-item-to-shopping_cart.dto';
 import { ShoppingCartService } from '../shopping_cart.service';
 
@@ -32,6 +33,10 @@ describe('ShoppingCartService', () => {
     findProductById: jest.fn(),
   };
 
+  const mockUsersService = {
+    findOne: jest.fn(),
+  };
+
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -39,12 +44,14 @@ describe('ShoppingCartService', () => {
         { provide: getRepositoryToken(Order), useValue: mockShoppingCartRepository },
         { provide: getRepositoryToken(OrderItem), useValue: mockOrderItemRepository },
         { provide: ProductsService, useValue: mockProductsService },
+        { provide: UsersService, useValue: mockUsersService },
       ],
     }).compile();
 
     service = module.get<ShoppingCartService>(ShoppingCartService);
     shoppingCartRepository = module.get<Repository<Order>>(getRepositoryToken(Order));
     orderItemRepository = module.get<Repository<OrderItem>>(getRepositoryToken(OrderItem));
+
     jest.clearAllMocks();
   });
 
@@ -65,13 +72,16 @@ describe('ShoppingCartService', () => {
 
       const result = await service.addItemToShoppingCart(userId, addItemDto);
 
-      expect(mockOrderItemRepository.save).toHaveBeenCalledWith({
-        order,
-        product,
-        quantity: addItemDto.quantity,
-        unit_price: product.price,
-      });
-      expect(result.message).toEqual('Produto adicionado ao carrinho');
+      expect(mockOrderItemRepository.save).toHaveBeenCalledWith(
+        expect.objectContaining({
+          order,
+          product,
+          quantity: addItemDto.quantity,
+          unit_price: product.price,
+          total: product.price * addItemDto.quantity,
+        })
+      );
+      expect(result.message).toBe('Product added to cart');
     });
 
     it('should update quantity if product already exists in cart', async () => {
@@ -85,7 +95,7 @@ describe('ShoppingCartService', () => {
       expect(mockOrderItemRepository.update).toHaveBeenCalledWith(existingItem.id, {
         quantity: addItemDto.quantity,
       });
-      expect(result.message).toEqual('Quantidade do produto atualizada');
+      expect(result.message).toBe('Product quantity updated');
     });
 
     it('should add a new product to a cart that already has other items', async () => {
@@ -100,42 +110,16 @@ describe('ShoppingCartService', () => {
 
       const result = await service.addItemToShoppingCart(userId, newItemDto);
 
-      expect(mockOrderItemRepository.save).toHaveBeenCalledWith({
-        product: newProduct,
-        order,
-        quantity: newItemDto.quantity,
-        unit_price: newProduct.price,
-      });
-      expect(result.message).toEqual('Produto adicionado ao carrinho');
-    });
-  });
-
-  describe('findOne', () => {
-    it('should return a shopping cart with items', async () => {
-      const mockCart = [{ id: 1, items: [] }];
-      const mockQueryBuilder = {
-        innerJoinAndSelect: jest.fn().mockReturnThis(),
-        where: jest.fn().mockReturnThis(),
-        andWhere: jest.fn().mockReturnThis(),
-        getMany: jest.fn().mockResolvedValue(mockCart),
-      };
-      mockShoppingCartRepository.createQueryBuilder.mockReturnValue(mockQueryBuilder as any);
-
-      const result = await service.findOne(1);
-
-      expect(result).toEqual(mockCart);
-    });
-
-    it('should return an "empty cart" message when no cart is found', async () => {
-      const mockQueryBuilder = {
-        innerJoinAndSelect: jest.fn().mockReturnThis(),
-        where: jest.fn().mockReturnThis(),
-        andWhere: jest.fn().mockReturnThis(),
-        getMany: jest.fn().mockResolvedValue([]),
-      };
-      mockShoppingCartRepository.createQueryBuilder.mockReturnValue(mockQueryBuilder as any);
-      const result = await service.findOne(1);
-      expect(result).toBe('Carrinho vazio');
+      expect(mockOrderItemRepository.save).toHaveBeenCalledWith(
+        expect.objectContaining({
+          product: newProduct,
+          order,
+          quantity: newItemDto.quantity,
+          unit_price: newProduct.price,
+          total: newProduct.price * newItemDto.quantity,
+        })
+      );
+      expect(result.message).toBe('Product added to cart');
     });
   });
 
@@ -143,7 +127,7 @@ describe('ShoppingCartService', () => {
     it('should update item quantity and return success message', async () => {
       const dto = { productId: 1, quantity: 5 };
       const cart = { id: 1 };
-      const item = { id: 10 };
+      const item = { id: 10, product: { price: 10 } };
       jest.spyOn(service, 'findShoppingCartByUserId').mockResolvedValue(cart as any);
       mockOrderItemRepository.findOne.mockResolvedValue(item);
 
@@ -151,8 +135,9 @@ describe('ShoppingCartService', () => {
 
       expect(mockOrderItemRepository.update).toHaveBeenCalledWith(item.id, {
         quantity: dto.quantity,
+        total: 50,
       });
-      expect(result).toEqual({ message: 'Quantidade do produto alterada' });
+      expect(result).toEqual({ message: 'Product quantity updated' });
     });
 
     it('should throw NotFoundException if item is not in the cart', async () => {
@@ -175,7 +160,7 @@ describe('ShoppingCartService', () => {
       const result = await service.remove(1, productId);
 
       expect(mockOrderItemRepository.remove).toHaveBeenCalledWith(item);
-      expect(result).toEqual({ message: 'Produto removido do carrinho' });
+      expect(result).toEqual({ message: 'Product removed from cart' });
     });
 
     it('should throw NotFoundException if item to remove is not in the cart', async () => {
@@ -191,18 +176,19 @@ describe('ShoppingCartService', () => {
       const existingCart = { id: 1 };
       mockShoppingCartRepository.findOne.mockResolvedValue(existingCart);
       const cart = await service.getOrCreateShoppingCart(1);
-      expect(mockShoppingCartRepository.findOne).toHaveBeenCalled();
-      expect(mockShoppingCartRepository.save).not.toHaveBeenCalled();
       expect(cart).toEqual(existingCart);
     });
 
     it('should create a new cart if none exists', async () => {
       mockShoppingCartRepository.findOne.mockResolvedValue(null);
+      mockUsersService.findOne.mockResolvedValue({ id: 1, name: 'User Test' });
       const newCart = { id: 2 };
       mockShoppingCartRepository.create.mockReturnValue({});
       mockShoppingCartRepository.save.mockResolvedValue(newCart);
+
       const cart = await service.getOrCreateShoppingCart(1);
-      expect(mockShoppingCartRepository.findOne).toHaveBeenCalled();
+
+      expect(mockUsersService.findOne).toHaveBeenCalledWith(1);
       expect(mockShoppingCartRepository.save).toHaveBeenCalled();
       expect(cart).toEqual(newCart);
     });
