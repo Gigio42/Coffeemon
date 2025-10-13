@@ -53,13 +53,15 @@ interface MatchmakingScreenProps {
   token: string;                  // Token JWT recebido do login
   playerId: number;               // ID do jogador
   onNavigateToLogin: () => void;  // Callback para voltar ao login
+  onNavigateToEcommerce?: () => void; // Callback para voltar ao e-commerce
   onNavigateToBattle: (battleId: string, battleState: BattleState, socket: Socket) => void; // Callback para ir à batalha
 }
 
 export default function MatchmakingScreen({ 
   token, 
   playerId, 
-  onNavigateToLogin, 
+  onNavigateToLogin,
+  onNavigateToEcommerce,
   onNavigateToBattle 
 }: MatchmakingScreenProps) {
   // ========================================
@@ -328,13 +330,23 @@ export default function MatchmakingScreen({
     <SafeAreaView style={styles.container}>
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
         <View style={styles.matchmakingContainer}>
+          {/* BOTÃO DE VOLTAR */}
+          {onNavigateToEcommerce && (
+            <TouchableOpacity 
+              style={styles.backButton} 
+              onPress={onNavigateToEcommerce}
+            >
+              <Text style={styles.backButtonText}>← Voltar</Text>
+            </TouchableOpacity>
+          )}
+
           <Text style={styles.matchTitle}>Procurar Partida</Text>
           
-          <View style={styles.infoContainer}>
-            <Text style={styles.infoText}>User ID: {playerId}</Text>
-            <Text style={styles.infoText}>Socket ID: {socket?.id || 'Desconectado'}</Text>
-            <Text style={styles.infoText}>Status: {matchStatus || 'Conectado'}</Text>
-          </View>
+          {matchStatus && (
+            <View style={styles.statusContainer}>
+              <Text style={styles.statusText}>{matchStatus}</Text>
+            </View>
+          )}
 
           {/* SEÇÃO: MEU TIME */}
           <View style={styles.teamSection}>
@@ -461,18 +473,36 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     color: '#333',
   },
-  infoContainer: {
-    backgroundColor: '#f0f0f0',
-    padding: 15,
+  backButton: {
+    position: 'absolute',
+    top: 10,
+    left: 10,
+    backgroundColor: '#8B4513',
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 8,
+    zIndex: 1,
+  },
+  backButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  statusContainer: {
+    backgroundColor: '#fff3cd',
+    padding: 12,
     borderRadius: 8,
     marginBottom: 20,
     width: '100%',
     maxWidth: 400,
+    borderWidth: 1,
+    borderColor: '#ffc107',
   },
-  infoText: {
+  statusText: {
     fontSize: 16,
-    marginBottom: 5,
-    color: '#333',
+    color: '#856404',
+    textAlign: 'center',
+    fontWeight: '600',
   },
   // ESTILOS PARA SEÇÃO DE TIME
   teamSection: {
