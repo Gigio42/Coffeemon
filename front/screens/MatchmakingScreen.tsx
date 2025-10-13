@@ -63,6 +63,7 @@ export default function MatchmakingScreen({
   playerId, 
   onNavigateToLogin,
   onNavigateToEcommerce,
+  onNavigateToHome,
   onNavigateToBattle 
 }: MatchmakingScreenProps) {
   // ========================================

@@ -62,7 +62,7 @@ export default function App() {
           // - Busca dados do jogador em /game/players/me
           // - Salva token e playerId no AsyncStorage
           // - Verifica se já está logado (checkAuthStatus)
-          onNavigateToMatchmaking={(token, playerId, userId) => {
+          onNavigateToMatchmaking={(token: string, playerId: number, userId: number) => {
             setAuthData({ token, playerId, userId });
             setCurrentScreen(Screen.ECOMMERCE);
           }}
@@ -115,7 +115,8 @@ export default function App() {
           
           // Callback chamado quando o usuário quer VOLTAR PARA HOME
           onNavigateToHome={() => {
-            setCurrentScreen(Screen.HOME);
+            // There is no `HOME` screen in the enum; return to the e-commerce hub instead
+            setCurrentScreen(Screen.ECOMMERCE);
           }}
           
           // Callback chamado quando o usuário faz LOGOUT

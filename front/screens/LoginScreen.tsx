@@ -32,7 +32,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { SOCKET_URL } from '../utils/config';
 
 export default function LoginScreen(props: any) {
-  const { onNavigateToHome } = props;
+  const { onNavigateToMatchmaking } = props;
   // ========================================
   // ESTADOS LOCAIS
   // ========================================
@@ -63,9 +63,33 @@ export default function LoginScreen(props: any) {
       const storedToken = await AsyncStorage.getItem('jwt_token');
       const storedPlayerId = await AsyncStorage.getItem('player_id');
       const storedUserId = await AsyncStorage.getItem('user_id');
-      
+
       if (storedToken && storedPlayerId) {
-        onNavigateToHome(storedToken, parseInt(storedPlayerId));
+        // Ensure we have the userId as well. If it's not stored, fetch it
+        // from the API so the parent can receive a complete auth payload.
+        let userId: number | null = storedUserId ? parseInt(storedUserId) : null;
+        if (!userId) {
+          try {
+            const userResp = await fetch(`${SOCKET_URL}/users/me`, {
+              headers: { 'Authorization': `Bearer ${storedToken}` }
+            });
+            if (userResp.ok) {
+              const ud = await userResp.json();
+              const fetchedUserId = ud.id as number;
+              userId = fetchedUserId;
+              await AsyncStorage.setItem('user_id', String(fetchedUserId));
+            }
+          } catch (err) {
+            console.error('Erro ao recuperar userId durante auto-login:', err);
+          }
+        }
+
+        if (userId) {
+          onNavigateToMatchmaking(storedToken, parseInt(storedPlayerId), userId);
+        } else {
+          // If we couldn't obtain userId, clear storage to avoid inconsistent state
+          await AsyncStorage.clear();
+        }
       }
     } catch (error) {
       console.error('Erro ao verificar auth:', error);
@@ -149,9 +173,9 @@ export default function LoginScreen(props: any) {
         await AsyncStorage.removeItem('player_id');
       }
       
-      // ETAPA 3: Login bem-sucedido! Navegar para Home
-  setLoginMessage(`Login bem-sucedido! Player ID: ${playerData.id}`);
-  setTimeout(() => onNavigateToHome(token, playerData.id), 1000);
+    // ETAPA 3: Login bem-sucedido! Navegar para tela principal do app
+    setLoginMessage(`Login bem-sucedido! Player ID: ${playerData.id}`);
+    setTimeout(() => onNavigateToMatchmaking(token, playerData.id, userId), 1000);
       
     } catch (error) {
       console.error('Erro de login:', error);
