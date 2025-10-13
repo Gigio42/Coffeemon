@@ -36,8 +36,8 @@ export default function LoginScreen(props: any) {
   // ========================================
   // ESTADOS LOCAIS
   // ========================================
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState('player12@coffeemon.com');
+  const [password, setPassword] = useState('player123');
   const [loginMessage, setLoginMessage] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
 

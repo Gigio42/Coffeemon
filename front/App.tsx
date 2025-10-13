@@ -20,6 +20,9 @@ import React, { useState } from 'react';
 import { Socket } from 'socket.io-client';
 import LoginScreen from './screens/LoginScreen';
 import HomeScreen from './screens/HomeScreen';
+import ProductsScreen from './screens/ProductsScreen';
+import CartScreen from './screens/CartScreen';
+import OrdersScreen from './screens/OrdersScreen';
 import MatchmakingScreen from './screens/MatchmakingScreen';
 import BattleScreen from './screens/BattleScreen';
 import { Screen, BattleState } from './types';
@@ -85,6 +88,16 @@ export default function App() {
           token={authData.token}
           playerId={authData.playerId}
           
+          // Callback para navegar para Produtos (menu da cafeteria)
+          onNavigateToProducts={() => {
+            setCurrentScreen(Screen.PRODUCTS);
+          }}
+          
+          // Callback para navegar para Pedidos (histórico)
+          onNavigateToOrders={() => {
+            setCurrentScreen(Screen.ORDERS);
+          }}
+          
           // Callback para navegar para Matchmaking (jogo)
           onNavigateToMatchmaking={(token: string, playerId: number) => {
             setAuthData({ token, playerId });
@@ -96,6 +109,66 @@ export default function App() {
             setAuthData(null);
             setBattleData(null);
             setCurrentScreen(Screen.LOGIN);
+          }}
+        />
+      );
+      
+    // ====================================
+    // TELA DE PRODUTOS (Menu da Cafeteria)
+    // ====================================
+    case Screen.PRODUCTS:
+      // Validação: Se não tem authData, volta pro login
+      if (!authData) {
+        setCurrentScreen(Screen.LOGIN);
+        return null;
+      }
+      return (
+        <ProductsScreen 
+          token={authData.token}
+          onNavigateToHome={() => {
+            setCurrentScreen(Screen.HOME);
+          }}
+          onNavigateToCart={() => {
+            setCurrentScreen(Screen.CART);
+          }}
+        />
+      );
+      
+    // ====================================
+    // TELA DO CARRINHO
+    // ====================================
+    case Screen.CART:
+      // Validação: Se não tem authData, volta pro login
+      if (!authData) {
+        setCurrentScreen(Screen.LOGIN);
+        return null;
+      }
+      return (
+        <CartScreen 
+          token={authData.token}
+          onNavigateToHome={() => {
+            setCurrentScreen(Screen.HOME);
+          }}
+          onNavigateToOrders={() => {
+            setCurrentScreen(Screen.ORDERS);
+          }}
+        />
+      );
+      
+    // ====================================
+    // TELA DE PEDIDOS (Histórico)
+    // ====================================
+    case Screen.ORDERS:
+      // Validação: Se não tem authData, volta pro login
+      if (!authData) {
+        setCurrentScreen(Screen.LOGIN);
+        return null;
+      }
+      return (
+        <OrdersScreen 
+          token={authData.token}
+          onNavigateToHome={() => {
+            setCurrentScreen(Screen.HOME);
           }}
         />
       );
