@@ -1,6 +1,6 @@
 export enum Screen {
   LOGIN = 'LOGIN',
-  HOME = 'HOME',
+  ECOMMERCE = 'ECOMMERCE',
   MATCHMAKING = 'MATCHMAKING',
   BATTLE = 'BATTLE'
 }
@@ -41,4 +41,51 @@ export interface BattleState {
   battleStatus: BattleStatus;
   winnerId: number | null;
   events?: any[];
+}
+
+// ========================================
+// TIPOS DO E-COMMERCE
+// ========================================
+
+export interface Product {
+  id: number;
+  name: string;
+  description: string;
+  price: number;
+  image: string;
+}
+
+export interface CartItem {
+  product: Product;
+  quantity: number;
+}
+
+export interface Cart {
+  items: CartItem[];
+  total: number;
+}
+
+export interface Order {
+  id: number;
+  total_amount: number;
+  total_quantity: number;
+  status: 'pending' | 'completed' | 'cancelled';
+  updated_at: string;
+  orderItem: OrderItem[];
+}
+
+export interface OrderItem {
+  id: number;
+  quantity: number;
+  price: number;
+  unit_price: number;
+  total: number;
+  product: Product;
+}
+
+export interface User {
+  id: number;
+  username: string;
+  email: string;
+  role: 'user' | 'admin';
 }

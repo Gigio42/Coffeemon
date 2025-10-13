@@ -47,7 +47,10 @@ export default function LoginScreen(props: any) {
   // Verifica se já está autenticado ao abrir a tela
   // Se sim, navega direto para Home
   useEffect(() => {
-    checkAuthStatus();
+    // Desabilitar auto-login na web
+    if (Platform.OS !== 'web') {
+      checkAuthStatus();
+    }
   }, []);
 
   /**
@@ -59,6 +62,7 @@ export default function LoginScreen(props: any) {
     try {
       const storedToken = await AsyncStorage.getItem('jwt_token');
       const storedPlayerId = await AsyncStorage.getItem('player_id');
+      const storedUserId = await AsyncStorage.getItem('user_id');
       
       if (storedToken && storedPlayerId) {
         onNavigateToHome(storedToken, parseInt(storedPlayerId));
@@ -74,9 +78,10 @@ export default function LoginScreen(props: any) {
    * Responsável por TODA a lógica de autenticação:
    * 1. Valida campos
    * 2. Faz POST para /auth/login
-   * 3. Busca dados do jogador em /game/players/me
-   * 4. Salva token e playerId no AsyncStorage
-   * 5. Navega para Matchmaking
+   * 3. Busca dados do usuário em /users/me
+   * 4. Busca dados do jogador em /game/players/me
+   * 5. Salva token, userId e playerId no AsyncStorage
+   * 6. Navega para E-commerce
    */
   async function handleLogin() {
     // Validação de campos
@@ -111,9 +116,24 @@ export default function LoginScreen(props: any) {
         await AsyncStorage.removeItem('jwt_token');
       }
       
-      setLoginMessage('Usuário autenticado! Buscando dados do jogador...');
+      setLoginMessage('Usuário autenticado! Buscando dados do usuário...');
       
-      // ETAPA 2: Buscar dados do jogador (Player ID)
+      // ETAPA 2: Buscar dados do usuário (User ID)
+      const userResponse = await fetch(`${SOCKET_URL}/users/me`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      
+      if (!userResponse.ok) {
+        throw new Error('Erro ao buscar dados do usuário.');
+      }
+      
+      const userData = await userResponse.json();
+      const userId = userData.id;
+      await AsyncStorage.setItem('user_id', userId.toString());
+      
+      setLoginMessage('Buscando dados do jogador...');
+      
+      // ETAPA 3: Buscar dados do jogador (Player ID)
       const playerResponse = await fetch(`${SOCKET_URL}/game/players/me`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
