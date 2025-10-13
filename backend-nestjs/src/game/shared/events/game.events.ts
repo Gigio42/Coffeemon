@@ -109,3 +109,15 @@ export class BattleCancelledEvent {
     public readonly disconnectedPlayerId: number
   ) {}
 }
+
+export class PlayerWantsToBattleBotCommand {
+  constructor(
+    public readonly playerId: number,
+    public readonly socketId: string,
+    public readonly botProfileId: string
+  ) {}
+}
+
+export class ExecuteBotTurnCommand {
+  constructor(public readonly battleId: string) {}
+}

@@ -91,7 +91,7 @@ describe('ShoppingCartService', () => {
     it('should add a new product to a cart that already has other items', async () => {
       const newItemDto: AddItemToShoppingCartDto = { productId: 2, quantity: 1 };
       const newProduct = { id: 2, name: 'New Product', price: 20 };
-      const existingItem = { id: 10, product: { id: 1 } }; // Item diferente já no carrinho
+      const existingItem = { id: 10, product: { id: 1 } };
       const order = { id: 1, orderItem: [existingItem] };
 
       jest.spyOn(service, 'getOrCreateShoppingCart').mockResolvedValue(order as any);

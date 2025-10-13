@@ -2,6 +2,7 @@ import { UseGuards } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import {
   ConnectedSocket,
+  MessageBody,
   OnGatewayDisconnect,
   SubscribeMessage,
   WebSocketGateway,
@@ -10,6 +11,7 @@ import { SocketWithUser } from 'src/auth/types/auth.types';
 import { WsGameAuthGuard } from '../../shared/auth/guards/ws-game-auth-guard';
 import {
   PlayerDisconnectedCommand,
+  PlayerWantsToBattleBotCommand,
   PlayerWantsToJoinQueueCommand,
   PlayerWantsToLeaveQueueCommand,
 } from '../../shared/events/game.events';
@@ -37,6 +39,19 @@ export class MatchmakingGateway implements OnGatewayDisconnect {
     this.eventEmitter.emit(
       'queue.leave.command',
       new PlayerWantsToLeaveQueueCommand(playerId, socket.id)
+    );
+  }
+
+  @SubscribeMessage('findBotMatch')
+  findBotMatch(
+    @ConnectedSocket() socket: SocketWithUser,
+    @MessageBody() data: { botProfileId: string }
+  ): void {
+    const playerId = socket.data.playerId;
+    if (!playerId) return;
+    this.eventEmitter.emit(
+      'bot.match.join.command',
+      new PlayerWantsToBattleBotCommand(playerId, socket.id, data.botProfileId || 'jessie')
     );
   }
 

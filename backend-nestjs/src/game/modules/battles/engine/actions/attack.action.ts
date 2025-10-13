@@ -15,7 +15,9 @@ export class AttackAction implements IBattleAction<BattleActionType.ATTACK> {
   async execute(
     context: BattleActionContext<BattleActionType.ATTACK>
   ): Promise<BattleActionResult> {
+    const notifications: ActionEventNotification[] = [];
     const { battleState, playerId, payload } = context;
+
     const isPlayer1 = battleState.player1Id === playerId;
     const attacker = isPlayer1 ? battleState.player1 : battleState.player2;
     const defender = isPlayer1 ? battleState.player2 : battleState.player1;
@@ -47,8 +49,6 @@ export class AttackAction implements IBattleAction<BattleActionType.ATTACK> {
         ],
       };
     }
-
-    const notifications: ActionEventNotification[] = [];
 
     // Verificação de (Dodge/Miss)
     if (

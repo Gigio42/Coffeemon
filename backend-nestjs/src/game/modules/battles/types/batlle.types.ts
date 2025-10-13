@@ -72,6 +72,8 @@ export interface BattleState {
   battleStatus: BattleStatus;
   winnerId?: number;
   events: BattleEvent[]; // <-- Guarda eventos da batalha (p/mandar pro front em seq)
+  isBotBattle?: boolean;
+  botStrategy?: string;
 }
 
 export interface BattleEvent {

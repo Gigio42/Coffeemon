@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { GameAuthModule } from '../../shared/auth/game-auth.module';
 import { CacheModule } from '../../shared/cache/cache.module';
+import { BotModule } from '../bot/bot.module';
 import { PlayerModule } from '../player/player.module';
 import { BattleGateway } from './battle.gateway';
 import { BattleService } from './battles.service';
@@ -12,9 +13,17 @@ import { BattleTurnManager } from './engine/battle-turn-manager';
 import { StatusEffectsService } from './engine/effects/status-effects.service';
 import { EventManager } from './engine/events/event-manager';
 import { Battle } from './entities/battle.entity';
+import { PveGameMode } from './game-modes/pve.game-mode';
+import { PvpGameMode } from './game-modes/pvp.game-mode';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Battle]), GameAuthModule, PlayerModule, CacheModule],
+  imports: [
+    TypeOrmModule.forFeature([Battle]),
+    GameAuthModule,
+    PlayerModule,
+    CacheModule,
+    BotModule,
+  ],
   providers: [
     BattleService,
     BattleGateway,
@@ -24,6 +33,8 @@ import { Battle } from './entities/battle.entity';
     AttackAction,
     SwitchAction,
     StatusEffectsService,
+    PvpGameMode,
+    PveGameMode,
   ],
   exports: [BattleService],
 })

@@ -1,26 +1,34 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, OnModuleInit } from '@nestjs/common';
 import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { BattleCacheService } from '../../shared/cache/services/battle-cache.service';
+import { RoomCacheService } from '../../shared/cache/services/room-cache.service';
 import {
   BattleActionCommand,
   BattleCancelledEvent,
   BattleCreatedEvent,
   BattleEndedEvent,
   BattleStateUpdatedEvent,
+  ExecuteBotTurnCommand,
   MatchPairFoundEvent,
   OpponentDisconnectedEvent,
   PlayerDisconnectedCommand,
   PlayerLeftBattleEvent,
   PlayerReconnectedEvent,
+  PlayerWantsToBattleBotCommand,
   PlayerWantsToLeaveBattleCommand,
   PlayerWantsToRejoinBattleCommand,
 } from '../../shared/events/game.events';
+import { BotPlayerService } from '../bot/services/bot-player.service';
+import { BotService } from '../bot/services/bot.service';
 import { PlayerCoffeemons } from '../player/entities/playerCoffeemons.entity';
 import { PlayerService } from '../player/player.service';
 import { BattleTurnManager } from './engine/battle-turn-manager';
 import { Battle } from './entities/battle.entity';
+import { IGameMode } from './game-modes/game-mode.interface';
+import { PveGameMode } from './game-modes/pve.game-mode';
+import { PvpGameMode } from './game-modes/pvp.game-mode';
 import {
   BattleActionType,
   BattleState,
@@ -29,11 +37,11 @@ import {
   ExtractPayload,
   PlayerBattleState,
 } from './types/batlle.types';
-import { RoomCacheService } from '../../shared/cache/services/room-cache.service';
 
 @Injectable()
-export class BattleService {
+export class BattleService implements OnModuleInit {
   private disconnectionTimeouts = new Map<string, NodeJS.Timeout>();
+  private activeGameModes = new Map<string, IGameMode>();
 
   constructor(
     @InjectRepository(Battle) private repo: Repository<Battle>,
@@ -41,8 +49,62 @@ export class BattleService {
     private battleCache: BattleCacheService,
     private roomCache: RoomCacheService,
     private battleTurnManager: BattleTurnManager,
-    private readonly eventEmitter: EventEmitter2
+    private readonly eventEmitter: EventEmitter2,
+    private readonly botPlayerService: BotPlayerService,
+    private readonly botService: BotService,
+    private readonly pvpGameMode: PvpGameMode,
+    private readonly pveGameMode: PveGameMode
   ) {}
+
+  onModuleInit() {
+    this.pvpGameMode.setBattleService(this);
+    this.pveGameMode.setBattleService(this);
+  }
+
+  // =============================================================================
+  // MÉTODOS PÚBLICOS (Usados pelas Estratégias de GameMode)
+  // =============================================================================
+
+  public async executeTurn<T extends BattleActionType>(
+    battleId: string,
+    playerId: number,
+    actionType: T,
+    payload: ExtractPayload<T>
+  ): Promise<BattleState | null> {
+    const battleState = await this.battleCache.get(battleId);
+    if (!battleState) throw new Error(`Battle with ID ${battleId} not found in cache`);
+    if (battleState.player1Id !== playerId && battleState.player2Id !== playerId)
+      throw new Error('You are not part of this battle');
+
+    const updatedState = await this.battleTurnManager.runTurn({
+      battleState,
+      playerId,
+      actionType,
+      payload,
+    });
+
+    if (updatedState.battleStatus === BattleStatus.FINISHED) {
+      await this.finalizeBattleInDb(battleId, updatedState);
+    } else {
+      await this.battleCache.set(battleId, updatedState);
+    }
+    return updatedState;
+  }
+
+  public emitStateUpdate(battleId: string, state: BattleState): void {
+    if (state.battleStatus === BattleStatus.FINISHED) {
+      this.eventEmitter.emit(
+        'battle.ended',
+        new BattleEndedEvent(battleId, state.winnerId!, state)
+      );
+    } else {
+      this.eventEmitter.emit('battle.state.updated', new BattleStateUpdatedEvent(battleId, state));
+    }
+  }
+
+  // =============================================================================
+  // ORQUESTRADORES DE EVENTOS (Listeners Principais)
+  // =============================================================================
 
   @OnEvent('match.pair.found')
   async createBattle(event: MatchPairFoundEvent): Promise<void> {
@@ -63,32 +125,93 @@ export class BattleService {
     );
     await this.battleCache.set(savedBattle.id, state);
 
+    this.activeGameModes.set(savedBattle.id, this.pvpGameMode);
     this.eventEmitter.emit('battle.created', new BattleCreatedEvent(savedBattle.id, state));
   }
 
+  @OnEvent('bot.match.join.command')
+  async createBotBattle(command: PlayerWantsToBattleBotCommand): Promise<void> {
+    const botId = -1 * Date.now();
+    const battle = this.repo.create({
+      player1Id: command.playerId,
+      player2Id: botId,
+      player1SocketId: command.socketId,
+      player2SocketId: 'bot',
+      status: BattleStatus.ACTIVE,
+      createdAt: new Date(),
+    });
+    const savedBattle = await this.repo.save(battle);
+    const { state: botPlayerState, profile: botProfile } =
+      await this.botPlayerService.createBotPlayerStateFromProfile(command.botProfileId);
+    const player1Team = await this.playerService.getPlayerParty(command.playerId);
+    const battleState: BattleState = {
+      player1Id: command.playerId,
+      player2Id: botId,
+      player1SocketId: command.socketId,
+      player2SocketId: 'bot',
+      player1: this.mapTeam(player1Team),
+      player2: botPlayerState,
+      turn: 1,
+      currentPlayerId: command.playerId,
+      battleStatus: BattleStatus.ACTIVE,
+      events: [],
+      isBotBattle: true,
+      botStrategy: botProfile.strategy,
+    };
+    await this.battleCache.set(savedBattle.id, battleState);
+    this.activeGameModes.set(savedBattle.id, this.pveGameMode);
+    this.eventEmitter.emit('battle.created', new BattleCreatedEvent(savedBattle.id, battleState));
+  }
+
   @OnEvent('battle.action.command')
-  async handleBattleAction(command: BattleActionCommand): Promise<void> {
+  async delegatePlayerAction(command: BattleActionCommand): Promise<void> {
     await this.updatePlayerSocketId(command.battleId, command.playerId, command.socketId);
-    const updatedState = await this.executeTurn(
-      command.battleId,
-      command.playerId,
-      command.actionType,
-      command.payload as ExtractPayload<typeof command.actionType>
-    );
-    if (updatedState) {
-      if (updatedState.battleStatus === BattleStatus.FINISHED) {
-        this.eventEmitter.emit(
-          'battle.ended',
-          new BattleEndedEvent(command.battleId, updatedState.winnerId!, updatedState)
-        );
-      } else {
-        this.eventEmitter.emit(
-          'battle.state.updated',
-          new BattleStateUpdatedEvent(command.battleId, updatedState)
-        );
-      }
+    const gameMode = this.activeGameModes.get(command.battleId);
+    if (gameMode) {
+      await gameMode.handlePlayerAction(command);
+    } else {
+      console.error(`Nenhum modo de jogo ativo encontrado para a batalha ${command.battleId}`);
     }
   }
+
+  @OnEvent('bot.turn.command')
+  async handleBotTurn(command: ExecuteBotTurnCommand): Promise<void> {
+    await new Promise((resolve) => setTimeout(resolve, 1500));
+    const battleState = await this.battleCache.get(command.battleId);
+    if (
+      !battleState ||
+      battleState.currentPlayerId >= 0 ||
+      battleState.battleStatus === BattleStatus.FINISHED
+    ) {
+      return;
+    }
+
+    const botAction = this.botService.getBotAction(
+      battleState,
+      battleState.currentPlayerId,
+      battleState.botStrategy || 'random'
+    );
+    const updatedStateAfterBot = await this.executeTurn(
+      command.battleId,
+      battleState.currentPlayerId,
+      botAction.actionType,
+      botAction.payload
+    );
+
+    if (updatedStateAfterBot) {
+      this.emitStateUpdate(command.battleId, updatedStateAfterBot);
+    }
+  }
+
+  @OnEvent('battle.ended')
+  @OnEvent('battle.cancelled')
+  handleBattleTermination(event: BattleEndedEvent | BattleCancelledEvent): void {
+    this.activeGameModes.delete(event.battleId);
+  }
+
+  // =============================================================================
+  // MÉTODOS DE CICLO DE VIDA (Reconexão, Desconexão)
+  // =============================================================================
 
   @OnEvent('player.rejoin.command')
   async handlePlayerRejoin(command: PlayerWantsToRejoinBattleCommand): Promise<void> {
@@ -101,7 +224,6 @@ export class BattleService {
       clearTimeout(this.disconnectionTimeouts.get(timeoutKey));
       this.disconnectionTimeouts.delete(timeoutKey);
     }
-
     const battleState = await this.getBattleState(command.battleId);
     if (battleState) {
       this.eventEmitter.emit(
@@ -124,7 +246,7 @@ export class BattleService {
   @OnEvent('player.disconnected.command')
   async handlePlayerDisconnect(command: PlayerDisconnectedCommand): Promise<void> {
     const roomId = await this.roomCache.findRoomBySocket(command.socketId);
-    if (roomId && roomId.startsWith('battle:')) {
+    if (roomId?.startsWith('battle:')) {
       const battleId = roomId.split(':')[1];
       await this.roomCache.markPlayerDisconnected(command.socketId);
       this.eventEmitter.emit(
@@ -139,7 +261,7 @@ export class BattleService {
     const timeoutKey = `${battleId}:${playerId}`;
     const timeout = setTimeout(() => {
       void this.handleDisconnectionTimeout(battleId, playerId);
-    }, 30000); // 30 segundos
+    }, 30000);
     this.disconnectionTimeouts.set(timeoutKey, timeout);
   }
 
@@ -149,10 +271,8 @@ export class BattleService {
 
     const roomData = await this.roomCache.getRoomData(`battle:${battleId}`);
     const member = roomData?.members.find((m) => m.playerId === playerId);
-
-    if (member && member.status === 'disconnected') {
+    if (member?.status === 'disconnected') {
       this.eventEmitter.emit('battle.cancelled', new BattleCancelledEvent(battleId, playerId));
-
       if (roomData) {
         for (const m of roomData.members) {
           await this.roomCache.leaveRoom(roomData.roomId, m.playerId);
@@ -162,29 +282,9 @@ export class BattleService {
     }
   }
 
-  private async executeTurn<T extends BattleActionType>(
-    battleId: string,
-    playerId: number,
-    actionType: T,
-    payload: ExtractPayload<T>
-  ): Promise<BattleState | null> {
-    const battleState = await this.battleCache.get(battleId);
-    if (!battleState) throw new Error(`Battle with ID ${battleId} not found in cache`);
-    if (battleState.player1Id !== playerId && battleState.player2Id !== playerId)
-      throw new Error('You are not part of this battle');
-    const updatedState = await this.battleTurnManager.runTurn({
-      battleState,
-      playerId,
-      actionType,
-      payload,
-    });
-    if (updatedState.battleStatus === BattleStatus.FINISHED) {
-      await this.finalizeBattleInDb(battleId, updatedState);
-    } else {
-      await this.battleCache.set(battleId, updatedState);
-    }
-    return updatedState;
-  }
+  // =============================================================================
+  // MÉTODOS AUXILIARES (Lógica Interna)
+  // =============================================================================
 
   private async finalizeBattleInDb(battleId: string, state: BattleState): Promise<void> {
     const battle = await this.repo.findOneByOrFail({ id: battleId });
@@ -193,11 +293,11 @@ export class BattleService {
     battle.endedAt = new Date();
     await this.repo.save(battle);
     await this.battleCache.delete(battleId);
+    this.activeGameModes.delete(battleId);
   }
 
-  async getBattleState(battleId: string): Promise<BattleState | null> {
-    const battleState = await this.battleCache.get(battleId);
-    return battleState ?? null;
+  private async getBattleState(battleId: string): Promise<BattleState | null> {
+    return (await this.battleCache.get(battleId)) ?? null;
   }
 
   private async updatePlayerSocketId(
@@ -247,7 +347,7 @@ export class BattleService {
 
   private mapTeam(team: PlayerCoffeemons[]): PlayerBattleState {
     return {
-      activeCoffeemonIndex: 0,
+      activeCoffeemonIndex: 1,
       coffeemons: team.map(
         (c): CoffeemonState => ({
           id: c.id,
