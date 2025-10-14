@@ -81,7 +81,7 @@ describe('ShoppingCartService', () => {
           total: product.price * addItemDto.quantity,
         })
       );
-      expect(result.message).toBe('Product added to cart');
+      expect(result.message).toBe('Produto adicionado ao carrinho');
     });
 
     it('should update quantity if product already exists in cart', async () => {
@@ -95,7 +95,7 @@ describe('ShoppingCartService', () => {
       expect(mockOrderItemRepository.update).toHaveBeenCalledWith(existingItem.id, {
         quantity: addItemDto.quantity,
       });
-      expect(result.message).toBe('Product quantity updated');
+      expect(result.message).toBe('Quantidade do produto atualizada');
     });
 
     it('should add a new product to a cart that already has other items', async () => {
@@ -119,7 +119,7 @@ describe('ShoppingCartService', () => {
           total: newProduct.price * newItemDto.quantity,
         })
       );
-      expect(result.message).toBe('Product added to cart');
+      expect(result.message).toBe('Produto adicionado ao carrinho');
     });
   });
 
@@ -137,7 +137,7 @@ describe('ShoppingCartService', () => {
         quantity: dto.quantity,
         total: 50,
       });
-      expect(result).toEqual({ message: 'Product quantity updated' });
+      expect(result).toEqual({ message: 'Quantidade do produto alterada' });
     });
 
     it('should throw NotFoundException if item is not in the cart', async () => {
@@ -160,7 +160,7 @@ describe('ShoppingCartService', () => {
       const result = await service.remove(1, productId);
 
       expect(mockOrderItemRepository.remove).toHaveBeenCalledWith(item);
-      expect(result).toEqual({ message: 'Product removed from cart' });
+      expect(result).toEqual({ message: 'Produto removido do carrinho' });
     });
 
     it('should throw NotFoundException if item to remove is not in the cart', async () => {
