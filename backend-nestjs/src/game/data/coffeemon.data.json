@@ -1,0 +1,74 @@
+[
+  {
+    "id": 1,
+    "name": "Jasminelle",
+    "type": "floral",
+    "baseHp": 95,
+    "baseAttack": 50,
+    "baseDefense": 55,
+    "moves": [1, 2]
+  },
+  {
+    "id": 2,
+    "name": "Limonetto",
+    "type": "fruity",
+    "baseHp": 80,
+    "baseAttack": 65,
+    "baseDefense": 35,
+    "moves": [3, 4]
+  },
+  {
+    "id": 3,
+    "name": "Maprion",
+    "type": "sweet",
+    "baseHp": 110,
+    "baseAttack": 50,
+    "baseDefense": 50,
+    "moves": [5, 6]
+  },
+  {
+    "id": 4,
+    "name": "Cocoly",
+    "type": "nutty",
+    "baseHp": 85,
+    "baseAttack": 55,
+    "baseDefense": 60,
+    "moves": [7, 8]
+  },
+  {
+    "id": 5,
+    "name": "Espressaur",
+    "type": "roasted",
+    "baseHp": 90,
+    "baseAttack": 70,
+    "baseDefense": 45,
+    "moves": [9, 10]
+  },
+  {
+    "id": 6,
+    "name": "Cinnara",
+    "type": "spicy",
+    "baseHp": 75,
+    "baseAttack": 75,
+    "baseDefense": 40,
+    "moves": [11, 12]
+  },
+  {
+    "id": 7,
+    "name": "Herban",
+    "type": "sour",
+    "baseHp": 80,
+    "baseAttack": 50,
+    "baseDefense": 65,
+    "moves": [13, 14]
+  },
+  {
+    "id": 8,
+    "name": "Chocobrawl",
+    "type": "sweet",
+    "baseHp": 70,
+    "baseAttack": 80,
+    "baseDefense": 45,
+    "moves": [15, 16]
+  }
+]

@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { BattleActionCommand, ExecuteBotTurnCommand } from '../../../shared/events/game.events';
 import { BattleService } from '../battles.service';
-import { BattleStatus } from '../types/batlle.types';
+import { BattleStatus, ExtractPayload } from '../types/batlle.types';
 import { IGameMode } from './game-mode.interface';
 
 @Injectable()
@@ -20,7 +20,7 @@ export class PveGameMode implements IGameMode {
       command.battleId,
       command.playerId,
       command.actionType,
-      command.payload as any
+      command.payload as ExtractPayload<typeof command.actionType>
     );
 
     if (!updatedState) return;

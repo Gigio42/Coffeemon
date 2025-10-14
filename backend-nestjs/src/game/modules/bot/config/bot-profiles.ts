@@ -12,8 +12,8 @@ export interface BotProfile {
 
 export const BotProfiles: Record<string, BotProfile> = {
   jessie: {
-    id: 'jessie',
-    name: 'Treinadora Novata Jessie',
+    id: 'Jessie',
+    name: 'Jessie (Rookie Trainer)',
     strategy: 'random',
     party: [
       { coffeemonId: 1, level: 5 },
@@ -21,9 +21,9 @@ export const BotProfiles: Record<string, BotProfile> = {
     ],
   },
   'pro-james': {
-    id: 'pro-james',
-    name: 'Estrategista james',
-    strategy: 'random', // TODO mudar para 'aggressive' quando implementar
+    id: 'James (Pro)',
+    name: 'James',
+    strategy: 'random', // TODO change to 'aggressive' when implemented
     party: [
       { coffeemonId: 2, level: 10 },
       { coffeemonId: 5, level: 12 },

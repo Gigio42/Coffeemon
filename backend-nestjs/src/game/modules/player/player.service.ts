@@ -109,7 +109,10 @@ export class PlayerService {
     return this.playerCoffeemonRepository.save(playerCoffeemon);
   }
 
-  async addCoffeemonToParty(playerId: number, playerCoffeemonId: number): Promise<PlayerCoffeemons> {
+  async addCoffeemonToParty(
+    playerId: number,
+    playerCoffeemonId: number
+  ): Promise<PlayerCoffeemons> {
     await this.findOne(playerId);
 
     const playerCoffeemon = await this.playerCoffeemonRepository.findOne({
@@ -170,33 +173,4 @@ export class PlayerService {
     playerCoffeemon.isInParty = false;
     return this.playerCoffeemonRepository.save(playerCoffeemon);
   }
-
-  // TODO implementar logica de ganhar xp, moedas e coffeemons
-  // async updatePlayerExperience(playerId: number, amount: number): Promise<Player> {
-  //   const player = await this.findOne(playerId);
-
-  //   player.experience += amount;
-
-  //   const xpNeededForNextLevel = player.level * 100;
-
-  //   if (player.experience >= xpNeededForNextLevel) {
-  //     player.level += 1;
-  //     player.experience -= xpNeededForNextLevel;
-  //     // TODO Bonuses
-  //   }
-
-  //   return this.playerRepository.save(player);
-  // }
-
-  // async updatePlayerCoins(playerId: number, amount: number): Promise<Player> {
-  //   const player = await this.findOne(playerId);
-
-  //   player.coins += amount;
-
-  //   if (player.coins < 0) {
-  //     player.coins = 0;
-  //   }
-
-  //   return this.playerRepository.save(player);
-  // }
 }

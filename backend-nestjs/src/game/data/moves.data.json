@@ -1,0 +1,129 @@
+[
+  {
+    "id": 1,
+    "name": "Petal Breeze",
+    "power": 40,
+    "type": "attack",
+    "description": "A gentle breeze of jasmine petals.",
+    "effects": [
+      { "type": "defenseUp", "chance": 0.3, "duration": 3, "target": "self", "value": 1.2 }
+    ]
+  },
+  {
+    "id": 2,
+    "name": "Fragrant Shield",
+    "power": 0,
+    "type": "attack",
+    "description": "Emits a scent that sharply boosts defense.",
+    "effects": [{ "type": "defenseUp", "chance": 1, "duration": 3, "target": "self", "value": 1.5 }]
+  },
+  {
+    "id": 3,
+    "name": "Zesty Burst",
+    "power": 50,
+    "type": "attack",
+    "description": "A sharp burst of citrus flavor.",
+    "effects": [{ "type": "sleep", "chance": 0.1, "duration": 2, "target": "enemy" }]
+  },
+  {
+    "id": 4,
+    "name": "Ristretto Flame",
+    "power": 45,
+    "type": "attack",
+    "description": "A quick, fiery espresso shot.",
+    "effects": [{ "type": "burn", "chance": 0.3, "duration": 3, "target": "enemy", "value": 5 }]
+  },
+  {
+    "id": 5,
+    "name": "Maple Splash",
+    "power": 40,
+    "type": "attack",
+    "description": "A sweet splash of maple syrup."
+  },
+  {
+    "id": 6,
+    "name": "Sticky Trap",
+    "power": 20,
+    "type": "attack",
+    "description": "Traps enemies, boosting your attack.",
+    "effects": [{ "type": "attackUp", "chance": 1, "duration": 2, "target": "self", "value": 1.3 }]
+  },
+  {
+    "id": 7,
+    "name": "Nut Cracker",
+    "power": 55,
+    "type": "attack",
+    "description": "A powerful blow that can break defenses."
+  },
+  {
+    "id": 8,
+    "name": "Shell Armor",
+    "power": 0,
+    "type": "attack",
+    "description": "Harden's the user's shell, increasing defense.",
+    "effects": [{ "type": "defenseUp", "chance": 1, "duration": 4, "target": "self", "value": 1.4 }]
+  },
+  {
+    "id": 9,
+    "name": "Espresso Shot",
+    "power": 60,
+    "type": "attack",
+    "description": "A concentrated shot of powerful espresso."
+  },
+  {
+    "id": 10,
+    "name": "Overcharge",
+    "power": 0,
+    "type": "attack",
+    "description": "Boosts attack at the cost of some defense.",
+    "effects": [
+      { "type": "attackUp", "chance": 1, "duration": 3, "target": "self", "value": 1.6 },
+      { "type": "defenseDown", "chance": 1, "duration": 3, "target": "self", "value": 0.8 }
+    ]
+  },
+  {
+    "id": 11,
+    "name": "Cinnamon Twist",
+    "power": 50,
+    "type": "attack",
+    "description": "A swirling attack with a spicy aroma."
+  },
+  {
+    "id": 12,
+    "name": "Spicy Spores",
+    "power": 0,
+    "type": "attack",
+    "description": "Scatters spores that may poison the target.",
+    "effects": [{ "type": "poison", "chance": 0.4, "duration": 4, "target": "enemy", "value": 8 }]
+  },
+  {
+    "id": 13,
+    "name": "Vine Whip",
+    "power": 45,
+    "type": "attack",
+    "description": "Whips the target with tough vines."
+  },
+  {
+    "id": 14,
+    "name": "Soothing Scent",
+    "power": 0,
+    "type": "attack",
+    "description": "A calming aroma that slightly heals the user.",
+    "effects": [{ "type": "heal", "chance": 1, "target": "self", "value": 15 }]
+  },
+  {
+    "id": 15,
+    "name": "Chocolate Rush",
+    "power": 65,
+    "type": "attack",
+    "description": "A powerful rush fueled by sugar."
+  },
+  {
+    "id": 16,
+    "name": "Sugar High",
+    "power": 0,
+    "type": "attack",
+    "description": "Greatly boosts attack for a short period.",
+    "effects": [{ "type": "attackUp", "chance": 1, "duration": 2, "target": "self", "value": 2.0 }]
+  }
+]

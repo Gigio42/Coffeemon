@@ -1,4 +1,3 @@
-import { Move } from 'src/game/modules/battles/types/batlle.types';
 import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
 import { Coffeemon } from '../../coffeemon/entities/coffeemon.entity';
 import { Player } from './player.entity';
@@ -33,7 +32,4 @@ export class PlayerCoffeemons {
 
   @Column({ default: false })
   isInParty: boolean;
-
-  @Column({ type: 'simple-json', nullable: true })
-  customMoves: Move[];
 }

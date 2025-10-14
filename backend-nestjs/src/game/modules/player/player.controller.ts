@@ -21,7 +21,6 @@ export class PlayerController {
     @GetUser('id') userId: number,
     @Body() createPlayerDto: CreatePlayerDto
   ): Promise<Player> {
-    console.log('Creating player for user ID:', userId);
     return this.playerService.create(userId, createPlayerDto);
   }
 

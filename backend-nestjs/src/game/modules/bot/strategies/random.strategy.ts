@@ -11,7 +11,6 @@ export class RandomStrategy implements IBotStrategy {
 
     const possibleActions: BattleActionUnion[] = [];
 
-    // Ataca se da pra agir
     if (activeCoffeemon.canAct) {
       activeCoffeemon.moves.forEach((move) => {
         possibleActions.push({
@@ -22,7 +21,6 @@ export class RandomStrategy implements IBotStrategy {
       });
     }
 
-    // troca de coffemon por opcao
     botPlayer.coffeemons.forEach((coffeemon, index) => {
       if (index !== botPlayer.activeCoffeemonIndex && !coffeemon.isFainted) {
         possibleActions.push({
@@ -33,7 +31,6 @@ export class RandomStrategy implements IBotStrategy {
       }
     });
 
-    // Se o Coffeemon atual desmaiou, troca
     if (activeCoffeemon.isFainted) {
       const switchActions = possibleActions.filter((a) => a.actionType === BattleActionType.SWITCH);
       const randomIndex = Math.floor(Math.random() * switchActions.length);

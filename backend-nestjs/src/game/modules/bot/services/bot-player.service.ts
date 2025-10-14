@@ -32,6 +32,7 @@ export class BotPlayerService {
     };
   }
 
+  //TODO refatorar a forma de calcular stats baseado no level pro bot
   private mapToCoffeemonState(baseCoffeemon: Coffeemon, level: number): CoffeemonState {
     const statMultiplier = 1 + (level - 1) * 0.1;
     const maxHp = Math.floor(baseCoffeemon.baseHp * statMultiplier);

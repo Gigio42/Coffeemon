@@ -1,4 +1,4 @@
-import { moveType } from 'src/game/modules/coffeemon/Types/coffeemon.types';
+import { Move } from '../../moves/entities/move.entity';
 
 // Enums
 export enum BattleActionType {
@@ -23,15 +23,6 @@ export interface StatusEffect {
   duration?: number;
   value?: number;
   target: 'self' | 'enemy' | 'ally';
-}
-
-export interface Move {
-  id: number;
-  name: string;
-  power: number;
-  type: moveType;
-  description: string;
-  effects?: StatusEffect[];
 }
 
 export interface CoffeemonState {
@@ -100,7 +91,7 @@ type PayloadMap = {
   [BattleActionType.SWITCH]: SwitchPayload;
 };
 
-// Tipos utilitários para ações
+// Payload Type que muda conforme a ação
 export type BattleActionUnion = {
   [K in keyof PayloadMap]: {
     battleId: string;

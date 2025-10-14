@@ -339,7 +339,7 @@ export class BattleService implements OnModuleInit {
       player1: this.mapTeam(team1),
       player2: this.mapTeam(team2),
       turn: 1,
-      currentPlayerId: p1,
+      currentPlayerId: p1, //TODO definir qual player começa
       battleStatus: BattleStatus.ACTIVE,
       events: [],
     };
@@ -347,7 +347,7 @@ export class BattleService implements OnModuleInit {
 
   private mapTeam(team: PlayerCoffeemons[]): PlayerBattleState {
     return {
-      activeCoffeemonIndex: 1,
+      activeCoffeemonIndex: 0, //TODO definir qual coffeemon começa
       coffeemons: team.map(
         (c): CoffeemonState => ({
           id: c.id,
@@ -366,7 +366,7 @@ export class BattleService implements OnModuleInit {
             critChance: 0.05,
             blockChance: 0.0,
           },
-          moves: [...(c.coffeemon.moves || []), ...(c.customMoves || [])],
+          moves: [...(c.coffeemon.moves || [])],
         })
       ),
     };

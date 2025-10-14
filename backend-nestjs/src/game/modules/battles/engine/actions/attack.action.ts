@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
-import { BattleActionType } from '../../types/batlle.types';
+import { moveType } from 'src/game/modules/coffeemon/Types/coffeemon.types';
+import { BattleActionType } from '../../types/batlle.types'; // Adicione CoffeemonState
 import { StatusEffectsService } from '../effects/status-effects.service';
 import {
   ActionEventNotification,
@@ -7,11 +8,11 @@ import {
   BattleActionResult,
   IBattleAction,
 } from './battle-action-interface';
-import { moveType } from 'src/game/modules/coffeemon/Types/coffeemon.types';
 
 @Injectable()
 export class AttackAction implements IBattleAction<BattleActionType.ATTACK> {
   constructor(private readonly statusEffectsService: StatusEffectsService) {}
+
   async execute(
     context: BattleActionContext<BattleActionType.ATTACK>
   ): Promise<BattleActionResult> {
@@ -29,12 +30,7 @@ export class AttackAction implements IBattleAction<BattleActionType.ATTACK> {
     if (!move) {
       return {
         advanceTurn: false,
-        notifications: [
-          {
-            eventKey: 'ACTION_ERROR',
-            payload: { playerId, error: 'Invalid Move' },
-          },
-        ],
+        notifications: [{ eventKey: 'ACTION_ERROR', payload: { playerId, error: 'Invalid Move' } }],
       };
     }
 
@@ -60,61 +56,54 @@ export class AttackAction implements IBattleAction<BattleActionType.ATTACK> {
         notifications: [
           {
             eventKey: 'ATTACK_MISS',
-            payload: {
-              attackerName: attackingMon.name,
-              targetName: defendingMon.name,
-            },
+            payload: { attackerName: attackingMon.name, targetName: defendingMon.name },
           },
         ],
       };
     }
 
-    // Calcula Dano
-    let damageMultiplier = 1.0;
-    let isCriticalHit = false;
-
-    // Critical Hit
-    if (Math.random() < attackingMon.modifiers.critChance) {
-      damageMultiplier = 1.5;
-      isCriticalHit = true;
-    }
-
-    // Modificadores de Atributos (Buffs/Debuffs)
+    // --- FÓRMULA DE DANO ---
+    //const attackerLevel = this.getLevelFromName(attackingMon.name); //TODO redefinir
     const modifiedAttack = attackingMon.attack * attackingMon.modifiers.attackModifier;
     const modifiedDefense = defendingMon.defense * defendingMon.modifiers.defenseModifier;
 
-    let rawDamage = (move.power + modifiedAttack - modifiedDefense) * damageMultiplier;
+    //let damage = (((2 * attackerLevel) / 5 + 2) * move.power * (modifiedAttack / modifiedDefense)) / 50 + 2; //TODO Está usando a do Pokémon, criar uma própria
+    let damage = move.power * (modifiedAttack / modifiedDefense) * 1.2;
+
+    // --- Multiplicadores ---
+    // Critical Hit
+    let isCriticalHit = false;
+    if (Math.random() < attackingMon.modifiers.critChance) {
+      damage *= 1.5;
+      isCriticalHit = true;
+    }
+
+    // TODO: Adicionar multiplicador de tipo aqui no futuro (Sistema elemental)
 
     // Bloqueio (Block)
     if (Math.random() < defendingMon.modifiers.blockChance) {
-      rawDamage *= 0.5;
+      damage *= 0.5;
       notifications.push({
         eventKey: 'ATTACK_BLOCKED',
         payload: { targetName: defendingMon.name },
       });
     }
 
-    const damage = Math.max(1, Math.floor(rawDamage));
-    defendingMon.currentHp = Math.max(0, defendingMon.currentHp - damage);
+    const finalDamage = Math.max(1, Math.floor(damage));
+    defendingMon.currentHp = Math.max(0, defendingMon.currentHp - finalDamage);
 
     const hitPayload = {
       playerId,
       attackerName: attackingMon.name,
       targetName: defendingMon.name,
-      damage,
+      damage: finalDamage,
     };
 
     // Add notificação de dano correta (CRÍTICO / NORMAL)
     if (isCriticalHit) {
-      notifications.push({
-        eventKey: 'ATTACK_CRIT',
-        payload: hitPayload,
-      });
+      notifications.push({ eventKey: 'ATTACK_CRIT', payload: hitPayload });
     } else {
-      notifications.push({
-        eventKey: 'ATTACK_HIT',
-        payload: hitPayload,
-      });
+      notifications.push({ eventKey: 'ATTACK_HIT', payload: hitPayload });
     }
 
     // Atualiza se o coffeemon foi de base
@@ -123,14 +112,10 @@ export class AttackAction implements IBattleAction<BattleActionType.ATTACK> {
       defendingMon.canAct = false;
       notifications.push({
         eventKey: 'COFFEEMON_FAINTED',
-        payload: {
-          playerId,
-          coffeemonName: defendingMon.name,
-        },
+        payload: { playerId, coffeemonName: defendingMon.name },
       });
     }
 
-    // Aplica efeitos de status do golpe
     if (move.effects) {
       move.effects.forEach((effect) => {
         if (Math.random() <= effect.chance) {
@@ -141,9 +126,12 @@ export class AttackAction implements IBattleAction<BattleActionType.ATTACK> {
       });
     }
 
-    return Promise.resolve({
-      advanceTurn: true,
-      notifications,
-    });
+    return { advanceTurn: true, notifications };
+  }
+
+  //TODO pegar da forma certa
+  private getLevelFromName(name: string): number {
+    const match = name.match(/\(Lvl (\d+)\)/);
+    return match ? parseInt(match[1], 10) : 1;
   }
 }

@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { BattleActionCommand } from '../../../shared/events/game.events';
 import { BattleService } from '../battles.service';
+import { ExtractPayload } from '../types/batlle.types';
 import { IGameMode } from './game-mode.interface';
 
 @Injectable()
@@ -18,7 +19,7 @@ export class PvpGameMode implements IGameMode {
       command.battleId,
       command.playerId,
       command.actionType,
-      command.payload as any
+      command.payload as ExtractPayload<typeof command.actionType>
     );
 
     if (updatedState) {

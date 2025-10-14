@@ -1,5 +1,5 @@
-import { Move } from 'src/game/modules/battles/types/batlle.types';
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, JoinTable, ManyToMany, PrimaryGeneratedColumn } from 'typeorm';
+import { Move } from '../../moves/entities/move.entity';
 
 export enum CoffeemonType {
   FRUITY = 'fruity',
@@ -16,13 +16,10 @@ export class Coffeemon {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column()
+  @Column({ unique: true })
   name: string;
 
-  @Column({
-    type: 'varchar',
-    enum: CoffeemonType,
-  })
+  @Column({ type: 'varchar', enum: CoffeemonType })
   type: CoffeemonType;
 
   @Column()
@@ -34,9 +31,7 @@ export class Coffeemon {
   @Column()
   baseDefense: number;
 
-  @Column()
-  imageUrl: string;
-
-  @Column({ type: 'simple-json' })
+  @ManyToMany(() => Move, { eager: true })
+  @JoinTable()
   moves: Move[];
 }

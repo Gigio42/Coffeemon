@@ -102,29 +102,6 @@ export class RoomCacheService {
     return roomData ? roomData.members.filter((m) => m.status === 'active') : [];
   }
 
-  // Não usado
-  async cleanupExpiredRooms(): Promise<void> {
-    const pattern = 'room:*';
-    const keys = await this.redis.keys(pattern);
-    const now = new Date();
-
-    for (const key of keys) {
-      const data = await this.redis.get(key);
-      if (data) {
-        const roomData: RoomData = JSON.parse(data);
-        if (roomData.expiresAt && new Date(roomData.expiresAt) < now) {
-          await this.redis.del(key);
-          for (const member of roomData.members) {
-            await this.redis.del(`player:${member.playerId}:rooms`);
-            if (member.socketId) {
-              await this.redis.del(`socket:${member.socketId}:room`);
-            }
-          }
-        }
-      }
-    }
-  }
-
   async findOpponentInRoom(roomId: string, playerId: number): Promise<RoomMember | null> {
     try {
       const roomData = await this.getRoomData(roomId);
