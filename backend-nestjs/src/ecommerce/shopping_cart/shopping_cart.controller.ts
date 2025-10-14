@@ -15,7 +15,6 @@ export class ShoppingCartController {
     @GetUser('id') userId: number,
     @Body() createShoppingCartDto: AddItemToShoppingCartDto
   ) {
-    console.log('🔍 Shopping Cart - UserId recebido:', userId);
     return this.shoppingCartService.addItemToShoppingCart(userId, createShoppingCartDto);
   }
 
@@ -29,13 +28,11 @@ export class ShoppingCartController {
     @GetUser('id') userId: number,
     @Body() updateShoppingCartDto: UpdateShoppingCartDto
   ) {
-    console.log('🔄 PUT /shopping-cart - UserId:', userId, 'DTO:', updateShoppingCartDto);
     return this.shoppingCartService.updateQuantity(userId, updateShoppingCartDto);
   }
 
   @Delete(':productId')
   remove(@GetUser('id') userId: number, @Param('productId') productId: string) {
-    console.log('🗑️ DELETE /shopping-cart/:productId - UserId:', userId, 'ProductId:', productId);
     return this.shoppingCartService.remove(userId, +productId);
   }
 }

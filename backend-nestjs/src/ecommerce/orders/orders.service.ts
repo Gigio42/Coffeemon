@@ -63,8 +63,6 @@ export class OrdersService {
         }, 0);
       }
 
-      console.log(`💰 Total calculado: ${totalPrice}, Quantidade total: ${totalQuantity}`);
-
       // Atualizar o status, total_amount e total_quantity
       await this.ordersRepository.update(shoppingCart.id, { 
         status: OrderStatus.FINISHED,

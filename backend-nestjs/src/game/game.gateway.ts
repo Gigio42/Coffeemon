@@ -3,7 +3,7 @@ import { ConnectedSocket, SubscribeMessage, WebSocketGateway } from '@nestjs/web
 import { Socket } from 'socket.io';
 import { GetUserWs } from '../auth/decorators/get-user-ws.decorator';
 import { User } from '../ecommerce/users/entities/user.entity';
-import { WsGameAuthGuard } from './auth/guards/ws-game-auth-guard';
+import { WsGameAuthGuard } from './shared/auth/guards/ws-game-auth-guard';
 
 @UseGuards(WsGameAuthGuard)
 @WebSocketGateway({

@@ -1,0 +1,260 @@
+<!doctype html>
+<html lang="pt-br">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Teste de Jogo - Batalha</title>
+    <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+    <style>
+      :root {
+        --player1-color: #3498db; --player2-color: #e74c3c; --bg-color: #2c3e50; --card-bg-color: #ffffff;
+        --disabled-color: #bdc3c7; --font-color: #333; --border-color: #e0e0e0; --log-bg-color: #e9ecef;
+        --highlight-glow: #2ecc71;
+      }
+      body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background-color: var(--bg-color); margin: 0; padding: 20px; color: var(--font-color); display: flex; justify-content: center; min-height: 100vh; }
+      .main-container { display: flex; width: 100%; max-width: 1600px; gap: 30px; border-radius: 15px; overflow: hidden; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3); background-color: #f8f9fa; padding: 20px; }
+      .controls-area { flex-basis: 25%; min-width: 280px; background-color: var(--card-bg-color); border: 1px solid var(--border-color); border-radius: 12px; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1); padding: 25px; display: flex; flex-direction: column; transition: all 0.3s ease-in-out; }
+      .battle-section { flex-basis: 50%; display: flex; flex-direction: column; gap: 25px; }
+      #battle-arena { position: relative; width: 100%; height: 500px; background: linear-gradient(to bottom right, #a2e2b9, #5cb85c); border: 1px solid var(--border-color); border-radius: 15px; overflow: hidden; box-shadow: inset 0 0 15px rgba(0, 0, 0, 0.2); }
+      .coffeemon-display { position: absolute; display: flex; flex-direction: column; align-items: center; padding: 15px; min-width: 200px; background-color: rgba(255, 255, 255, 0.85); border-radius: 10px; box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2); backdrop-filter: blur(5px); transition: transform 0.3s ease-out, box-shadow 0.3s ease-out; }
+      .coffeemon-display:hover { transform: translateY(-5px); box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3); }
+      .coffeemon-display img { max-width: 180px; max-height: 180px; object-fit: contain; margin-bottom: 15px; border-radius: 5px; }
+      .coffeemon-display h4 { margin: 0 0 10px 0; font-size: 1.4em; font-weight: 600; color: var(--font-color); text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1); }
+      .coffeemon-display .hp-bar-container { width: 100%; height: 22px; border-radius: 11px; background-color: #ccc; border: 1px solid #999; overflow: hidden; }
+      .coffeemon-display .hp-bar { height: 100%; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 0.85em; transition: width 0.4s ease-in-out, background-color 0.4s ease-in-out; border-radius: 11px; text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3); }
+      .player-position { bottom: 30px; left: 30px; }
+      .opponent-position { top: 30px; right: 30px; }
+      h3, h4, h5 { border-bottom: 1px solid var(--border-color); padding-bottom: 10px; margin-top: 0; margin-bottom: 15px; color: #333; }
+      #my-controls-area h3 { color: var(--player1-color); }
+      #opponent-controls-area h3 { color: var(--player2-color); }
+      .current-player { border-width: 2px; box-shadow: 0 0 20px var(--highlight-glow), 0 0 30px var(--highlight-glow); border-color: var(--highlight-glow) !important; transform: scale(1.01); }
+      .actions-container h5 { font-size: 1.1em; text-transform: uppercase; color: #666; margin-bottom: 15px; }
+      .move-card, .switch-card { border: 1px solid var(--border-color); border-radius: 10px; padding: 15px; margin-bottom: 12px; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s, background-color 0.2s; background-color: #fdfdfd; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05); }
+      .move-card:hover, .switch-card:not(.card-disabled):hover { transform: translateY(-3px); box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1); background-color: #f0f8ff; }
+      .move-card h6 { margin: 0 0 8px 0; font-size: 1.2em; font-weight: 700; }
+      .move-card .power { float: right; font-weight: bold; color: #555; }
+      #my-actions .move-card h6 { color: var(--player1-color); }
+      .card-disabled { cursor: not-allowed !important; background-color: #eceff1 !important; opacity: 0.5; box-shadow: none !important; transform: none !important; }
+      .card-disabled:hover { transform: none; box-shadow: none; }
+      .fainted-coffeemon { background-color: #dee2e6; color: #888; border-color: #c0c0c0; }
+      .log-container { flex-grow: 1; background-color: var(--card-bg-color); border: 1px solid var(--border-color); border-radius: 12px; padding: 15px; height: 300px; overflow-y: auto; display: flex; flex-direction: column-reverse; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1); }
+      .log-area p { margin: 6px 0; padding: 8px; border-bottom: 1px dashed #f1f3f5; font-size: 0.95em; }
+      .log-area .turn-divider { font-weight: bold; text-align: center; background-color: #4a6c8e; color: white; border-radius: 8px; margin-top: 20px; padding: 8px; font-size: 1.05em; }
+      .log-area .event-message { font-style: italic; color: #555; }
+      .debug-area { margin-top: 20px; }
+      .debug-area summary { background-color: #f1f1f1; border-radius: 8px; padding: 8px 12px; font-size: 0.9em; color: #555; }
+      .debug-area pre { background-color: #2d2d2d; color: #f1f1f1; padding: 15px; border-radius: 8px; font-size: 0.75em; max-height: 200px; overflow-y: auto; margin-top: 10px; }
+    </style>
+  </head>
+  <body>
+    <div class="main-container">
+      <div id="my-controls-area" class="controls-area">
+        <h3>Meu Jogador (ID: <span id="my-id"></span>)</h3>
+        <div id="my-actions" class="actions-container"></div>
+      </div>
+      <div class="battle-section">
+        <div id="battle-arena">
+          <div id="player-active-coffeemon-display" class="coffeemon-display player-position"></div>
+          <div id="opponent-active-coffeemon-display" class="coffeemon-display opponent-position"></div>
+        </div>
+        <div class="log-container">
+          <h4>Log da Batalha</h4>
+          <div class="log-area" id="battle-log"></div>
+          <div class="debug-area">
+            <details>
+              <summary>Ver BattleState Completo</summary>
+              <pre id="battle-state-pre"></pre>
+            </details>
+          </div>
+        </div>
+      </div>
+      <div id="opponent-controls-area" class="controls-area">
+        <h3>Oponente (ID: <span id="opponent-id"></span>)</h3>
+        <div id="opponent-actions" class="actions-container"></div>
+      </div>
+    </div>
+
+    <script>
+      const BattleStatus = {
+        ACTIVE: 'ACTIVE',
+        FINISHED: 'FINISHED',
+      };
+
+      const token = localStorage.getItem('jwt_token');
+      const myPlayerId = parseInt(localStorage.getItem('player_id'));
+      const battleData = JSON.parse(sessionStorage.getItem('battle_data'));
+      
+      let battleState = null; // Começa como nulo
+
+      if (!token || !battleData?.battleId || !myPlayerId) {
+        alert('Dados da batalha, token ou ID do jogador não encontrados. Redirecionando...');
+        window.location.href = 'menu.html';
+      }
+
+      const battleId = battleData.battleId;
+      const battleLog = document.getElementById('battle-log');
+      const battleStatePre = document.getElementById('battle-state-pre');
+
+      const socket = io('http://localhost:3000', { auth: { token } });
+
+      socket.on('connect', () => {
+        logMessage(`Conectado. Meu ID: ${myPlayerId}. Entrando na batalha ${battleId}...`);
+        socket.emit('joinBattle', { battleId });
+      });
+
+      socket.on('battleUpdate', (data) => {
+        if (!data || !data.battleState) {
+          logMessage('<strong>ERRO: Recebido battleUpdate sem battleState.</strong>');
+          return;
+        }
+
+        const isFirstUpdate = battleState === null;
+        battleState = data.battleState;
+
+        if (isFirstUpdate) {
+            logMessage(`<div class="turn-divider">Batalha Iniciada! Turno ${battleState.turn}</div>`);
+        } else {
+            logMessage(`<div class="turn-divider">Turno ${battleState.turn}</div>`);
+        }
+
+        updateUI(battleState);
+
+        if (battleState.events && battleState.events.length > 0) {
+          battleState.events.forEach((event) => {
+            logMessage(`<span class="event-message">${event.message}</span>`);
+
+            if (event.type === 'AttackHit') {
+              const attackerPlayerId = event.payload.playerId;
+              const attackedPlayerId = attackerPlayerId === battleState.player1Id ? battleState.player2Id : battleState.player1Id;
+
+              const targetCoffeemonName = event.payload.targetName.split(' (Lvl')[0];
+              const baseUrl = 'https://gigio42.github.io/Coffeemon/';
+              const encodedName = encodeURIComponent(targetCoffeemonName);
+              const imageType = (attackedPlayerId === myPlayerId) ? 'back' : 'default';
+              const displayId = (attackedPlayerId === myPlayerId) ? 'player-active-coffeemon-display-image' : 'opponent-active-coffeemon-display-image';
+              const targetImageElement = document.querySelector(`#${displayId}`);
+
+              if (targetImageElement) {
+                const originalImageUrl = `${baseUrl}${encodedName}/${imageType}.png`;
+                const hurtImageUrl = `${baseUrl}${encodedName}/hurt.png`;
+                targetImageElement.src = hurtImageUrl;
+                setTimeout(() => { targetImageElement.src = originalImageUrl; }, 500);
+              }
+            }
+          });
+        }
+        
+        if (battleState.battleStatus === BattleStatus.FINISHED) {
+          const message = `A batalha terminou! Vencedor: Jogador ${battleState.winnerId}`;
+          logMessage(`<strong class="turn-divider">${message}</strong>`);
+          alert(message);
+        }
+      });
+
+      socket.on('battleEnd', (data) => {
+        const message = `A batalha terminou! Vencedor: Jogador ${data.winnerId}`;
+        logMessage(`<strong class="turn-divider">${message}</strong>`);
+        alert(message);
+      });
+
+      socket.on('error', (error) => logMessage(`<strong>ERRO: ${error.message}</strong>`));
+
+      function logMessage(msg) {
+        battleLog.innerHTML = `<p>${msg}</p>` + battleLog.innerHTML;
+      }
+
+      function sendAction(actionType, payload) {
+        if (!battleState || battleState.currentPlayerId !== myPlayerId) {
+            logMessage("Aguarde, não é seu turno!");
+            return;
+        }
+        logMessage(`Enviando ação: ${actionType}`);
+        socket.emit('battleAction', { battleId, actionType, payload });
+      }
+      
+      function renderCoffeemonDisplay(playerState, containerId, isMe) {
+          const activeMon = playerState.coffeemons[playerState.activeCoffeemonIndex];
+          const coffeemonContainer = document.getElementById(containerId);
+          const hpPercentage = (activeMon.currentHp / activeMon.maxHp) * 100;
+          const baseUrl = 'https://gigio42.github.io/Coffeemon/';
+          const imageType = isMe ? 'back' : 'default';
+          const coffeemonNameFormatted = activeMon.name.split(' (Lvl')[0];
+          const encodedName = encodeURIComponent(coffeemonNameFormatted);
+          const imageUrl = `${baseUrl}${encodedName}/${imageType}.png`;
+          const defaultImageUrl = 'https://via.placeholder.com/150?text=Not+Found';
+          coffeemonContainer.innerHTML = `
+              <img id="${containerId}-image" src="${imageUrl}" alt="${activeMon.name}" onerror="this.onerror=null;this.src='${defaultImageUrl}';" />
+              <h4>${activeMon.name} ${activeMon.isFainted ? ' (Derrotado)' : ''}</h4>
+              <div class="hp-bar-container">
+                  <div class="hp-bar" style="width: ${hpPercentage}%; background-color: ${isMe ? 'var(--player1-color)' : 'var(--player2-color)'};">${activeMon.currentHp}/${activeMon.maxHp}</div>
+              </div>
+          `;
+      }
+      
+      function updateUI(state) {
+          if (!state) return;
+          battleStatePre.textContent = JSON.stringify(state, null, 2);
+          const myPlayerState = state.player1Id === myPlayerId ? state.player1 : state.player2;
+          const opponentPlayerState = state.player1Id === myPlayerId ? state.player2 : state.player1;
+          const myPlayerTrueId = state.player1Id === myPlayerId ? state.player1Id : state.player2Id;
+          const opponentPlayerTrueId = state.player1Id === myPlayerId ? state.player2Id : state.player1Id;
+          document.getElementById('my-id').textContent = myPlayerTrueId;
+          document.getElementById('opponent-id').textContent = opponentPlayerTrueId;
+          const myControls = document.getElementById('my-controls-area');
+          const opponentControls = document.getElementById('opponent-controls-area');
+          myControls.classList.remove('current-player');
+          opponentControls.classList.remove('current-player');
+          if (state.currentPlayerId === myPlayerTrueId) {
+              myControls.classList.add('current-player');
+          } else {
+              opponentControls.classList.add('current-player');
+          }
+          renderCoffeemonDisplay(myPlayerState, 'player-active-coffeemon-display', true);
+          renderCoffeemonDisplay(opponentPlayerState, 'opponent-active-coffeemon-display', false);
+          renderPlayerActions(myPlayerTrueId, myPlayerState, document.getElementById('my-actions'), true, state);
+          renderPlayerActions(opponentPlayerTrueId, opponentPlayerState, document.getElementById('opponent-actions'), false, state);
+      }
+
+      function renderPlayerActions(playerId, playerState, actionsContainer, isMe, fullState) {
+          actionsContainer.innerHTML = '';
+          const activeMon = playerState.coffeemons[playerState.activeCoffeemonIndex];
+          const isMyTurn = playerId === fullState.currentPlayerId;
+          const canControl = isMyTurn && isMe;
+          if (isMe) {
+              const movesContainer = document.createElement('div');
+              movesContainer.innerHTML = '<h5>Golpes</h5>';
+              activeMon.moves.forEach((move) => {
+                  const card = document.createElement('div');
+                  card.className = 'move-card';
+                  card.innerHTML = `<span class="power">Poder: ${move.power}</span><h6>${move.name}</h6><p>${move.description || 'Sem descrição.'}</p>`;
+                  if (canControl && activeMon.canAct) {
+                      card.onclick = () => sendAction('attack', { moveId: move.id });
+                  } else {
+                      card.classList.add('card-disabled');
+                  }
+                  movesContainer.appendChild(card);
+              });
+              actionsContainer.appendChild(movesContainer);
+          } else {
+              actionsContainer.innerHTML = `<h5>Ações do Oponente</h5><p>${fullState.isBotBattle ? 'Bot está pensando...' : 'Aguardando jogada...'}</p>`;
+          }
+          const switchContainer = document.createElement('div');
+          switchContainer.innerHTML = '<h5>Equipe</h5>';
+          playerState.coffeemons.forEach((mon, index) => {
+              if (index === playerState.activeCoffeemonIndex) return;
+              const card = document.createElement('div');
+              card.className = 'switch-card';
+              card.innerHTML = `<strong>${mon.name}</strong> (HP: ${mon.currentHp}/${mon.maxHp})`;
+              if (mon.isFainted) {
+                  card.classList.add('fainted-coffeemon', 'card-disabled');
+              } else if (isMe && canControl) {
+                  card.onclick = () => sendAction('switch', { newIndex: index });
+              } else {
+                  card.classList.add('card-disabled');
+              }
+              switchContainer.appendChild(card);
+          });
+          actionsContainer.appendChild(switchContainer);
+      }
+    </script>
+  </body>
+</html>
