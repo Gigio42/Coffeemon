@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
-import { CoffeemonState, StatusEffect } from '../../types/batlle.types';
-import { statusEffectRegistry } from './status-effect.registry';
-import { StatusEffectCategory } from './status-effect.interface';
+import { CoffeemonState, StatusEffect } from '../../types/battle-state.types';
 import { ActionEventNotification } from '../actions/battle-action-interface';
+import { StatusEffectCategory } from './status-effect.interface';
+import { statusEffectRegistry } from './status-effect.registry';
 
 @Injectable()
 export class StatusEffectsService {

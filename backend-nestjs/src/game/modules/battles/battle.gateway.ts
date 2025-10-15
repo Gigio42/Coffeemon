@@ -9,14 +9,14 @@ import {
 } from '@nestjs/websockets';
 import { SocketWithUser } from 'src/auth/types/auth.types';
 import { WsGameAuthGuard } from '../../shared/auth/guards/ws-game-auth-guard';
-import { WsPlayerGuard } from '../player/auth/ws-player.guard';
 import {
   BattleActionCommand,
   PlayerDisconnectedCommand,
   PlayerWantsToLeaveBattleCommand,
   PlayerWantsToRejoinBattleCommand,
 } from '../../shared/events/game.events';
-import { BattleActionUnion } from './types/batlle.types';
+import { WsPlayerGuard } from '../player/auth/ws-player.guard';
+import { BattleActionUnion } from './types/battle-actions.types';
 
 @WebSocketGateway({ cors: { origin: '*' } })
 @UseGuards(WsGameAuthGuard, WsPlayerGuard)

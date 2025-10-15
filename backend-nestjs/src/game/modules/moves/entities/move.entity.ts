@@ -1,5 +1,5 @@
 import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
-import { StatusEffect } from '../../battles/types/batlle.types';
+import { StatusEffect } from '../../battles/types/battle-state.types';
 
 @Entity()
 export class Move {

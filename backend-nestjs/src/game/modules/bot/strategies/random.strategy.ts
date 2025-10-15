@@ -1,5 +1,7 @@
 import { Injectable } from '@nestjs/common';
-import { BattleActionType, BattleActionUnion, BattleState } from '../../battles/types/batlle.types';
+import { BattleActionUnion } from '../../battles/types/battle-actions.types';
+import { BattleState } from '../../battles/types/battle-state.types';
+import { BattleActionType } from '../../battles/types/enums';
 import { IBotStrategy } from './bot-strategy.interface';
 
 @Injectable()

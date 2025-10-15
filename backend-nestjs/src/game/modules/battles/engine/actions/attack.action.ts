@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { moveType } from 'src/game/modules/coffeemon/Types/coffeemon.types';
-import { BattleActionType } from '../../types/batlle.types'; // Adicione CoffeemonState
+import { BattleActionType } from '../../types/enums';
 import { StatusEffectsService } from '../effects/status-effects.service';
 import {
   ActionEventNotification,
@@ -11,6 +11,8 @@ import {
 
 @Injectable()
 export class AttackAction implements IBattleAction<BattleActionType.ATTACK> {
+  readonly priority = 5;
+
   constructor(private readonly statusEffectsService: StatusEffectsService) {}
 
   async execute(

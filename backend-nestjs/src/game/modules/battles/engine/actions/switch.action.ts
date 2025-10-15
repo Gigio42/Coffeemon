@@ -1,9 +1,11 @@
 import { Injectable } from '@nestjs/common';
-import { BattleActionType } from '../../types/batlle.types';
+import { BattleActionType } from '../../types/enums';
 import { BattleActionContext, BattleActionResult, IBattleAction } from './battle-action-interface';
 
 @Injectable()
 export class SwitchAction implements IBattleAction<BattleActionType.SWITCH> {
+  readonly priority = 10;
+
   async execute(
     context: BattleActionContext<BattleActionType.SWITCH>
   ): Promise<BattleActionResult> {

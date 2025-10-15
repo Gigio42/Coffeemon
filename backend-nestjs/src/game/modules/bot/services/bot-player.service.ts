@@ -1,5 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { CoffeemonState, PlayerBattleState } from '../../battles/types/batlle.types';
+import { CoffeemonState, PlayerBattleState } from '../../battles/types/battle-state.types';
 import { CoffeemonService } from '../../coffeemon/coffeemon.service';
 import { Coffeemon } from '../../coffeemon/entities/coffeemon.entity';
 import { BotProfile, BotProfiles } from '../config/bot-profiles';
@@ -46,6 +46,7 @@ export class BotPlayerService {
       maxHp: maxHp,
       attack: Math.floor(baseCoffeemon.baseAttack * statMultiplier),
       defense: Math.floor(baseCoffeemon.baseDefense * statMultiplier),
+      speed: Math.floor(baseCoffeemon.baseSpeed * statMultiplier),
       modifiers: {
         attackModifier: 1.0,
         defenseModifier: 1.0,
@@ -55,6 +56,7 @@ export class BotPlayerService {
         blockChance: 0.0,
       },
       moves: [...(baseCoffeemon.moves || [])],
+      statusEffects: [],
     };
   }
 }

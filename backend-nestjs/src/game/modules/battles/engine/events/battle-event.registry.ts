@@ -1,19 +1,13 @@
-import { BattleEvent } from '../../types/batlle.types';
+import { BattleEvent } from '../../types/battle-events.types';
 
 type KnockoutBlockPayload = { playerId: number; coffeemonName: string };
 type StatusBlockPayload = { playerId: number; coffeemonName: string; effectType: string };
 type ActionErrorPayload = { playerId: number; error: string };
 type SwitchSuccessPayload = { playerId: number; newActiveCoffeemonName: string };
 type SwitchFailedPayload = { playerId: number };
-type AttackHitPayload = {
-  playerId: number;
-  attackerName: string;
-  targetName: string;
-  damage: number;
-};
+type AttackHitPayload = { attackerName: string; targetName: string; damage: number };
 type AttackCritPayload = { attackerName: string };
 type AttackBlockedPayload = { targetName: string };
-type TurnAdvancedPayload = { currentPlayerId: number; turn: number };
 type BattleFinishedPayload = { winnerId: number };
 type TurnEndPayload = { turn: number };
 type StatusAppliedPayload = { targetName: string; effectType: string };
@@ -21,109 +15,82 @@ type StatusDamagePayload = { coffeemonName: string; damage: number; effectType: 
 type StatusRemovedPayload = { coffeemonName: string; effectType: string };
 
 export const BattleEventRegistry = {
-  // --- Turn Events ---
-  NOT_YOUR_TURN: (payload: { playerId: number }): BattleEvent => ({
-    type: 'not-your-turn',
-    payload,
-    message: `It's not your turn, player ${payload.playerId}.`,
-  }),
-  TURN_ADVANCED: (payload: TurnAdvancedPayload): BattleEvent => ({
-    type: 'turn-advanced',
-    payload,
-    message: `Turn ${payload.turn}. It's player ${payload.currentPlayerId}'s turn.`,
-  }),
+  // --- Eventos de Turno ---
   BATTLE_FINISHED: (payload: BattleFinishedPayload): BattleEvent => ({
-    type: 'battle-finished',
+    type: 'BATTLE_FINISHED',
     payload,
-    message: `The battle is over! The winner is player ${payload.winnerId}!`,
   }),
   TURN_END: (payload: TurnEndPayload): BattleEvent => ({
-    type: 'turn-end',
+    type: 'TURN_END',
     payload,
-    message: `End of turn ${payload.turn}.`,
   }),
 
-  // --- Action Block Events ---
+  // --- Eventos de Bloqueio de Ação ---
   KNOCKOUT_BLOCK: (payload: KnockoutBlockPayload): BattleEvent => ({
-    type: 'knockout-block',
+    type: 'KNOCKOUT_BLOCK',
     payload,
-    message: `${payload.coffeemonName} is knocked out! You need to switch.`,
   }),
   STATUS_BLOCK: (payload: StatusBlockPayload): BattleEvent => ({
-    type: 'status-block',
+    type: 'STATUS_BLOCK',
     payload,
-    message: `${payload.coffeemonName} is under the effect of ${payload.effectType} and can't act!`,
   }),
   ACTION_ERROR: (payload: ActionErrorPayload): BattleEvent => ({
-    type: 'action-error',
+    type: 'ACTION_ERROR',
     payload,
-    message: `An error occurred: ${payload.error}`,
   }),
 
-  // --- Switch Events ---
+  // --- Eventos de Troca (Switch) ---
   SWITCH_SUCCESS: (payload: SwitchSuccessPayload): BattleEvent => ({
-    type: 'SwitchSuccess',
+    type: 'SWITCH_SUCCESS',
     payload,
-    message: `${payload.newActiveCoffeemonName} enters the field!`,
   }),
   SWITCH_FAILED_SAME_COFFEEMON: (payload: SwitchFailedPayload): BattleEvent => ({
-    type: 'SwitchFailed',
+    type: 'SWITCH_FAILED_SAME_COFFEEMON',
     payload,
-    message: 'This Coffeemon is already on the field.',
   }),
   SWITCH_FAILED_FAINTED_COFFEEMON: (payload: SwitchFailedPayload): BattleEvent => ({
-    type: 'SwitchFailed',
+    type: 'SWITCH_FAILED_FAINTED_COFFEEMON',
     payload,
-    message: 'Cannot switch to a knocked out Coffeemon.',
   }),
   SWITCH_FAILED_INVALID_INDEX: (payload: SwitchFailedPayload): BattleEvent => ({
-    type: 'SwitchFailed',
+    type: 'SWITCH_FAILED_INVALID_INDEX',
     payload,
-    message: 'Invalid switch action.',
   }),
 
-  // --- Attack Events ---
+  // --- Eventos de Ataque ---
   ATTACK_HIT: (payload: AttackHitPayload): BattleEvent => ({
-    type: 'AttackHit',
+    type: 'ATTACK_HIT',
     payload,
-    message: `${payload.attackerName} attacks ${payload.targetName} and deals ${payload.damage} damage!`,
   }),
   ATTACK_MISS: (payload: { attackerName: string; targetName: string }): BattleEvent => ({
-    type: 'AttackMiss',
+    type: 'ATTACK_MISS',
     payload,
-    message: `${payload.attackerName} attacked ${payload.targetName}, but missed!`,
   }),
   ATTACK_CRIT: (payload: AttackCritPayload): BattleEvent => ({
-    type: 'AttackCrit',
+    type: 'ATTACK_CRIT',
     payload,
-    message: `A critical hit! ${payload.attackerName}'s attack is super effective!`,
   }),
   ATTACK_BLOCKED: (payload: AttackBlockedPayload): BattleEvent => ({
-    type: 'AttackBlocked',
+    type: 'ATTACK_BLOCKED',
     payload,
-    message: `${payload.targetName} blocked part of the damage!`,
   }),
   COFFEEMON_FAINTED: (payload: KnockoutBlockPayload): BattleEvent => ({
-    type: 'CoffeemonFainted',
+    type: 'COFFEEMON_FAINTED',
     payload,
-    message: `${payload.coffeemonName} has fainted!`,
   }),
 
-  // --- Status Effect Events ---
+  // --- Eventos de Efeito de Status ---
   STATUS_APPLIED: (payload: StatusAppliedPayload): BattleEvent => ({
-    type: 'status-applied',
+    type: 'STATUS_APPLIED',
     payload,
-    message: `${payload.targetName} is now affected by ${payload.effectType}!`,
   }),
   STATUS_DAMAGE: (payload: StatusDamagePayload): BattleEvent => ({
-    type: 'status-damage',
+    type: 'STATUS_DAMAGE',
     payload,
-    message: `${payload.coffeemonName} takes ${payload.damage} damage from ${payload.effectType}!`,
   }),
   STATUS_REMOVED: (payload: StatusRemovedPayload): BattleEvent => ({
-    type: 'status-removed',
+    type: 'STATUS_REMOVED',
     payload,
-    message: `${payload.coffeemonName} is no longer affected by ${payload.effectType}.`,
   }),
 };
 

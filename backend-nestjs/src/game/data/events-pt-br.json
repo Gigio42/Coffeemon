@@ -1,0 +1,16 @@
+{
+    "BATTLE_FINISHED": "A batalha terminou! O vencedor é o jogador {winnerId}!",
+    "TURN_END": "Fim do Turno {turn}.",
+    "KNOCKOUT_BLOCK": "{coffeemonName} está nocauteado! Você precisa trocar.",
+    "STATUS_BLOCK": "{coffeemonName} está sob o efeito de {effectType} e não pode agir!",
+    "ACTION_ERROR": "Ocorreu um erro: {error}",
+    "SWITCH_SUCCESS": "{newActiveCoffeemonName} entra no campo de batalha!",
+    "ATTACK_HIT": "{attackerName} ataca {targetName} e causa {damage} de dano!",
+    "ATTACK_MISS": "{attackerName} atacou {targetName}, mas errou!",
+    "ATTACK_CRIT": "Um acerto crítico! O ataque de {attackerName} é super efetivo!",
+    "ATTACK_BLOCKED": "{targetName} bloqueou parte do dano!",
+    "COFFEEMON_FAINTED": "{coffeemonName} foi derrotado!",
+    "STATUS_APPLIED": "{targetName} agora está afetado por {effectType}!",
+    "STATUS_DAMAGE": "{coffeemonName} sofre {damage} de dano de {effectType}!",
+    "STATUS_REMOVED": "{coffeemonName} não está mais afetado por {effectType}."
+  }

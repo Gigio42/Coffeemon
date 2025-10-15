@@ -1,6 +1,6 @@
 import { Injectable, Type } from '@nestjs/common';
 import { ModuleRef } from '@nestjs/core';
-import { BattleActionType } from '../../types/batlle.types';
+import { BattleActionType } from '../../types/enums';
 import { AttackAction } from './attack.action';
 import { IBattleAction } from './battle-action-interface';
 import { SwitchAction } from './switch.action';

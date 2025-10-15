@@ -31,6 +31,9 @@ export class Coffeemon {
   @Column()
   baseDefense: number;
 
+  @Column()
+  baseSpeed: number;
+
   @ManyToMany(() => Move, { eager: true })
   @JoinTable()
   moves: Move[];

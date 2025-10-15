@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
+import { BattleState } from 'src/game/modules/battles/types/battle-state.types';
 import { RedisService } from '../../../../infrastructure/redis/redis.service';
-import { BattleState } from '../../../modules/battles/types/batlle.types';
 
 @Injectable()
 export class BattleCacheService {
