@@ -11,8 +11,10 @@ export class I18nService implements OnModuleInit {
   }
 
   private loadTranslations() {
-    const dataPath = path.join(__dirname, '..', 'data');
+    const dataPath = path.join(__dirname, '..', '..', 'game', 'data');
     const files = fs.readdirSync(dataPath);
+
+    console.log(`[I18nService] Loading translations from: ${dataPath}`);
 
     files.forEach((file) => {
       if (file.startsWith('events-') && file.endsWith('.json')) {

@@ -3,7 +3,7 @@ import { EventEmitterModule } from '@nestjs/event-emitter';
 import { AuthModule } from '../auth/auth.module';
 import { UsersModule } from '../ecommerce/users/users.module';
 import { GameGateway } from './game.gateway';
-import { I18nModule } from './i18n/i18n.module';
+import { I18nModule } from '../i18n/i18n.module';
 import { BattlesModule } from './modules/battles/battles.module';
 import { CoffeemonModule } from './modules/coffeemon/coffeemon.module';
 import { MatchmakingModule } from './modules/matchmaking/matchmaking.module';

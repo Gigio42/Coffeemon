@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { I18nService } from 'src/game/i18n/i18n.service';
+import { I18nService } from 'src/i18n/i18n.service';
 import { BattleEvent } from '../../types/battle-events.types';
 import { ActionEventNotification } from '../actions/battle-action-interface';
 import { BattleEventRegistry } from './battle-event.registry';
