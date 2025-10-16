@@ -1,6 +1,7 @@
 export enum BattleActionType {
   ATTACK = 'attack',
   SWITCH = 'switch',
+  SELECT_COFFEEMON = 'select_coffeemon',
 }
 
 export enum BattleStatus {
@@ -9,6 +10,7 @@ export enum BattleStatus {
 }
 
 export enum TurnPhase {
+  SELECTION = 'SELECTION',
   SUBMISSION = 'SUBMISSION',
   RESOLUTION = 'RESOLUTION',
   END_OF_TURN = 'END_OF_TURN',

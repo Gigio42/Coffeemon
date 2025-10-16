@@ -8,6 +8,7 @@ import { BattleGateway } from './battle.gateway';
 import { ActionExecutorService } from './engine/action-executor.service';
 import { AttackAction } from './engine/actions/attack.action';
 import { BattleActionFactory } from './engine/actions/battle-action-factory';
+import { SelectCoffeemonAction } from './engine/actions/select-coffeemon.action';
 import { SwitchAction } from './engine/actions/switch.action';
 import { BattlePhaseManager } from './engine/battle-phase-manager.service';
 import { StatusEffectsService } from './engine/effects/status-effects.service';
@@ -39,6 +40,7 @@ import { BattleService } from './services/battles.service';
     StatusEffectsService,
     AttackAction,
     SwitchAction,
+    SelectCoffeemonAction,
     PvpGameMode,
     PveGameMode,
   ],

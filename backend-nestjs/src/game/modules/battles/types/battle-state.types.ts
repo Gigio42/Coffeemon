@@ -34,8 +34,9 @@ export interface CoffeemonState {
 }
 
 export interface PlayerBattleState {
-  activeCoffeemonIndex: number;
+  activeCoffeemonIndex: number | null;
   coffeemons: CoffeemonState[];
+  hasSelectedCoffeemon: boolean;
 }
 
 export interface BattleState {

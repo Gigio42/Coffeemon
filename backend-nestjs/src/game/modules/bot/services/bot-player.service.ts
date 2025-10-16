@@ -25,8 +25,9 @@ export class BotPlayerService {
 
     return {
       state: {
-        activeCoffeemonIndex: 0,
+        activeCoffeemonIndex: null,
         coffeemons: botParty,
+        hasSelectedCoffeemon: false,
       },
       profile,
     };

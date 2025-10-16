@@ -25,6 +25,18 @@ export class AttackAction implements IBattleAction<BattleActionType.ATTACK> {
     const attacker = isPlayer1 ? battleState.player1 : battleState.player2;
     const defender = isPlayer1 ? battleState.player2 : battleState.player1;
 
+    if (attacker.activeCoffeemonIndex === null || defender.activeCoffeemonIndex === null) {
+      return {
+        advanceTurn: false,
+        notifications: [
+          {
+            eventKey: 'ACTION_ERROR',
+            payload: { playerId, error: 'A player has not selected a Coffeemon yet.' },
+          },
+        ],
+      };
+    }
+
     const attackingMon = attacker.coffeemons[attacker.activeCoffeemonIndex];
     const defendingMon = defender.coffeemons[defender.activeCoffeemonIndex];
 

@@ -13,6 +13,18 @@ export class BotService {
     //TODO implementar mais estrategias dps
   }
 
+  getBotInitialSelection(
+    battleState: BattleState,
+    botPlayerId: number,
+    strategy: string
+  ): BattleActionUnion {
+    const selectedStrategy = this.strategies.get(strategy);
+    if (!selectedStrategy) {
+      throw new Error(`Estratégia de bot '${strategy}' não encontrada.`);
+    }
+    return selectedStrategy.chooseInitialCoffeemon(battleState, botPlayerId);
+  }
+
   getBotAction(battleState: BattleState, botPlayerId: number, strategy: string): BattleActionUnion {
     const selectedStrategy = this.strategies.get(strategy);
     if (!selectedStrategy) {

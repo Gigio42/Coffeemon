@@ -3,11 +3,13 @@ import { ModuleRef } from '@nestjs/core';
 import { BattleActionType } from '../../types/enums';
 import { AttackAction } from './attack.action';
 import { IBattleAction } from './battle-action-interface';
+import { SelectCoffeemonAction } from './select-coffeemon.action';
 import { SwitchAction } from './switch.action';
 
 const actionMap: Record<BattleActionType, Type<IBattleAction<any>>> = {
   [BattleActionType.ATTACK]: AttackAction,
   [BattleActionType.SWITCH]: SwitchAction,
+  [BattleActionType.SELECT_COFFEEMON]: SelectCoffeemonAction,
 };
 
 @Injectable()

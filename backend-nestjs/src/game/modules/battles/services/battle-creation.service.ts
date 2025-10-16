@@ -51,7 +51,7 @@ export class BattleCreationService {
       turn: 1,
       battleStatus: BattleStatus.ACTIVE,
       events: [],
-      turnPhase: TurnPhase.SUBMISSION,
+      turnPhase: TurnPhase.SELECTION,
       pendingActions: { [event.player1Id]: null, [event.player2Id]: null },
     };
 
@@ -88,7 +88,7 @@ export class BattleCreationService {
       events: [],
       isBotBattle: true,
       botStrategy: botProfile.strategy,
-      turnPhase: TurnPhase.SUBMISSION,
+      turnPhase: TurnPhase.SELECTION,
       pendingActions: { [command.playerId]: null, [botId]: null },
     };
 
@@ -98,7 +98,8 @@ export class BattleCreationService {
 
   private mapTeamToState(team: PlayerCoffeemons[]): PlayerBattleState {
     return {
-      activeCoffeemonIndex: 0,
+      activeCoffeemonIndex: null,
+      hasSelectedCoffeemon: false,
       coffeemons: team.map(
         (c): CoffeemonState => ({
           id: c.id,

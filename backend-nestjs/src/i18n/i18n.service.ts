@@ -11,7 +11,7 @@ export class I18nService implements OnModuleInit {
   }
 
   private loadTranslations() {
-    const dataPath = path.join(__dirname, '..', '..', 'game', 'data');
+    const dataPath = path.join(process.cwd(), 'src', 'game', 'data');
     const files = fs.readdirSync(dataPath);
 
     console.log(`[I18nService] Loading translations from: ${dataPath}`);

@@ -8,9 +8,14 @@ export interface SwitchPayload {
   newIndex: number;
 }
 
+export interface SelectCoffeemonPayload {
+  coffeemonIndex: number;
+}
+
 type PayloadMap = {
   [BattleActionType.ATTACK]: AttackPayload;
   [BattleActionType.SWITCH]: SwitchPayload;
+  [BattleActionType.SELECT_COFFEEMON]: SelectCoffeemonPayload;
 };
 
 export type BattleActionUnion = {

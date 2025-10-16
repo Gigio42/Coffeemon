@@ -5,6 +5,7 @@ import { Repository } from 'typeorm';
 import { BattleCacheService } from '../../../shared/cache/services/battle-cache.service';
 import {
   BattleActionCommand,
+  BattleCreatedEvent,
   BattleEndedEvent,
   BattleStateUpdatedEvent,
   ExecuteBotTurnCommand,
@@ -37,15 +38,25 @@ export class BattleService implements OnModuleInit {
     this.pvpGameMode.setBattleService(this);
     this.pveGameMode.setBattleService(this);
 
-    this.eventEmitter.on('battle.created', ({ battleId, battleState }) => {
+    this.eventEmitter.on('battle.created', ({ battleId, battleState }: BattleCreatedEvent) => {
       this.activeGameModes.set(
         battleId,
         battleState.isBotBattle ? this.pveGameMode : this.pvpGameMode
       );
+      if (battleState.isBotBattle) {
+        this.handleBotInitialSelection(battleId, battleState).catch((err) => {
+          console.error(
+            `[BattleService] Failed to handle bot initial selection for battle ${battleId}:`,
+            err
+          );
+        });
+      }
     });
 
-    this.eventEmitter.on('battle.ended', ({ battleId }) => this.activeGameModes.delete(battleId));
-    this.eventEmitter.on('battle.cancelled', ({ battleId }) =>
+    this.eventEmitter.on('battle.ended', ({ battleId }: { battleId: string }) =>
+      this.activeGameModes.delete(battleId)
+    );
+    this.eventEmitter.on('battle.cancelled', ({ battleId }: { battleId: string }) =>
       this.activeGameModes.delete(battleId)
     );
   }
@@ -61,6 +72,8 @@ export class BattleService implements OnModuleInit {
     }
 
     const initialTurn = battleState.turn;
+    const initialTurnPhase = battleState.turnPhase;
+
     const updatedState = await this.battlePhaseManager.submitAction(battleState, playerId, action);
 
     if (updatedState.battleStatus === BattleStatus.FINISHED) {
@@ -69,9 +82,18 @@ export class BattleService implements OnModuleInit {
       await this.battleCache.set(battleId, updatedState);
     }
 
-    const turnWasResolved =
-      updatedState.turn > initialTurn || updatedState.battleStatus === BattleStatus.FINISHED;
-    if (turnWasResolved) {
+    const turnAdvanced = updatedState.turn > initialTurn;
+    const phaseChanged = updatedState.turnPhase !== initialTurnPhase;
+    const battleEnded = updatedState.battleStatus === BattleStatus.FINISHED;
+    const turnWasResolved = turnAdvanced || phaseChanged || battleEnded;
+
+    const numSubmittedActions = Object.values(updatedState.pendingActions).filter(
+      (act) => act !== null
+    ).length;
+    const isFirstActionOfTurn =
+      initialTurnPhase === TurnPhase.SUBMISSION && numSubmittedActions === 1;
+
+    if (turnWasResolved || isFirstActionOfTurn) {
       this.emitStateUpdate(battleId, updatedState);
     }
   }
@@ -85,6 +107,23 @@ export class BattleService implements OnModuleInit {
     } else {
       this.eventEmitter.emit('battle.state.updated', new BattleStateUpdatedEvent(battleId, state));
     }
+  }
+
+  private async handleBotInitialSelection(
+    battleId: string,
+    battleState: BattleState
+  ): Promise<void> {
+    const botId = battleState.player2Id;
+    const botAction = this.botService.getBotInitialSelection(
+      battleState,
+      botId,
+      battleState.botStrategy || 'random'
+    );
+
+    await this.submitAction(battleId, botId, {
+      ...botAction,
+      battleId,
+    });
   }
 
   @OnEvent('battle.action.command')
@@ -124,7 +163,10 @@ export class BattleService implements OnModuleInit {
       battleState.botStrategy || 'random'
     );
 
-    await this.submitAction(command.battleId, botId, botAction);
+    await this.submitAction(command.battleId, botId, {
+      ...botAction,
+      battleId: command.battleId,
+    });
   }
 
   private async finalizeBattleInDb(battleId: string, state: BattleState): Promise<void> {

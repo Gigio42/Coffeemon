@@ -23,26 +23,37 @@ export class ActionExecutorService {
     payload: ExtractPayload<any>
   ): Promise<BattleState> {
     const player = battleState.player1Id === playerId ? battleState.player1 : battleState.player2;
-    const activeCoffeemon = player.coffeemons[player.activeCoffeemonIndex];
 
-    if (activeCoffeemon.isFainted) {
-      if (actionType !== BattleActionType.SWITCH) {
+    if (actionType !== BattleActionType.SELECT_COFFEEMON) {
+      if (player.activeCoffeemonIndex === null) {
         this.addEvent(battleState, {
-          eventKey: 'KNOCKOUT_BLOCK',
-          payload: { playerId, coffeemonName: activeCoffeemon.name },
+          eventKey: 'ACTION_ERROR',
+          payload: { playerId, error: 'No active Coffeemon selected.' },
         });
         return battleState;
       }
-    } else if (!this.canAct(activeCoffeemon)) {
-      this.addEvent(battleState, {
-        eventKey: 'STATUS_BLOCK',
-        payload: {
-          playerId,
-          coffeemonName: activeCoffeemon.name,
-          effectType: 'a status condition',
-        },
-      });
-      return battleState;
+
+      const activeCoffeemon = player.coffeemons[player.activeCoffeemonIndex];
+
+      if (activeCoffeemon.isFainted) {
+        if (actionType !== BattleActionType.SWITCH) {
+          this.addEvent(battleState, {
+            eventKey: 'KNOCKOUT_BLOCK',
+            payload: { playerId, coffeemonName: activeCoffeemon.name },
+          });
+          return battleState;
+        }
+      } else if (!this.canAct(activeCoffeemon)) {
+        this.addEvent(battleState, {
+          eventKey: 'STATUS_BLOCK',
+          payload: {
+            playerId,
+            coffeemonName: activeCoffeemon.name,
+            effectType: 'a status condition',
+          },
+        });
+        return battleState;
+      }
     }
 
     const action = this.battleActionFactory.getAction(actionType);

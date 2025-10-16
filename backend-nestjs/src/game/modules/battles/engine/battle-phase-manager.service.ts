@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { BattleActionUnion } from '../types/battle-actions.types';
 import { BattleState } from '../types/battle-state.types';
-import { BattleStatus, TurnPhase } from '../types/enums';
+import { BattleActionType, BattleStatus, TurnPhase } from '../types/enums';
 import { ActionExecutorService } from './action-executor.service';
 import { BattleActionFactory } from './actions/battle-action-factory';
 import { StatusEffectsService } from './effects/status-effects.service';
@@ -28,6 +28,10 @@ export class BattlePhaseManager {
     playerId: number,
     action: BattleActionUnion
   ): Promise<BattleState> {
+    if (battleState.turnPhase === TurnPhase.SELECTION) {
+      return this.handleSelectionPhase(battleState, playerId, action);
+    }
+
     if (battleState.turnPhase !== TurnPhase.SUBMISSION) {
       battleState.events.push(
         this.eventManager.createEvent({
@@ -61,6 +65,46 @@ export class BattlePhaseManager {
     return battleState;
   }
 
+  private async handleSelectionPhase(
+    battleState: BattleState,
+    playerId: number,
+    action: BattleActionUnion
+  ): Promise<BattleState> {
+    if (action.actionType !== BattleActionType.SELECT_COFFEEMON) {
+      battleState.events.push(
+        this.eventManager.createEvent({
+          eventKey: 'ACTION_ERROR',
+          payload: { playerId, error: 'You must select your starting Coffeemon.' },
+        })
+      );
+      return battleState;
+    }
+
+    const player = battleState.player1Id === playerId ? battleState.player1 : battleState.player2;
+    if (player.hasSelectedCoffeemon) {
+      battleState.events.push(
+        this.eventManager.createEvent({
+          eventKey: 'ACTION_ERROR',
+          payload: { playerId, error: 'You have already selected your Coffeemon.' },
+        })
+      );
+      return battleState;
+    }
+
+    const updatedState = await this.actionExecutor.execute(
+      battleState,
+      playerId,
+      action.actionType,
+      action.payload
+    );
+
+    if (updatedState.player1.hasSelectedCoffeemon && updatedState.player2.hasSelectedCoffeemon) {
+      updatedState.turnPhase = TurnPhase.SUBMISSION;
+    }
+
+    return updatedState;
+  }
+
   private async resolveTurn(battleState: BattleState): Promise<BattleState> {
     battleState.turnPhase = TurnPhase.RESOLUTION;
     battleState.events = [];
@@ -87,8 +131,8 @@ export class BattlePhaseManager {
     const p1Action = pendingActions[player1Id]!;
     const p2Action = pendingActions[player2Id]!;
 
-    const p1Coffeemon = player1.coffeemons[player1.activeCoffeemonIndex];
-    const p2Coffeemon = player2.coffeemons[player2.activeCoffeemonIndex];
+    const p1Coffeemon = player1.coffeemons[player1.activeCoffeemonIndex!];
+    const p2Coffeemon = player2.coffeemons[player2.activeCoffeemonIndex!];
 
     const queue: ActionInQueue[] = [
       {
