@@ -2,49 +2,384 @@
 <html lang="pt-br">
   <head>
     <meta charset="UTF-8" />
-    <title>Teste de Jogo - Batalha</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Teste de Jogo - Batalha por Fases</title>
     <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
     <style>
       :root {
-        --player1-color: #3498db; --player2-color: #e74c3c; --bg-color: #2c3e50; --card-bg-color: #ffffff;
-        --disabled-color: #bdc3c7; --font-color: #333; --border-color: #e0e0e0; --log-bg-color: #e9ecef;
+        --player1-color: #3498db;
+        --player2-color: #e74c3c;
+        --bg-color: #2c3e50;
+        --card-bg-color: #ffffff;
+        --disabled-color: #bdc3c7;
+        --font-color: #333;
+        --border-color: #e0e0e0;
+        --log-bg-color: #e9ecef;
         --highlight-glow: #2ecc71;
       }
-      body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background-color: var(--bg-color); margin: 0; padding: 20px; color: var(--font-color); display: flex; justify-content: center; min-height: 100vh; }
-      .main-container { display: flex; width: 100%; max-width: 1600px; gap: 30px; border-radius: 15px; overflow: hidden; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3); background-color: #f8f9fa; padding: 20px; }
-      .controls-area { flex-basis: 25%; min-width: 280px; background-color: var(--card-bg-color); border: 1px solid var(--border-color); border-radius: 12px; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1); padding: 25px; display: flex; flex-direction: column; transition: all 0.3s ease-in-out; }
-      .battle-section { flex-basis: 50%; display: flex; flex-direction: column; gap: 25px; }
-      #battle-arena { position: relative; width: 100%; height: 500px; background: linear-gradient(to bottom right, #a2e2b9, #5cb85c); border: 1px solid var(--border-color); border-radius: 15px; overflow: hidden; box-shadow: inset 0 0 15px rgba(0, 0, 0, 0.2); }
-      .coffeemon-display { position: absolute; display: flex; flex-direction: column; align-items: center; padding: 15px; min-width: 200px; background-color: rgba(255, 255, 255, 0.85); border-radius: 10px; box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2); backdrop-filter: blur(5px); transition: transform 0.3s ease-out, box-shadow 0.3s ease-out; }
-      .coffeemon-display:hover { transform: translateY(-5px); box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3); }
-      .coffeemon-display img { max-width: 180px; max-height: 180px; object-fit: contain; margin-bottom: 15px; border-radius: 5px; }
-      .coffeemon-display h4 { margin: 0 0 10px 0; font-size: 1.4em; font-weight: 600; color: var(--font-color); text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1); }
-      .coffeemon-display .hp-bar-container { width: 100%; height: 22px; border-radius: 11px; background-color: #ccc; border: 1px solid #999; overflow: hidden; }
-      .coffeemon-display .hp-bar { height: 100%; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 0.85em; transition: width 0.4s ease-in-out, background-color 0.4s ease-in-out; border-radius: 11px; text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3); }
-      .player-position { bottom: 30px; left: 30px; }
-      .opponent-position { top: 30px; right: 30px; }
-      h3, h4, h5 { border-bottom: 1px solid var(--border-color); padding-bottom: 10px; margin-top: 0; margin-bottom: 15px; color: #333; }
-      #my-controls-area h3 { color: var(--player1-color); }
-      #opponent-controls-area h3 { color: var(--player2-color); }
-      .current-player { border-width: 2px; box-shadow: 0 0 20px var(--highlight-glow), 0 0 30px var(--highlight-glow); border-color: var(--highlight-glow) !important; transform: scale(1.01); }
-      .actions-container h5 { font-size: 1.1em; text-transform: uppercase; color: #666; margin-bottom: 15px; }
-      .move-card, .switch-card { border: 1px solid var(--border-color); border-radius: 10px; padding: 15px; margin-bottom: 12px; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s, background-color 0.2s; background-color: #fdfdfd; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05); }
-      .move-card:hover, .switch-card:not(.card-disabled):hover { transform: translateY(-3px); box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1); background-color: #f0f8ff; }
-      .move-card h6 { margin: 0 0 8px 0; font-size: 1.2em; font-weight: 700; }
-      .move-card .power { float: right; font-weight: bold; color: #555; }
-      #my-actions .move-card h6 { color: var(--player1-color); }
-      .card-disabled { cursor: not-allowed !important; background-color: #eceff1 !important; opacity: 0.5; box-shadow: none !important; transform: none !important; }
-      .card-disabled:hover { transform: none; box-shadow: none; }
-      .fainted-coffeemon { background-color: #dee2e6; color: #888; border-color: #c0c0c0; }
-      .log-container { flex-grow: 1; background-color: var(--card-bg-color); border: 1px solid var(--border-color); border-radius: 12px; padding: 15px; height: 300px; overflow-y: auto; display: flex; flex-direction: column-reverse; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1); }
-      .log-area p { margin: 6px 0; padding: 8px; border-bottom: 1px dashed #f1f3f5; font-size: 0.95em; }
-      .log-area .turn-divider { font-weight: bold; text-align: center; background-color: #4a6c8e; color: white; border-radius: 8px; margin-top: 20px; padding: 8px; font-size: 1.05em; }
-      .log-area .event-message { font-style: italic; color: #555; }
-      .debug-area { margin-top: 20px; }
-      .debug-area summary { background-color: #f1f1f1; border-radius: 8px; padding: 8px 12px; font-size: 0.9em; color: #555; }
-      .debug-area pre { background-color: #2d2d2d; color: #f1f1f1; padding: 15px; border-radius: 8px; font-size: 0.75em; max-height: 200px; overflow-y: auto; margin-top: 10px; }
+
+      body {
+        font-family:
+          -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+        background-color: var(--bg-color);
+        margin: 0;
+        padding: 10px;
+        color: var(--font-color);
+        display: flex;
+        justify-content: center;
+        min-height: 100vh;
+        box-sizing: border-box;
+      }
+
+      .main-container {
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+        max-width: 1600px;
+        gap: 15px;
+        background-color: #f8f9fa;
+        padding: 10px;
+        box-sizing: border-box;
+      }
+
+      .controls-area {
+        background-color: var(--card-bg-color);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        padding: 15px;
+        display: flex;
+        flex-direction: column;
+        order: 3;
+      }
+
+      #my-controls-area {
+        order: 2;
+      }
+
+      .battle-section {
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+        order: 1;
+      }
+
+      #battle-arena {
+        position: relative;
+        width: 100%;
+        height: 65vmin;
+        max-height: 500px;
+        background: linear-gradient(to bottom right, #a2e2b9, #5cb85c);
+        border: 1px solid var(--border-color);
+        border-radius: 15px;
+        overflow: hidden;
+        box-shadow: inset 0 0 15px rgba(0, 0, 0, 0.2);
+      }
+
+      .coffeemon-display {
+        position: absolute;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 10px;
+        min-width: 150px;
+        background-color: rgba(255, 255, 255, 0.85);
+        border-radius: 10px;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        backdrop-filter: blur(5px);
+      }
+
+      .coffeemon-display img {
+        max-width: 120px;
+        max-height: 120px;
+        object-fit: contain;
+        margin-bottom: 10px;
+      }
+
+      .coffeemon-display h4 {
+        margin: 0 0 8px 0;
+        font-size: 1.1em;
+        font-weight: 600;
+        text-align: center;
+      }
+
+      .coffeemon-display .hp-bar-container {
+        width: 100%;
+        height: 20px;
+        border-radius: 10px;
+        background-color: #ccc;
+        border: 1px solid #999;
+        overflow: hidden;
+      }
+
+      .coffeemon-display .hp-bar {
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: bold;
+        font-size: 0.8em;
+        transition:
+          width 0.4s ease-in-out,
+          background-color 0.4s ease-in-out;
+        border-radius: 10px;
+      }
+
+      .player-position {
+        bottom: 15px;
+        left: 15px;
+      }
+
+      .opponent-position {
+        top: 15px;
+        right: 15px;
+      }
+
+      h3,
+      h4,
+      h5 {
+        border-bottom: 1px solid var(--border-color);
+        padding-bottom: 10px;
+        margin: 0 0 15px 0;
+        color: #333;
+      }
+
+      #my-controls-area h3 {
+        color: var(--player1-color);
+      }
+      #opponent-controls-area h3 {
+        color: var(--player2-color);
+      }
+
+      .status-text {
+        font-style: italic;
+        color: #555;
+        text-align: center;
+        margin-top: 20px;
+        padding: 10px;
+        background-color: #e9ecef;
+        border-radius: 8px;
+      }
+
+      .actions-container h5 {
+        font-size: 1.1em;
+        text-transform: uppercase;
+        color: #666;
+        margin-bottom: 15px;
+      }
+
+      .move-card,
+      .switch-card {
+        border: 1px solid var(--border-color);
+        border-radius: 10px;
+        padding: 15px;
+        margin-bottom: 12px;
+        cursor: pointer;
+        transition:
+          transform 0.2s,
+          box-shadow 0.2s,
+          background-color 0.2s;
+        background-color: #fdfdfd;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+      }
+
+      .move-card:hover,
+      .switch-card:not(.card-disabled):hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+        background-color: #f0f8ff;
+      }
+
+      .move-card h6 {
+        margin: 0 0 8px 0;
+        font-size: 1.2em;
+        font-weight: 700;
+      }
+      .move-card .power {
+        float: right;
+        font-weight: bold;
+        color: #555;
+      }
+      #my-actions .move-card h6 {
+        color: var(--player1-color);
+      }
+
+      .card-disabled {
+        cursor: not-allowed !important;
+        background-color: #eceff1 !important;
+        opacity: 0.5;
+        box-shadow: none !important;
+        transform: none !important;
+      }
+
+      .fainted-coffeemon {
+        background-color: #dee2e6;
+        color: #888;
+        border-color: #c0c0c0;
+      }
+
+      .log-container {
+        flex-grow: 1;
+        background-color: var(--card-bg-color);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        padding: 15px;
+        height: 200px;
+        overflow-y: auto;
+        display: flex;
+        flex-direction: column-reverse;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+      }
+
+      .log-area p {
+        margin: 6px 0;
+        padding: 8px;
+        border-bottom: 1px dashed #f1f3f5;
+        font-size: 0.9em;
+      }
+
+      .log-area .turn-divider {
+        font-weight: bold;
+        text-align: center;
+        background-color: #4a6c8e;
+        color: white;
+        border-radius: 8px;
+        margin-top: 20px;
+        padding: 8px;
+        font-size: 1em;
+      }
+
+      .log-area .event-message {
+        font-style: italic;
+        color: #555;
+      }
+      .debug-area {
+        margin-top: 20px;
+      }
+
+      .debug-area summary {
+        background-color: #f1f1f1;
+        border-radius: 8px;
+        padding: 8px 12px;
+        font-size: 0.9em;
+        color: #555;
+      }
+
+      .debug-area pre {
+        background-color: #2d2d2d;
+        color: #f1f1f1;
+        padding: 15px;
+        border-radius: 8px;
+        font-size: 0.75em;
+        max-height: 200px;
+        overflow-y: auto;
+        margin-top: 10px;
+      }
+
+      /* --- MODAL STYLES --- */
+      .modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.7);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 1000;
+        visibility: hidden;
+        opacity: 0;
+        transition:
+          opacity 0.3s ease,
+          visibility 0s 0.3s;
+      }
+      .modal-overlay.visible {
+        visibility: visible;
+        opacity: 1;
+        transition: opacity 0.3s ease;
+      }
+
+      .modal-content {
+        background-color: white;
+        padding: 25px;
+        border-radius: 15px;
+        width: 90%;
+        max-width: 800px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+      }
+
+      .modal-content h2 {
+        text-align: center;
+        margin-top: 0;
+        margin-bottom: 25px;
+        color: #333;
+      }
+
+      .team-preview-container {
+        display: flex;
+        justify-content: space-around;
+        gap: 20px;
+      }
+
+      .team-column {
+        flex: 1;
+        border: 1px solid var(--border-color);
+        border-radius: 10px;
+        padding: 15px;
+      }
+
+      .team-column h4 {
+        text-align: center;
+        color: #555;
+      }
+
+      #my-team-selection .team-card {
+        cursor: pointer;
+        transition:
+          transform 0.2s ease,
+          box-shadow 0.2s ease;
+      }
+
+      #my-team-selection .team-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
+      }
+
+      #opponent-team-preview .team-card {
+        cursor: default;
+        background-color: #f8f9fa;
+      }
+
+      .team-card {
+        padding: 12px;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        margin-bottom: 10px;
+      }
+
+      /* Desktop Layout */
+      @media (min-width: 768px) {
+        .main-container {
+          flex-direction: row;
+          align-items: flex-start;
+          padding: 20px;
+        }
+        .controls-area {
+          flex-basis: 25%;
+          order: 0;
+        }
+        #my-controls-area {
+          order: 0;
+        }
+        .battle-section {
+          flex-basis: 50%;
+          order: 0;
+        }
+      }
     </style>
   </head>
+
   <body>
     <div class="main-container">
       <div id="my-controls-area" class="controls-area">
@@ -54,7 +389,10 @@
       <div class="battle-section">
         <div id="battle-arena">
           <div id="player-active-coffeemon-display" class="coffeemon-display player-position"></div>
-          <div id="opponent-active-coffeemon-display" class="coffeemon-display opponent-position"></div>
+          <div
+            id="opponent-active-coffeemon-display"
+            class="coffeemon-display opponent-position"
+          ></div>
         </div>
         <div class="log-container">
           <h4>Log da Batalha</h4>
@@ -73,17 +411,36 @@
       </div>
     </div>
 
+    <div id="selection-modal" class="modal-overlay">
+      <div class="modal-content">
+        <h2>Escolha seu Coffeemon Inicial!</h2>
+        <div class="team-preview-container">
+          <div id="my-team-selection" class="team-column">
+            <h4>Sua Equipe</h4>
+          </div>
+          <div id="opponent-team-preview" class="team-column">
+            <h4>Equipe do Oponente</h4>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <script>
-      const BattleStatus = {
-        ACTIVE: 'ACTIVE',
-        FINISHED: 'FINISHED',
+      const BattleStatus = { ACTIVE: 'ACTIVE', FINISHED: 'FINISHED' };
+      const TurnPhase = {
+        SELECTION: 'SELECTION',
+        SUBMISSION: 'SUBMISSION',
+        RESOLUTION: 'RESOLUTION',
+        END_OF_TURN: 'END_OF_TURN',
       };
 
       const token = localStorage.getItem('jwt_token');
       const myPlayerId = parseInt(localStorage.getItem('player_id'));
       const battleData = JSON.parse(sessionStorage.getItem('battle_data'));
-      
-      let battleState = null; // Começa como nulo
+
+      let battleState = null;
+      let isProcessingEventQueue = false;
+      const eventQueue = [];
 
       if (!token || !battleData?.battleId || !myPlayerId) {
         alert('Dados da batalha, token ou ID do jogador não encontrados. Redirecionando...');
@@ -91,169 +448,316 @@
       }
 
       const battleId = battleData.battleId;
-      const battleLog = document.getElementById('battle-log');
-      const battleStatePre = document.getElementById('battle-state-pre');
-
       const socket = io('http://localhost:3000', { auth: { token } });
 
+      // --- SOCKET EVENT HANDLERS ---
       socket.on('connect', () => {
-        logMessage(`Conectado. Meu ID: ${myPlayerId}. Entrando na batalha ${battleId}...`);
+        logMessage(`Conectado. Entrando na batalha ${battleId}...`);
         socket.emit('joinBattle', { battleId });
       });
+      socket.on('battleUpdate', onBattleUpdate);
+      socket.on('error', (error) => logMessage(`<strong>ERRO: ${error.message}</strong>`));
+      socket.on('opponentLeft', (data) =>
+        logMessage(`<strong>Oponente (ID: ${data.playerId}) saiu.</strong>`)
+      );
+      socket.on('playerReconnected', (data) =>
+        logMessage(`<strong>Oponente (ID: ${data.playerId}) reconectou.</strong>`)
+      );
+      socket.on('opponentDisconnected', (data) =>
+        logMessage(`<strong>Oponente (ID: ${data.playerId}) desconectou.</strong>`)
+      );
+      socket.on('battleCancelled', (data) => {
+        logMessage(
+          `<strong>Batalha cancelada por desconexão do jogador ${data.disconnectedPlayerId}.</strong>`
+        );
+        alert('A batalha foi cancelada porque seu oponente demorou muito para reconectar.');
+        window.location.href = 'menu.html';
+      });
 
-      socket.on('battleUpdate', (data) => {
-        if (!data || !data.battleState) {
-          logMessage('<strong>ERRO: Recebido battleUpdate sem battleState.</strong>');
-          return;
-        }
+      // --- CORE LOGIC ---
+      async function onBattleUpdate(data) {
+        if (!data || !data.battleState) return;
 
-        const isFirstUpdate = battleState === null;
+        const previousState = battleState;
         battleState = data.battleState;
 
-        if (isFirstUpdate) {
-            logMessage(`<div class="turn-divider">Batalha Iniciada! Turno ${battleState.turn}</div>`);
-        } else {
-            logMessage(`<div class="turn-divider">Turno ${battleState.turn}</div>`);
+        if (
+          !previousState ||
+          battleState.turn > previousState.turn ||
+          (previousState.turnPhase === TurnPhase.SELECTION &&
+            battleState.turnPhase === TurnPhase.SUBMISSION)
+        ) {
+          logMessage(`<div class="turn-divider">Turno ${battleState.turn}</div>`);
         }
 
-        updateUI(battleState);
-
-        if (battleState.events && battleState.events.length > 0) {
-          battleState.events.forEach((event) => {
-            logMessage(`<span class="event-message">${event.message}</span>`);
-
-            if (event.type === 'AttackHit') {
-              const attackerPlayerId = event.payload.playerId;
-              const attackedPlayerId = attackerPlayerId === battleState.player1Id ? battleState.player2Id : battleState.player1Id;
-
-              const targetCoffeemonName = event.payload.targetName.split(' (Lvl')[0];
-              const baseUrl = 'https://gigio42.github.io/Coffeemon/';
-              const encodedName = encodeURIComponent(targetCoffeemonName);
-              const imageType = (attackedPlayerId === myPlayerId) ? 'back' : 'default';
-              const displayId = (attackedPlayerId === myPlayerId) ? 'player-active-coffeemon-display-image' : 'opponent-active-coffeemon-display-image';
-              const targetImageElement = document.querySelector(`#${displayId}`);
-
-              if (targetImageElement) {
-                const originalImageUrl = `${baseUrl}${encodedName}/${imageType}.png`;
-                const hurtImageUrl = `${baseUrl}${encodedName}/hurt.png`;
-                targetImageElement.src = hurtImageUrl;
-                setTimeout(() => { targetImageElement.src = originalImageUrl; }, 500);
-              }
-            }
-          });
+        if (battleState.events?.length) {
+          eventQueue.push(...battleState.events);
         }
-        
-        if (battleState.battleStatus === BattleStatus.FINISHED) {
-          const message = `A batalha terminou! Vencedor: Jogador ${battleState.winnerId}`;
-          logMessage(`<strong class="turn-divider">${message}</strong>`);
-          alert(message);
+
+        render(previousState);
+        await processEventQueue();
+        render(previousState);
+      }
+
+      async function processEventQueue() {
+        if (isProcessingEventQueue || eventQueue.length === 0) return;
+
+        isProcessingEventQueue = true;
+        render(); // Bloqueia a UI para mostrar "Resolvendo..."
+
+        while (eventQueue.length > 0) {
+          const event = eventQueue.shift();
+          render(); // Atualiza a UI a cada passo (ex: mostrar dano)
+          logMessage(`<span class="event-message">${event.message}</span>`);
+          await playEventAnimation(event);
+          await sleep(400);
         }
-      });
 
-      socket.on('battleEnd', (data) => {
-        const message = `A batalha terminou! Vencedor: Jogador ${data.winnerId}`;
-        logMessage(`<strong class="turn-divider">${message}</strong>`);
-        alert(message);
-      });
-
-      socket.on('error', (error) => logMessage(`<strong>ERRO: ${error.message}</strong>`));
-
-      function logMessage(msg) {
-        battleLog.innerHTML = `<p>${msg}</p>` + battleLog.innerHTML;
+        isProcessingEventQueue = false;
       }
 
       function sendAction(actionType, payload) {
-        if (!battleState || battleState.currentPlayerId !== myPlayerId) {
-            logMessage("Aguarde, não é seu turno!");
-            return;
+        const myPendingAction = battleState?.pendingActions[myPlayerId];
+        if (isProcessingEventQueue || myPendingAction) return;
+
+        const isSelection = actionType === 'SELECT_COFFEEMON';
+        const eventName = isSelection ? 'selectInitialCoffeemon' : 'battleAction';
+        const data = isSelection ? { battleId, ...payload } : { battleId, actionType, payload };
+
+        socket.emit(eventName, data);
+
+        if (isSelection) {
+          hideSelectionModal();
         }
-        logMessage(`Enviando ação: ${actionType}`);
-        socket.emit('battleAction', { battleId, actionType, payload });
-      }
-      
-      function renderCoffeemonDisplay(playerState, containerId, isMe) {
-          const activeMon = playerState.coffeemons[playerState.activeCoffeemonIndex];
-          const coffeemonContainer = document.getElementById(containerId);
-          const hpPercentage = (activeMon.currentHp / activeMon.maxHp) * 100;
-          const baseUrl = 'https://gigio42.github.io/Coffeemon/';
-          const imageType = isMe ? 'back' : 'default';
-          const coffeemonNameFormatted = activeMon.name.split(' (Lvl')[0];
-          const encodedName = encodeURIComponent(coffeemonNameFormatted);
-          const imageUrl = `${baseUrl}${encodedName}/${imageType}.png`;
-          const defaultImageUrl = 'https://via.placeholder.com/150?text=Not+Found';
-          coffeemonContainer.innerHTML = `
-              <img id="${containerId}-image" src="${imageUrl}" alt="${activeMon.name}" onerror="this.onerror=null;this.src='${defaultImageUrl}';" />
-              <h4>${activeMon.name} ${activeMon.isFainted ? ' (Derrotado)' : ''}</h4>
-              <div class="hp-bar-container">
-                  <div class="hp-bar" style="width: ${hpPercentage}%; background-color: ${isMe ? 'var(--player1-color)' : 'var(--player2-color)'};">${activeMon.currentHp}/${activeMon.maxHp}</div>
-              </div>
-          `;
-      }
-      
-      function updateUI(state) {
-          if (!state) return;
-          battleStatePre.textContent = JSON.stringify(state, null, 2);
-          const myPlayerState = state.player1Id === myPlayerId ? state.player1 : state.player2;
-          const opponentPlayerState = state.player1Id === myPlayerId ? state.player2 : state.player1;
-          const myPlayerTrueId = state.player1Id === myPlayerId ? state.player1Id : state.player2Id;
-          const opponentPlayerTrueId = state.player1Id === myPlayerId ? state.player2Id : state.player1Id;
-          document.getElementById('my-id').textContent = myPlayerTrueId;
-          document.getElementById('opponent-id').textContent = opponentPlayerTrueId;
-          const myControls = document.getElementById('my-controls-area');
-          const opponentControls = document.getElementById('opponent-controls-area');
-          myControls.classList.remove('current-player');
-          opponentControls.classList.remove('current-player');
-          if (state.currentPlayerId === myPlayerTrueId) {
-              myControls.classList.add('current-player');
-          } else {
-              opponentControls.classList.add('current-player');
-          }
-          renderCoffeemonDisplay(myPlayerState, 'player-active-coffeemon-display', true);
-          renderCoffeemonDisplay(opponentPlayerState, 'opponent-active-coffeemon-display', false);
-          renderPlayerActions(myPlayerTrueId, myPlayerState, document.getElementById('my-actions'), true, state);
-          renderPlayerActions(opponentPlayerTrueId, opponentPlayerState, document.getElementById('opponent-actions'), false, state);
       }
 
-      function renderPlayerActions(playerId, playerState, actionsContainer, isMe, fullState) {
-          actionsContainer.innerHTML = '';
-          const activeMon = playerState.coffeemons[playerState.activeCoffeemonIndex];
-          const isMyTurn = playerId === fullState.currentPlayerId;
-          const canControl = isMyTurn && isMe;
-          if (isMe) {
-              const movesContainer = document.createElement('div');
-              movesContainer.innerHTML = '<h5>Golpes</h5>';
-              activeMon.moves.forEach((move) => {
-                  const card = document.createElement('div');
-                  card.className = 'move-card';
-                  card.innerHTML = `<span class="power">Poder: ${move.power}</span><h6>${move.name}</h6><p>${move.description || 'Sem descrição.'}</p>`;
-                  if (canControl && activeMon.canAct) {
-                      card.onclick = () => sendAction('attack', { moveId: move.id });
-                  } else {
-                      card.classList.add('card-disabled');
-                  }
-                  movesContainer.appendChild(card);
-              });
-              actionsContainer.appendChild(movesContainer);
-          } else {
-              actionsContainer.innerHTML = `<h5>Ações do Oponente</h5><p>${fullState.isBotBattle ? 'Bot está pensando...' : 'Aguardando jogada...'}</p>`;
-          }
-          const switchContainer = document.createElement('div');
-          switchContainer.innerHTML = '<h5>Equipe</h5>';
-          playerState.coffeemons.forEach((mon, index) => {
-              if (index === playerState.activeCoffeemonIndex) return;
-              const card = document.createElement('div');
-              card.className = 'switch-card';
-              card.innerHTML = `<strong>${mon.name}</strong> (HP: ${mon.currentHp}/${mon.maxHp})`;
-              if (mon.isFainted) {
-                  card.classList.add('fainted-coffeemon', 'card-disabled');
-              } else if (isMe && canControl) {
-                  card.onclick = () => sendAction('switch', { newIndex: index });
-              } else {
-                  card.classList.add('card-disabled');
-              }
-              switchContainer.appendChild(card);
+      // --- UI RENDERING ENGINE ---
+      function render() {
+        if (!battleState) return;
+
+        const myState =
+          battleState.player1Id === myPlayerId ? battleState.player1 : battleState.player2;
+        const opponentState =
+          battleState.player1Id === myPlayerId ? battleState.player2 : battleState.player1;
+
+        updateDebugInfo(opponentState);
+        updateCoffeemonDisplay(myState, 'player-active-coffeemon-display', true);
+        updateCoffeemonDisplay(opponentState, 'opponent-active-coffeemon-display', false);
+
+        if (battleState.turnPhase === TurnPhase.SELECTION) {
+          renderSelectionScreen(myState, opponentState);
+        } else {
+          hideSelectionModal();
+          renderPlayerActions(myState);
+        }
+
+        renderOpponentStatus(opponentState);
+
+        if (battleState.battleStatus === BattleStatus.FINISHED) {
+          handleBattleEnd();
+        }
+      }
+
+      function renderPlayerActions(myState) {
+        const actionsContainer = document.getElementById('my-actions');
+        actionsContainer.innerHTML = '';
+
+        if (myState.activeCoffeemonIndex === null) return;
+
+        const activeMon = myState.coffeemons[myState.activeCoffeemonIndex];
+        const myPendingAction = battleState.pendingActions[myPlayerId];
+        const canAct =
+          !isProcessingEventQueue &&
+          !myPendingAction &&
+          battleState.turnPhase === TurnPhase.SUBMISSION;
+        const mustSwitch = activeMon.isFainted;
+
+        if (!mustSwitch) {
+          const movesContainer = document.createElement('div');
+          movesContainer.innerHTML = '<h5>Golpes</h5>';
+          activeMon.moves.forEach((move) => {
+            const card = createCard(
+              'move-card',
+              `<span class="power">Poder: ${move.power}</span><h6>${move.name}</h6><p>${move.description || ''}</p>`
+            );
+            if (canAct && activeMon.canAct)
+              card.onclick = () => sendAction('attack', { moveId: move.id });
+            else card.classList.add('card-disabled');
+            movesContainer.appendChild(card);
           });
-          actionsContainer.appendChild(switchContainer);
+          actionsContainer.appendChild(movesContainer);
+        }
+
+        const switchContainer = document.createElement('div');
+        switchContainer.innerHTML = `<h5>${mustSwitch ? 'Escolha o próximo Coffeemon!' : 'Equipe'}</h5>`;
+        myState.coffeemons.forEach((mon, index) => {
+          if (index === myState.activeCoffeemonIndex) return;
+          const card = createCard(
+            'switch-card',
+            `<strong>${mon.name}</strong> (HP: ${mon.currentHp}/${mon.maxHp})`
+          );
+          if (mon.isFainted) {
+            card.classList.add('fainted-coffeemon', 'card-disabled');
+          } else if (canAct) {
+            card.onclick = () => sendAction('switch', { newIndex: index });
+          } else {
+            card.classList.add('card-disabled');
+          }
+          switchContainer.appendChild(card);
+        });
+        actionsContainer.appendChild(switchContainer);
+      }
+
+      function renderOpponentStatus(opponentState) {
+        let statusMessage = '';
+        const opponentId =
+          battleState.player1Id === myPlayerId ? battleState.player2Id : battleState.player1Id;
+        const opponentPendingAction = battleState.pendingActions[opponentId];
+
+        if (battleState.battleStatus === BattleStatus.FINISHED) {
+          statusMessage = 'Batalha finalizada.';
+        } else if (isProcessingEventQueue || battleState.turnPhase === TurnPhase.RESOLUTION) {
+          statusMessage = 'Resolvendo o turno...';
+        } else if (battleState.turnPhase === TurnPhase.SELECTION) {
+          statusMessage = opponentState.hasSelectedCoffeemon
+            ? 'Oponente já escolheu.'
+            : 'Oponente está escolhendo...';
+        } else if (opponentPendingAction) {
+          statusMessage = 'Oponente já enviou a ação.';
+        } else {
+          statusMessage = 'Oponente está escolhendo uma ação...';
+        }
+        updateElementHTML(
+          'opponent-actions',
+          `<h5>Ações do Oponente</h5><p class="status-text">${statusMessage}</p>`
+        );
+      }
+
+      function renderSelectionScreen(myState, opponentState) {
+        if (myState.hasSelectedCoffeemon) {
+          updateElementHTML(
+            'my-actions',
+            `<p class="status-text">Seleção feita. Aguardando oponente...</p>`
+          );
+          return;
+        }
+        showSelectionModal(myState, opponentState);
+      }
+
+      function handleBattleEnd() {
+        const message = `A batalha terminou! Vencedor: Jogador ${battleState.winnerId}`;
+        if (!document.body.innerText.includes(message)) {
+          logMessage(`<strong class="turn-divider">${message}</strong>`);
+          alert(message);
+        }
+      }
+
+      // --- DOM HELPER & UTILS ---
+      function updateElementText(id, text) {
+        const el = document.getElementById(id);
+        if (el && el.textContent !== text) el.textContent = text;
+      }
+      function updateElementHTML(id, html) {
+        const el = document.getElementById(id);
+        if (el && el.innerHTML !== html) el.innerHTML = html;
+      }
+      function logMessage(msg) {
+        document.getElementById('battle-log').insertAdjacentHTML('afterbegin', `<p>${msg}</p>`);
+      }
+      function createCard(className, innerHTML) {
+        const card = document.createElement('div');
+        card.className = className;
+        card.innerHTML = innerHTML;
+        return card;
+      }
+      function sleep(ms) {
+        return new Promise((resolve) => setTimeout(resolve, ms));
+      }
+
+      // --- MODAL & ANIMATION ---
+      function showSelectionModal(myState, opponentState) {
+        const myTeamContainer = document.getElementById('my-team-selection');
+        myTeamContainer.innerHTML = '<h4>Sua Equipe</h4>';
+        myState.coffeemons.forEach((mon, index) => {
+          const card = createCard(
+            'team-card',
+            `<strong>${mon.name}</strong> (HP: ${mon.currentHp}/${mon.maxHp})`
+          );
+          if (mon.isFainted) card.classList.add('fainted-coffeemon', 'card-disabled');
+          else card.onclick = () => sendAction('SELECT_COFFEEMON', { coffeemonIndex: index });
+          myTeamContainer.appendChild(card);
+        });
+
+        const opponentTeamContainer = document.getElementById('opponent-team-preview');
+        opponentTeamContainer.innerHTML = '<h4>Equipe do Oponente</h4>';
+        opponentState.coffeemons.forEach((mon) => {
+          const card = createCard('team-card', `<strong>${mon.name}</strong>`);
+          opponentTeamContainer.appendChild(card);
+        });
+
+        document.getElementById('selection-modal').classList.add('visible');
+      }
+
+      function hideSelectionModal() {
+        document.getElementById('selection-modal').classList.remove('visible');
+      }
+
+      function updateCoffeemonDisplay(playerState, containerId, isMe) {
+        const container = document.getElementById(containerId);
+        if (playerState.activeCoffeemonIndex === null) {
+          if (container.innerHTML !== '') container.innerHTML = '';
+          return;
+        }
+        const activeMon = playerState.coffeemons[playerState.activeCoffeemonIndex];
+        if (!activeMon) return;
+
+        let imgEl = container.querySelector('img');
+        const coffeemonNameFormatted = activeMon.name.split(' (Lvl')[0];
+        const newImageUrl = `https://gigio42.github.io/Coffeemon/${encodeURIComponent(coffeemonNameFormatted)}/${isMe ? 'back' : 'default'}.png`;
+
+        if (!imgEl || imgEl.dataset.name !== activeMon.name) {
+          container.innerHTML = `
+              <img data-name="${activeMon.name}" src="${newImageUrl}" alt="${activeMon.name}" />
+              <h4></h4><div class="hp-bar-container"><div class="hp-bar"></div></div>`;
+        }
+
+        updateElementText(
+          container.querySelector('h4'),
+          `${activeMon.name} ${activeMon.isFainted ? ' (Derrotado)' : ''}`
+        );
+        const hpBar = container.querySelector('.hp-bar');
+        const hpPercentage = (activeMon.currentHp / activeMon.maxHp) * 100;
+        hpBar.style.width = `${hpPercentage}%`;
+        hpBar.style.backgroundColor = isMe ? 'var(--player1-color)' : 'var(--player2-color)';
+        hpBar.textContent = `${activeMon.currentHp}/${activeMon.maxHp}`;
+      }
+
+      async function playEventAnimation(event) {
+        if (event.type === 'ATTACK_HIT' || event.type === 'ATTACK_CRIT') {
+          const attackerIsMe = event.payload.playerId === myPlayerId;
+          const targetDisplayId = attackerIsMe
+            ? 'opponent-active-coffeemon-display'
+            : 'player-active-coffeemon-display';
+          const targetElement = document.getElementById(targetDisplayId);
+
+          if (targetElement) {
+            targetElement.style.transition = 'transform 0.1s ease-in-out';
+            targetElement.style.transform = 'scale(0.95)';
+            await sleep(100);
+            targetElement.style.transform = 'scale(1)';
+          }
+        }
+      }
+      function updateDebugInfo(opponentState) {
+        updateElementText('my-id', myPlayerId);
+        const opponentId =
+          battleState.player1Id === myPlayerId ? battleState.player2Id : battleState.player1Id;
+        updateElementText('opponent-id', opponentId);
+        document.getElementById('battle-state-pre').textContent = JSON.stringify(
+          battleState,
+          null,
+          2
+        );
       }
     </script>
   </body>

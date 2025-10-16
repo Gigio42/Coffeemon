@@ -1,4 +1,4 @@
-import { BattleState } from '../../modules/battles/types/batlle.types';
+import { BattleState } from 'src/game/modules/battles/types/battle-state.types';
 
 // --- Comandos (Intenções do Usuário ou do Sistema) ---
 export class PlayerWantsToJoinQueueCommand {

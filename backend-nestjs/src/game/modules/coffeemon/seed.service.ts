@@ -43,6 +43,7 @@ export class SeedService implements OnModuleInit {
         baseHp: data.baseHp,
         baseAttack: data.baseAttack,
         baseDefense: data.baseDefense,
+        baseSpeed: data.baseSpeed,
         moves: moves,
       };
 

@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { moveType } from 'src/game/modules/coffeemon/Types/coffeemon.types';
-import { BattleActionType } from '../../types/batlle.types'; // Adicione CoffeemonState
+import { BattleActionType } from '../../types/enums';
 import { StatusEffectsService } from '../effects/status-effects.service';
 import {
   ActionEventNotification,
@@ -11,6 +11,8 @@ import {
 
 @Injectable()
 export class AttackAction implements IBattleAction<BattleActionType.ATTACK> {
+  readonly priority = 5;
+
   constructor(private readonly statusEffectsService: StatusEffectsService) {}
 
   async execute(
@@ -22,6 +24,18 @@ export class AttackAction implements IBattleAction<BattleActionType.ATTACK> {
     const isPlayer1 = battleState.player1Id === playerId;
     const attacker = isPlayer1 ? battleState.player1 : battleState.player2;
     const defender = isPlayer1 ? battleState.player2 : battleState.player1;
+
+    if (attacker.activeCoffeemonIndex === null || defender.activeCoffeemonIndex === null) {
+      return {
+        advanceTurn: false,
+        notifications: [
+          {
+            eventKey: 'ACTION_ERROR',
+            payload: { playerId, error: 'A player has not selected a Coffeemon yet.' },
+          },
+        ],
+      };
+    }
 
     const attackingMon = attacker.coffeemons[attacker.activeCoffeemonIndex];
     const defendingMon = defender.coffeemons[defender.activeCoffeemonIndex];

@@ -1,5 +1,5 @@
 import { BattleActionCommand } from '../../../shared/events/game.events';
-import { BattleService } from '../battles.service';
+import { BattleService } from '../services/battles.service';
 
 export interface IGameMode {
   setBattleService(service: BattleService): void;

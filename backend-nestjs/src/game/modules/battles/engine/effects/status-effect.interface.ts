@@ -1,4 +1,4 @@
-import { CoffeemonState, StatusEffect } from '../../types/batlle.types';
+import { CoffeemonState, StatusEffect } from '../../types/battle-state.types';
 import { ActionEventNotification } from '../actions/battle-action-interface';
 
 export enum StatusEffectCategory {
