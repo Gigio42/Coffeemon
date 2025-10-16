@@ -29,6 +29,7 @@ export interface Coffeemon {
 export interface PlayerState {
   coffeemons: Coffeemon[];
   activeCoffeemonIndex: number;
+  hasSelectedCoffeemon?: boolean;  // Novo campo para fase de seleção
 }
 
 export interface BattleState {
@@ -41,6 +42,8 @@ export interface BattleState {
   battleStatus: BattleStatus;
   winnerId: number | null;
   events?: any[];
+  turnPhase?: string;  // Novo campo: 'SELECTION' | 'SUBMISSION' | 'RESOLUTION'
+  pendingActions?: { [playerId: number]: any };  // Novo campo: ações pendentes
 }
 
 // ========================================
