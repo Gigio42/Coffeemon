@@ -5,6 +5,7 @@ import { UsersService } from '../../../ecommerce/users/users.service';
 import { CoffeemonService } from '../coffeemon/coffeemon.service';
 import { CreatePlayerDto } from './dto/create-player.dto';
 import { Player } from './entities/player.entity';
+import { PlayerCoffeemonMove } from './entities/playerCoffeemonMove.entity';
 import { PlayerCoffeemons } from './entities/playerCoffeemons.entity';
 
 @Injectable()
@@ -14,6 +15,8 @@ export class PlayerService {
     private playerRepository: Repository<Player>,
     @InjectRepository(PlayerCoffeemons)
     private playerCoffeemonRepository: Repository<PlayerCoffeemons>,
+    @InjectRepository(PlayerCoffeemonMove)
+    private playerCoffeemonMoveRepository: Repository<PlayerCoffeemonMove>,
     private usersService: UsersService,
     private coffeemonService: CoffeemonService
   ) {}
@@ -79,17 +82,14 @@ export class PlayerService {
   }
 
   async getPlayerParty(playerId: number): Promise<PlayerCoffeemons[]> {
-    await this.findOne(playerId);
-
     return this.playerCoffeemonRepository.find({
       where: {
         player: { id: playerId },
         isInParty: true,
       },
-      relations: ['coffeemon'],
+      relations: ['coffeemon', 'learnedMoves', 'learnedMoves.move'],
     });
   }
-
   async addCoffeemonToPlayer(playerId: number, coffeemonId: number): Promise<PlayerCoffeemons> {
     await this.findOne(playerId);
 

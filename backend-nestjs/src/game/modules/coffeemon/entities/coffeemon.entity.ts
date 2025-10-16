@@ -34,7 +34,7 @@ export class Coffeemon {
   @Column()
   baseSpeed: number;
 
-  @ManyToMany(() => Move, { eager: true })
+  @ManyToMany(() => Move)
   @JoinTable()
-  moves: Move[];
+  learnableMoves: Move[];
 }

@@ -1,6 +1,7 @@
-import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, JoinColumn, ManyToOne, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 import { Coffeemon } from '../../coffeemon/entities/coffeemon.entity';
 import { Player } from './player.entity';
+import { PlayerCoffeemonMove } from './playerCoffeemonMove.entity';
 
 @Entity()
 export class PlayerCoffeemons {
@@ -32,4 +33,7 @@ export class PlayerCoffeemons {
 
   @Column({ default: false })
   isInParty: boolean;
+
+  @OneToMany(() => PlayerCoffeemonMove, (pcm) => pcm.playerCoffeemon)
+  learnedMoves: PlayerCoffeemonMove[];
 }
