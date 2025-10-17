@@ -1,0 +1,16 @@
+{
+    "BATTLE_FINISHED": "The battle is over! The winner is player {winnerId}!",
+    "TURN_END": "End of Turn {turn}.",
+    "KNOCKOUT_BLOCK": "{coffeemonName} is knocked out! You need to switch.",
+    "STATUS_BLOCK": "{coffeemonName} is under the effect of {effectType} and can't act!",
+    "ACTION_ERROR": "An error occurred: {error}",
+    "SWITCH_SUCCESS": "{newActiveCoffeemonName} enters the field!",
+    "ATTACK_HIT": "{attackerName} attacks {targetName} and deals {damage} damage!",
+    "ATTACK_MISS": "{attackerName} attacked {targetName}, but missed!",
+    "ATTACK_CRIT": "A critical hit! {attackerName}'s attack is super effective!",
+    "ATTACK_BLOCKED": "{targetName} blocked part of the damage!",
+    "COFFEEMON_FAINTED": "{coffeemonName} has fainted!",
+    "STATUS_APPLIED": "{targetName} is now affected by {effectType}!",
+    "STATUS_DAMAGE": "{coffeemonName} takes {damage} damage from {effectType}!",
+    "STATUS_REMOVED": "{coffeemonName} is no longer affected by {effectType}."
+  }

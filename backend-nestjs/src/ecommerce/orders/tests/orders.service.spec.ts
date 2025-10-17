@@ -82,9 +82,12 @@ describe('OrdersService', () => {
 
       expect(mockOrdersRepository.findOne).toHaveBeenCalledWith({
         where: { user: { id: userId }, status: OrderStatus.SHOPPING_CART },
+        relations: ['orderItem'],
       });
       expect(mockOrdersRepository.update).toHaveBeenCalledWith(shoppingCart.id, {
         status: OrderStatus.FINISHED,
+        total_amount: 0,
+        total_quantity: 0,
       });
       expect(result).toEqual('Pedido finalizado');
     });

@@ -243,16 +243,18 @@ export default function MatchmakingScreen({
       console.log('Socket event received:', eventName, args);
     });
 
-    // Evento: Partida encontrada!
-    // Quando servidor encontra um oponente, navega para tela de batalha
+    // Evento: Partida encontrada! (PvP ou PvE)
+    // Quando servidor encontra um oponente ou cria partida com bot
+    // Backend retorna: { battleId, battleState, player1, player2, ... }
     s.on('matchFound', (data: any) => {
-      console.log('Match found!', data);
+      console.log('Match found! Full data:', data);
       addLog(`Partida encontrada! Battle ID: ${data.battleId}`);
       setMatchStatus('Partida encontrada!');
       
-      // Pequeno delay para dar tempo de atualizar UI
+      // IMPORTANTE: Passar o objeto completo data (não só battleState)
+      // O backend mudou e agora espera o objeto completo
       setTimeout(() => {
-        onNavigateToBattle(data.battleId, data.battleState, s);
+        onNavigateToBattle(data.battleId, data, s);
       }, 100);
     });
   }
@@ -268,14 +270,48 @@ export default function MatchmakingScreen({
 
   /**
    * FUNÇÃO: findMatch
-   * Emite evento "findMatch" para o servidor
-   * Servidor vai colocar jogador na fila de matchmaking
+   * Emite evento "findMatch" para o servidor (PvP)
+   * Servidor vai colocar jogador na fila de matchmaking online
    */
   function findMatch() {
-    addLog('Enviando evento "findMatch"...');
-    setMatchStatus('Procurando...');
+    // Verificar se tem pelo menos 1 Coffeemon no time
+    const partyCount = coffeemons.filter(c => c.isInParty).length;
+    if (partyCount === 0) {
+      Alert.alert(
+        'Time Vazio',
+        'Você precisa ter pelo menos 1 Coffeemon no seu time antes de procurar uma partida!'
+      );
+      return;
+    }
+
+    addLog('Procurando partida online (PvP)...');
+    setMatchStatus('Procurando partida online...');
     if (socket) {
       socket.emit('findMatch');
+    }
+  }
+
+  /**
+   * FUNÇÃO: findBotMatch
+   * Emite evento "findBotMatch" para o servidor criar partida contra bot (PvE)
+   * @param botProfileId - ID do perfil do bot ('jessie' ou 'pro-james')
+   */
+  function findBotMatch(botProfileId: string) {
+    // Verificar se tem pelo menos 1 Coffeemon no time
+    const partyCount = coffeemons.filter(c => c.isInParty).length;
+    if (partyCount === 0) {
+      Alert.alert(
+        'Time Vazio',
+        'Você precisa ter pelo menos 1 Coffeemon no seu time antes de lutar!'
+      );
+      return;
+    }
+
+    const botName = botProfileId === 'jessie' ? 'Jessie' : 'James';
+    addLog(`Criando partida contra ${botName} (Bot)...`);
+    setMatchStatus(`Criando partida contra ${botName}...`);
+    if (socket) {
+      socket.emit('findBotMatch', { botProfileId });
     }
   }
 
@@ -435,9 +471,38 @@ export default function MatchmakingScreen({
             <Text style={styles.captureButtonText}>📷 Capturar Coffeemon</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.findMatchButton} onPress={findMatch}>
-            <Text style={styles.findMatchButtonText}>Procurar Partida</Text>
+          {/* Botão de Procurar Partida (PvP) */}
+          <TouchableOpacity 
+            style={[styles.findMatchButton, styles.pvpButton]} 
+            onPress={findMatch}
+          >
+            <Text style={styles.findMatchButtonText}>
+              🎮 PROCURAR PARTIDA ONLINE (PvP)
+            </Text>
           </TouchableOpacity>
+
+          {/* Botões de Lutar contra Bots (PvE) */}
+          <View style={styles.botButtonsContainer}>
+            <Text style={styles.botSectionTitle}>Ou lute contra um bot:</Text>
+            
+            <TouchableOpacity 
+              style={[styles.findMatchButton, styles.jessieButton]}
+              onPress={() => findBotMatch('jessie')}
+            >
+              <Text style={styles.findMatchButtonText}>
+                👾 LUTAR CONTRA JESSIE (Bot)
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity 
+              style={[styles.findMatchButton, styles.jamesButton]}
+              onPress={() => findBotMatch('pro-james')}
+            >
+              <Text style={styles.findMatchButtonText}>
+                🤖 LUTAR CONTRA JAMES (Bot Avançado)
+              </Text>
+            </TouchableOpacity>
+          </View>
           
           <TouchableOpacity style={styles.homeButton} onPress={onNavigateToHome}>
             <Text style={styles.homeButtonText}>🏠 Voltar para Home</Text>
@@ -638,20 +703,47 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
   },
+  // Botões de Matchmaking
+  botButtonsContainer: {
+    width: '100%',
+    maxWidth: 300,
+    marginBottom: 15,
+  },
+  botSectionTitle: {
+    fontSize: 14,
+    color: '#7f8c8d',
+    textAlign: 'center',
+    marginBottom: 10,
+    fontStyle: 'italic',
+  },
   findMatchButton: {
     width: '100%',
     maxWidth: 300,
     height: 50,
-    backgroundColor: '#2ecc71',
     borderRadius: 8,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 15,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  pvpButton: {
+    backgroundColor: '#3498db',
+  },
+  jessieButton: {
+    backgroundColor: '#e67e22',
+  },
+  jamesButton: {
+    backgroundColor: '#e74c3c',
   },
   findMatchButtonText: {
     color: '#fff',
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: 'bold',
+    textAlign: 'center',
   },
   homeButton: {
     width: '100%',
@@ -677,7 +769,7 @@ const styles = StyleSheet.create({
     width: '100%',
     maxWidth: 300,
     height: 40,
-    backgroundColor: '#e74c3c',
+    backgroundColor: '#95a5a6',
     borderRadius: 8,
     justifyContent: 'center',
     alignItems: 'center',

@@ -1,0 +1,179 @@
+<!doctype html>
+<html lang="pt-br">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Coffeemon - Menu Principal</title>
+    <style>
+      body {
+        font-family: sans-serif;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        flex-direction: column;
+        background-color: #333;
+        color: white;
+      }
+      .container {
+        padding: 30px;
+        border: 1px solid #555;
+        border-radius: 10px;
+        width: 600px;
+        text-align: center;
+        background-color: #444;
+        box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
+      }
+      .info {
+        background-color: #555;
+        padding: 15px;
+        margin-bottom: 20px;
+        border-radius: 5px;
+        text-align: left;
+      }
+      .log {
+        border: 1px solid #666;
+        height: 150px;
+        overflow-y: scroll;
+        text-align: left;
+        padding: 10px;
+        margin-top: 20px;
+        background-color: #222;
+      }
+      #status {
+        font-weight: bold;
+        color: #3498db;
+      }
+      .game-modes {
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+        margin-top: 20px;
+      }
+      button {
+        padding: 12px 20px;
+        font-size: 16px;
+        cursor: pointer;
+        border: none;
+        border-radius: 5px;
+        transition: all 0.2s;
+      }
+      .pvp-btn {
+        background-color: #3498db;
+        color: white;
+      }
+      .pvp-btn:hover {
+        background-color: #2980b9;
+      }
+      .pve-btn {
+        background-color: #e67e22;
+        color: white;
+      }
+      .pve-btn:hover {
+        background-color: #d35400;
+      }
+    </style>
+    <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+  </head>
+  <body>
+    <div class="container">
+      <h2>Menu Principal</h2>
+      <div class="info">
+        <strong>Player ID:</strong> <span id="playerId"></span><br />
+        <strong>Socket ID:</strong> <span id="socketId"></span><br />
+        <strong>Status:</strong> <span id="status">Desconectado</span>
+      </div>
+
+      <div class="game-modes">
+        <button id="findMatchBtn" class="pvp-btn">Procurar Partida Online (PvP)</button>
+        <button id="fightJessieBtn" class="pve-btn">Lutar contra Jessie (Bot)</button>
+        <button id="fightJamesBtn" class="pve-btn">Lutar contra James (Bot)</button>
+      </div>
+
+      <div class="log" id="log-area"></div>
+    </div>
+
+    <script>
+      const statusSpan = document.getElementById('status');
+      const playerIdSpan = document.getElementById('playerId');
+      const socketIdSpan = document.getElementById('socketId');
+      const logArea = document.getElementById('log-area');
+      const token = localStorage.getItem('jwt_token');
+
+      if (!token) {
+        window.location.href = 'login.html';
+      }
+
+      function logMessage(msg) {
+        logArea.innerHTML += `<p style="margin: 2px 0;">${new Date().toLocaleTimeString()}: ${msg}</p>`;
+        logArea.scrollTop = logArea.scrollHeight;
+      }
+
+      try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        playerIdSpan.textContent = localStorage.getItem('player_id') || 'N/A';
+      } catch (e) {
+        logMessage('Erro ao decodificar token JWT. Redirecionando...');
+        localStorage.clear();
+        window.location.href = 'login.html';
+      }
+
+      const socket = io('http://localhost:3000', {
+        auth: { token },
+      });
+
+      socket.on('connect', () => {
+        statusSpan.textContent = 'Conectado';
+        socketIdSpan.textContent = socket.id;
+        logMessage('Conectado ao servidor. Escolha um modo de jogo.');
+      });
+
+      socket.on('connect_error', (err) => {
+        statusSpan.textContent = `Erro de conexão`;
+        logMessage(`Erro: ${err.message}. Verifique o token e o servidor.`);
+        localStorage.clear();
+        setTimeout(() => (window.location.href = 'login.html'), 3000);
+      });
+
+      // PvP
+      document.getElementById('findMatchBtn').addEventListener('click', () => {
+        logMessage('Enviando evento "findMatch"...');
+        statusSpan.textContent = 'Procurando partida online...';
+        socket.emit('findMatch');
+      });
+
+      // PvE
+      function startBotMatch(botProfileId) {
+        logMessage(`Enviando evento "findBotMatch" com o perfil: ${botProfileId}...`);
+        statusSpan.textContent = 'Criando partida contra o bot...';
+        socket.emit('findBotMatch', { botProfileId });
+      }
+
+      document
+        .getElementById('fightJessieBtn')
+        .addEventListener('click', () => startBotMatch('jessie'));
+      document
+        .getElementById('fightJamesBtn')
+        .addEventListener('click', () => startBotMatch('pro-james'));
+
+      socket.on('matchFound', (data) => {
+        statusSpan.textContent = `Partida encontrada!`;
+        logMessage(`Partida criada! Batalha ID: ${data.battleId}. Redirecionando...`);
+        // **IMPORTANTE**: Armazenamos o objeto completo que vem do backend
+        sessionStorage.setItem('battle_data', JSON.stringify(data));
+        window.location.href = 'battle.html';
+      });
+
+      socket.on('matchStatus', (data) => {
+        if (data.status === 'waiting') {
+          statusSpan.textContent = 'Aguardando oponente...';
+          logMessage('Na fila de matchmaking: Aguardando outro jogador.');
+        }
+      });
+
+      socket.on('error', (error) => {
+        statusSpan.textContent = `Erro!`;
+        logMessage(`Erro do servidor: ${error.message || JSON.stringify(error)}`);
+      });
+    </script>
+  </body>
+</html>
