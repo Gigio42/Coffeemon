@@ -2,10 +2,11 @@ import { Injectable } from '@nestjs/common';
 import { BattleActionUnion } from '../types/battle-actions.types';
 import { BattleState } from '../types/battle-state.types';
 import { BattleActionType, BattleStatus, TurnPhase } from '../types/enums';
-import { ActionExecutorService } from './action-executor.service';
+import { ActionExecutorService } from './actions/action-executor.service';
 import { BattleActionFactory } from './actions/battle-action-factory';
 import { StatusEffectsService } from './effects/status-effects.service';
 import { EventManager } from './events/event-manager';
+import { BattleValidatorService } from './validation/battle-validator.service';
 
 interface ActionInQueue {
   playerId: number;
@@ -20,7 +21,8 @@ export class BattlePhaseManager {
     private readonly actionExecutor: ActionExecutorService,
     private readonly statusEffectsService: StatusEffectsService,
     private readonly eventManager: EventManager,
-    private readonly actionFactory: BattleActionFactory
+    private readonly actionFactory: BattleActionFactory,
+    private readonly actionValidator: BattleValidatorService
   ) {}
 
   public async submitAction(
@@ -28,37 +30,35 @@ export class BattlePhaseManager {
     playerId: number,
     action: BattleActionUnion
   ): Promise<BattleState> {
+    battleState.events = [];
+    const validationResult = this.actionValidator.validate(battleState, playerId, action);
+
+    if (!validationResult.isValid) {
+      const payload = validationResult.errorPayload || {};
+      payload.playerId = playerId;
+
+      battleState.events.push(
+        this.eventManager.createEvent({
+          eventKey: validationResult.errorKey || 'ACTION_ERROR',
+          payload: payload,
+        })
+      );
+      return battleState;
+    }
+
+    // SELECTION
     if (battleState.turnPhase === TurnPhase.SELECTION) {
       return this.handleSelectionPhase(battleState, playerId, action);
     }
 
-    if (battleState.turnPhase !== TurnPhase.SUBMISSION) {
-      battleState.events.push(
-        this.eventManager.createEvent({
-          eventKey: 'ACTION_ERROR',
-          payload: { playerId, error: 'Not in action submission phase.' },
-        })
-      );
-      return battleState;
-    }
-
-    if (battleState.pendingActions[playerId]) {
-      battleState.events.push(
-        this.eventManager.createEvent({
-          eventKey: 'ACTION_ERROR',
-          payload: { playerId, error: 'Action already submitted for this turn.' },
-        })
-      );
-      return battleState;
-    }
-
     battleState.pendingActions[playerId] = action;
-
     const allActionsSubmitted = Object.values(battleState.pendingActions).every(
       (act) => act !== null
     );
 
+    // RESOLUTION
     if (allActionsSubmitted) {
+      console.log('[BattlePhaseManager] All actions submitted, resolving turn.');
       return this.resolveTurn(battleState);
     }
 
@@ -70,27 +70,6 @@ export class BattlePhaseManager {
     playerId: number,
     action: BattleActionUnion
   ): Promise<BattleState> {
-    if (action.actionType !== BattleActionType.SELECT_COFFEEMON) {
-      battleState.events.push(
-        this.eventManager.createEvent({
-          eventKey: 'ACTION_ERROR',
-          payload: { playerId, error: 'You must select your starting Coffeemon.' },
-        })
-      );
-      return battleState;
-    }
-
-    const player = battleState.player1Id === playerId ? battleState.player1 : battleState.player2;
-    if (player.hasSelectedCoffeemon) {
-      battleState.events.push(
-        this.eventManager.createEvent({
-          eventKey: 'ACTION_ERROR',
-          payload: { playerId, error: 'You have already selected your Coffeemon.' },
-        })
-      );
-      return battleState;
-    }
-
     const updatedState = await this.actionExecutor.execute(
       battleState,
       playerId,
@@ -100,6 +79,12 @@ export class BattlePhaseManager {
 
     if (updatedState.player1.hasSelectedCoffeemon && updatedState.player2.hasSelectedCoffeemon) {
       updatedState.turnPhase = TurnPhase.SUBMISSION;
+      updatedState.events.push(
+        this.eventManager.createEvent({
+          eventKey: 'TURN_END',
+          payload: { turn: updatedState.turn },
+        })
+      );
     }
 
     return updatedState;
@@ -107,13 +92,21 @@ export class BattlePhaseManager {
 
   private async resolveTurn(battleState: BattleState): Promise<BattleState> {
     battleState.turnPhase = TurnPhase.RESOLUTION;
-    battleState.events = [];
-
     const actionQueue = this.determineActionOrder(battleState);
 
     let currentState = battleState;
     for (const item of actionQueue) {
       if (currentState.battleStatus === BattleStatus.FINISHED) break;
+
+      const actorPlayer =
+        item.playerId === currentState.player1Id ? currentState.player1 : currentState.player2;
+      if (actorPlayer.activeCoffeemonIndex === null) {
+        continue;
+      }
+      const activeMon = actorPlayer.coffeemons[actorPlayer.activeCoffeemonIndex];
+      if (activeMon.isFainted && item.action.actionType !== BattleActionType.SWITCH) {
+        continue;
+      }
 
       currentState = await this.actionExecutor.execute(
         currentState,
@@ -171,11 +164,34 @@ export class BattlePhaseManager {
       }
     }
 
+    for (const coffeemon of allCoffeemons) {
+      if (coffeemon.currentHp < 0) {
+        coffeemon.currentHp = 0;
+      }
+
+      if (!coffeemon.isFainted && coffeemon.currentHp <= 0) {
+        coffeemon.isFainted = true;
+        coffeemon.canAct = false;
+        state.events.push(
+          this.eventManager.createEvent({
+            eventKey: 'COFFEEMON_FAINTED',
+            payload: {
+              playerId: null,
+              coffeemonName: coffeemon.name,
+            },
+          })
+        );
+      }
+    }
+
     this.checkEndBattleCondition(state);
 
     if (state.battleStatus === BattleStatus.ACTIVE) {
       state.turnPhase = TurnPhase.SUBMISSION;
-      state.pendingActions = { [state.player1Id]: null, [state.player2Id]: null };
+      state.pendingActions = {
+        [state.player1Id]: null,
+        [state.player2Id]: null,
+      };
       state.turn++;
       state.events.push(
         this.eventManager.createEvent({

@@ -1,7 +1,4 @@
-import { ApiProperty } from '@nestjs/swagger';
-import { Type } from 'class-transformer';
-import { IsArray, IsEnum, IsNumber, IsString, ValidateNested } from 'class-validator';
-import { MoveDto } from '../../moves/dto/move.dto';
+import { ArrayNotEmpty, IsArray, IsEnum, IsNumber, IsString } from 'class-validator';
 import { CoffeemonType } from '../entities/coffeemon.entity';
 
 export class CreateCoffeemonDto {
@@ -20,11 +17,11 @@ export class CreateCoffeemonDto {
   @IsNumber()
   baseDefense: number;
 
-  @IsString()
-  imageUrl: string;
+  @IsNumber()
+  baseSpeed: number;
 
   @IsArray()
-  @ValidateNested({ each: true })
-  @Type(() => MoveDto)
-  moves: MoveDto[];
+  @ArrayNotEmpty()
+  @IsNumber({}, { each: true })
+  learnableMoveIds: number[];
 }

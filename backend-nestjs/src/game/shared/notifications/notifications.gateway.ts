@@ -41,7 +41,7 @@ export class NotificationsGateway {
   @OnEvent('battle.created')
   async handleBattleCreated(event: BattleCreatedEvent): Promise<void> {
     const battleRoom = `battle:${event.battleId}`;
-    const { player1SocketId, player2SocketId } = event.battleState;
+    const { player1SocketId, player2SocketId, player1Id, player2Id } = event.battleState;
 
     const p1Socket = this.server.sockets.sockets.get(player1SocketId);
     const p2Socket = this.server.sockets.sockets.get(player2SocketId);
@@ -49,10 +49,12 @@ export class NotificationsGateway {
     if (p1Socket) {
       await p1Socket.leave('matchmaking:default');
       await p1Socket.join(battleRoom);
+      p1Socket.data = { ...p1Socket.data, playerId: player1Id, battleId: event.battleId };
     }
     if (p2Socket) {
       await p2Socket.leave('matchmaking:default');
       await p2Socket.join(battleRoom);
+      p2Socket.data = { ...p2Socket.data, playerId: player2Id, battleId: event.battleId };
     }
 
     this.server.to(battleRoom).emit('matchFound', { battleId: event.battleId });
@@ -72,14 +74,24 @@ export class NotificationsGateway {
       event.battleState.player1Id === event.playerId
         ? event.battleState.player1SocketId
         : event.battleState.player2SocketId;
+
     const socket = this.server.sockets.sockets.get(socketId);
+
     if (socket) {
       await socket.join(battleRoom);
+
       socket.emit('battleUpdate', { battleState: event.battleState });
+
       socket.to(battleRoom).emit('playerReconnected', {
         playerId: event.playerId,
         message: 'Opponent reconnected to the battle.',
       });
+
+      socket.data = { ...socket.data, playerId: event.playerId, battleId: event.battleId };
+    } else {
+      console.warn(
+        `[NotificationsGateway] Socket ${socketId} for reconnected player ${event.playerId} not found.`
+      );
     }
   }
 

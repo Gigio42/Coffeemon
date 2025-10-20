@@ -1,5 +1,5 @@
-import { Column, Entity, JoinTable, ManyToMany, PrimaryGeneratedColumn } from 'typeorm';
-import { Move } from '../../moves/entities/move.entity';
+import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
+import { CoffeemonLearnsetMove } from './coffeemon-learnset-move.entity';
 
 export enum CoffeemonType {
   FRUITY = 'fruity',
@@ -34,7 +34,6 @@ export class Coffeemon {
   @Column()
   baseSpeed: number;
 
-  @ManyToMany(() => Move)
-  @JoinTable()
-  learnableMoves: Move[];
+  @OneToMany(() => CoffeemonLearnsetMove, (learnsetMove) => learnsetMove.coffeemon)
+  learnset: CoffeemonLearnsetMove[];
 }
