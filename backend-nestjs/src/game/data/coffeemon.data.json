@@ -6,8 +6,7 @@
     "baseHp": 95,
     "baseAttack": 50,
     "baseDefense": 55,
-    "baseSpeed": 60,
-    "moves": [1, 2]
+    "baseSpeed": 60
   },
   {
     "id": 2,
@@ -16,8 +15,7 @@
     "baseHp": 80,
     "baseAttack": 65,
     "baseDefense": 35,
-    "baseSpeed": 85,
-    "moves": [3, 4]
+    "baseSpeed": 85
   },
   {
     "id": 3,
@@ -26,8 +24,7 @@
     "baseHp": 110,
     "baseAttack": 50,
     "baseDefense": 50,
-    "baseSpeed": 50,
-    "moves": [5, 6]
+    "baseSpeed": 50
   },
   {
     "id": 4,
@@ -36,8 +33,7 @@
     "baseHp": 85,
     "baseAttack": 55,
     "baseDefense": 60,
-    "baseSpeed": 55,
-    "moves": [7, 8]
+    "baseSpeed": 55
   },
   {
     "id": 5,
@@ -46,8 +42,7 @@
     "baseHp": 90,
     "baseAttack": 70,
     "baseDefense": 45,
-    "baseSpeed": 70,
-    "moves": [9, 10]
+    "baseSpeed": 70
   },
   {
     "id": 6,
@@ -56,8 +51,7 @@
     "baseHp": 75,
     "baseAttack": 75,
     "baseDefense": 40,
-    "baseSpeed": 90,
-    "moves": [11, 12]
+    "baseSpeed": 90
   },
   {
     "id": 7,
@@ -66,8 +60,7 @@
     "baseHp": 80,
     "baseAttack": 50,
     "baseDefense": 65,
-    "baseSpeed": 65,
-    "moves": [13, 14]
+    "baseSpeed": 65
   },
   {
     "id": 8,
@@ -76,7 +69,6 @@
     "baseHp": 70,
     "baseAttack": 80,
     "baseDefense": 45,
-    "baseSpeed": 80,
-    "moves": [15, 16]
+    "baseSpeed": 80
   }
 ]

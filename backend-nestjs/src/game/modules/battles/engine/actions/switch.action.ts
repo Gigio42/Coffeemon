@@ -14,28 +14,6 @@ export class SwitchAction implements IBattleAction<BattleActionType.SWITCH> {
     const activePlayer = isPlayer1 ? battleState.player1 : battleState.player2;
     const newIndex = payload.newIndex;
 
-    if (newIndex < 0 || newIndex >= activePlayer.coffeemons.length) {
-      return {
-        advanceTurn: false,
-        notifications: [{ eventKey: 'SWITCH_FAILED_INVALID_INDEX', payload: { playerId } }],
-      };
-    }
-
-    if (newIndex === activePlayer.activeCoffeemonIndex) {
-      return {
-        advanceTurn: false,
-        notifications: [{ eventKey: 'SWITCH_FAILED_SAME_COFFEEMON', payload: { playerId } }],
-      };
-    }
-
-    const targetCoffeemon = activePlayer.coffeemons[newIndex];
-    if (targetCoffeemon.isFainted) {
-      return {
-        advanceTurn: false,
-        notifications: [{ eventKey: 'SWITCH_FAILED_FAINTED_COFFEEMON', payload: { playerId } }],
-      };
-    }
-
     activePlayer.activeCoffeemonIndex = newIndex;
     const newActiveCoffeemon = activePlayer.coffeemons[activePlayer.activeCoffeemonIndex];
 
@@ -44,7 +22,10 @@ export class SwitchAction implements IBattleAction<BattleActionType.SWITCH> {
       notifications: [
         {
           eventKey: 'SWITCH_SUCCESS',
-          payload: { playerId, newActiveCoffeemonName: newActiveCoffeemon.name },
+          payload: {
+            playerId,
+            newActiveCoffeemonName: newActiveCoffeemon.name,
+          },
         },
       ],
     });

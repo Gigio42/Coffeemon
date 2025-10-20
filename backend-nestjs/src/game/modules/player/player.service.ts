@@ -3,8 +3,13 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { UsersService } from '../../../ecommerce/users/users.service';
 import { CoffeemonService } from '../coffeemon/coffeemon.service';
+import {
+  CoffeemonLearnsetMove,
+  MoveLearnMethod,
+} from '../coffeemon/entities/coffeemon-learnset-move.entity';
 import { CreatePlayerDto } from './dto/create-player.dto';
 import { Player } from './entities/player.entity';
+import { PlayerCoffeemonMove } from './entities/playerCoffeemonMove.entity';
 import { PlayerCoffeemons } from './entities/playerCoffeemons.entity';
 
 @Injectable()
@@ -14,6 +19,10 @@ export class PlayerService {
     private playerRepository: Repository<Player>,
     @InjectRepository(PlayerCoffeemons)
     private playerCoffeemonRepository: Repository<PlayerCoffeemons>,
+    @InjectRepository(PlayerCoffeemonMove)
+    private playerCoffeemonMoveRepository: Repository<PlayerCoffeemonMove>,
+    @InjectRepository(CoffeemonLearnsetMove)
+    private learnsetRepository: Repository<CoffeemonLearnsetMove>,
     private usersService: UsersService,
     private coffeemonService: CoffeemonService
   ) {}
@@ -74,47 +83,71 @@ export class PlayerService {
 
     return this.playerCoffeemonRepository.find({
       where: { player: { id: playerId } },
-      relations: ['coffeemon'],
+      relations: ['coffeemon', 'learnedMoves', 'learnedMoves.move'],
     });
   }
 
   async getPlayerParty(playerId: number): Promise<PlayerCoffeemons[]> {
-    await this.findOne(playerId);
-
     return this.playerCoffeemonRepository.find({
       where: {
         player: { id: playerId },
         isInParty: true,
       },
-      relations: ['coffeemon'],
+      relations: ['coffeemon', 'learnedMoves', 'learnedMoves.move'],
     });
   }
 
   async addCoffeemonToPlayer(playerId: number, coffeemonId: number): Promise<PlayerCoffeemons> {
-    await this.findOne(playerId);
+    const player = await this.findOne(playerId);
+    const coffeemonBase = await this.coffeemonService.findOne(coffeemonId);
 
-    const coffeemon = await this.coffeemonService.findOne(coffeemonId);
-
-    const playerCoffeemon = this.playerCoffeemonRepository.create({
-      player: { id: playerId },
-      coffeemon: { id: coffeemonId },
-      hp: coffeemon.baseHp,
-      attack: coffeemon.baseAttack,
-      defense: coffeemon.baseDefense,
+    const playerCoffeemonInstance = this.playerCoffeemonRepository.create({
+      player: player,
+      coffeemon: coffeemonBase,
+      hp: coffeemonBase.baseHp,
+      attack: coffeemonBase.baseAttack,
+      defense: coffeemonBase.baseDefense,
       level: 1,
       experience: 0,
       isInParty: false,
+      learnedMoves: [],
     });
 
-    return this.playerCoffeemonRepository.save(playerCoffeemon);
+    const savedPlayerCoffeemon = await this.playerCoffeemonRepository.save(playerCoffeemonInstance);
+
+    const startingMovesLearnset = await this.learnsetRepository.find({
+      where: {
+        coffeemonId: coffeemonId,
+        learnMethod: MoveLearnMethod.START,
+        levelLearned: 1,
+      },
+      relations: ['move'],
+      take: 4,
+    });
+
+    const initialMovesToAdd = startingMovesLearnset.map((learnsetEntry, index) =>
+      this.playerCoffeemonMoveRepository.create({
+        playerCoffeemon: savedPlayerCoffeemon,
+        move: learnsetEntry.move,
+        slot: index + 1,
+      })
+    );
+
+    if (initialMovesToAdd.length > 0) {
+      await this.playerCoffeemonMoveRepository.save(initialMovesToAdd);
+      return await this.playerCoffeemonRepository.findOneOrFail({
+        where: { id: savedPlayerCoffeemon.id },
+        relations: ['coffeemon', 'learnedMoves', 'learnedMoves.move'],
+      });
+    }
+
+    return savedPlayerCoffeemon;
   }
 
   async addCoffeemonToParty(
     playerId: number,
     playerCoffeemonId: number
   ): Promise<PlayerCoffeemons> {
-    await this.findOne(playerId);
-
     const playerCoffeemon = await this.playerCoffeemonRepository.findOne({
       where: {
         id: playerCoffeemonId,
@@ -124,13 +157,13 @@ export class PlayerService {
 
     if (!playerCoffeemon) {
       throw new NotFoundException(
-        `Coffeemon ID ${playerCoffeemonId} not found for player with ID ${playerId}`
+        `Player Coffeemon with ID ${playerCoffeemonId} not found for player with ID ${playerId}`
       );
     }
 
     if (playerCoffeemon.isInParty) {
       throw new BadRequestException(
-        `Coffeemon ID ${playerCoffeemonId} is already in the party for player with ID ${playerId}`
+        `Player Coffeemon with ID ${playerCoffeemonId} is already in the party.`
       );
     }
 
@@ -143,7 +176,7 @@ export class PlayerService {
 
     const maxPartySize = 3;
     if (partyCount >= maxPartySize) {
-      throw new BadRequestException(`You can only have ${maxPartySize} Coffeemons in your party`);
+      throw new BadRequestException(`Party is full (maximum size: ${maxPartySize}).`);
     }
 
     playerCoffeemon.isInParty = true;
@@ -166,7 +199,7 @@ export class PlayerService {
 
     if (!playerCoffeemon) {
       throw new NotFoundException(
-        `Coffeemon ID ${playerCoffeemonId} not found in party for player with ID ${playerId}`
+        `Player Coffeemon with ID ${playerCoffeemonId} not found in the party for player with ID ${playerId}`
       );
     }
 

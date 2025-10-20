@@ -1,7 +1,9 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { CoffeemonState, PlayerBattleState } from '../../battles/types/battle-state.types';
 import { CoffeemonService } from '../../coffeemon/coffeemon.service';
+import { MoveLearnMethod } from '../../coffeemon/entities/coffeemon-learnset-move.entity';
 import { Coffeemon } from '../../coffeemon/entities/coffeemon.entity';
+import { Move } from '../../moves/entities/move.entity';
 import { BotProfile, BotProfiles } from '../config/bot-profiles';
 
 @Injectable()
@@ -38,6 +40,20 @@ export class BotPlayerService {
     const statMultiplier = 1 + (level - 1) * 0.1;
     const maxHp = Math.floor(baseCoffeemon.baseHp * statMultiplier);
 
+    const learnableMovesForLevel = (baseCoffeemon.learnset || [])
+      .filter(
+        (ls) =>
+          (ls.learnMethod === MoveLearnMethod.START && ls.levelLearned === 1) ||
+          (ls.learnMethod === MoveLearnMethod.LEVEL_UP &&
+            ls.levelLearned &&
+            ls.levelLearned <= level)
+      )
+      .sort((a, b) => (b.levelLearned || 0) - (a.levelLearned || 0))
+      .map((ls) => ls.move)
+      .filter((move, index, self) => move && self.findIndex((m) => m.id === move.id) === index);
+
+    const selectedMoves: Move[] = learnableMovesForLevel.slice(0, 4);
+
     return {
       id: baseCoffeemon.id,
       name: `${baseCoffeemon.name} (Lvl ${level})`,
@@ -56,7 +72,7 @@ export class BotPlayerService {
         critChance: 0.05,
         blockChance: 0.0,
       },
-      moves: [...(baseCoffeemon.moves || [])],
+      moves: selectedMoves,
       statusEffects: [],
     };
   }

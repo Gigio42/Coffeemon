@@ -119,7 +119,7 @@ export class BattleCreationService {
             critChance: 0.05,
             blockChance: 0.0,
           },
-          moves: [...(c.coffeemon.moves || [])],
+          moves: c.learnedMoves.sort((a, b) => a.slot - b.slot).map((lm) => lm.move),
           statusEffects: [],
         })
       ),
