@@ -139,7 +139,7 @@ Define todos os tipos TypeScript:
 ### ⚙️ **utils/config.ts**
 Configurações globais:
 - `getServerUrl()`: Detecta IP do servidor automaticamente
-- `SOCKET_URL`: URL do servidor
+- `getServerUrl()`: URL do servidor
 - `BASE_IMAGE_URL`: URL base para imagens dos Coffeemon
 
 ---
@@ -148,15 +148,15 @@ Configurações globais:
 
 ```
 ┌─────────────┐
-│ LoginScreen │ ◄──────────────────┐
-└──────┬──────┘                    │
-       │ onNavigateToMatchmaking   │
+│ LoginScreen │ ◄───────────────────┐
+└──────┬──────┘                     │
+       │ onNavigateToMatchmaking    │
        ▼                            │
 ┌──────────────────┐                │
 │ MatchmakingScreen│ ───────────────┤ onNavigateToLogin
 └────────┬─────────┘                │
          │ onNavigateToBattle       │
-         ▼                           │
+         ▼                          │
     ┌────────────┐                  │
     │BattleScreen│ ─────────────────┘
     └────────────┘ onNavigateToMatchmaking

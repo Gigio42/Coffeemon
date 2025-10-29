@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
 import {
   StyleSheet,
   Text,
@@ -7,9 +7,9 @@ import {
   Modal,
   Alert,
   ActivityIndicator,
-} from 'react-native';
-import { CameraView, Camera } from 'expo-camera';
-import { getServerUrl } from '../utils/config';
+} from "react-native";
+import { CameraView, Camera } from "expo-camera";
+import { getServerUrl } from "../utils/config";
 
 interface QRScannerProps {
   visible: boolean;
@@ -36,7 +36,7 @@ export default function QRScanner({
 
   async function requestCameraPermission() {
     const { status } = await Camera.requestCameraPermissionsAsync();
-    setHasPermission(status === 'granted');
+    setHasPermission(status === "granted");
   }
 
   async function handleBarCodeScanned({ data }: { data: string }) {
@@ -45,36 +45,37 @@ export default function QRScanner({
     setScanned(true);
     setProcessing(true);
 
-    console.log('QR Code scanned:', data);
+    console.log("QR Code scanned:", data);
 
     try {
       // Formato esperado: coffeemon://add/1 ou coffeemon://add/2
-      if (!data.startsWith('coffeemon://add/')) {
+      if (!data.startsWith("coffeemon://add/")) {
         Alert.alert(
-          'QR Code Inválido',
-          'Este QR code não é de um Coffeemon válido.'
+          "QR Code Inválido",
+          "Este QR code não é de um Coffeemon válido."
         );
         resetScanner();
         return;
       }
 
       // Extrai o ID do Coffeemon da URL
-      const coffeemonId = data.replace('coffeemon://add/', '');
-      
+      const coffeemonId = data.replace("coffeemon://add/", "");
+
       if (!coffeemonId || isNaN(Number(coffeemonId))) {
-        Alert.alert('Erro', 'ID do Coffeemon inválido no QR code.');
+        Alert.alert("Erro", "ID do Coffeemon inválido no QR code.");
         resetScanner();
         return;
       }
 
+      // --- MUDANÇA: Adicionar 'await' em getServerUrl() ---
       // Faz requisição para adicionar o Coffeemon ao jogador
       const response = await fetch(
-        `${getServerUrl()}/game/players/me/coffeemons/${coffeemonId}`,
+        `${await getServerUrl()}/game/players/me/coffeemons/${coffeemonId}`,
         {
-          method: 'POST',
+          method: "POST",
           headers: {
             Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json',
+            "Content-Type": "application/json",
           },
         }
       );
@@ -82,11 +83,11 @@ export default function QRScanner({
       if (response.ok) {
         const coffeemon = await response.json();
         Alert.alert(
-          '✅ Coffeemon Capturado!',
+          "✅ Coffeemon Capturado!",
           `${coffeemon.coffeemon.name} foi adicionado ao seu inventário!\n\nHP: ${coffeemon.hp}\nAtaque: ${coffeemon.attack}\nDefesa: ${coffeemon.defense}`,
           [
             {
-              text: 'OK',
+              text: "OK",
               onPress: () => {
                 onCoffeemonAdded();
                 onClose();
@@ -95,19 +96,19 @@ export default function QRScanner({
           ]
         );
       } else if (response.status === 404) {
-        Alert.alert('Erro', 'Coffeemon não encontrado.');
+        Alert.alert("Erro", "Coffeemon não encontrado.");
         resetScanner();
       } else if (response.status === 409) {
-        Alert.alert('Aviso', 'Você já possui este Coffeemon!');
+        Alert.alert("Aviso", "Você já possui este Coffeemon!");
         resetScanner();
       } else {
         const error = await response.json();
-        Alert.alert('Erro', error.message || 'Erro ao adicionar Coffeemon.');
+        Alert.alert("Erro", error.message || "Erro ao adicionar Coffeemon.");
         resetScanner();
       }
     } catch (error) {
-      console.error('Error processing QR code:', error);
-      Alert.alert('Erro', 'Erro de conexão ao processar QR code.');
+      console.error("Error processing QR code:", error);
+      Alert.alert("Erro", "Erro de conexão ao processar QR code.");
       resetScanner();
     } finally {
       setProcessing(false);
@@ -124,6 +125,7 @@ export default function QRScanner({
     onClose();
   }
 
+  // ... (JSX de renderização - NÃO MUDA)
   if (!visible) return null;
 
   if (hasPermission === null) {
@@ -165,7 +167,7 @@ export default function QRScanner({
           facing="back"
           onBarcodeScanned={scanned ? undefined : handleBarCodeScanned}
           barcodeScannerSettings={{
-            barcodeTypes: ['qr'],
+            barcodeTypes: ["qr"],
           }}
         >
           <View style={styles.overlay}>
@@ -181,7 +183,7 @@ export default function QRScanner({
               <View style={[styles.corner, styles.topRight]} />
               <View style={[styles.corner, styles.bottomLeft]} />
               <View style={[styles.corner, styles.bottomRight]} />
-              
+
               {processing && (
                 <View style={styles.processingOverlay}>
                   <ActivityIndicator size="large" color="#fff" />
@@ -196,10 +198,12 @@ export default function QRScanner({
                   style={styles.rescanButton}
                   onPress={resetScanner}
                 >
-                  <Text style={styles.rescanButtonText}>🔄 Escanear Novamente</Text>
+                  <Text style={styles.rescanButtonText}>
+                    🔄 Escanear Novamente
+                  </Text>
                 </TouchableOpacity>
               )}
-              
+
               <TouchableOpacity
                 style={styles.cancelButton}
                 onPress={handleClose}
@@ -214,57 +218,58 @@ export default function QRScanner({
   );
 }
 
+// ... (seus styles continuam iguais)
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#000',
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: "#000",
+    justifyContent: "center",
+    alignItems: "center",
   },
   camera: {
     flex: 1,
-    width: '100%',
+    width: "100%",
   },
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    backgroundColor: "rgba(0,0,0,0.5)",
+    justifyContent: "space-between",
+    alignItems: "center",
     padding: 20,
   },
   header: {
     marginTop: 40,
-    alignItems: 'center',
+    alignItems: "center",
   },
   title: {
     fontSize: 24,
-    fontWeight: 'bold',
-    color: '#fff',
+    fontWeight: "bold",
+    color: "#fff",
     marginBottom: 10,
-    textShadowColor: 'rgba(0, 0, 0, 0.75)',
+    textShadowColor: "rgba(0, 0, 0, 0.75)",
     textShadowOffset: { width: 2, height: 2 },
     textShadowRadius: 4,
   },
   instruction: {
     fontSize: 16,
-    color: '#fff',
-    textAlign: 'center',
-    textShadowColor: 'rgba(0, 0, 0, 0.75)',
+    color: "#fff",
+    textAlign: "center",
+    textShadowColor: "rgba(0, 0, 0, 0.75)",
     textShadowOffset: { width: 1, height: 1 },
     textShadowRadius: 2,
   },
   scanArea: {
     width: 250,
     height: 250,
-    position: 'relative',
-    justifyContent: 'center',
-    alignItems: 'center',
+    position: "relative",
+    justifyContent: "center",
+    alignItems: "center",
   },
   corner: {
-    position: 'absolute',
+    position: "absolute",
     width: 40,
     height: 40,
-    borderColor: '#2ecc71',
+    borderColor: "#2ecc71",
     borderWidth: 4,
   },
   topLeft: {
@@ -292,69 +297,69 @@ const styles = StyleSheet.create({
     borderTopWidth: 0,
   },
   processingOverlay: {
-    backgroundColor: 'rgba(0,0,0,0.7)',
+    backgroundColor: "rgba(0,0,0,0.7)",
     padding: 20,
     borderRadius: 12,
-    alignItems: 'center',
+    alignItems: "center",
   },
   processingText: {
-    color: '#fff',
+    color: "#fff",
     marginTop: 10,
     fontSize: 16,
   },
   footer: {
     marginBottom: 40,
-    width: '100%',
-    alignItems: 'center',
+    width: "100%",
+    alignItems: "center",
   },
   rescanButton: {
-    backgroundColor: '#3498db',
+    backgroundColor: "#3498db",
     paddingVertical: 15,
     paddingHorizontal: 30,
     borderRadius: 8,
     marginBottom: 15,
     minWidth: 200,
-    alignItems: 'center',
+    alignItems: "center",
   },
   rescanButtonText: {
-    color: '#fff',
+    color: "#fff",
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
   cancelButton: {
-    backgroundColor: '#e74c3c',
+    backgroundColor: "#e74c3c",
     paddingVertical: 15,
     paddingHorizontal: 30,
     borderRadius: 8,
     minWidth: 200,
-    alignItems: 'center',
+    alignItems: "center",
   },
   cancelButtonText: {
-    color: '#fff',
+    color: "#fff",
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
   closeButton: {
-    backgroundColor: '#e74c3c',
+    backgroundColor: "#e74c3c",
     paddingVertical: 15,
     paddingHorizontal: 30,
     borderRadius: 8,
     marginTop: 20,
   },
   closeButtonText: {
-    color: '#fff',
+    color: "#fff",
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
   text: {
     fontSize: 18,
-    color: '#fff',
-    textAlign: 'center',
+    color: "#fff",
+    textAlign: "center",
     marginBottom: 10,
   },
   subText: {
     fontSize: 14,
-    color: '#ccc',
-    textAlign: 'center',
+    color: "#ccc",
+    textAlign: "center",
   },
 });

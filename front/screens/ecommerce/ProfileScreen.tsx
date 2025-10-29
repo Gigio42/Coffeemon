@@ -1,12 +1,4 @@
-/**
- * ========================================
- * PROFILE SCREEN - PERFIL DO USUÁRIO
- * ========================================
- * 
- * Exibe informações do usuário e opções de navegação
- */
-
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
 import {
   StyleSheet,
   Text,
@@ -16,10 +8,10 @@ import {
   SafeAreaView,
   ActivityIndicator,
   Alert,
-} from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { SOCKET_URL } from '../../utils/config';
-import { User } from '../../types';
+} from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { getServerUrl } from "../../utils/config";
+import { User } from "../../types";
 
 interface ProfileScreenProps {
   token: string;
@@ -45,44 +37,42 @@ export default function ProfileScreen({
 
   const fetchUserData = async () => {
     try {
-      const response = await fetch(`${SOCKET_URL}/users/me`, {
+      // --- MUDANÇA: Adicionar 'await' em getServerUrl() ---
+      const response = await fetch(`${await getServerUrl()}/users/me`, {
         headers: {
-          'Authorization': `Bearer ${token}`,
+          Authorization: `Bearer ${token}`,
         },
       });
 
       if (!response.ok) {
-        throw new Error('Erro ao carregar dados do usuário');
+        throw new Error("Erro ao carregar dados do usuário");
       }
 
       const data = await response.json();
       setUser(data);
     } catch (err) {
-      console.error('Erro ao buscar usuário:', err);
-      Alert.alert('Erro', 'Não foi possível carregar os dados do usuário');
+      console.error("Erro ao buscar usuário:", err);
+      Alert.alert("Erro", "Não foi possível carregar os dados do usuário");
     } finally {
       setLoading(false);
     }
   };
 
   const handleLogout = () => {
-    Alert.alert(
-      'Sair',
-      'Deseja realmente sair da sua conta?',
-      [
-        { text: 'Cancelar', style: 'cancel' },
-        {
-          text: 'Sair',
-          style: 'destructive',
-          onPress: async () => {
-            await AsyncStorage.clear();
-            onLogout();
-          },
+    Alert.alert("Sair", "Deseja realmente sair da sua conta?", [
+      { text: "Cancelar", style: "cancel" },
+      {
+        text: "Sair",
+        style: "destructive",
+        onPress: async () => {
+          await AsyncStorage.clear();
+          onLogout();
         },
-      ]
-    );
+      },
+    ]);
   };
 
+  // ... (JSX de renderização - NÃO MUDA)
   if (loading) {
     return (
       <View style={styles.centerContainer}>
@@ -98,14 +88,16 @@ export default function ProfileScreen({
         <View style={styles.centerContainer}>
           <Text style={styles.errorIcon}>⚠️</Text>
           <Text style={styles.errorText}>Erro ao carregar perfil</Text>
-          <Text style={styles.errorSubtext}>Não foi possível carregar seus dados</Text>
-          
+          <Text style={styles.errorSubtext}>
+            Não foi possível carregar seus dados
+          </Text>
+
           <TouchableOpacity style={styles.retryButton} onPress={fetchUserData}>
             <Text style={styles.retryButtonText}>🔄 Tentar Novamente</Text>
           </TouchableOpacity>
-          
-          <TouchableOpacity 
-            style={styles.loginButton} 
+
+          <TouchableOpacity
+            style={styles.loginButton}
             onPress={async () => {
               await AsyncStorage.clear();
               onLogout();
@@ -139,7 +131,7 @@ export default function ProfileScreen({
           </View>
           <Text style={styles.username}>{user.username}</Text>
           <Text style={styles.email}>{user.email}</Text>
-          {user.role === 'admin' && (
+          {user.role === "admin" && (
             <View style={styles.adminBadge}>
               <Text style={styles.adminBadgeText}>👑 Admin</Text>
             </View>
@@ -168,7 +160,7 @@ export default function ProfileScreen({
             <View style={styles.infoRow}>
               <Text style={styles.infoLabel}>Tipo de conta:</Text>
               <Text style={styles.infoValue}>
-                {user.role === 'admin' ? 'Administrador' : 'Usuário'}
+                {user.role === "admin" ? "Administrador" : "Usuário"}
               </Text>
             </View>
           </View>
@@ -177,7 +169,7 @@ export default function ProfileScreen({
         {/* Ações */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Ações</Text>
-          
+
           <TouchableOpacity
             style={styles.actionButton}
             onPress={onNavigateToGame}
@@ -207,82 +199,83 @@ export default function ProfileScreen({
   );
 }
 
+// ... (seus styles continuam iguais)
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: "#f5f5f5",
   },
   centerContainer: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#f5f5f5',
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#f5f5f5",
   },
   header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     padding: 20,
-    backgroundColor: '#8B4513',
+    backgroundColor: "#8B4513",
   },
   backButton: {
     padding: 8,
   },
   backButtonText: {
-    color: '#fff',
+    color: "#fff",
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
   headerTitle: {
     fontSize: 20,
-    fontWeight: 'bold',
-    color: '#fff',
+    fontWeight: "bold",
+    color: "#fff",
   },
   scrollView: {
     flex: 1,
   },
   profileHeader: {
-    alignItems: 'center',
+    alignItems: "center",
     padding: 30,
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
+    borderBottomColor: "#e0e0e0",
   },
   avatar: {
     width: 100,
     height: 100,
     borderRadius: 50,
-    backgroundColor: '#8B4513',
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: "#8B4513",
+    justifyContent: "center",
+    alignItems: "center",
     marginBottom: 15,
   },
   avatarText: {
     fontSize: 48,
-    color: '#fff',
-    fontWeight: 'bold',
+    color: "#fff",
+    fontWeight: "bold",
   },
   username: {
     fontSize: 24,
-    fontWeight: 'bold',
-    color: '#333',
+    fontWeight: "bold",
+    color: "#333",
     marginBottom: 5,
   },
   email: {
     fontSize: 16,
-    color: '#666',
+    color: "#666",
   },
   adminBadge: {
     marginTop: 10,
-    backgroundColor: '#FFD700',
+    backgroundColor: "#FFD700",
     paddingHorizontal: 15,
     paddingVertical: 5,
     borderRadius: 20,
   },
   adminBadgeText: {
     fontSize: 14,
-    fontWeight: 'bold',
-    color: '#333',
+    fontWeight: "bold",
+    color: "#333",
   },
   section: {
     marginTop: 20,
@@ -290,56 +283,56 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 18,
-    fontWeight: 'bold',
-    color: '#333',
+    fontWeight: "bold",
+    color: "#333",
     marginBottom: 10,
     paddingLeft: 5,
   },
   infoCard: {
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     borderRadius: 12,
     padding: 15,
     elevation: 2,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
   },
   infoRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    justifyContent: "space-between",
     paddingVertical: 12,
   },
   infoLabel: {
     fontSize: 14,
-    color: '#666',
+    color: "#666",
   },
   infoValue: {
     fontSize: 14,
-    fontWeight: 'bold',
-    color: '#333',
+    fontWeight: "bold",
+    color: "#333",
   },
   divider: {
     height: 1,
-    backgroundColor: '#e0e0e0',
+    backgroundColor: "#e0e0e0",
   },
   actionButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#fff',
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#fff",
     padding: 18,
     borderRadius: 12,
     marginBottom: 10,
     elevation: 2,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
   },
   logoutButton: {
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     borderWidth: 2,
-    borderColor: '#ff3b30',
+    borderColor: "#ff3b30",
   },
   actionButtonIcon: {
     fontSize: 24,
@@ -348,26 +341,26 @@ const styles = StyleSheet.create({
   actionButtonText: {
     flex: 1,
     fontSize: 16,
-    fontWeight: 'bold',
-    color: '#333',
+    fontWeight: "bold",
+    color: "#333",
   },
   actionButtonArrow: {
     fontSize: 20,
-    color: '#666',
+    color: "#666",
   },
   footer: {
-    alignItems: 'center',
+    alignItems: "center",
     padding: 30,
   },
   footerText: {
     fontSize: 12,
-    color: '#999',
+    color: "#999",
     marginBottom: 5,
   },
   loadingText: {
     marginTop: 10,
     fontSize: 16,
-    color: '#666',
+    color: "#666",
   },
   errorIcon: {
     fontSize: 48,
@@ -375,37 +368,37 @@ const styles = StyleSheet.create({
   },
   errorText: {
     fontSize: 18,
-    color: '#ff3b30',
-    fontWeight: 'bold',
+    color: "#ff3b30",
+    fontWeight: "bold",
     marginBottom: 8,
   },
   errorSubtext: {
     fontSize: 14,
-    color: '#666',
+    color: "#666",
     marginBottom: 24,
-    textAlign: 'center',
+    textAlign: "center",
   },
   retryButton: {
-    backgroundColor: '#8B4513',
+    backgroundColor: "#8B4513",
     paddingHorizontal: 30,
     paddingVertical: 12,
     borderRadius: 8,
     marginBottom: 12,
   },
   retryButtonText: {
-    color: '#fff',
+    color: "#fff",
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
   loginButton: {
-    backgroundColor: '#3498db',
+    backgroundColor: "#3498db",
     paddingHorizontal: 30,
     paddingVertical: 12,
     borderRadius: 8,
   },
   loginButtonText: {
-    color: '#fff',
+    color: "#fff",
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
 });

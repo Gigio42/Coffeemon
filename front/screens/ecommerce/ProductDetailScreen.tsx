@@ -1,12 +1,4 @@
-/**
- * ========================================
- * PRODUCT DETAIL SCREEN - DETALHES DO PRODUTO
- * ========================================
- * 
- * Exibe informações detalhadas de um produto
- */
-
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import {
   StyleSheet,
   Text,
@@ -17,9 +9,9 @@ import {
   SafeAreaView,
   TextInput,
   Alert,
-} from 'react-native';
-import { SOCKET_URL } from '../../utils/config';
-import { Product } from '../../types';
+} from "react-native";
+import { getServerUrl } from "../../utils/config";
+import { Product } from "../../types";
 
 interface ProductDetailScreenProps {
   token: string;
@@ -34,33 +26,36 @@ export default function ProductDetailScreen({
   onBack,
   onAddedToCart,
 }: ProductDetailScreenProps) {
-  const [quantity, setQuantity] = useState('1');
+  const [quantity, setQuantity] = useState("1");
   const [loading, setLoading] = useState(false);
 
   const formatPrice = (price: number) => {
-    return `R$ ${price.toFixed(2).replace('.', ',')}`;
+    return `R$ ${price.toFixed(2).replace(".", ",")}`;
   };
 
   const handleAddToCart = async () => {
     const qty = parseInt(quantity);
     if (isNaN(qty) || qty < 1) {
-      Alert.alert('Erro', 'Quantidade inválida');
+      Alert.alert("Erro", "Quantidade inválida");
       return;
     }
 
     try {
       setLoading(true);
-      console.log('Adicionando ao carrinho:', {
+
+      // --- MUDANÇA: Adicionar 'await' em getServerUrl() ---
+      const url = await getServerUrl();
+      console.log("Adicionando ao carrinho:", {
         productId: product.id,
         quantity: qty,
-        url: `${SOCKET_URL}/shopping-cart`,
+        url: `${url}/shopping-cart`,
       });
 
-      const response = await fetch(`${SOCKET_URL}/shopping-cart`, {
-        method: 'POST',
+      const response = await fetch(`${url}/shopping-cart`, {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
           productId: product.id,
@@ -68,34 +63,45 @@ export default function ProductDetailScreen({
         }),
       });
 
-      console.log('Status da resposta:', response.status);
+      console.log("Status da resposta:", response.status);
       const responseData = await response.json();
-      console.log('Resposta do servidor:', responseData);
+      console.log("Resposta do servidor:", responseData);
 
       if (!response.ok) {
         // Erro específico de usuário não encontrado
-        if (responseData.message && responseData.message.includes('Usuário com ID')) {
-          throw new Error('Sessão expirada ou inválida. Por favor, faça logout e login novamente.');
+        if (
+          responseData.message &&
+          responseData.message.includes("Usuário com ID")
+        ) {
+          throw new Error(
+            "Sessão expirada ou inválida. Por favor, faça logout e login novamente."
+          );
         }
-        throw new Error(responseData.message || 'Erro ao adicionar ao carrinho');
+        throw new Error(
+          responseData.message || "Erro ao adicionar ao carrinho"
+        );
       }
 
       Alert.alert(
-        'Sucesso! ✅',
+        "Sucesso! ✅",
         `${qty}x ${product.name} adicionado ao carrinho`,
         [
-          { text: 'Continuar comprando', onPress: onBack },
-          { text: 'Ir para carrinho', onPress: onAddedToCart },
+          { text: "Continuar comprando", onPress: onBack },
+          { text: "Ir para carrinho", onPress: onAddedToCart },
         ]
       );
     } catch (err) {
-      console.error('Erro ao adicionar ao carrinho:', err);
-      Alert.alert('Erro', err instanceof Error ? err.message : 'Erro desconhecido');
+      console.error("Erro ao adicionar ao carrinho:", err);
+      Alert.alert(
+        "Erro",
+        err instanceof Error ? err.message : "Erro desconhecido"
+      );
     } finally {
       setLoading(false);
     }
   };
 
+  // ... (JSX de renderização - NÃO MUDA)
   return (
     <SafeAreaView style={styles.container}>
       {/* Header */}
@@ -121,9 +127,9 @@ export default function ProductDetailScreen({
         <View style={styles.infoContainer}>
           <Text style={styles.productName}>{product.name}</Text>
           <Text style={styles.productPrice}>{formatPrice(product.price)}</Text>
-          
+
           <View style={styles.divider} />
-          
+
           <Text style={styles.sectionTitle}>Descrição</Text>
           <Text style={styles.productDescription}>{product.description}</Text>
 
@@ -178,7 +184,7 @@ export default function ProductDetailScreen({
           disabled={loading}
         >
           <Text style={styles.addButtonText}>
-            {loading ? 'Adicionando...' : '🛒 Adicionar ao Carrinho'}
+            {loading ? "Adicionando..." : "🛒 Adicionar ao Carrinho"}
           </Text>
         </TouchableOpacity>
       </View>
@@ -186,134 +192,135 @@ export default function ProductDetailScreen({
   );
 }
 
+// ... (seus styles continuam iguais)
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
   },
   header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     padding: 20,
-    backgroundColor: '#8B4513',
+    backgroundColor: "#8B4513",
   },
   backButton: {
     padding: 8,
   },
   backButtonText: {
-    color: '#fff',
+    color: "#fff",
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
   headerTitle: {
     fontSize: 20,
-    fontWeight: 'bold',
-    color: '#fff',
+    fontWeight: "bold",
+    color: "#fff",
   },
   scrollView: {
     flex: 1,
   },
   productImage: {
-    width: '100%',
+    width: "100%",
     height: 300,
-    backgroundColor: '#e0e0e0',
+    backgroundColor: "#e0e0e0",
   },
   infoContainer: {
     padding: 20,
   },
   productName: {
     fontSize: 28,
-    fontWeight: 'bold',
-    color: '#333',
+    fontWeight: "bold",
+    color: "#333",
     marginBottom: 8,
-    textTransform: 'capitalize',
+    textTransform: "capitalize",
   },
   productPrice: {
     fontSize: 32,
-    fontWeight: 'bold',
-    color: '#8B4513',
+    fontWeight: "bold",
+    color: "#8B4513",
   },
   divider: {
     height: 1,
-    backgroundColor: '#e0e0e0',
+    backgroundColor: "#e0e0e0",
     marginVertical: 20,
   },
   sectionTitle: {
     fontSize: 18,
-    fontWeight: 'bold',
-    color: '#333',
+    fontWeight: "bold",
+    color: "#333",
     marginBottom: 10,
   },
   productDescription: {
     fontSize: 16,
-    color: '#666',
+    color: "#666",
     lineHeight: 24,
   },
   quantityContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     marginTop: 10,
   },
   quantityButton: {
     width: 50,
     height: 50,
-    backgroundColor: '#8B4513',
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: "#8B4513",
+    justifyContent: "center",
+    alignItems: "center",
     borderRadius: 8,
   },
   quantityButtonText: {
-    color: '#fff',
+    color: "#fff",
     fontSize: 24,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
   quantityInput: {
     flex: 1,
     height: 50,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: "#f5f5f5",
     marginHorizontal: 10,
-    textAlign: 'center',
+    textAlign: "center",
     fontSize: 20,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     borderRadius: 8,
   },
   subtotalContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     marginTop: 20,
     padding: 15,
-    backgroundColor: '#f9f9f9',
+    backgroundColor: "#f9f9f9",
     borderRadius: 8,
   },
   subtotalLabel: {
     fontSize: 18,
-    color: '#666',
+    color: "#666",
   },
   subtotalValue: {
     fontSize: 24,
-    fontWeight: 'bold',
-    color: '#8B4513',
+    fontWeight: "bold",
+    color: "#8B4513",
   },
   footer: {
     padding: 20,
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     borderTopWidth: 1,
-    borderTopColor: '#e0e0e0',
+    borderTopColor: "#e0e0e0",
   },
   addButton: {
-    backgroundColor: '#8B4513',
+    backgroundColor: "#8B4513",
     padding: 18,
     borderRadius: 12,
-    alignItems: 'center',
+    alignItems: "center",
   },
   addButtonDisabled: {
     opacity: 0.6,
   },
   addButtonText: {
-    color: '#fff',
+    color: "#fff",
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
 });
