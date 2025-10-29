@@ -1,12 +1,4 @@
-/**
- * ========================================
- * ORDER HISTORY SCREEN - HISTÓRICO DE PEDIDOS
- * ========================================
- * 
- * Exibe o histórico de pedidos do usuário
- */
-
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
 import {
   StyleSheet,
   Text,
@@ -17,10 +9,10 @@ import {
   ActivityIndicator,
   RefreshControl,
   Alert,
-} from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { SOCKET_URL } from '../../utils/config';
-import { Order } from '../../types';
+} from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { getServerUrl } from "../../utils/config";
+import { Order } from "../../types";
 
 interface OrderHistoryScreenProps {
   token: string;
@@ -45,9 +37,10 @@ export default function OrderHistoryScreen({
 
   const fetchOrders = async () => {
     try {
-      const response = await fetch(`${SOCKET_URL}/orders`, {
+      // --- MUDANÇA: Adicionar 'await' em getServerUrl() ---
+      const response = await fetch(`${await getServerUrl()}/orders`, {
         headers: {
-          'Authorization': `Bearer ${token}`,
+          Authorization: `Bearer ${token}`,
         },
       });
 
@@ -56,16 +49,16 @@ export default function OrderHistoryScreen({
         if (response.status === 401 || response.status === 403) {
           setAuthError(true);
         }
-        throw new Error('Erro ao carregar pedidos');
+        throw new Error("Erro ao carregar pedidos");
       }
 
       const data = await response.json();
       setOrders(data);
       setAuthError(false); // Reset auth error on success
     } catch (err) {
-      console.error('Erro ao buscar pedidos:', err);
+      console.error("Erro ao buscar pedidos:", err);
       setAuthError(true);
-      Alert.alert('Erro', 'Não foi possível carregar os pedidos');
+      Alert.alert("Erro", "Não foi possível carregar os pedidos");
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -77,42 +70,43 @@ export default function OrderHistoryScreen({
     fetchOrders();
   };
 
+  // ... (funções formatPrice, formatDate, getStatusColor, getStatusText, toggleOrderDetails)
   const formatPrice = (price: number) => {
-    return `R$ ${price.toFixed(2).replace('.', ',')}`;
+    return `R$ ${price.toFixed(2).replace(".", ",")}`;
   };
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
-    return date.toLocaleDateString('pt-BR', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
+    return date.toLocaleDateString("pt-BR", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
     });
   };
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'completed':
-        return '#4CAF50';
-      case 'pending':
-        return '#FF9800';
-      case 'cancelled':
-        return '#F44336';
+      case "completed":
+        return "#4CAF50";
+      case "pending":
+        return "#FF9800";
+      case "cancelled":
+        return "#F44336";
       default:
-        return '#666';
+        return "#666";
     }
   };
 
   const getStatusText = (status: string) => {
     switch (status) {
-      case 'completed':
-        return '✅ Concluído';
-      case 'pending':
-        return '⏳ Pendente';
-      case 'cancelled':
-        return '❌ Cancelado';
+      case "completed":
+        return "✅ Concluído";
+      case "pending":
+        return "⏳ Pendente";
+      case "cancelled":
+        return "❌ Cancelado";
       default:
         return status;
     }
@@ -122,6 +116,7 @@ export default function OrderHistoryScreen({
     setExpandedOrder(expandedOrder === orderId ? null : orderId);
   };
 
+  // ... (JSX de renderização - NÃO MUDA)
   if (loading) {
     return (
       <View style={styles.centerContainer}>
@@ -138,10 +133,12 @@ export default function OrderHistoryScreen({
         <View style={styles.centerContainer}>
           <Text style={styles.errorIcon}>⚠️</Text>
           <Text style={styles.errorText}>Erro ao carregar pedidos</Text>
-          <Text style={styles.errorSubtext}>Não foi possível autenticar sua sessão</Text>
-          
-          <TouchableOpacity 
-            style={styles.retryButton} 
+          <Text style={styles.errorSubtext}>
+            Não foi possível autenticar sua sessão
+          </Text>
+
+          <TouchableOpacity
+            style={styles.retryButton}
             onPress={() => {
               setAuthError(false);
               setLoading(true);
@@ -150,9 +147,9 @@ export default function OrderHistoryScreen({
           >
             <Text style={styles.retryButtonText}>🔄 Tentar Novamente</Text>
           </TouchableOpacity>
-          
-          <TouchableOpacity 
-            style={styles.loginButton} 
+
+          <TouchableOpacity
+            style={styles.loginButton}
             onPress={async () => {
               await AsyncStorage.clear();
               onLogout();
@@ -216,7 +213,8 @@ export default function OrderHistoryScreen({
                     {formatPrice(order.total_amount)}
                   </Text>
                   <Text style={styles.orderQuantity}>
-                    {order.total_quantity} {order.total_quantity === 1 ? 'item' : 'itens'}
+                    {order.total_quantity}{" "}
+                    {order.total_quantity === 1 ? "item" : "itens"}
                   </Text>
                 </View>
               </TouchableOpacity>
@@ -245,47 +243,48 @@ export default function OrderHistoryScreen({
   );
 }
 
+// ... (seus styles continuam iguais)
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: "#f5f5f5",
   },
   centerContainer: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#f5f5f5',
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#f5f5f5",
   },
   header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     padding: 20,
-    backgroundColor: '#8B4513',
+    backgroundColor: "#8B4513",
   },
   backButton: {
     padding: 8,
   },
   backButtonText: {
-    color: '#fff',
+    color: "#fff",
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
   headerTitle: {
     fontSize: 20,
-    fontWeight: 'bold',
-    color: '#fff',
+    fontWeight: "bold",
+    color: "#fff",
   },
   scrollView: {
     flex: 1,
   },
   orderCard: {
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     margin: 10,
     borderRadius: 12,
-    overflow: 'hidden',
+    overflow: "hidden",
     elevation: 2,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
@@ -294,76 +293,76 @@ const styles = StyleSheet.create({
     padding: 15,
   },
   orderMainInfo: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     marginBottom: 10,
   },
   orderId: {
     fontSize: 18,
-    fontWeight: 'bold',
-    color: '#333',
+    fontWeight: "bold",
+    color: "#333",
   },
   orderStatus: {
     fontSize: 14,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
   orderSummary: {
     marginTop: 5,
   },
   orderDate: {
     fontSize: 14,
-    color: '#666',
+    color: "#666",
     marginBottom: 5,
   },
   orderTotal: {
     fontSize: 20,
-    fontWeight: 'bold',
-    color: '#8B4513',
+    fontWeight: "bold",
+    color: "#8B4513",
     marginBottom: 3,
   },
   orderQuantity: {
     fontSize: 14,
-    color: '#666',
+    color: "#666",
   },
   orderDetails: {
     padding: 15,
     paddingTop: 0,
     borderTopWidth: 1,
-    borderTopColor: '#e0e0e0',
+    borderTopColor: "#e0e0e0",
   },
   detailsTitle: {
     fontSize: 14,
-    fontWeight: 'bold',
-    color: '#666',
+    fontWeight: "bold",
+    color: "#666",
     marginBottom: 10,
   },
   orderItem: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    justifyContent: "space-between",
     paddingVertical: 8,
     borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
+    borderBottomColor: "#f0f0f0",
   },
   itemName: {
     fontSize: 14,
-    color: '#333',
-    textTransform: 'capitalize',
+    color: "#333",
+    textTransform: "capitalize",
   },
   itemPrice: {
     fontSize: 14,
-    fontWeight: 'bold',
-    color: '#8B4513',
+    fontWeight: "bold",
+    color: "#8B4513",
   },
   loadingText: {
     marginTop: 10,
     fontSize: 16,
-    color: '#666',
+    color: "#666",
   },
   emptyContainer: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     padding: 20,
   },
   emptyIcon: {
@@ -372,19 +371,19 @@ const styles = StyleSheet.create({
   },
   emptyMessage: {
     fontSize: 18,
-    color: '#666',
+    color: "#666",
     marginBottom: 30,
   },
   shopButton: {
-    backgroundColor: '#8B4513',
+    backgroundColor: "#8B4513",
     paddingHorizontal: 30,
     paddingVertical: 15,
     borderRadius: 12,
   },
   shopButtonText: {
-    color: '#fff',
+    color: "#fff",
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
   errorIcon: {
     fontSize: 48,
@@ -392,37 +391,37 @@ const styles = StyleSheet.create({
   },
   errorText: {
     fontSize: 18,
-    color: '#ff3b30',
-    fontWeight: 'bold',
+    color: "#ff3b30",
+    fontWeight: "bold",
     marginBottom: 8,
   },
   errorSubtext: {
     fontSize: 14,
-    color: '#666',
+    color: "#666",
     marginBottom: 24,
-    textAlign: 'center',
+    textAlign: "center",
   },
   retryButton: {
-    backgroundColor: '#8B4513',
+    backgroundColor: "#8B4513",
     paddingHorizontal: 30,
     paddingVertical: 12,
     borderRadius: 8,
     marginBottom: 12,
   },
   retryButtonText: {
-    color: '#fff',
+    color: "#fff",
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
   loginButton: {
-    backgroundColor: '#3498db',
+    backgroundColor: "#3498db",
     paddingHorizontal: 30,
     paddingVertical: 12,
     borderRadius: 8,
   },
   loginButtonText: {
-    color: '#fff',
+    color: "#fff",
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
 });

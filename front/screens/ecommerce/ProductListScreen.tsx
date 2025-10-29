@@ -1,11 +1,3 @@
-/**
- * ========================================
- * PRODUCT LIST SCREEN - CATÁLOGO DE PRODUTOS
- * ========================================
- * 
- * Exibe lista de produtos disponíveis na loja
- */
-
 import React, { useState, useEffect } from 'react';
 import {
   StyleSheet,
@@ -18,7 +10,7 @@ import {
   ActivityIndicator,
   RefreshControl,
 } from 'react-native';
-import { SOCKET_URL } from '../../utils/config';
+import { getServerUrl } from '../../utils/config';
 import { Product } from '../../types';
 
 interface ProductListScreenProps {
@@ -48,7 +40,8 @@ export default function ProductListScreen({
       setError('');
       
       // A rota /products não requer autenticação
-      const response = await fetch(`${SOCKET_URL}/products`);
+      // --- MUDANÇA: Adicionar 'await' em getServerUrl() ---
+      const response = await fetch(`${await getServerUrl()}/products`);
 
       if (!response.ok) {
         throw new Error(`Erro ao carregar produtos: ${response.status}`);
@@ -82,6 +75,7 @@ export default function ProductListScreen({
     return `R$ ${price.toFixed(2).replace('.', ',')}`;
   };
 
+  // ... (JSX de renderização - NÃO MUDA)
   if (loading) {
     return (
       <View style={styles.centerContainer}>
@@ -159,6 +153,7 @@ export default function ProductListScreen({
   );
 }
 
+// ... (seus styles continuam iguais)
 const styles = StyleSheet.create({
   container: {
     flex: 1,

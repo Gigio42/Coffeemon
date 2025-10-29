@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "front",
+    "name": "Coffeemon",
     "slug": "front",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -19,6 +19,17 @@
       }
     },
     "android": {
+      "usesCleartextTraffic": true,
+      "networkSecurityConfig": {
+        "domainConfigurations": [
+          {
+            "domains": [
+              "192.168.15.2" 
+            ],
+            "cleartextTrafficPermitted": true
+          }
+        ]
+      },
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
@@ -26,8 +37,11 @@
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
       "permissions": [
-        "CAMERA"
-      ]
+        "CAMERA",
+        "android.permission.CAMERA",
+        "android.permission.RECORD_AUDIO"
+      ],
+      "package": "com.anonymous.front"
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -39,6 +53,11 @@
           "cameraPermission": "Este app precisa de acesso à câmera para escanear QR codes e capturar Coffeemons."
         }
       ]
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "4ed4eaee-ac23-4aee-a087-24a74145914a"
+      }
+    }
   }
 }
