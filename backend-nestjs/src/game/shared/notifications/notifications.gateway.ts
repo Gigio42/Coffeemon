@@ -1,6 +1,7 @@
 import { OnEvent } from '@nestjs/event-emitter';
 import { WebSocketGateway, WebSocketServer } from '@nestjs/websockets';
 import { Server } from 'socket.io';
+import { BattleViewService } from 'src/game/modules/battles/engine/battle-view.service';
 import {
   BattleCancelledEvent,
   BattleCreatedEvent,
@@ -17,6 +18,8 @@ import {
 export class NotificationsGateway {
   @WebSocketServer()
   server: Server;
+
+  constructor(private readonly battleViewService: BattleViewService) {}
 
   @OnEvent('queue.player.joined')
   async handlePlayerJoinedQueue(event: PlayerJoinedQueueEvent): Promise<void> {
@@ -40,8 +43,9 @@ export class NotificationsGateway {
 
   @OnEvent('battle.created')
   async handleBattleCreated(event: BattleCreatedEvent): Promise<void> {
+    const fullState = event.battleState;
     const battleRoom = `battle:${event.battleId}`;
-    const { player1SocketId, player2SocketId, player1Id, player2Id } = event.battleState;
+    const { player1SocketId, player2SocketId, player1Id, player2Id } = fullState;
 
     const p1Socket = this.server.sockets.sockets.get(player1SocketId);
     const p2Socket = this.server.sockets.sockets.get(player2SocketId);
@@ -58,17 +62,36 @@ export class NotificationsGateway {
     }
 
     this.server.to(battleRoom).emit('matchFound', { battleId: event.battleId });
-    this.server.to(battleRoom).emit('battleUpdate', { battleState: event.battleState });
+
+    const p1View = this.battleViewService.buildPlayerView(fullState, player1Id);
+    const p2View = this.battleViewService.buildPlayerView(fullState, player2Id);
+
+    if (p1Socket) {
+      p1Socket.emit('battleUpdate', { battleState: p1View });
+    }
+    if (p2Socket) {
+      p2Socket.emit('battleUpdate', { battleState: p2View });
+    }
   }
 
   @OnEvent('battle.state.updated')
   handleBattleStateUpdate(event: BattleStateUpdatedEvent): void {
-    const battleRoom = `battle:${event.battleId}`;
-    this.server.to(battleRoom).emit('battleUpdate', { battleState: event.battleState });
+    const fullState = event.battleState;
+    const { player1Id, player2Id, player1SocketId, player2SocketId } = fullState;
+    const p1View = this.battleViewService.buildPlayerView(fullState, player1Id);
+    const p2View = this.battleViewService.buildPlayerView(fullState, player2Id);
+
+    this.server.to(player1SocketId).emit('battleUpdate', { battleState: p1View });
+
+    // n envia o state pro bot (ele n precisa saber de nada)
+    if (player2SocketId !== 'bot') {
+      this.server.to(player2SocketId).emit('battleUpdate', { battleState: p2View });
+    }
   }
 
   @OnEvent('player.reconnected')
   async handlePlayerReconnected(event: PlayerReconnectedEvent): Promise<void> {
+    const fullState = event.battleState;
     const battleRoom = `battle:${event.battleId}`;
     const socketId =
       event.battleState.player1Id === event.playerId
@@ -80,7 +103,8 @@ export class NotificationsGateway {
     if (socket) {
       await socket.join(battleRoom);
 
-      socket.emit('battleUpdate', { battleState: event.battleState });
+      const playerView = this.battleViewService.buildPlayerView(fullState, event.playerId);
+      socket.emit('battleUpdate', { battleState: playerView });
 
       socket.to(battleRoom).emit('playerReconnected', {
         playerId: event.playerId,
