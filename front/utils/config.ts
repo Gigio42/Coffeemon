@@ -11,7 +11,7 @@ function getDefaultDevUrl(): string {
       : "http://localhost:3000";
   }
   // URL de produção
-  return "http://your-production-server.com:3000";
+  return "https://coffeemon-back.onrender.com";
 }
 
 export async function setServerUrl(url: string): Promise<void> {

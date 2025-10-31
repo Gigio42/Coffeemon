@@ -51,24 +51,24 @@ export class SeedService implements OnModuleInit {
 
   async onModuleInit() {
     if ((await this.moveRepository.count()) === 0) {
-      console.log('Seeding Moves...');
+      console.log('[SeedService] Seeding Moves...');
       await this.seedMoves();
     } else {
-      console.log('Moves already seeded.');
+      console.log('[SeedService] Coffeemon Learnset already seeded.');
     }
 
     if ((await this.coffeemonRepository.count()) === 0) {
       console.log('Seeding Coffeemons...');
       await this.seedCoffeemons();
     } else {
-      console.log('Coffeemons already seeded.');
+      console.log('[SeedService] Coffeemons already seeded.');
     }
 
     if ((await this.learnsetRepository.count()) === 0) {
-      console.log('Seeding Coffeemon Learnset...');
+      console.log('[SeedService] Seeding Coffeemon Learnset...');
       await this.seedLearnset();
     } else {
-      console.log('Coffeemon Learnset already seeded.');
+      console.log('[SeedService] Coffeemon Learnset already seeded.');
     }
   }
 
@@ -78,7 +78,7 @@ export class SeedService implements OnModuleInit {
       return this.moveRepository.create(moveDto);
     });
     await this.moveRepository.save(movesToCreate);
-    console.log('Move seeding complete!');
+    console.log('[SeedService] Move seeding complete!');
   }
 
   private async seedCoffeemons() {
@@ -96,7 +96,7 @@ export class SeedService implements OnModuleInit {
       const newCoffeemon = this.coffeemonRepository.create(coffeemonToCreate);
       await this.coffeemonRepository.save(newCoffeemon);
     }
-    console.log('Coffeemon seeding complete!');
+    console.log('[SeedService] Coffeemon seeding complete!');
   }
 
   private async seedLearnset() {
@@ -132,6 +132,6 @@ export class SeedService implements OnModuleInit {
 
     const newLearnsetEntries = this.learnsetRepository.create(learnsetEntries);
     await this.learnsetRepository.save(newLearnsetEntries);
-    console.log('Coffeemon Learnset seeding complete!');
+    console.log('[SeedService] Coffeemon Learnset seeding complete!');
   }
 }

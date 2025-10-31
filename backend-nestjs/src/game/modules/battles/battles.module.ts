@@ -11,6 +11,7 @@ import { BattleActionFactory } from './engine/actions/battle-action-factory';
 import { SelectCoffeemonAction } from './engine/actions/select-coffeemon.action';
 import { SwitchAction } from './engine/actions/switch.action';
 import { BattlePhaseManager } from './engine/battle-phase-manager.service';
+import { BattleViewService } from './engine/battle-view.service';
 import { StatusEffectsService } from './engine/effects/status-effects.service';
 import { EventManager } from './engine/events/event-manager';
 import { BattleValidatorService } from './engine/validation/battle-validator.service';
@@ -34,18 +35,19 @@ import { BattleService } from './services/battles.service';
     BattleValidatorService,
     BattleCreationService,
     BattleLifecycleService,
+    BattleViewService,
     BattleGateway,
     BattlePhaseManager,
-    ActionExecutorService,
-    EventManager,
     BattleActionFactory,
-    StatusEffectsService,
+    ActionExecutorService,
     AttackAction,
     SwitchAction,
     SelectCoffeemonAction,
+    EventManager,
     PvpGameMode,
     PveGameMode,
+    StatusEffectsService,
   ],
-  exports: [BattleService],
+  exports: [BattleService, BattleViewService],
 })
 export class BattlesModule {}
