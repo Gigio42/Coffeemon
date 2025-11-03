@@ -22,7 +22,6 @@ interface LoginScreenProps {
   ) => void;
 }
 
-
 function ConfigModal({
   visible,
   onClose,
@@ -237,6 +236,7 @@ export default function LoginScreen({
           onChangeText={setEmail}
           keyboardType="email-address"
           autoCapitalize="none"
+          accessibilityLabel="emailInput"
         />
 
         <TextInput
@@ -245,9 +245,14 @@ export default function LoginScreen({
           value={password}
           onChangeText={setPassword}
           secureTextEntry
+          accessibilityLabel="passwordInput"
         />
 
-        <TouchableOpacity style={styles.loginButton} onPress={handleLogin}>
+        <TouchableOpacity
+          style={styles.loginButton}
+          onPress={handleLogin}
+          accessibilityLabel="loginButton"
+        >
           <Text style={styles.loginButtonText}>Login</Text>
         </TouchableOpacity>
 
