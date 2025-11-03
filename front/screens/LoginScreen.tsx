@@ -102,7 +102,9 @@ export default function LoginScreen({
 }: LoginScreenProps) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [username, setUsername] = useState("");
   const [loginMessage, setLoginMessage] = useState("");
+  const [isRegistering, setIsRegistering] = useState(false);
 
   // --- NOVO: Estado para controlar o modal ---
   const [configVisible, setConfigVisible] = useState(false);
@@ -208,6 +210,91 @@ export default function LoginScreen({
     }
   }
 
+  async function handleRegister() {
+    // Validação de campos
+    if (!username.trim() || !email.trim() || !password.trim()) {
+      setLoginMessage("Erro: Preencha todos os campos");
+      return;
+    }
+
+    if (password.length < 8) {
+      setLoginMessage("Erro: A senha deve ter pelo menos 8 caracteres");
+      return;
+    }
+
+    try {
+      setLoginMessage("Criando conta...");
+
+      const url = await getServerUrl();
+      console.log("Tentando registrar em:", `${url}/auth/register`);
+
+      const registerResponse = await fetch(`${url}/auth/register`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, email, password }),
+      });
+
+      const registerData = await registerResponse.json();
+
+      if (!registerData.success || !registerData.access_token) {
+        throw new Error(registerData.message || "Falha no registro");
+      }
+
+      const token = registerData.access_token;
+      await AsyncStorage.setItem("jwt_token", token);
+
+      setLoginMessage("Conta criada! Buscando dados do usuário...");
+
+      // ETAPA 2: Buscar dados do usuário (User ID)
+      const userResponse = await fetch(`${await getServerUrl()}/users/me`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (!userResponse.ok) {
+        throw new Error("Erro ao buscar dados do usuário.");
+      }
+
+      const userData = await userResponse.json();
+      const userId = userData.id;
+      await AsyncStorage.setItem("user_id", userId.toString());
+
+      setLoginMessage("Criando perfil de jogador...");
+
+      // ETAPA 3: Criar perfil de jogador
+      const createPlayerResponse = await fetch(
+        `${await getServerUrl()}/game/players`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({}),
+        }
+      );
+
+      if (!createPlayerResponse.ok) {
+        throw new Error("Erro ao criar perfil de jogador.");
+      }
+
+      const playerData = await createPlayerResponse.json();
+      await AsyncStorage.setItem("player_id", playerData.id.toString());
+
+      // ETAPA 4: Registro bem-sucedido! Navegar para Matchmaking
+      setLoginMessage(`Registro bem-sucedido! Bem-vindo, ${username}!`);
+      setTimeout(
+        () => onNavigateToMatchmaking(token, playerData.id, userId),
+        1000
+      );
+    } catch (error: any) {
+      console.error("Erro de registro:", error);
+      setLoginMessage(
+        `Erro: ${error.message || "Falha na conexão com o servidor"}`
+      );
+      await AsyncStorage.clear();
+    }
+  }
+
   return (
     <SafeAreaView style={styles.container}>
       {/* --- NOVO: Botão de Configuração --- */}
@@ -225,9 +312,22 @@ export default function LoginScreen({
       />
 
       <View style={styles.loginContainer}>
-        <Text style={styles.loginTitle}>Login</Text>
+        <Text style={styles.loginTitle}>
+          {isRegistering ? "Criar Conta" : "Login"}
+        </Text>
 
         {/* --- REMOVIDO: TextInput da URL --- */}
+
+        {isRegistering && (
+          <TextInput
+            style={styles.input}
+            placeholder="Nome de usuário"
+            value={username}
+            onChangeText={setUsername}
+            autoCapitalize="none"
+            accessibilityLabel="usernameInput"
+          />
+        )}
 
         <TextInput
           style={styles.input}
@@ -250,10 +350,29 @@ export default function LoginScreen({
 
         <TouchableOpacity
           style={styles.loginButton}
-          onPress={handleLogin}
-          accessibilityLabel="loginButton"
+          onPress={isRegistering ? handleRegister : handleLogin}
+          accessibilityLabel={isRegistering ? "registerButton" : "loginButton"}
         >
-          <Text style={styles.loginButtonText}>Login</Text>
+          <Text style={styles.loginButtonText}>
+            {isRegistering ? "Criar Conta" : "Login"}
+          </Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.toggleButton}
+          onPress={() => {
+            setIsRegistering(!isRegistering);
+            setLoginMessage("");
+            setUsername("");
+            setEmail("");
+            setPassword("");
+          }}
+        >
+          <Text style={styles.toggleButtonText}>
+            {isRegistering
+              ? "Já tem uma conta? Faça login"
+              : "Não tem uma conta? Registre-se"}
+          </Text>
         </TouchableOpacity>
 
         {loginMessage ? (
@@ -328,6 +447,15 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontSize: 16,
     fontWeight: "bold",
+  },
+  toggleButton: {
+    marginTop: 15,
+    paddingVertical: 8,
+  },
+  toggleButtonText: {
+    color: "#3498db",
+    fontSize: 14,
+    textDecorationLine: "underline",
   },
   message: {
     marginTop: 15,

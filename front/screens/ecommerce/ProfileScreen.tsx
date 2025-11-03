@@ -8,6 +8,7 @@ import {
   SafeAreaView,
   ActivityIndicator,
   Alert,
+  Platform,
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { getServerUrl } from "../../utils/config";
@@ -32,6 +33,8 @@ export default function ProfileScreen({
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    console.log('🔍 ProfileScreen montado');
+    console.log('🔍 Props recebidas:', { token: !!token, userId, onLogout: !!onLogout });
     fetchUserData();
   }, []);
 
@@ -58,18 +61,11 @@ export default function ProfileScreen({
     }
   };
 
-  const handleLogout = () => {
-    Alert.alert("Sair", "Deseja realmente sair da sua conta?", [
-      { text: "Cancelar", style: "cancel" },
-      {
-        text: "Sair",
-        style: "destructive",
-        onPress: async () => {
-          await AsyncStorage.clear();
-          onLogout();
-        },
-      },
-    ]);
+  const handleLogout = async () => {
+    console.log('🚪 Fazendo logout...');
+    await AsyncStorage.clear();
+    console.log('✅ AsyncStorage limpo, redirecionando...');
+    onLogout();
   };
 
   // ... (JSX de renderização - NÃO MUDA)
