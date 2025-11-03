@@ -1,10 +1,7 @@
 import type { Options } from '@wdio/types';
 import * as path from 'path';
 
-const apkPath = process.env.APK_PATH ||
-                path.join(__dirname, '..', 'frontend/android/app/build/outputs/apk/debug/app-debug.apk');
-
-console.log(`[Config] Attempting to use APK at: ${apkPath}`);
+const apkPath = path.resolve(process.cwd(), './apps/app-debug.apk');
 
 export const config: Options.Testrunner = {
     runner: 'local',
@@ -42,14 +39,14 @@ export const config: Options.Testrunner = {
             args: {
                 port: 4723,
                 address: 'localhost',
-                // relaxedSecurity: true, // Descomente se precisar
+                // relaxedSecurity: true,
             }
         }],
         ['rerun', {
              retries: 1
         }],
-        'performancetotal' // Serviço para métricas de performance
-        // Se precisar de debug: '@wdio/vscode-service' (instale antes)
+        'performancetotal'
+        //debug: '@wdio/vscode-service
     ],
 
     framework: 'cucumber',
@@ -67,7 +64,7 @@ export const config: Options.Testrunner = {
     cucumberOpts: {
         require: [
             './features/step-definitions/**/*.ts',
-            './features/support/**/*.ts' // Para hooks (opcional)
+            './features/support/**/*.ts'
         ],
         backtrace: false,
         requireModule: [],
@@ -82,7 +79,6 @@ export const config: Options.Testrunner = {
     },
 
     // ===== HOOKS =====
-    // Adicione hooks aqui conforme necessário
     /*
     afterStep: async function (step, scenario, { error }) {
         if (error) {

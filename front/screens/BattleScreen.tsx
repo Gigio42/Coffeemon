@@ -1,56 +1,233 @@
-/**
- * ========================================
- * BATTLE SCREEN - TELA DE BATALHA
- * ========================================
- * 
- * RESPONSABILIDADES DESTA TELA:
- * 1. Escutar eventos de batalha via Socket.IO ("battleUpdate", "battleEnd")
- * 2. Renderizar Coffeemon do jogador e do oponente
- * 3. Exibir HP bars e informações dos Coffeemon
- * 4. Gerenciar ações do jogador (ataques e trocas)
- * 5. Mostrar animações de dano
- * 6. Exibir alerta quando batalha termina
- * 7. Navegar para tela de Matchmaking quando batalha acaba ou jogador foge
- * 
- * IMPORTANTE: Esta tela NÃO depende do App.tsx para lógica de batalha!
- */
-
-import React, { useState, useEffect } from 'react';
-import { 
-  StyleSheet, 
-  Text, 
-  View, 
-  TouchableOpacity, 
-  SafeAreaView, 
-  Image, 
-  Alert,
+import React, { useState, useEffect, useRef } from 'react';
+import {
+  StyleSheet,
+  Text,
+  View,
+  TouchableOpacity,
+  SafeAreaView,
+  Image,
   Modal,
-  ScrollView
+  ScrollView,
+  ImageBackground,
+  Dimensions,
 } from 'react-native';
 import { Socket } from 'socket.io-client';
 import { BattleState, BattleStatus, PlayerState, Coffeemon } from '../types';
-import { BASE_IMAGE_URL } from '../utils/config';
 
-interface BattleScreenProps {
-  battleId: string;                          // ID único da batalha
-  battleState: any;                          // Dados completos da batalha do evento matchFound
-  playerId: number;                          // ID do jogador
-  socket: Socket;                            // Socket.IO já conectado
-  onNavigateToMatchmaking: () => void;       // Callback para voltar ao matchmaking
+interface BattleEvent {
+  type: string;
+  message: string;
+  payload?: any;
+}
+import { BASE_IMAGE_URL } from '../utils/config';
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withTiming,
+  withSequence,
+  withDelay,
+  withRepeat,
+  interpolateColor,
+} from 'react-native-reanimated';
+
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
+
+const scenarioImages = {
+  default: require('../assets/scenarios/field.png'),
+  forest: require('../assets/scenarios/forest.png'),
+  city: require('../assets/scenarios/city.png'),
+};
+
+type ScenarioName = keyof typeof scenarioImages;
+
+function getScenarioImage(scenarioName?: ScenarioName) {
+  if (scenarioName && scenarioImages[scenarioName]) {
+    return scenarioImages[scenarioName];
+  }
+  return scenarioImages.default;
 }
 
-export default function BattleScreen({ 
-  battleId, 
-  battleState: initialBattleData, 
-  playerId, 
+const AnimatedImage = Animated.createAnimatedComponent(Image);
+const AnimatedView = Animated.createAnimatedComponent(View);
+const AnimatedImageBackground = Animated.createAnimatedComponent(ImageBackground);
+
+interface BattleScreenProps {
+  battleId: string;
+  battleState: any;
+  playerId: number;
+  socket: Socket;
+  onNavigateToMatchmaking: () => void;
+}
+
+function useBattleAnimations() {
+  const playerPosition = {
+    translateX: useSharedValue(0),
+    translateY: useSharedValue(0),
+    opacity: useSharedValue(1),
+  };
+  const opponentPosition = {
+    translateX: useSharedValue(0),
+    translateY: useSharedValue(0),
+    opacity: useSharedValue(1),
+  };
+  const arenaShake = {
+    translateX: useSharedValue(0),
+    translateY: useSharedValue(0),
+  };
+
+  const playerAnimStyle = useAnimatedStyle(() => ({
+    transform: [
+      { translateX: playerPosition.translateX.value },
+      { translateY: playerPosition.translateY.value },
+    ],
+    opacity: playerPosition.opacity.value,
+  }));
+
+  const opponentAnimStyle = useAnimatedStyle(() => ({
+    transform: [
+      { translateX: opponentPosition.translateX.value },
+      { translateY: opponentPosition.translateY.value },
+    ],
+    opacity: opponentPosition.opacity.value,
+  }));
+
+  const arenaWobble = useAnimatedStyle(() => ({
+    transform: [
+      { translateX: arenaShake.translateX.value },
+      { translateY: arenaShake.translateY.value },
+    ],
+  }));
+
+  const playLunge = (isPlayer: boolean) => {
+    const anim = isPlayer ? playerPosition : opponentPosition;
+    const distance = isPlayer ? 40 : -40;
+    return new Promise((resolve) => {
+      anim.translateX.value = withSequence(
+        withTiming(distance, { duration: 150 }),
+        withTiming(0, { duration: 300 }, (finished) => {
+          if (finished) resolve(true);
+        })
+      );
+    });
+  };
+
+  const playShake = (isPlayer: boolean) => {
+    const anim = isPlayer ? playerPosition : opponentPosition;
+    return new Promise((resolve) => {
+      anim.translateX.value = withSequence(
+        withTiming(-10, { duration: 50 }),
+        withTiming(10, { duration: 50 }),
+        withTiming(-5, { duration: 50 }),
+        withTiming(5, { duration: 50 }),
+        withTiming(0, { duration: 50 }, (finished) => {
+          if (finished) resolve(true);
+        })
+      );
+    });
+  };
+
+  const playCritShake = () => {
+    return new Promise((resolve) => {
+      arenaShake.translateX.value = withSequence(
+        withTiming(-15, { duration: 60 }),
+        withTiming(15, { duration: 60 }),
+        withTiming(-10, { duration: 60 }),
+        withTiming(10, { duration: 60 }),
+        withTiming(0, { duration: 60 }, (finished) => {
+          if (finished) resolve(true);
+        })
+      );
+    });
+  };
+
+  const playFaint = (isPlayer: boolean) => {
+    const anim = isPlayer ? playerPosition : opponentPosition;
+    return new Promise((resolve) => {
+      anim.translateY.value = withTiming(50, { duration: 500 });
+      anim.opacity.value = withTiming(0, { duration: 500 }, (finished) => {
+        if (finished) resolve(true);
+      });
+    });
+  };
+
+  const playSwitchIn = (isPlayer: boolean) => {
+    const anim = isPlayer ? playerPosition : opponentPosition;
+    anim.translateY.value = 0;
+    anim.opacity.value = 0;
+    return new Promise((resolve) => {
+      anim.opacity.value = withTiming(1, { duration: 300 }, (finished) => {
+        if (finished) resolve(true);
+      });
+    });
+  };
+
+  const reset = () => {
+    playerPosition.translateX.value = 0;
+    playerPosition.translateY.value = 0;
+    playerPosition.opacity.value = 1;
+    opponentPosition.translateX.value = 0;
+    opponentPosition.translateY.value = 0;
+    opponentPosition.opacity.value = 1;
+  };
+
+  return {
+    playerAnimStyle,
+    opponentAnimStyle,
+    arenaWobble,
+    playLunge,
+    playShake,
+    playCritShake,
+    playFaint,
+    playSwitchIn,
+    reset,
+  };
+}
+
+const AnimatedHealthBar = React.memo(
+  ({ currentHp, maxHp }: { currentHp: number; maxHp: number }) => {
+    const hp = useSharedValue(currentHp);
+    const hpPercent = useSharedValue((currentHp / maxHp) * 100);
+
+    useEffect(() => {
+      hp.value = withTiming(currentHp, { duration: 400 });
+      hpPercent.value = withTiming(maxHp > 0 ? (currentHp / maxHp) * 100 : 0, {
+        duration: 400,
+      });
+    }, [currentHp, maxHp]);
+
+    const animatedHpBar = useAnimatedStyle(() => {
+      const width = Math.max(0, hpPercent.value);
+      const color = interpolateColor(
+        width,
+        [0, 20, 50, 100],
+        ['#e74c3c', '#e74c3c', '#f1c40f', '#2ecc71']
+      );
+      return {
+        width: `${width}%`,
+        backgroundColor: color,
+      };
+    });
+
+    return (
+      <View style={styles.hudHpBarContainer}>
+        <View style={styles.hudHpBarBackground}>
+          <AnimatedView style={[styles.hudHpBarFill, animatedHpBar]} />
+        </View>
+        <Text style={styles.hudHpText}>
+          {Math.floor(hp.value)}/{maxHp}
+        </Text>
+      </View>
+    );
+  }
+);
+
+export default function BattleScreen({
+  battleId,
+  battleState: initialBattleData,
+  playerId,
   socket,
-  onNavigateToMatchmaking 
+  onNavigateToMatchmaking,
 }: BattleScreenProps) {
-  // ========================================
-  // ESTADOS LOCAIS
-  // ========================================
-  // MUDANÇA: Backend agora envia objeto completo com battleState dentro
-  // Extrai battleState do objeto data recebido
   const extractedBattleState = initialBattleData?.battleState || initialBattleData;
   const [battleState, setBattleState] = useState<BattleState>(extractedBattleState);
   const [log, setLog] = useState<string[]>([]);
@@ -59,16 +236,43 @@ export default function BattleScreen({
   const [battleEnded, setBattleEnded] = useState<boolean>(false);
   const [winnerId, setWinnerId] = useState<number | null>(null);
   const [showSelectionModal, setShowSelectionModal] = useState<boolean>(false);
+  const [isProcessing, setIsProcessing] = useState<boolean>(false);
+  const [popupMessage, setPopupMessage] = useState<string | null>(null);
 
-  // ========================================
-  // SETUP DOS EVENTOS DE BATALHA AO INICIAR
-  // ========================================
+  const logScrollRef = useRef<ScrollView>(null);
+  const battleStateRef = useRef<BattleState>(battleState);
+  const popupOpacity = useSharedValue(0);
+
+  const {
+    playerAnimStyle,
+    opponentAnimStyle,
+    arenaWobble,
+    playLunge,
+    playShake,
+    playCritShake,
+    playFaint,
+    playSwitchIn,
+    reset: resetAnimations,
+  } = useBattleAnimations();
+
+  useEffect(() => {
+    battleStateRef.current = battleState;
+  }, [battleState]);
+
   useEffect(() => {
     setupBattleEvents();
     socket.emit('joinBattle', { battleId });
     updateCoffeemonImages(extractedBattleState);
-    
-    // Cleanup: remove listeners quando componente é desmontado
+    if (extractedBattleState.turnPhase === 'SELECTION') {
+      const myState =
+        extractedBattleState.player1Id === playerId
+          ? extractedBattleState.player1
+          : extractedBattleState.player2;
+      if (myState && !myState.hasSelectedCoffeemon) {
+        setShowSelectionModal(true);
+      }
+    }
+
     return () => {
       socket.off('battleUpdate');
       socket.off('battleEnd');
@@ -79,308 +283,274 @@ export default function BattleScreen({
     };
   }, []);
 
-  /**
-   * FUNÇÃO: setupBattleEvents
-   * Configura os listeners de eventos Socket.IO:
-   * - "battleUpdate": Atualização do estado da batalha a cada turno
-   * - "battleEnd": Batalha terminou
-   * 
-   * MUDANÇA IMPORTANTE: Backend agora envia { battleState: {...}, events: [...] }
-   */
+  const getBaseName = (name: string) => {
+    if (!name) return '';
+    return name.split(' (Lvl')[0];
+  };
+
+  const addLog = (msg: string) => {
+    if (msg) {
+      setLog((prev) => [...prev, msg]);
+    }
+  };
+
+  const showPopup = (message: string) => {
+    return new Promise((resolve) => {
+      if (!message) {
+        resolve(true);
+        return;
+      }
+      setPopupMessage(message);
+      popupOpacity.value = withSequence(
+        withTiming(1, { duration: 200 }),
+        withDelay(
+          1200,
+          withTiming(0, { duration: 200 }, (finished) => {
+            if (finished) {
+              setPopupMessage(null);
+              resolve(true);
+            }
+          })
+        )
+      );
+    });
+  };
+
+  const playAnimationForEvent = async (event: BattleEvent, fullState: BattleState) => {
+    const payload = event.payload || {};
+    const myPlayerState =
+      fullState.player1Id === playerId ? fullState.player1 : fullState.player2;
+    const isPlayerAttacker = payload.playerId === playerId;
+
+    const activeMonName =
+      myPlayerState && myPlayerState.activeCoffeemonIndex !== null
+        ? getBaseName(myPlayerState.coffeemons[myPlayerState.activeCoffeemonIndex].name)
+        : '';
+
+    const isPlayerTarget = payload.targetName === activeMonName;
+
+    switch (event.type) {
+      case 'ATTACK_HIT':
+        await playLunge(isPlayerAttacker);
+        await playShake(!isPlayerAttacker);
+        break;
+      case 'ATTACK_CRIT':
+        await playLunge(isPlayerAttacker);
+        await playCritShake();
+        await playShake(!isPlayerAttacker);
+        break;
+      case 'ATTACK_MISS':
+      case 'ATTACK_BLOCKED':
+        await playLunge(isPlayerAttacker);
+        break;
+      case 'COFFEEMON_FAINTED':
+        await playFaint(isPlayerTarget);
+        break;
+      case 'SWITCH_SUCCESS':
+        resetAnimations();
+        await playSwitchIn(payload.playerId === playerId);
+        break;
+      case 'STATUS_DAMAGE':
+        await playShake(isPlayerTarget);
+        break;
+      default:
+        await new Promise((r) => setTimeout(r, 200));
+        break;
+    }
+  };
+
+  const processEventSequence = async (events: BattleEvent[], fullState: BattleState) => {
+    for (const event of events) {
+      addLog(event.message);
+      const animationPromise = playAnimationForEvent(event, fullState);
+      const popupPromise = showPopup(event.message);
+
+      await Promise.all([animationPromise, popupPromise]);
+    }
+  };
+
   function setupBattleEvents() {
-    // Evento: Atualização da batalha (novo turno, ataque, etc)
     socket.on('battleUpdate', async (data: any) => {
       console.log('Received battleUpdate:', data);
-      
       if (!data || !data.battleState) {
         console.error('Invalid battleUpdate data');
         return;
       }
 
+      setIsProcessing(true);
       const newBattleState = data.battleState;
-      
-      // Log do turno
-      if (newBattleState.turn !== battleState.turn) {
-        addLog(`--- Turno ${newBattleState.turn} ---`);
-      }
-      
-      // Atualizar estado da batalha
+
+      await processEventSequence(newBattleState.events || [], newBattleState);
+
       setBattleState(newBattleState);
       updateCoffeemonImages(newBattleState);
-      
-      // Verificar se está na fase de seleção de Coffeemon
+
       if (newBattleState.turnPhase === 'SELECTION') {
-        const myState = newBattleState.player1Id === playerId 
-          ? newBattleState.player1 
-          : newBattleState.player2;
-        
-        // Mostra modal apenas se o jogador ainda não selecionou
-        if (!myState.hasSelectedCoffeemon) {
+        const myState =
+          newBattleState.player1Id === playerId ? newBattleState.player1 : newBattleState.player2;
+        if (myState && !myState.hasSelectedCoffeemon) {
           setShowSelectionModal(true);
         } else {
           setShowSelectionModal(false);
-          addLog('Aguardando oponente selecionar Coffeemon...');
+          if (!isProcessing) addLog('Aguardando oponente selecionar Coffeemon...');
         }
       } else {
         setShowSelectionModal(false);
       }
-      
-      // Processar eventos do turno (ataques, dano, etc)
-      if (newBattleState.events && newBattleState.events.length > 0) {
-        for (const event of newBattleState.events) {
-          addLog(event.message || JSON.stringify(event));
-          
-          // Animação de ataque
-          if (event.type === 'AttackHit' || event.type === 'ATTACK_HIT') {
-            handleAttackAnimation(event, newBattleState);
-            await new Promise(resolve => setTimeout(resolve, 500));
-          }
-        }
-      }
-      
-      // Verificar se batalha terminou
+
       if (newBattleState.battleStatus === BattleStatus.FINISHED) {
         handleBattleEnd(newBattleState.winnerId);
       }
+
+      setIsProcessing(false);
     });
-    
-    // Evento: Batalha terminou (evento separado do backend)
+
     socket.on('battleEnd', (data: any) => {
       console.log('Received battleEnd event:', data);
       handleBattleEnd(data.winnerId);
     });
 
-    // Evento: Erro na batalha
     socket.on('battleError', (data: any) => {
-      console.error('Battle error:', data);
+      console.error('Battle error:', data.message);
       addLog(`Erro: ${data.message}`);
-      Alert.alert('Erro na Batalha', data.message);
     });
 
-    // Evento: Oponente desconectou
     socket.on('opponentDisconnected', (data: any) => {
       addLog('Oponente desconectou da batalha');
-      Alert.alert('Oponente Desconectou', 'Seu oponente saiu da batalha.');
     });
 
-    // Evento: Oponente reconectou
     socket.on('playerReconnected', (data: any) => {
       addLog('Oponente reconectou à batalha');
     });
 
-    // Evento: Batalha cancelada
     socket.on('battleCancelled', (data: any) => {
       addLog('Batalha cancelada pelo servidor');
-      Alert.alert(
-        'Batalha Cancelada',
-        'A batalha foi cancelada.',
-        [{ text: 'OK', onPress: onNavigateToMatchmaking }]
-      );
+      onNavigateToMatchmaking();
     });
   }
 
-  /**
-   * FUNÇÃO: handleBattleEnd
-   * Mostra alerta de fim de jogo e navega para Matchmaking AUTOMATICAMENTE
-   * após 3 segundos (não depende do clique do usuário)
-   */
   function handleBattleEnd(winnerIdParam: number) {
-    console.log('handleBattleEnd called with winnerId:', winnerIdParam);
-    
-    // Evita processar múltiplas vezes
-    if (battleEnded) {
-      console.log('Battle already ended, ignoring duplicate call');
+    if (battleEnded || battleStateRef.current.battleStatus === BattleStatus.FINISHED) {
       return;
     }
 
     setBattleEnded(true);
     setWinnerId(winnerIdParam);
-    
-    const message = `A batalha terminou! Vencedor: Jogador ${winnerIdParam}`;
-    addLog(message);
-    
-    // Mostra alerta (mas não depende dele para navegar)
-    Alert.alert('Fim de Jogo', message, [
-      { text: 'OK', onPress: () => {
-        console.log('User clicked OK on alert');
-        onNavigateToMatchmaking();
-      }}
-    ]);
+    addLog(`A batalha terminou! Vencedor: Jogador ${winnerIdParam}`);
 
-    // NAVEGAÇÃO AUTOMÁTICA: Volta ao matchmaking após 3 segundos
-    // independente se o usuário clicou no alerta ou não
     setTimeout(() => {
-      console.log('Auto-navigating back to matchmaking after 3 seconds');
       onNavigateToMatchmaking();
-    }, 3000);
+    }, 4000);
   }
 
-  /**
-   * FUNÇÃO: addLog
-   * Adiciona mensagem ao log da batalha
-   */
-  /**
-   * FUNÇÃO: addLog
-   * Adiciona mensagem ao log da batalha
-   */
-  function addLog(msg: string) {
-    console.log('LOG:', msg);
-    setLog((prev) => [...prev, msg]);
-  }
-
-  /**
-   * FUNÇÃO: sendAction
-   * Envia uma ação do jogador para o servidor:
-   * - "attack": Ataque com um golpe
-   * - "switch": Troca de Coffeemon
-   */
   function sendAction(actionType: string, payload: any) {
-    addLog(`Enviando ação: ${actionType}`);
     socket.emit('battleAction', { battleId, actionType, payload });
   }
 
-  /**
-   * FUNÇÃO: selectInitialCoffeemon
-   * Envia seleção de Coffeemon inicial para o servidor
-   * @param coffeemonIndex - Índice do Coffeemon selecionado no array
-   */
   function selectInitialCoffeemon(coffeemonIndex: number) {
-    addLog(`Selecionando Coffeemon inicial: índice ${coffeemonIndex}`);
-    socket.emit('selectInitialCoffeemon', { 
-      battleId, 
-      coffeemonIndex 
+    socket.emit('selectInitialCoffeemon', {
+      battleId,
+      coffeemonIndex,
     });
     setShowSelectionModal(false);
   }
 
-  /**
-   * FUNÇÃO: updateCoffeemonImages
-   * Atualiza as imagens dos Coffeemon baseado no estado da batalha
-   * Define qual sprite usar (default, back, hurt, etc)
-   */
   function updateCoffeemonImages(state: BattleState) {
     if (!state || !playerId) return;
-    
+
     try {
       const myPlayerState = state.player1Id === playerId ? state.player1 : state.player2;
-      const opponentPlayerState = state.player1Id === playerId ? state.player2 : state.player1;
-      
-      if (myPlayerState && myPlayerState.coffeemons && myPlayerState.coffeemons.length > 0) {
+      const opponentPlayerState =
+        state.player1Id === playerId ? state.player2 : state.player1;
+
+      if (myPlayerState && myPlayerState.activeCoffeemonIndex !== null) {
         const myActiveMon = myPlayerState.coffeemons[myPlayerState.activeCoffeemonIndex];
         if (myActiveMon && myActiveMon.name) {
-          setPlayerImageUrl(`${BASE_IMAGE_URL}${myActiveMon.name}/back.png`);
+          setPlayerImageUrl(`${BASE_IMAGE_URL}${getBaseName(myActiveMon.name)}/back.png`);
         }
+      } else {
+        setPlayerImageUrl('');
       }
-      
-      if (opponentPlayerState && opponentPlayerState.coffeemons && opponentPlayerState.coffeemons.length > 0) {
-        const opponentActiveMon = opponentPlayerState.coffeemons[opponentPlayerState.activeCoffeemonIndex];
+
+      if (opponentPlayerState && opponentPlayerState.activeCoffeemonIndex !== null) {
+        const opponentActiveMon =
+          opponentPlayerState.coffeemons[opponentPlayerState.activeCoffeemonIndex];
         if (opponentActiveMon && opponentActiveMon.name) {
-          setOpponentImageUrl(`${BASE_IMAGE_URL}${opponentActiveMon.name}/default.png`);
+          setOpponentImageUrl(
+            `${BASE_IMAGE_URL}${getBaseName(opponentActiveMon.name)}/default.png`
+          );
         }
+      } else {
+        setOpponentImageUrl('');
       }
     } catch (error) {
       console.error('Erro ao atualizar imagens dos Coffeemon:', error);
     }
   }
 
-  function handleAttackAnimation(event: any, state: BattleState) {
-    if (!event.payload || !playerId) return;
-    
-    const attackedPlayerId = event.payload.playerId === state.player1Id ? state.player2Id : state.player1Id;
-    const targetCoffeemonName = event.payload.targetName;
-    
-    const hurtImageUrl = `${BASE_IMAGE_URL}${targetCoffeemonName}/hurt.png`;
-    let originalImageUrl = '';
-    
-    if (attackedPlayerId === playerId) {
-      originalImageUrl = `${BASE_IMAGE_URL}${targetCoffeemonName}/back.png`;
-      setPlayerImageUrl(hurtImageUrl);
-      setTimeout(() => setPlayerImageUrl(originalImageUrl), 500);
-    } else {
-      originalImageUrl = `${BASE_IMAGE_URL}${targetCoffeemonName}/default.png`;
-      setOpponentImageUrl(hurtImageUrl);
-      setTimeout(() => setOpponentImageUrl(originalImageUrl), 500);
-    }
-  }
-
-  function renderCoffeemonDisplay(playerState: PlayerState | null, isMe: boolean) {
-    if (!playerState || !playerState.coffeemons || playerState.coffeemons.length === 0) {
-      return (
-        <View style={[styles.coffeemonDisplay, isMe ? styles.playerPosition : styles.opponentPosition]}>
-          <Text style={styles.pokemonName}>Aguardando Coffeemon...</Text>
-        </View>
-      );
-    }
-    
-    const activeMon = playerState.coffeemons[playerState.activeCoffeemonIndex];
-    if (!activeMon) {
-      return (
-        <View style={[styles.coffeemonDisplay, isMe ? styles.playerPosition : styles.opponentPosition]}>
-          <Text style={styles.pokemonName}>Coffeemon não encontrado</Text>
-        </View>
-      );
-    }
-    
-    const hpPercent = (activeMon.currentHp / activeMon.maxHp) * 100;
-    const imageUrl = isMe ? playerImageUrl : opponentImageUrl;
+  function renderCoffeemonSprite(imageUrl: string, isMe: boolean) {
+    const animationStyle = isMe ? playerAnimStyle : opponentAnimStyle;
     const fallbackUrl = 'https://via.placeholder.com/150?text=Image+Not+Found';
-    
+
     return (
-      <View style={[styles.coffeemonDisplay, isMe ? styles.playerPosition : styles.opponentPosition]}>
-        <Image 
-          source={{ uri: imageUrl || fallbackUrl }} 
+      <AnimatedView
+        style={[
+          styles.coffeemonSpriteContainer,
+          isMe ? styles.playerSpritePosition : styles.opponentSpritePosition,
+          animationStyle,
+        ]}
+      >
+        <AnimatedImage
+          source={{ uri: imageUrl || fallbackUrl }}
           style={styles.pokemonImg}
           onError={() => {
-            if (isMe) {
-              setPlayerImageUrl(fallbackUrl);
-            } else {
-              setOpponentImageUrl(fallbackUrl);
-            }
+            if (isMe) setPlayerImageUrl(fallbackUrl);
+            else setOpponentImageUrl(fallbackUrl);
           }}
         />
-        <Text style={styles.pokemonName}>
-          {activeMon.name} {activeMon.isFainted ? '(Derrotado)' : ''}
-        </Text>
-        <View style={styles.hpBarContainer}>
-          <View style={[
-            styles.hpBar, 
-            { 
-              width: `${hpPercent}%`, 
-              backgroundColor: isMe ? '#3498db' : '#e74c3c' 
-            }
-          ]}>
-            <Text style={styles.hpText}>{activeMon.currentHp}/{activeMon.maxHp}</Text>
-          </View>
-        </View>
+      </AnimatedView>
+    );
+  }
+
+  function renderHud(playerState: PlayerState | null, isMe: boolean) {
+    const activeMon =
+      playerState && playerState.activeCoffeemonIndex !== null
+        ? playerState.coffeemons[playerState.activeCoffeemonIndex]
+        : null;
+
+    const containerStyle = isMe ? styles.playerHudContainer : styles.opponentHudContainer;
+
+    if (!activeMon) {
+      return <View style={[styles.hudInfoBox, containerStyle, { opacity: 0 }]} />;
+    }
+
+    return (
+      <View style={[styles.hudInfoBox, containerStyle]}>
+        <Text style={styles.hudName}>{activeMon.name}</Text>
+        <AnimatedHealthBar currentHp={activeMon.currentHp} maxHp={activeMon.maxHp} />
       </View>
     );
   }
 
   function renderAttackButtons(playerState: PlayerState | null, canAct: boolean) {
-    if (!playerState || !playerState.coffeemons || playerState.coffeemons.length === 0) {
-      return <Text>Aguardando dados do jogador...</Text>;
+    if (!playerState || playerState.activeCoffeemonIndex === null) {
+      return null;
     }
 
     const activeMon = playerState.coffeemons[playerState.activeCoffeemonIndex];
-    if (!activeMon) {
-      return <Text>Nenhum Coffeemon ativo</Text>;
-    }
+    if (!activeMon) return null;
 
     return (
       <View style={styles.attacksGrid}>
         {activeMon.moves.map((move, idx) => (
           <TouchableOpacity
             key={move.id}
-            style={[
-              styles.attackButton,
-              idx === 0 ? styles.fireAttackButton : styles.normalAttackButton,
-              !canAct && styles.attackButtonDisabled
-            ]}
+            style={[styles.attackButton, !canAct && styles.attackButtonDisabled]}
             onPress={() => canAct && sendAction('attack', { moveId: move.id })}
             disabled={!canAct}
           >
             <View style={styles.attackButtonContent}>
-              <View style={[styles.attackTypeIcon, idx === 0 ? styles.fireTypeIcon : styles.normalTypeIcon]} />
+              <View style={[styles.attackTypeIcon]} />
               <Text style={styles.attackButtonText}>{move.name}</Text>
             </View>
           </TouchableOpacity>
@@ -401,38 +571,87 @@ export default function BattleScreen({
     return (
       <View style={styles.switchGrid}>
         {availablePokemon.slice(0, 4).map((mon, idx) => {
-          const imageUrl = `${BASE_IMAGE_URL}${mon.name}/default.png`;
+          const imageUrl = `${BASE_IMAGE_URL}${getBaseName(mon.name)}/default.png`;
           const hpPercent = (mon.currentHp / mon.maxHp) * 100;
-          
+
           return (
             <TouchableOpacity
               key={idx}
-              style={[
-                styles.switchButton,
-                !canAct && styles.switchButtonDisabled
-              ]}
+              style={[styles.switchButton, !canAct && styles.switchButtonDisabled]}
               onPress={() => {
                 const originalIndex = playerState.coffeemons.findIndex((m) => m === mon);
                 canAct && sendAction('switch', { newIndex: originalIndex });
               }}
               disabled={!canAct}
             >
-              <Image 
-                source={{ uri: imageUrl }} 
+              <Image
+                source={{ uri: imageUrl }}
                 style={styles.switchButtonImage}
                 resizeMode="contain"
               />
               <Text style={styles.switchButtonName}>{mon.name.toUpperCase()}</Text>
               <View style={styles.switchButtonHpBar}>
-                <View style={[
-                  styles.switchButtonHpFill,
-                  { width: `${hpPercent}%` }
-                ]} />
+                <View style={[styles.switchButtonHpFill, { width: `${hpPercent}%` }]} />
               </View>
             </TouchableOpacity>
           );
         })}
       </View>
+    );
+  }
+
+  function renderGamifiedLog(canAct: boolean, myPendingAction: any) {
+    const statusText = battleEnded
+      ? 'BATALHA FINALIZADA!'
+      : isProcessing
+      ? 'PROCESSANDO...'
+      : myPendingAction
+      ? 'AGUARDANDO OPONENTE...'
+      : canAct
+      ? 'SUA VEZ DE JOGAR!'
+      : 'RESOLVENDO TURNO...';
+
+    const statusStyle = canAct
+      ? styles.logStatusTurn
+      : isProcessing
+      ? styles.logStatusResolving
+      : myPendingAction || battleEnded
+      ? styles.logStatusWait
+      : styles.logStatusResolving;
+
+    return (
+      <View style={styles.gamifiedLogContainer}>
+        <Text style={[styles.logStatusText, statusStyle]}>{statusText}</Text>
+        <View style={styles.logSeparator} />
+        <ScrollView
+          ref={logScrollRef}
+          style={styles.logScrollView}
+          onContentSizeChange={() => logScrollRef.current?.scrollToEnd({ animated: true })}
+          persistentScrollbar={true}
+        >
+          {log.length === 0 && <Text style={styles.logText}>Aguardando primeira ação...</Text>}
+          {log.slice(-4).map((msg, index) => (
+            <Text key={index} style={styles.logText}>
+              {`> ${msg}`}
+            </Text>
+          ))}
+        </ScrollView>
+      </View>
+    );
+  }
+
+  function renderPopupMessage() {
+    const popupStyle = useAnimatedStyle(() => {
+      return {
+        opacity: popupOpacity.value,
+        transform: [{ scale: popupOpacity.value * 0.9 + 0.1 }],
+      };
+    });
+
+    return (
+      <AnimatedView style={[styles.popupContainer, popupStyle]}>
+        <Text style={styles.popupText}>{popupMessage}</Text>
+      </AnimatedView>
     );
   }
 
@@ -444,102 +663,74 @@ export default function BattleScreen({
     );
   }
 
-  const myPlayerState = battleState.player1Id === playerId ? battleState.player1 : battleState.player2;
-  const opponentPlayerState = battleState.player1Id === playerId ? battleState.player2 : battleState.player1;
-  const myPlayerTrueId = battleState.player1Id === playerId ? battleState.player1Id : battleState.player2Id;
-  
-  // MUDANÇA IMPORTANTE: canAct agora verifica turnPhase e pendingActions
-  // Não é mais baseado apenas em isMyTurn!
+  const myPlayerState =
+    battleState.player1Id === playerId ? battleState.player1 : battleState.player2;
+  const opponentPlayerState =
+    battleState.player1Id === playerId ? battleState.player2 : battleState.player1;
+
   const myPendingAction = battleState.pendingActions?.[playerId];
-  const canAct = 
+  const canAct =
     !battleEnded &&
+    !isProcessing &&
     !myPendingAction &&
     battleState.turnPhase === 'SUBMISSION';
 
   return (
     <SafeAreaView style={styles.battleContainer}>
-      {/* Overlay de Fim de Batalha */}
       {battleEnded && (
         <View style={styles.battleEndOverlay}>
           <View style={styles.battleEndCard}>
             <Text style={styles.battleEndTitle}>🏆 BATALHA TERMINOU! 🏆</Text>
             <Text style={styles.battleEndWinner}>
-              Vencedor: Jogador {winnerId}
+              Vencedor: {winnerId === playerId ? 'VOCÊ' : 'Oponente'}
             </Text>
-            <Text style={styles.battleEndSubtext}>
-              Voltando ao matchmaking em 3 segundos...
-            </Text>
-            <TouchableOpacity 
-              style={styles.battleEndButton}
-              onPress={onNavigateToMatchmaking}
-            >
+            <Text style={styles.battleEndSubtext}>Voltando ao matchmaking...</Text>
+            <TouchableOpacity style={styles.battleEndButton} onPress={onNavigateToMatchmaking}>
               <Text style={styles.battleEndButtonText}>VOLTAR AGORA</Text>
             </TouchableOpacity>
           </View>
         </View>
       )}
 
-      {/* Nome do oponente */}
-      <View style={styles.opponentNameContainer}>
-        <Text style={styles.opponentNameText}>Nome do oponente NV.</Text>
-      </View>
+      <AnimatedImageBackground
+        source={getScenarioImage('default')}
+        style={[styles.battleArena, arenaWobble]}
+        resizeMode="cover"
+      >
+        {renderCoffeemonSprite(playerImageUrl, true)}
+        {renderCoffeemonSprite(opponentImageUrl, false)}
 
-      {/* Área da Batalha com Pokémon */}
-      <View style={styles.battleArena}>
-        {renderCoffeemonDisplay(myPlayerState, true)}
-        {renderCoffeemonDisplay(opponentPlayerState, false)}
-      </View>
+        {renderHud(myPlayerState, true)}
+        {renderHud(opponentPlayerState, false)}
 
-      {/* Log do turno atual */}
-      <View style={[
-        styles.turnLogContainer,
-        canAct ? styles.myTurnContainer : styles.opponentTurnContainer
-      ]}>
-        <Text style={styles.turnLogText}>
-          {battleEnded 
-            ? 'BATALHA FINALIZADA!' 
-            : myPendingAction 
-              ? 'AGUARDANDO OPONENTE...' 
-              : canAct 
-                ? 'SUA VEZ DE JOGAR!' 
-                : 'RESOLVENDO TURNO...'}
-        </Text>
-      </View>
+        {renderPopupMessage()}
+      </AnimatedImageBackground>
 
-      {/* Log da última ação */}
-      <View style={styles.actionLogContainer}>
-        <Text style={styles.actionLogText}>
-          {log.length > 0 ? log[log.length - 1] : 'Aguardando primeira ação...'}
-        </Text>
-      </View>
-
-      {/* Área de ações do jogador */}
       <View style={styles.battleActionsContainer}>
-        {/* Ataques do Pokémon ativo */}
+        {renderGamifiedLog(canAct, myPendingAction)}
+
         <View style={styles.attacksContainer}>
           {renderAttackButtons(myPlayerState, canAct)}
         </View>
 
-        {/* Pokémon disponíveis para troca */}
         <View style={styles.pokemonSwitchContainer}>
           {renderPokemonSwitchButtons(myPlayerState, canAct)}
         </View>
 
-        {/* Botões Mochila e Fugir */}
         <View style={styles.bottomButtonsContainer}>
           <TouchableOpacity style={styles.bagButton} disabled>
             <Text style={styles.bagButtonText}>MOCHILA</Text>
           </TouchableOpacity>
-          <TouchableOpacity 
-            style={styles.runButton} 
+          <TouchableOpacity
+            style={styles.runButton}
             onPress={onNavigateToMatchmaking}
+            disabled={battleEnded}
           >
             <Text style={styles.runButtonText}>FUGIR</Text>
           </TouchableOpacity>
         </View>
       </View>
 
-      {/* MODAL DE SELEÇÃO DE COFFEEMON INICIAL */}
       <Modal
         visible={showSelectionModal}
         transparent={true}
@@ -549,26 +740,20 @@ export default function BattleScreen({
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <Text style={styles.modalTitle}>Escolha seu Coffeemon Inicial</Text>
-            
             <ScrollView style={styles.modalScroll}>
-              {/* Minha Equipe */}
               <View style={styles.teamColumn}>
                 <Text style={styles.teamColumnTitle}>Sua Equipe</Text>
                 {myPlayerState?.coffeemons?.map((mon: Coffeemon, index: number) => {
-                  const imageUrl = `${BASE_IMAGE_URL}${mon.name.split(' (Lvl')[0]}/default.png`;
+                  const imageUrl = `${BASE_IMAGE_URL}${getBaseName(mon.name)}/default.png`;
                   const isFainted = mon.isFainted || mon.currentHp <= 0;
-                  
                   return (
                     <TouchableOpacity
                       key={index}
-                      style={[
-                        styles.teamCard,
-                        isFainted && styles.teamCardDisabled
-                      ]}
+                      style={[styles.teamCard, isFainted && styles.teamCardDisabled]}
                       onPress={() => !isFainted && selectInitialCoffeemon(index)}
                       disabled={isFainted}
                     >
-                      <Image 
+                      <Image
                         source={{ uri: imageUrl }}
                         style={styles.teamCardImage}
                         resizeMode="contain"
@@ -585,15 +770,13 @@ export default function BattleScreen({
                 })}
               </View>
 
-              {/* Equipe do Oponente (Preview) */}
               <View style={styles.teamColumn}>
                 <Text style={styles.teamColumnTitle}>Equipe do Oponente</Text>
                 {opponentPlayerState?.coffeemons?.map((mon: Coffeemon, index: number) => {
-                  const imageUrl = `${BASE_IMAGE_URL}${mon.name.split(' (Lvl')[0]}/default.png`;
-                  
+                  const imageUrl = `${BASE_IMAGE_URL}${getBaseName(mon.name)}/default.png`;
                   return (
                     <View key={index} style={[styles.teamCard, styles.teamCardOpponent]}>
-                      <Image 
+                      <Image
                         source={{ uri: imageUrl }}
                         style={styles.teamCardImage}
                         resizeMode="contain"
@@ -616,127 +799,157 @@ export default function BattleScreen({
 const styles = StyleSheet.create({
   battleContainer: {
     flex: 1,
-    backgroundColor: '#f9f5ed',
-  },
-  opponentNameContainer: {
-    backgroundColor: '#f0f0f0',
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    alignItems: 'center',
-    borderBottomWidth: 1,
-    borderBottomColor: '#ddd',
-  },
-  opponentNameText: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#333',
+    backgroundColor: '#333',
   },
   battleArena: {
     position: 'relative',
     width: '100%',
-    height: 300,
-    backgroundColor: '#a2e2b9',
-    borderRadius: 15,
-    marginVertical: 16,
-  },
-  coffeemonDisplay: {
-    position: 'absolute',
-    alignItems: 'center',
-    padding: 15,
-    minWidth: 150,
-    backgroundColor: 'rgba(255, 255, 255, 0.9)',
-    borderRadius: 10,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 5 },
-    shadowOpacity: 0.2,
-    shadowRadius: 10,
-    elevation: 5,
-  },
-  playerPosition: {
-    bottom: 20,
-    left: 20,
-  },
-  opponentPosition: {
-    top: 20,
-    right: 20,
-  },
-  pokemonName: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#222',
-    textAlign: 'center',
-    marginBottom: 8,
-  },
-  hpBarContainer: {
-    width: '100%',
-    height: 22,
-    backgroundColor: '#ccc',
-    borderRadius: 11,
+    flex: 1.1,
     overflow: 'hidden',
-    borderWidth: 1,
-    borderColor: '#999',
   },
-  hpBar: {
-    height: '100%',
-    justifyContent: 'center',
+  coffeemonSpriteContainer: {
+    position: 'absolute',
+    width: '50%',
+    height: '50%',
     alignItems: 'center',
-    borderRadius: 10,
+    justifyContent: 'center',
   },
-  hpText: {
-    color: 'white',
-    fontWeight: 'bold',
-    fontSize: 12,
-    textShadowColor: 'rgba(0, 0, 0, 0.5)',
-    textShadowOffset: { width: 1, height: 1 },
-    textShadowRadius: 2,
+  playerSpritePosition: {
+    bottom: '5%',
+    right: '5%',
+  },
+  opponentSpritePosition: {
+    top: '10%',
+    left: '5%',
   },
   pokemonImg: {
-    width: 120,
-    height: 120,
+    width: '100%',
+    height: '100%',
     resizeMode: 'contain',
-    marginBottom: 8,
   },
-  turnLogContainer: {
-    paddingVertical: 8,
+  hudInfoBox: {
+    position: 'absolute',
+    width: '45%',
+    padding: 8,
+    backgroundColor: 'rgba(40, 40, 40, 0.85)',
+    borderRadius: 8,
+    borderWidth: 2,
+    borderColor: '#666',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.5,
+    shadowRadius: 4,
+    elevation: 5,
+  },
+  playerHudContainer: {
+    top: '5%',
+    right: '5%',
+  },
+  opponentHudContainer: {
+    bottom: '5%',
+    left: '5%',
+  },
+  hudName: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#fff',
+    marginBottom: 6,
+  },
+  hudHpBarContainer: {
+    width: '100%',
+  },
+  hudHpBarBackground: {
+    width: '100%',
+    height: 12,
+    backgroundColor: '#111',
+    borderRadius: 6,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: '#444',
+  },
+  hudHpBarFill: {
+    height: '100%',
+    borderRadius: 6,
+  },
+  hudHpText: {
+    position: 'absolute',
+    right: 6,
+    top: -2,
+    fontSize: 12,
+    fontWeight: 'bold',
+    color: '#fff',
+    textShadowColor: 'rgba(0, 0, 0, 0.7)',
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 1,
+  },
+  popupContainer: {
+    position: 'absolute',
+    bottom: '40%',
+    left: 0,
+    right: 0,
+    alignItems: 'center',
+    zIndex: 100,
+  },
+  popupText: {
+    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+    color: 'white',
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 20,
+    fontSize: 16,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    overflow: 'hidden',
+  },
+  gamifiedLogContainer: {
+    backgroundColor: 'rgba(0, 0, 0, 0.75)',
+    borderRadius: 15,
     paddingHorizontal: 16,
-    borderTopWidth: 1,
-    minHeight: 40,
-    justifyContent: 'center',
+    paddingTop: 12,
+    paddingBottom: 8,
+    marginBottom: 12,
+    minHeight: 110,
+    maxHeight: 110,
+    borderWidth: 2,
+    borderColor: 'rgba(255, 255, 255, 0.2)',
   },
-  myTurnContainer: {
-    backgroundColor: '#2ecc71',
-    borderColor: '#27ae60',
-  },
-  opponentTurnContainer: {
-    backgroundColor: '#e74c3c',
-    borderColor: '#c0392b',
-  },
-  turnLogText: {
-    fontSize: 14,
+  logStatusText: {
+    fontSize: 16,
     fontWeight: 'bold',
     color: '#fff',
     textAlign: 'center',
+    marginBottom: 8,
   },
-  actionLogContainer: {
-    backgroundColor: '#fff',
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    borderTopWidth: 1,
-    borderBottomWidth: 1,
-    borderColor: '#ddd',
-    minHeight: 50,
-    justifyContent: 'center',
+  logStatusTurn: {
+    color: '#2ecc71',
   },
-  actionLogText: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#333',
-    textAlign: 'center',
+  logStatusWait: {
+    color: '#f39c12',
+  },
+  logStatusResolving: {
+    color: '#e74c3c',
+  },
+  logSeparator: {
+    height: 1,
+    backgroundColor: 'rgba(255, 255, 255, 0.3)',
+    marginBottom: 8,
+  },
+  logScrollView: {
+    flex: 1,
+  },
+  logText: {
+    fontSize: 14,
+    color: '#fff',
+    marginBottom: 4,
+    fontFamily: 'monospace',
   },
   battleActionsContainer: {
-    backgroundColor: '#e8e8e8',
+    backgroundColor: '#3b3b3b',
     padding: 16,
     flex: 1,
+    borderTopWidth: 2,
+    borderTopColor: '#555',
+    minHeight: 400,
   },
   attacksContainer: {
     marginBottom: 16,
@@ -753,11 +966,6 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     paddingHorizontal: 8,
     minHeight: 60,
-  },
-  fireAttackButton: {
-    backgroundColor: '#4CAF50',
-  },
-  normalAttackButton: {
     backgroundColor: '#4CAF50',
   },
   attackButtonDisabled: {
@@ -774,12 +982,7 @@ const styles = StyleSheet.create({
     height: 20,
     borderRadius: 10,
     marginRight: 8,
-  },
-  fireTypeIcon: {
     backgroundColor: '#FF6B6B',
-  },
-  normalTypeIcon: {
-    backgroundColor: '#74C0FC',
   },
   attackButtonText: {
     color: '#fff',
@@ -862,7 +1065,7 @@ const styles = StyleSheet.create({
   },
   runButton: {
     width: '48%',
-    backgroundColor: '#666',
+    backgroundColor: '#e74c3c',
     borderRadius: 8,
     paddingVertical: 16,
     alignItems: 'center',
@@ -873,7 +1076,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: 'bold',
   },
-  // Estilos do Overlay de Fim de Batalha
   battleEndOverlay: {
     position: 'absolute',
     top: 0,
@@ -934,7 +1136,6 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     textAlign: 'center',
   },
-  // Estilos do Modal de Seleção de Coffeemon
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0, 0, 0, 0.7)',
@@ -1000,7 +1201,6 @@ const styles = StyleSheet.create({
   },
   teamCardOpponent: {
     backgroundColor: '#f8f9fa',
-    cursor: 'default' as any,
   },
   teamCardImage: {
     width: 60,
