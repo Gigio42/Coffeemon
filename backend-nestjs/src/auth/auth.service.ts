@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, ConflictException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 
@@ -25,5 +25,28 @@ export class AuthService {
     return {
       access_token: this.jwtService.sign(payload),
     };
+  }
+
+  async register(username: string, email: string, password: string) {
+    // Verifica se o email já existe
+    const existingUser = await this.usersService.findOneByEmail(email);
+    if (existingUser) {
+      throw new ConflictException('Email already exists');
+    }
+
+    // Valida força da senha
+    if (password.length < 8) {
+      throw new ConflictException('Password must be at least 8 characters long');
+    }
+
+    // Cria o usuário
+    const user = await this.usersService.create({
+      username,
+      email,
+      password,
+    });
+
+    // Retorna o token de acesso
+    return this.login(user);
   }
 }
