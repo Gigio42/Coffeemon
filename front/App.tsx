@@ -18,9 +18,9 @@
 
 import React, { useState } from 'react';
 import { Socket } from 'socket.io-client';
-import LoginScreen from './screens/LoginScreen';
-import EcommerceScreen from './screens/EcommerceScreen';
-import MatchmakingScreen from './screens/MatchmakingScreen';
+import LoginScreen from './src/screens/Login';
+import EcommerceScreen from './screens/ecommerce/EcommerceScreen';
+import MatchmakingScreen from './src/screens/Matchmaking';
 import BattleScreen from './screens/BattleScreen';
 import { Screen, BattleState } from './types';
 

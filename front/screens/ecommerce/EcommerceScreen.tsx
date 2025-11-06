@@ -17,8 +17,8 @@ import {
   CartScreen,
   OrderHistoryScreen,
   ProfileScreen,
-} from './ecommerce';
-import { Product } from '../types';
+} from '.';
+import { Product } from '../../types';
 
 // Sub-telas do e-commerce
 enum EcommerceTab {
