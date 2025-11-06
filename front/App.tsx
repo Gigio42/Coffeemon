@@ -18,10 +18,10 @@
 
 import React, { useState } from 'react';
 import { Socket } from 'socket.io-client';
-import LoginScreen from './screens/LoginScreen';
-import EcommerceScreen from './screens/EcommerceScreen';
-import MatchmakingScreen from './screens/MatchmakingScreen';
-import BattleScreen from './screens/BattleScreen';
+import LoginScreen from './src/screens/Login';
+import EcommerceScreen from './src/screens/Ecommerce';
+import MatchmakingScreen from './src/screens/Matchmaking';
+import BattleScreen from './src/screens/Battle';
 import { Screen, BattleState } from './types';
 
 export default function App() {
