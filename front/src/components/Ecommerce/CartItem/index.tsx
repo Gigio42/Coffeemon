@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Text, View, TouchableOpacity, Image } from 'react-native';
 import { CartItem as CartItemType } from '../../../types';
 import { styles } from './styles';
+import { pixelArt } from '../../../theme';
 
 interface CartItemProps {
   item: CartItemType;
@@ -10,6 +11,9 @@ interface CartItemProps {
 }
 
 export default function CartItem({ item, onUpdateQuantity, onRemove }: CartItemProps) {
+  const [isDecreasePressed, setIsDecreasePressed] = useState(false);
+  const [isIncreasePressed, setIsIncreasePressed] = useState(false);
+  const [isRemovePressed, setIsRemovePressed] = useState(false);
   const formatPrice = (price: number) => {
     return `R$ ${price.toFixed(2).replace('.', ',')}`;
   };
@@ -25,15 +29,27 @@ export default function CartItem({ item, onUpdateQuantity, onRemove }: CartItemP
 
         <View style={styles.quantityContainer}>
           <TouchableOpacity
-            style={styles.quantityButton}
+            style={[
+              styles.quantityButton,
+              isDecreasePressed && pixelArt.buttons.smallPressed
+            ]}
+            onPressIn={() => setIsDecreasePressed(true)}
+            onPressOut={() => setIsDecreasePressed(false)}
             onPress={() => onUpdateQuantity(item.product.id, item.quantity - 1)}
+            activeOpacity={1}
           >
             <Text style={styles.quantityButtonText}>−</Text>
           </TouchableOpacity>
           <Text style={styles.quantityText}>{item.quantity}</Text>
           <TouchableOpacity
-            style={styles.quantityButton}
+            style={[
+              styles.quantityButton,
+              isIncreasePressed && pixelArt.buttons.smallPressed
+            ]}
+            onPressIn={() => setIsIncreasePressed(true)}
+            onPressOut={() => setIsIncreasePressed(false)}
             onPress={() => onUpdateQuantity(item.product.id, item.quantity + 1)}
+            activeOpacity={1}
           >
             <Text style={styles.quantityButtonText}>+</Text>
           </TouchableOpacity>
@@ -45,10 +61,20 @@ export default function CartItem({ item, onUpdateQuantity, onRemove }: CartItemP
       </View>
 
       <TouchableOpacity
-        style={styles.removeButton}
+        style={[
+          styles.removeButton,
+          isRemovePressed && pixelArt.buttons.dangerPressed
+        ]}
+        onPressIn={() => setIsRemovePressed(true)}
+        onPressOut={() => setIsRemovePressed(false)}
         onPress={() => onRemove(item.product.id)}
+        activeOpacity={1}
       >
-        <Text style={styles.removeButtonText}>🗑️</Text>
+        <Image
+          source={require('../../../../assets/icons/help_ajuda.png')}
+          style={styles.removeButtonIcon}
+          resizeMode="contain"
+        />
       </TouchableOpacity>
     </View>
   );

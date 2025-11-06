@@ -45,7 +45,7 @@ export default function ProductDetailScreen({
       await addToCart(token, product.id, qty);
 
       Alert.alert(
-        'Sucesso! ✅',
+        'Sucesso!',
         `${qty}x ${product.name} adicionado ao carrinho`,
         [
           { text: 'Continuar comprando', onPress: onBack },
@@ -136,7 +136,20 @@ export default function ProductDetailScreen({
           disabled={loading}
         >
           <Text style={styles.addButtonText}>
-            {loading ? 'Adicionando...' : '🛒 Adicionar ao Carrinho'}
+            <View style={styles.addButtonContent}>
+              {loading ? (
+                <Text style={styles.addButtonText}>Adicionando...</Text>
+              ) : (
+                <>
+                  <Image
+                    source={require('../../../../assets/icons/icone_carrinho_compra.png')}
+                    style={styles.addButtonIcon}
+                    resizeMode="contain"
+                  />
+                  <Text style={styles.addButtonText}>Adicionar ao Carrinho</Text>
+                </>
+              )}
+            </View>
           </Text>
         </TouchableOpacity>
       </View>

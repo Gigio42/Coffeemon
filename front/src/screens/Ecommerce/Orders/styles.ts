@@ -1,99 +1,202 @@
 import { StyleSheet } from 'react-native';
+import { pixelArt } from '../../../theme';
 
 export const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: pixelArt.colors.bgLight,
   },
-  centerContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#f5f5f5',
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: 20,
-    backgroundColor: '#8B4513',
-  },
-  backButton: {
-    padding: 8,
-  },
-  backButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
-  headerTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#fff',
-  },
+
   scrollView: {
     flex: 1,
   },
-  loadingText: {
-    marginTop: 10,
-    fontSize: 16,
-    color: '#666',
+
+  contentContainer: {
+    padding: pixelArt.spacing.lg,
+    paddingBottom: 100,
   },
+
+  // ========================================
+  // HEADER
+  // ========================================
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: pixelArt.spacing.lg,
+    backgroundColor: pixelArt.colors.headerBg,
+    borderBottomWidth: 3,
+    borderBottomColor: pixelArt.colors.borderDark,
+    borderTopWidth: 2,
+    borderTopColor: '#ffffff',
+    ...pixelArt.shadows.innerBorder,
+  },
+
+  backButton: {
+    ...pixelArt.buttons.action,
+    marginRight: pixelArt.spacing.md,
+  },
+
+  backButtonText: {
+    ...pixelArt.buttons.text,
+    fontSize: 12,
+  },
+
+  // Botões adicionais para estados de erro
+  retryButton: {
+    ...pixelArt.buttons.action,
+    marginBottom: pixelArt.spacing.md,
+  },
+
+  retryButtonText: {
+    ...pixelArt.buttons.text,
+  },
+
+  shopButton: {
+    ...pixelArt.buttons.primary,
+    marginTop: pixelArt.spacing.lg,
+  },
+
+  shopButtonText: {
+    ...pixelArt.buttons.text,
+  },
+
+  headerTitle: {
+    ...pixelArt.typography.pixelTitle,
+    color: pixelArt.colors.coffeePrimary,
+    fontSize: 16,
+  },
+
+  // ========================================
+  // EMPTY STATE
+  // ========================================
   emptyContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 20,
+    padding: pixelArt.spacing.xxl,
   },
-  shopButton: {
-    backgroundColor: '#8B4513',
-    paddingHorizontal: 30,
-    paddingVertical: 15,
-    borderRadius: 12,
-    marginTop: 20,
-  },
-  shopButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
-  errorIcon: {
-    fontSize: 48,
-    marginBottom: 16,
-  },
-  errorText: {
-    fontSize: 18,
-    color: '#ff3b30',
-    fontWeight: 'bold',
-    marginBottom: 8,
-  },
-  errorSubtext: {
-    fontSize: 14,
-    color: '#666',
-    marginBottom: 24,
+
+  emptyText: {
+    ...pixelArt.typography.pixelBody,
+    color: pixelArt.colors.textLight,
     textAlign: 'center',
+    marginBottom: pixelArt.spacing.lg,
   },
-  retryButton: {
-    backgroundColor: '#8B4513',
-    paddingHorizontal: 30,
-    paddingVertical: 12,
-    borderRadius: 8,
-    marginBottom: 12,
+
+  // ========================================
+  // LISTA DE PEDIDOS
+  // ========================================
+  ordersList: {
+    gap: pixelArt.spacing.md,
   },
-  retryButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: 'bold',
+
+  // ========================================
+  // LOADING
+  // ========================================
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
+
+  loadingText: {
+    ...pixelArt.typography.pixelBody,
+    color: pixelArt.colors.textDark,
+    marginTop: pixelArt.spacing.md,
+  },
+
+  // ========================================
+  // ESTILOS PARA ÍCONES
+  // ========================================
+  errorIcon: {
+    width: 80,
+    height: 80,
+    marginBottom: pixelArt.spacing.lg,
+  },
+
+  retryButtonContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+
+  retryIcon: {
+    width: 32,
+    height: 32,
+  },
+
+  loginButtonContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+
+  loginIcon: {
+    width: 32,
+    height: 32,
+  },
+
+  headerTitleContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+
+  headerIcon: {
+    width: 36,
+    height: 36,
+  },
+
+  // ========================================
+  // MISSING STYLES
+  // ========================================
+  centerContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: pixelArt.spacing.xxl,
+  },
+
+  helpIcon: {
+    width: 80,
+    height: 80,
+    marginBottom: pixelArt.spacing.lg,
+  },
+
+  errorText: {
+    ...pixelArt.typography.pixelSubtitle,
+    color: pixelArt.colors.error,
+    textAlign: 'center',
+    marginBottom: pixelArt.spacing.md,
+  },
+
+  errorSubtext: {
+    ...pixelArt.typography.pixelBody,
+    color: pixelArt.colors.textLight,
+    textAlign: 'center',
+    marginBottom: pixelArt.spacing.lg,
+  },
+
+  settingsIcon: {
+    width: 32,
+    height: 32,
+  },
+
   loginButton: {
-    backgroundColor: '#3498db',
-    paddingHorizontal: 30,
-    paddingVertical: 12,
-    borderRadius: 8,
+    ...pixelArt.buttons.primary,
   },
+
   loginButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: 'bold',
+    ...pixelArt.buttons.text,
+  },
+
+  profileIcon: {
+    width: 32,
+    height: 32,
+  },
+
+  emptyIcon: {
+    width: 36,
+    height: 36,
   },
 });

@@ -1,142 +1,362 @@
 import { StyleSheet } from 'react-native';
+import { pixelArt } from '../../../theme';
 
 export const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: pixelArt.colors.bgLight,
   },
-  centerContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#f5f5f5',
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: 20,
-    backgroundColor: '#8B4513',
-  },
-  backButton: {
-    padding: 8,
-  },
-  backButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
-  headerTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#fff',
-  },
+
   scrollView: {
     flex: 1,
   },
-  loadingText: {
-    marginTop: 10,
-    fontSize: 16,
-    color: '#666',
+
+  contentContainer: {
+    padding: pixelArt.spacing.lg,
+    paddingBottom: 100,
   },
+
+  // ========================================
+  // HEADER
+  // ========================================
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: pixelArt.spacing.lg,
+    backgroundColor: pixelArt.colors.headerBg,
+    borderBottomWidth: 3,
+    borderBottomColor: pixelArt.colors.borderDark,
+    borderTopWidth: 2,
+    borderTopColor: '#ffffff',
+    ...pixelArt.shadows.innerBorder,
+  },
+
+  backButton: {
+    ...pixelArt.buttons.action,
+    marginRight: pixelArt.spacing.md,
+  },
+
+  backButtonText: {
+    ...pixelArt.buttons.text,
+    fontSize: 12,
+  },
+
+  headerTitle: {
+    ...pixelArt.typography.pixelTitle,
+    color: pixelArt.colors.coffeePrimary,
+    fontSize: 16,
+  },
+
+  // ========================================
+  // EMPTY STATE
+  // ========================================
   emptyContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 20,
+    padding: pixelArt.spacing.xxl,
   },
-  emptyIcon: {
-    fontSize: 80,
-    marginBottom: 20,
+
+  emptyText: {
+    ...pixelArt.typography.pixelBody,
+    color: pixelArt.colors.textLight,
+    textAlign: 'center',
+    marginBottom: pixelArt.spacing.lg,
   },
-  emptyMessage: {
-    fontSize: 18,
-    color: '#666',
-    marginBottom: 30,
+
+  // ========================================
+  // RESUMO DO CARRINHO
+  // ========================================
+  summaryCard: {
+    padding: pixelArt.spacing.lg,
+    backgroundColor: pixelArt.colors.cardOuterBg,
+    borderRadius: pixelArt.borders.radiusMedium,
+    marginBottom: pixelArt.spacing.lg,
+    borderTopWidth: 3,
+    borderLeftWidth: 3,
+    borderTopColor: pixelArt.colors.borderLight,
+    borderLeftColor: pixelArt.colors.borderLight,
+    borderBottomWidth: 3,
+    borderRightWidth: 3,
+    borderBottomColor: pixelArt.colors.borderDark,
+    borderRightColor: pixelArt.colors.borderDark,
+    ...pixelArt.shadows.card,
   },
-  shopButton: {
-    backgroundColor: '#8B4513',
-    paddingHorizontal: 30,
-    paddingVertical: 15,
-    borderRadius: 12,
-  },
-  shopButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
-  footer: {
-    padding: 20,
-    backgroundColor: '#fff',
-    borderTopWidth: 1,
+
+  summaryInner: {
+    backgroundColor: pixelArt.colors.cardInnerBg,
+    borderRadius: pixelArt.borders.radiusSmall,
+    padding: pixelArt.spacing.lg,
+    borderWidth: 2,
     borderTopColor: '#e0e0e0',
+    borderLeftColor: '#e0e0e0',
+    borderBottomColor: '#f8f8f8',
+    borderRightColor: '#f8f8f8',
   },
+
+  summaryTitle: {
+    ...pixelArt.typography.pixelSubtitle,
+    color: pixelArt.colors.textDark,
+    marginBottom: pixelArt.spacing.md,
+    textAlign: 'center',
+  },
+
+  summaryRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: pixelArt.spacing.sm,
+  },
+
+  summaryLabel: {
+    ...pixelArt.typography.pixelBody,
+    color: pixelArt.colors.textLight,
+  },
+
+  summaryValue: {
+    ...pixelArt.typography.pixelBody,
+    color: pixelArt.colors.textDark,
+    fontWeight: '700',
+  },
+
+  summaryDivider: {
+    height: 2,
+    backgroundColor: pixelArt.colors.borderDark,
+    marginVertical: pixelArt.spacing.md,
+  },
+
+  summaryTotal: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: pixelArt.spacing.sm,
+  },
+
+  summaryTotalLabel: {
+    ...pixelArt.typography.pixelSubtitle,
+    color: pixelArt.colors.textDark,
+  },
+
+  summaryTotalValue: {
+    ...pixelArt.typography.pixelPrice,
+    color: pixelArt.colors.coffeePrimary,
+    fontSize: 20,
+  },
+
+  // ========================================
+  // LISTA DE ITENS
+  // ========================================
+  itemsList: {
+    marginBottom: pixelArt.spacing.lg,
+  },
+
+  // ========================================
+  // BOTÕES DE AÇÃO
+  // ========================================
+  actionsContainer: {
+    flexDirection: 'row',
+    gap: pixelArt.spacing.md,
+    marginTop: pixelArt.spacing.lg,
+  },
+
+  checkoutButton: {
+    ...pixelArt.buttons.secondary,
+    flex: 1,
+    paddingVertical: pixelArt.spacing.lg,
+  },
+
+  checkoutButtonDisabled: {
+    opacity: 0.5,
+  },
+
+  checkoutButtonText: {
+    ...pixelArt.buttons.text,
+    fontSize: 12,
+  },
+
+  clearButton: {
+    ...pixelArt.buttons.danger,
+    paddingVertical: pixelArt.spacing.lg,
+  },
+
+  clearButtonText: {
+    ...pixelArt.buttons.text,
+    fontSize: 12,
+  },
+
+  // Botões genéricos com estados pressionados
+  retryButton: {
+    ...pixelArt.buttons.action,
+    marginBottom: pixelArt.spacing.md,
+  },
+
+  retryButtonText: {
+    ...pixelArt.buttons.text,
+  },
+
+  loginButton: {
+    ...pixelArt.buttons.primary,
+  },
+
+  loginButtonText: {
+    ...pixelArt.buttons.text,
+  },
+
+  shopButton: {
+    ...pixelArt.buttons.primary,
+    marginTop: pixelArt.spacing.lg,
+  },
+
+  shopButtonText: {
+    ...pixelArt.buttons.text,
+  },
+
+  // ========================================
+  // LOADING
+  // ========================================
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+
+  loadingText: {
+    ...pixelArt.typography.pixelBody,
+    color: pixelArt.colors.textDark,
+    marginTop: pixelArt.spacing.md,
+  },
+
+  // ========================================
+  // ESTADOS DE ERRO E CARREGAMENTO
+  // ========================================
+  centerContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: pixelArt.spacing.xxl,
+  },
+
+  errorIcon: {
+    width: 80,
+    height: 80,
+    marginBottom: pixelArt.spacing.lg,
+  },
+
+  errorText: {
+    ...pixelArt.typography.pixelSubtitle,
+    color: pixelArt.colors.error,
+    textAlign: 'center',
+    marginBottom: pixelArt.spacing.md,
+  },
+
+  errorSubtext: {
+    ...pixelArt.typography.pixelBody,
+    color: pixelArt.colors.textLight,
+    textAlign: 'center',
+    marginBottom: pixelArt.spacing.lg,
+  },
+
+  // ========================================
+  // FOOTER COM TOTAL
+  // ========================================
+  footer: {
+    padding: pixelArt.spacing.lg,
+    backgroundColor: pixelArt.colors.headerBg,
+    borderTopWidth: 3,
+    borderTopColor: pixelArt.colors.borderDark,
+    ...pixelArt.shadows.innerBorder,
+  },
+
   totalContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 15,
+    marginBottom: pixelArt.spacing.md,
+    paddingVertical: pixelArt.spacing.sm,
+    borderTopWidth: 2,
+    borderTopColor: pixelArt.colors.borderLight,
+    borderBottomWidth: 2,
+    borderBottomColor: pixelArt.colors.borderDark,
   },
+
   totalLabel: {
-    fontSize: 20,
-    color: '#666',
+    ...pixelArt.typography.pixelSubtitle,
+    color: pixelArt.colors.textDark,
+    fontSize: 16,
   },
+
   totalValue: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: '#8B4513',
+    ...pixelArt.typography.pixelPrice,
+    color: pixelArt.colors.coffeePrimary,
+    fontSize: 18,
   },
-  checkoutButton: {
-    backgroundColor: '#8B4513',
-    padding: 18,
-    borderRadius: 12,
+
+  // ========================================
+  // ESTILOS PARA ÍCONES
+  // ========================================
+  retryButtonContent: {
+    flexDirection: 'row',
     alignItems: 'center',
+    gap: 8,
   },
-  checkoutButtonDisabled: {
-    opacity: 0.6,
+
+  retryIcon: {
+    width: 32,
+    height: 32,
   },
-  checkoutButtonText: {
-    color: '#fff',
-    fontSize: 18,
-    fontWeight: 'bold',
+
+  loginButtonContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
   },
-  errorIcon: {
-    fontSize: 48,
-    marginBottom: 16,
+
+  loginIcon: {
+    width: 32,
+    height: 32,
   },
-  errorText: {
-    fontSize: 18,
-    color: '#ff3b30',
-    fontWeight: 'bold',
-    marginBottom: 8,
+
+  headerTitleContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
   },
-  errorSubtext: {
-    fontSize: 14,
-    color: '#666',
-    marginBottom: 24,
-    textAlign: 'center',
+
+  headerIcon: {
+    width: 36,
+    height: 36,
   },
-  retryButton: {
-    backgroundColor: '#8B4513',
-    paddingHorizontal: 30,
-    paddingVertical: 12,
-    borderRadius: 8,
-    marginBottom: 12,
+
+  checkoutButtonContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
   },
-  retryButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: 'bold',
+
+  checkoutIcon: {
+    width: 32,
+    height: 32,
   },
-  loginButton: {
-    backgroundColor: '#3498db',
-    paddingHorizontal: 30,
-    paddingVertical: 12,
-    borderRadius: 8,
+
+  // ========================================
+  // MISSING ICON STYLES
+  // ========================================
+  helpIcon: {
+    width: 80,
+    height: 80,
+    marginBottom: pixelArt.spacing.lg,
   },
-  loginButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: 'bold',
+
+  settingsIcon: {
+    width: 32,
+    height: 32,
+  },
+
+  profileIcon: {
+    width: 32,
+    height: 32,
+  },
+
+  emptyIcon: {
+    width: 36,
+    height: 36,
   },
 });

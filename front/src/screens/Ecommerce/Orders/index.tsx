@@ -8,6 +8,7 @@ import {
   ActivityIndicator,
   RefreshControl,
   Alert,
+  Image,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useOrders } from '../../../hooks/useOrders';
@@ -42,12 +43,23 @@ export default function OrderHistoryScreen({ token, onBack, onLogout }: OrderHis
     return (
       <SafeAreaView style={styles.container}>
         <View style={styles.centerContainer}>
-          <Text style={styles.errorIcon}>⚠️</Text>
+          <Image
+            source={require('../../../../assets/icons/help_ajuda.png')}
+            style={styles.helpIcon}
+            resizeMode="contain"
+          />
           <Text style={styles.errorText}>Erro ao carregar pedidos</Text>
           <Text style={styles.errorSubtext}>Não foi possível autenticar sua sessão</Text>
 
           <TouchableOpacity style={styles.retryButton} onPress={refetch}>
-            <Text style={styles.retryButtonText}>🔄 Tentar Novamente</Text>
+            <View style={styles.retryButtonContent}>
+              <Image
+                source={require('../../../../assets/icons/icone_engrenagem_ajustes.png')}
+                style={styles.settingsIcon}
+                resizeMode="contain"
+              />
+              <Text style={styles.retryButtonText}>Tentar Novamente</Text>
+            </View>
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -57,7 +69,14 @@ export default function OrderHistoryScreen({ token, onBack, onLogout }: OrderHis
               onLogout();
             }}
           >
-            <Text style={styles.loginButtonText}>🔐 Voltar ao Login</Text>
+            <View style={styles.loginButtonContent}>
+              <Image
+                source={require('../../../../assets/icons/icone_perfil_usuario_generico.png')}
+                style={styles.profileIcon}
+                resizeMode="contain"
+              />
+              <Text style={styles.loginButtonText}>Voltar ao Login</Text>
+            </View>
           </TouchableOpacity>
         </View>
       </SafeAreaView>
@@ -70,13 +89,23 @@ export default function OrderHistoryScreen({ token, onBack, onLogout }: OrderHis
         <TouchableOpacity style={styles.backButton} onPress={onBack}>
           <Text style={styles.backButtonText}>← Voltar</Text>
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>📦 Meus Pedidos</Text>
+        <View style={styles.headerTitleContainer}>
+          <Image
+            source={require('../../../../assets/icons/icone_caixa_produto.png')}
+            style={styles.emptyIcon}
+            resizeMode="contain"
+          />
+          <Text style={styles.headerTitle}>Meus Pedidos</Text>
+        </View>
         <View style={{ width: 80 }} />
       </View>
 
       {orders.length === 0 ? (
         <View style={styles.emptyContainer}>
-          <EmptyState icon="📦" message="Nenhum pedido realizado" />
+          <EmptyState
+            iconSource={require('../../../../assets/icons/icone_caixa_produto.png')} 
+            message="Nenhum pedido realizado"
+          />
           <TouchableOpacity style={styles.shopButton} onPress={onBack}>
             <Text style={styles.shopButtonText}>Começar a Comprar</Text>
           </TouchableOpacity>

@@ -1,86 +1,155 @@
 import { StyleSheet } from 'react-native';
+import { pixelArt } from '../../../theme';
 
 export const styles = StyleSheet.create({
+  // ========================================
+  // CONTAINER PRINCIPAL COM GRADIENTE - Como no HTML
+  // ========================================
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: '#e0f0ff', // --bg-light - fallback para o gradiente
   },
-  centerContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#f5f5f5',
+
+  // Overlay de scanline (simulação de CRT)
+  scanlineOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'transparent',
+    pointerEvents: 'none',
+    opacity: 0.15,
   },
-  loadingText: {
-    marginTop: 10,
-    fontSize: 16,
-    color: '#666',
-  },
+
+  // ========================================
+  // HEADER PIXEL ART
+  // ========================================
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    padding: 20,
-    backgroundColor: '#8B4513',
+    padding: pixelArt.spacing.lg,
+    backgroundColor: pixelArt.colors.headerBg,
+    borderBottomWidth: 3,
+    borderBottomColor: pixelArt.colors.borderDark,
+    // Borda 3D no header
+    borderTopWidth: 2,
+    borderTopColor: '#ffffff',
+    ...pixelArt.shadows.innerBorder,
   },
+
   headerTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#fff',
+    ...pixelArt.typography.pixelTitle,
+    color: pixelArt.colors.coffeePrimary,
+    fontSize: 16,
   },
+
+  // ========================================
+  // BOTÃO DO CARRINHO COM BADGE
+  // ========================================
   cartButton: {
+    ...pixelArt.buttons.primary,
     position: 'relative',
-    padding: 8,
   },
+
   cartIcon: {
-    fontSize: 28,
+    fontSize: 20,
   },
+
+  cartIconImage: {
+    width: 36,
+    height: 36,
+  },
+
   badge: {
     position: 'absolute',
-    top: 0,
-    right: 0,
-    backgroundColor: '#ff3b30',
+    top: -6,
+    right: -6,
+    backgroundColor: pixelArt.colors.error,
     borderRadius: 10,
     minWidth: 20,
     height: 20,
     justifyContent: 'center',
     alignItems: 'center',
+    paddingHorizontal: 4,
+    // Borda do badge
+    borderWidth: 2,
+    borderColor: '#ffffff',
+    ...pixelArt.shadows.button,
   },
+
   badgeText: {
-    color: '#fff',
-    fontSize: 12,
-    fontWeight: 'bold',
+    ...pixelArt.typography.pixelButton,
+    color: '#ffffff',
+    fontSize: 10,
   },
+
+  // ========================================
+  // SCROLL VIEW E GRID
+  // ========================================
   scrollView: {
     flex: 1,
   },
+
   productsGrid: {
-    padding: 10,
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    paddingBottom: 80,
   },
+
+  // ========================================
+  // LOADING E ERROR STATES
+  // ========================================
+  centerContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: pixelArt.colors.bgLight,
+  },
+
+  loadingText: {
+    ...pixelArt.typography.pixelBody,
+    color: pixelArt.colors.textDark,
+    marginTop: pixelArt.spacing.md,
+  },
+
   errorContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 20,
+    padding: pixelArt.spacing.xl,
+    backgroundColor: pixelArt.colors.bgLight,
   },
+
   errorText: {
-    fontSize: 16,
-    color: '#ff3b30',
+    ...pixelArt.typography.pixelBody,
+    color: pixelArt.colors.error,
     textAlign: 'center',
-    marginBottom: 20,
+    marginBottom: pixelArt.spacing.lg,
   },
+
   retryButton: {
-    backgroundColor: '#8B4513',
-    paddingHorizontal: 30,
-    paddingVertical: 12,
-    borderRadius: 8,
+    ...pixelArt.buttons.action,
+    paddingVertical: pixelArt.spacing.md,
+    paddingHorizontal: pixelArt.spacing.xl,
   },
+
+  retryButtonContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+
+  retryIcon: {
+    width: 32,
+    height: 32,
+  },
+
   retryButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: 'bold',
+    ...pixelArt.buttons.text,
   },
 });

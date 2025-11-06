@@ -7,12 +7,14 @@ import {
   SafeAreaView,
   ActivityIndicator,
   Alert,
+  Image,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useCart } from '../../../hooks/useCart';
 import CartItem from '../../../components/Ecommerce/CartItem';
 import EmptyState from '../../../components/Ecommerce/EmptyState';
 import { styles } from './styles';
+import { pixelArt } from '../../../theme';
 
 interface CartScreenProps {
   token: string;
@@ -31,6 +33,11 @@ export default function CartScreen({
 }: CartScreenProps) {
   const { cartItems, loading, error, totalAmount, updateQuantity, removeItem, checkout, refetch } = useCart(token);
   const [checkingOut, setCheckingOut] = useState(false);
+  const [isBackPressed, setIsBackPressed] = useState(false);
+  const [isRetryPressed, setIsRetryPressed] = useState(false);
+  const [isLoginPressed, setIsLoginPressed] = useState(false);
+  const [isShopPressed, setIsShopPressed] = useState(false);
+  const [isCheckoutPressed, setIsCheckoutPressed] = useState(false);
 
   React.useEffect(() => {
     onCartUpdate(cartItems.length);
@@ -92,22 +99,55 @@ export default function CartScreen({
     return (
       <SafeAreaView style={styles.container}>
         <View style={styles.centerContainer}>
-          <Text style={styles.errorIcon}>⚠️</Text>
+          <Image
+            source={require('../../../../assets/icons/help_ajuda.png')}
+            style={styles.helpIcon}
+            resizeMode="contain"
+          />
           <Text style={styles.errorText}>Erro ao carregar carrinho</Text>
           <Text style={styles.errorSubtext}>Não foi possível autenticar sua sessão</Text>
 
-          <TouchableOpacity style={styles.retryButton} onPress={refetch}>
-            <Text style={styles.retryButtonText}>🔄 Tentar Novamente</Text>
+          <TouchableOpacity 
+            style={[
+              styles.retryButton,
+              isRetryPressed && pixelArt.buttons.actionPressed
+            ]}
+            onPressIn={() => setIsRetryPressed(true)}
+            onPressOut={() => setIsRetryPressed(false)}
+            onPress={refetch}
+            activeOpacity={1}
+          >
+            <View style={styles.retryButtonContent}>
+              <Image
+                source={require('../../../../assets/icons/icone_engrenagem_ajustes.png')}
+                style={styles.settingsIcon}
+                resizeMode="contain"
+              />
+              <Text style={styles.retryButtonText}>Tentar Novamente</Text>
+            </View>
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={styles.loginButton}
+            style={[
+              styles.loginButton,
+              isLoginPressed && pixelArt.buttons.primaryPressed
+            ]}
+            onPressIn={() => setIsLoginPressed(true)}
+            onPressOut={() => setIsLoginPressed(false)}
             onPress={async () => {
               await AsyncStorage.clear();
               onLogout();
             }}
+            activeOpacity={1}
           >
-            <Text style={styles.loginButtonText}>🔐 Voltar ao Login</Text>
+            <View style={styles.loginButtonContent}>
+              <Image
+                source={require('../../../../assets/icons/icone_perfil_usuario_generico.png')}
+                style={styles.profileIcon}
+                resizeMode="contain"
+              />
+              <Text style={styles.loginButtonText}>Voltar ao Login</Text>
+            </View>
           </TouchableOpacity>
         </View>
       </SafeAreaView>
@@ -117,17 +157,45 @@ export default function CartScreen({
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <TouchableOpacity style={styles.backButton} onPress={onBack}>
+        <TouchableOpacity 
+          style={[
+            styles.backButton,
+            isBackPressed && pixelArt.buttons.actionPressed
+          ]}
+          onPressIn={() => setIsBackPressed(true)}
+          onPressOut={() => setIsBackPressed(false)}
+          onPress={onBack}
+          activeOpacity={1}
+        >
           <Text style={styles.backButtonText}>← Voltar</Text>
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>🛒 Meu Carrinho</Text>
+        <View style={styles.headerTitleContainer}>
+          <Image
+            source={require('../../../../assets/icons/icone_carrinho_compra.png')}
+            style={styles.emptyIcon}
+            resizeMode="contain"
+          />
+          <Text style={styles.headerTitle}>Meu Carrinho</Text>
+        </View>
         <View style={{ width: 80 }} />
       </View>
 
       {cartItems.length === 0 ? (
         <View style={styles.emptyContainer}>
-          <EmptyState icon="🛒" message="Seu carrinho está vazio" />
-          <TouchableOpacity style={styles.shopButton} onPress={onBack}>
+          <EmptyState 
+            iconSource={require('../../../../assets/icons/icone_carrinho_compra.png')} 
+            message="Seu carrinho está vazio" 
+          />
+          <TouchableOpacity 
+            style={[
+              styles.shopButton,
+              isShopPressed && pixelArt.buttons.primaryPressed
+            ]}
+            onPressIn={() => setIsShopPressed(true)}
+            onPressOut={() => setIsShopPressed(false)}
+            onPress={onBack}
+            activeOpacity={1}
+          >
             <Text style={styles.shopButtonText}>Continuar Comprando</Text>
           </TouchableOpacity>
         </View>
@@ -150,12 +218,32 @@ export default function CartScreen({
               <Text style={styles.totalValue}>{formatPrice(totalAmount)}</Text>
             </View>
             <TouchableOpacity
-              style={[styles.checkoutButton, checkingOut && styles.checkoutButtonDisabled]}
+              style={[
+                styles.checkoutButton, 
+                checkingOut && styles.checkoutButtonDisabled,
+                isCheckoutPressed && pixelArt.buttons.secondaryPressed
+              ]}
+              onPressIn={() => setIsCheckoutPressed(true)}
+              onPressOut={() => setIsCheckoutPressed(false)}
               onPress={handleCheckout}
               disabled={checkingOut}
+              activeOpacity={1}
             >
               <Text style={styles.checkoutButtonText}>
-                {checkingOut ? 'Processando...' : '✅ Finalizar Compra'}
+                <View style={styles.checkoutButtonContent}>
+                  {checkingOut ? (
+                    <Text style={styles.checkoutButtonText}>Processando...</Text>
+                  ) : (
+                    <>
+                      <Image
+                        source={require('../../../../assets/icons/icone_cartao_credito.png')}
+                        style={styles.checkoutIcon}
+                        resizeMode="contain"
+                      />
+                      <Text style={styles.checkoutButtonText}>Finalizar Compra</Text>
+                    </>
+                  )}
+                </View>
               </Text>
             </TouchableOpacity>
           </View>

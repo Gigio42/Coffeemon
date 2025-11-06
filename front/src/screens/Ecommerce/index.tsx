@@ -10,7 +10,7 @@
  */
 
 import React, { useState } from 'react';
-import { View, TouchableOpacity, Text } from 'react-native';
+import { View, TouchableOpacity, Text, Image } from 'react-native';
 import ProductListScreen from './ProductList';
 import ProductDetailScreen from './ProductDetail';
 import CartScreen from './Cart';
@@ -135,12 +135,15 @@ export default function EcommerceScreen({
             style={styles.tabButton}
             onPress={() => setCurrentTab(EcommerceTab.PRODUCTS)}
           >
-            <Text style={[
-              styles.tabIcon,
-              currentTab === EcommerceTab.PRODUCTS && styles.tabIconActive
-            ]}>
-              🏪
-            </Text>
+    
+            <Image
+              source={require('../../../assets/icons/loja.png')}
+              style={[
+                styles.tabIconImage,
+                currentTab === EcommerceTab.PRODUCTS && styles.tabIconActive
+              ]}
+              resizeMode="contain"
+            />
             <Text style={[
               styles.tabLabel,
               currentTab === EcommerceTab.PRODUCTS && styles.tabLabelActive
@@ -155,12 +158,14 @@ export default function EcommerceScreen({
             onPress={() => setCurrentTab(EcommerceTab.CART)}
           >
             <View>
-              <Text style={[
-                styles.tabIcon,
-                currentTab === EcommerceTab.CART && styles.tabIconActive
-              ]}>
-                🛒
-              </Text>
+              <Image
+                source={require('../../../assets/icons/icone_carrinho_compra.png')}
+                style={[
+                  styles.tabIconImage,
+                  currentTab === EcommerceTab.CART && styles.tabIconActive
+                ]}
+                resizeMode="contain"
+              />
               {cartCount > 0 && (
                 <View style={styles.badge}>
                   <Text style={styles.badgeText}>{cartCount}</Text>
@@ -180,12 +185,14 @@ export default function EcommerceScreen({
             style={styles.tabButton}
             onPress={() => setCurrentTab(EcommerceTab.ORDERS)}
           >
-            <Text style={[
-              styles.tabIcon,
-              currentTab === EcommerceTab.ORDERS && styles.tabIconActive
-            ]}>
-              📦
-            </Text>
+            <Image
+              source={require('../../../assets/icons/icone_caixa_produto.png')}
+              style={[
+                styles.tabIconImage,
+                currentTab === EcommerceTab.ORDERS && styles.tabIconActive
+              ]}
+              resizeMode="contain"
+            />
             <Text style={[
               styles.tabLabel,
               currentTab === EcommerceTab.ORDERS && styles.tabLabelActive
@@ -199,12 +206,14 @@ export default function EcommerceScreen({
             style={styles.tabButton}
             onPress={() => setCurrentTab(EcommerceTab.PROFILE)}
           >
-            <Text style={[
-              styles.tabIcon,
-              currentTab === EcommerceTab.PROFILE && styles.tabIconActive
-            ]}>
-              👤
-            </Text>
+            <Image
+              source={require('../../../assets/icons/icone_perfil_usuario_generico.png')}
+              style={[
+                styles.tabIconImage,
+                currentTab === EcommerceTab.PROFILE && styles.tabIconActive
+              ]}
+              resizeMode="contain"
+            />
             <Text style={[
               styles.tabLabel,
               currentTab === EcommerceTab.PROFILE && styles.tabLabelActive
