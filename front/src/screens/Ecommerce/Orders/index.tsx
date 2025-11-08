@@ -10,6 +10,7 @@ import {
   Alert,
   Image,
 } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useOrders } from '../../../hooks/useOrders';
 import OrderCard from '../../../components/Ecommerce/OrderCard';
@@ -85,10 +86,10 @@ export default function OrderHistoryScreen({ token, onBack, onLogout }: OrderHis
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity style={styles.backButton} onPress={onBack}>
-          <Text style={styles.backButtonText}>← Voltar</Text>
-        </TouchableOpacity>
+        <View style={styles.header}>
+          <TouchableOpacity style={styles.backButton} onPress={onBack}>
+            <Text style={styles.backButtonText}>←</Text>
+          </TouchableOpacity>
         <View style={styles.headerTitleContainer}>
           <Image
             source={require('../../../../assets/icons/icone_caixa_produto.png')}
@@ -100,7 +101,11 @@ export default function OrderHistoryScreen({ token, onBack, onLogout }: OrderHis
         <View style={{ width: 80 }} />
       </View>
 
-      {orders.length === 0 ? (
+      <LinearGradient 
+        colors={['#e0f0ff', '#f0d0e0']} 
+        style={styles.gradientContainer}
+      >
+        {orders.length === 0 ? (
         <View style={styles.emptyContainer}>
           <EmptyState
             iconSource={require('../../../../assets/icons/icone_caixa_produto.png')} 
@@ -125,6 +130,7 @@ export default function OrderHistoryScreen({ token, onBack, onLogout }: OrderHis
           ))}
         </ScrollView>
       )}
+      </LinearGradient>
     </SafeAreaView>
   );
 }

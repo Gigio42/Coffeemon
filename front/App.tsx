@@ -17,11 +17,15 @@
  */
 
 import React, { useState } from 'react';
+import { StatusBar } from 'expo-status-bar';
+import { View } from 'react-native';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { Socket } from 'socket.io-client';
 import LoginScreen from './src/screens/Login';
 import EcommerceScreen from './src/screens/Ecommerce';
 import MatchmakingScreen from './src/screens/Matchmaking';
 import BattleScreen from './src/screens/Battle';
+import ErrorBoundary from './src/components/ErrorBoundary';
 import { Screen, BattleState } from './types';
 
 export default function App() {
@@ -48,7 +52,24 @@ export default function App() {
   // RENDERIZAÇÃO BASEADA NA TELA ATUAL
   // ========================================
   
-  switch (currentScreen) {
+  // Configuração do StatusBar baseada na tela atual
+  const getStatusBarConfig = () => {
+    switch (currentScreen) {
+      case Screen.ECOMMERCE:
+        return { style: "dark" as const, backgroundColor: "#f5f2e8" };
+      case Screen.MATCHMAKING:
+        return { style: "light" as const, backgroundColor: "#2c3e50" };
+      case Screen.BATTLE:
+        return { style: "light" as const, backgroundColor: "#8B4513" };
+      default:
+        return { style: "light" as const, backgroundColor: "#f5f2e8" };
+    }
+  };
+
+  const statusBarConfig = getStatusBarConfig();
+
+  const renderScreen = () => {
+    switch (currentScreen) {
     // ====================================
     // TELA DE LOGIN
     // ====================================
@@ -150,25 +171,35 @@ export default function App() {
         return null;
       }
       return (
-        <BattleScreen 
-          // Passa dados da batalha e autenticação para a tela
-          battleId={battleData.battleId}
-          battleState={battleData.battleState}
-          playerId={authData.playerId}
-          socket={battleData.socket}
-          
-          // Callback chamado quando a BATALHA TERMINA ou usuário FOGE
-          // A BattleScreen faz TODA a lógica da batalha:
-          // - Escuta eventos "battleUpdate" e "battleEnd"
-          // - Renderiza Coffeemon dos jogadores
-          // - Gerencia ataques e trocas
-          // - Mostra animações
-          // - Exibe alerta quando batalha acaba
-          onNavigateToMatchmaking={() => {
+        <ErrorBoundary
+          onError={(error, errorInfo) => {
+            console.error('Battle screen crashed:', error, errorInfo);
+          }}
+          onReset={() => {
             setBattleData(null);
             setCurrentScreen(Screen.MATCHMAKING);
           }}
-        />
+        >
+          <BattleScreen 
+            // Passa dados da batalha e autenticação para a tela
+            battleId={battleData.battleId}
+            battleState={battleData.battleState}
+            playerId={authData.playerId}
+            socket={battleData.socket}
+            
+            // Callback chamado quando a BATALHA TERMINA ou usuário FOGE
+            // A BattleScreen faz TODA a lógica da batalha:
+            // - Escuta eventos "battleUpdate" e "battleEnd"
+            // - Renderiza Coffeemon dos jogadores
+            // - Gerencia ataques e trocas
+            // - Mostra animações
+            // - Exibe alerta quando batalha acaba
+            onNavigateToMatchmaking={() => {
+              setBattleData(null);
+              setCurrentScreen(Screen.MATCHMAKING);
+            }}
+          />
+        </ErrorBoundary>
       );
       
     // ====================================
@@ -183,5 +214,19 @@ export default function App() {
           }}
         />
       );
-  }
+    }
+  };
+
+  return (
+    <SafeAreaProvider>
+      <View style={{ flex: 1 }}>
+        <StatusBar 
+          style={statusBarConfig.style} 
+          backgroundColor={statusBarConfig.backgroundColor} 
+          translucent={false} 
+        />
+        {renderScreen()}
+      </View>
+    </SafeAreaProvider>
+  );
 }

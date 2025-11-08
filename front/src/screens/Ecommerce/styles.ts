@@ -1,10 +1,13 @@
-import { StyleSheet } from 'react-native';
+import { StyleSheet, Platform } from 'react-native';
 import { pixelArt } from '../../theme';
+
+// Para Android, adiciona padding para navigation bar
+const navigationBarHeight = Platform.OS === 'android' ? 20 : 0;
 
 export const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: pixelArt.colors.bgLight,
+    backgroundColor: '#f5f2e8', // Cor creme clara - mesma do header
   },
   
   // ========================================
@@ -12,21 +15,21 @@ export const styles = StyleSheet.create({
   // ========================================
   tabBar: {
     flexDirection: 'row',
-    backgroundColor: pixelArt.colors.headerBg,
+    backgroundColor: '#f5f2e8', // Cor creme clara
     borderTopWidth: 3,
-    borderTopColor: pixelArt.colors.borderDark,
-    paddingBottom: 5,
-    paddingTop: 5,
+    borderTopColor: '#d4c5a0', // Borda creme mais escura
+    paddingBottom: 20 + navigationBarHeight, // Padding adicional na parte de baixo
+    paddingTop: 6, // Reduzido
     // Borda 3D sutil
     borderBottomWidth: 2,
-    borderBottomColor: pixelArt.colors.borderLight,
+    borderBottomColor: '#faf8f0', // Borda creme mais clara
     ...pixelArt.shadows.innerBorder,
   },
   
   tabButton: {
     flex: 1,
     alignItems: 'center',
-    paddingVertical: 8,
+    paddingVertical: 4, // Reduzido
     position: 'relative',
   },
   
@@ -37,9 +40,9 @@ export const styles = StyleSheet.create({
   },
 
   tabIconImage: {
-    width: 40,
-    height: 40,
-    marginBottom: 4,
+    width: 28,
+    height: 28,
+    marginBottom: 2,
     opacity: 0.6,
   },
   

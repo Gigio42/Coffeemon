@@ -6,7 +6,7 @@ import { styles } from './styles';
 interface ProductCardProps {
   product: Product;
   onPress: () => void;
-  onAddToCart?: () => void;
+  onAddToCart: () => void;
 }
 
 export default function ProductCard({ product, onPress, onAddToCart }: ProductCardProps) {
@@ -16,14 +16,17 @@ export default function ProductCard({ product, onPress, onAddToCart }: ProductCa
     return `R$ ${price.toFixed(2).replace('.', ',')}`;
   };
 
-  const handleAddToCart = () => {
-    if (onAddToCart) {
-      onAddToCart();
-    }
+  const handleButtonPress = (e: any) => {
+    e?.stopPropagation?.();
+    onAddToCart();
   };
 
   return (
-    <View style={styles.cardContainer}>
+    <TouchableOpacity 
+      style={styles.cardContainer}
+      onPress={onPress}
+      activeOpacity={0.9}
+    >
       <View style={styles.productCard}>
         {/* Header apenas com nome do produto */}
         <View style={styles.cardHeader} testID={`product-card-header-${product.id}`}>
@@ -32,13 +35,8 @@ export default function ProductCard({ product, onPress, onAddToCart }: ProductCa
           </Text>
         </View>
 
-        {/* Descrição do produto */}
-        <Text style={styles.productDescription} numberOfLines={3}>
-          {product.description}
-        </Text>
-
-        {/* Imagem do produto com sparkles - Estrutura exata do HTML */}
-        <TouchableOpacity style={styles.imageContainer} onPress={onPress}>
+        {/* Imagem do produto com sparkles */}
+        <View style={styles.imageContainer}>
           {product.image ? (
             <Image
               source={{ uri: product.image }}
@@ -49,7 +47,7 @@ export default function ProductCard({ product, onPress, onAddToCart }: ProductCa
             <Text style={styles.placeholderText}>Latte</Text>
           )}
           
-          {/* Sparkles decorativos - Exatamente como no HTML */}
+          {/* Sparkles decorativos */}
           <View style={styles.sparklesContainer}>
             <View style={[styles.sparkle, styles.sparkle1]} />
             <View style={[styles.sparkle, styles.sparkle2]} />
@@ -57,24 +55,24 @@ export default function ProductCard({ product, onPress, onAddToCart }: ProductCa
             <View style={[styles.sparkle, styles.sparkle4]} />
             <View style={[styles.sparkle, styles.sparkle5]} />
           </View>
-        </TouchableOpacity>
+        </View>
 
         {/* Preço do produto */}
         <Text style={styles.productPrice}>
           {formatPrice(product.price)}
         </Text>
 
-        {/* Botão de adicionar ao carrinho - Exato do HTML */}
+        {/* Botão de comprar - Adiciona ao carrinho */}
         <TouchableOpacity
           style={[styles.addButton, isPressed && styles.addButtonPressed]}
           onPressIn={() => setIsPressed(true)}
           onPressOut={() => setIsPressed(false)}
-          onPress={onAddToCart || onPress}
+          onPress={handleButtonPress}
           activeOpacity={1}
         >
-          <Text style={styles.addButtonText}>ADICIONAR AO CARRINHO</Text>
+          <Text style={styles.addButtonText}>COMPRAR</Text>
         </TouchableOpacity>
       </View>
-    </View>
+    </TouchableOpacity>
   );
 }

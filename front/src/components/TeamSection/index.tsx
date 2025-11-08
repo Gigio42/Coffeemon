@@ -11,7 +11,6 @@ interface TeamSectionProps {
   emptyMessage: string;
   onToggleParty: (coffeemon: PlayerCoffeemon) => void;
   partyLoading: number | null;
-  variant?: 'grid' | 'horizontal';
 }
 
 export default function TeamSection({
@@ -21,15 +20,13 @@ export default function TeamSection({
   emptyMessage,
   onToggleParty,
   partyLoading,
-  variant = 'grid',
 }: TeamSectionProps) {
   const renderContent = () => {
     if (loading) {
       return (
-        <ActivityIndicator
-          size="large"
-          color={variant === 'grid' ? '#2ecc71' : '#3498db'}
-        />
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#8B4513" />
+        </View>
       );
     }
 
@@ -37,28 +34,13 @@ export default function TeamSection({
       return <Text style={styles.emptyText}>{emptyMessage}</Text>;
     }
 
-    if (variant === 'horizontal') {
-      return (
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          style={styles.availableScroll}
-        >
-          {coffeemons.map((pc) => (
-            <CoffeemonCard
-              key={pc.id}
-              coffeemon={pc}
-              onToggleParty={onToggleParty}
-              isLoading={partyLoading === pc.id}
-              variant="small"
-            />
-          ))}
-        </ScrollView>
-      );
-    }
-
     return (
-      <View style={styles.teamGrid}>
+      <ScrollView 
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={styles.carouselContent}
+        style={styles.carousel}
+      >
         {coffeemons.map((pc) => (
           <CoffeemonCard
             key={pc.id}
@@ -68,7 +50,7 @@ export default function TeamSection({
             variant="large"
           />
         ))}
-      </View>
+      </ScrollView>
     );
   };
 

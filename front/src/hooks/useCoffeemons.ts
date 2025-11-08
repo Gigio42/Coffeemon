@@ -16,6 +16,7 @@ interface UseCoffeemonsResult {
   availableCoffeemons: PlayerCoffeemon[];
   fetchCoffeemons: () => Promise<void>;
   toggleParty: (coffeemon: PlayerCoffeemon) => Promise<void>;
+  giveAllCoffeemons: () => Promise<void>;
 }
 
 export function useCoffeemons({
@@ -25,30 +26,56 @@ export function useCoffeemons({
   const [coffeemons, setCoffeemons] = useState<PlayerCoffeemon[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [partyLoading, setPartyLoading] = useState<number | null>(null);
+  const [playerId, setPlayerId] = useState<number | null>(null);
 
   useEffect(() => {
-    fetchCoffeemons();
+    initializePlayer();
   }, []);
 
-  async function fetchCoffeemons() {
+  async function initializePlayer() {
+    try {
+      console.log('Initializing player...');
+      const playerData = await coffeemonService.fetchPlayerData(token);
+      console.log('Player data:', playerData);
+      setPlayerId(playerData.id);
+      await fetchCoffeemons(playerData.id);
+    } catch (error: any) {
+      console.error('Error initializing player:', error);
+      if (onLog) {
+        onLog('Erro ao inicializar jogador');
+      }
+    }
+  }
+
+  async function fetchCoffeemons(playerIdParam?: number) {
+    const idToUse = playerIdParam || playerId;
+    if (!idToUse) {
+      console.error('No player ID available');
+      return;
+    }
+
     setLoading(true);
     try {
-      // Primeiro busca o player
-      const player = await coffeemonService.fetchPlayerData(token);
-      console.log('Player data:', player);
-
-      // Agora busca todos os coffeemons desse player
-      const data = await coffeemonService.fetchPlayerCoffeemons(token, player.id);
-      console.log('Coffeemons data:', data);
+      console.log('Fetching coffeemons for player:', idToUse);
+      const data = await coffeemonService.fetchPlayerCoffeemons(token, idToUse);
+      console.log('Coffeemons received:', data);
       setCoffeemons(data);
 
       if (onLog) {
-        onLog(`${data.length} Coffeemons carregados`);
+        onLog(`${data.length} Coffeemons disponíveis`);
+      }
+      
+      // Se não tem coffeemons, sugerir dar todos
+      if (data.length === 0) {
+        console.log('No coffeemons found. Call giveAllCoffeemons() to add them.');
+        if (onLog) {
+          onLog('Nenhum Coffeemon encontrado. Use o botão para capturar todos.');
+        }
       }
     } catch (error: any) {
       console.error('Error fetching coffeemons:', error);
       if (onLog) {
-        onLog('Erro de conexão ao carregar Coffeemons');
+        onLog('Erro ao carregar Coffeemons');
       }
     } finally {
       setLoading(false);
@@ -90,9 +117,40 @@ export function useCoffeemons({
       }
     } catch (error: any) {
       console.error('Error toggling party:', error);
-      Alert.alert('Erro', error.message || 'Erro de conexão ao alterar time');
+      Alert.alert('Erro', error.message || 'Erro ao alterar time');
     } finally {
       setPartyLoading(null);
+    }
+  }
+
+  async function giveAllCoffeemons() {
+    setLoading(true);
+    try {
+      console.log('Giving all coffeemons to player...');
+      const result = await coffeemonService.giveAllCoffeemons(token);
+      console.log('Coffeemons given:', result);
+      
+      if (onLog) {
+        onLog(result.message || `${result.count} Coffeemons capturados!`);
+      }
+      
+      if (result.count > 0) {
+        Alert.alert('Sucesso!', result.message || `${result.count} Coffeemons capturados!`);
+      } else {
+        Alert.alert('Informação', 'Você já possui todos os Coffeemons!');
+      }
+      
+      // Recarregar coffeemons
+      await fetchCoffeemons();
+    } catch (error: any) {
+      console.error('Error giving all coffeemons:', error);
+      const errorMessage = error.message || 'Erro ao capturar Coffeemons';
+      Alert.alert('Erro', errorMessage);
+      if (onLog) {
+        onLog(`Erro: ${errorMessage}`);
+      }
+    } finally {
+      setLoading(false);
     }
   }
 
@@ -105,7 +163,8 @@ export function useCoffeemons({
     partyLoading,
     partyMembers,
     availableCoffeemons,
-    fetchCoffeemons,
+    fetchCoffeemons: () => fetchCoffeemons(),
     toggleParty,
+    giveAllCoffeemons,
   };
 }

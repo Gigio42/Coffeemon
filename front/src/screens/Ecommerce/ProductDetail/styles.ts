@@ -1,13 +1,20 @@
-import { StyleSheet } from 'react-native';
+import { StyleSheet, Platform, StatusBar } from 'react-native';
 import { pixelArt } from '../../../theme';
+
+// Para Android, considera a altura da status bar
+const statusBarHeight = Platform.OS === 'android' ? StatusBar.currentHeight || 0 : 0;
 
 export const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: pixelArt.colors.bgLight,
+    backgroundColor: '#faf8f0', // Cor creme muito clara para background
   },
 
   scrollView: {
+    flex: 1,
+  },
+
+  gradientContainer: {
     flex: 1,
   },
 
@@ -22,22 +29,24 @@ export const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     padding: pixelArt.spacing.lg,
-    backgroundColor: pixelArt.colors.headerBg,
+    paddingTop: pixelArt.spacing.lg + statusBarHeight, // Evita sobreposição com status bar
+    backgroundColor: '#f5f2e8', // Cor creme clara
     borderBottomWidth: 3,
-    borderBottomColor: pixelArt.colors.borderDark,
+    borderBottomColor: '#d4c5a0', // Borda creme mais escura
     borderTopWidth: 2,
-    borderTopColor: '#ffffff',
+    borderTopColor: '#faf8f0', // Borda creme mais clara
     ...pixelArt.shadows.innerBorder,
   },
 
   backButton: {
-    ...pixelArt.buttons.action,
     marginRight: pixelArt.spacing.md,
+    padding: 8,
   },
 
   backButtonText: {
-    ...pixelArt.buttons.text,
-    fontSize: 12,
+    fontSize: 24,
+    color: '#8B7355',
+    fontWeight: '700',
   },
 
   headerTitle: {
@@ -50,28 +59,29 @@ export const styles = StyleSheet.create({
   // IMAGEM DO PRODUTO COM CONTAINER PIXELADO
   // ========================================
   imageContainer: {
-    padding: pixelArt.spacing.lg,
-    backgroundColor: pixelArt.colors.cardOuterBg,
+    margin: pixelArt.spacing.lg,
+    padding: pixelArt.spacing.md,
+    backgroundColor: '#ffffff',
     borderRadius: pixelArt.borders.radiusMedium,
-    marginBottom: pixelArt.spacing.lg,
     borderTopWidth: 3,
     borderLeftWidth: 3,
-    borderTopColor: pixelArt.colors.borderLight,
-    borderLeftColor: pixelArt.colors.borderLight,
+    borderTopColor: '#faf8f0',
+    borderLeftColor: '#faf8f0',
     borderBottomWidth: 3,
     borderRightWidth: 3,
-    borderBottomColor: pixelArt.colors.borderDark,
-    borderRightColor: pixelArt.colors.borderDark,
+    borderBottomColor: '#d4c5a0',
+    borderRightColor: '#d4c5a0',
     ...pixelArt.shadows.card,
+    elevation: 4,
   },
 
-  imageInner: {
-    backgroundColor: pixelArt.colors.cardInnerBg,
+  imageWrapper: {
+    backgroundColor: 'transparent',
     borderRadius: pixelArt.borders.radiusSmall,
     overflow: 'hidden',
     aspectRatio: 1,
-    borderWidth: 2,
-    borderColor: '#e0e0e0',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 
   productImage: {
@@ -81,10 +91,17 @@ export const styles = StyleSheet.create({
 
   placeholderImage: {
     width: '100%',
-    height: '100%',
-    backgroundColor: '#f0e0d0',
+    aspectRatio: 1,
+    backgroundColor: '#f0e6d2',
     justifyContent: 'center',
     alignItems: 'center',
+    borderRadius: pixelArt.borders.radiusSmall,
+  },
+
+  placeholderText: {
+    ...pixelArt.typography.pixelBody,
+    color: '#c9b896',
+    fontSize: 14,
   },
 
   // ========================================
@@ -117,25 +134,67 @@ export const styles = StyleSheet.create({
     borderRightColor: '#f8f8f8',
   },
 
+  titleRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: pixelArt.spacing.md,
+  },
+
   productName: {
     ...pixelArt.typography.pixelTitle,
     color: pixelArt.colors.textDark,
-    marginBottom: pixelArt.spacing.md,
-    fontSize: 18,
+    fontSize: 20,
+    flex: 1,
+    marginRight: pixelArt.spacing.md,
+  },
+
+  stockBadge: {
+    backgroundColor: '#4CAF50',
+    paddingHorizontal: pixelArt.spacing.md,
+    paddingVertical: pixelArt.spacing.sm,
+    borderRadius: 4,
+    borderWidth: 2,
+    borderTopColor: '#66BB6A',
+    borderLeftColor: '#66BB6A',
+    borderBottomColor: '#388E3C',
+    borderRightColor: '#388E3C',
+  },
+
+  stockBadgeText: {
+    ...pixelArt.typography.pixelBody,
+    color: '#ffffff',
+    fontSize: 10,
+    fontWeight: 'bold',
+  },
+
+  priceContainer: {
+    backgroundColor: '#fff9f0',
+    padding: pixelArt.spacing.md,
+    borderRadius: pixelArt.borders.radiusSmall,
+    borderWidth: 2,
+    borderColor: '#f0e6d2',
+    marginBottom: pixelArt.spacing.lg,
+  },
+
+  priceLabel: {
+    ...pixelArt.typography.pixelBody,
+    color: pixelArt.colors.textLight,
+    fontSize: 12,
+    marginBottom: pixelArt.spacing.xs,
   },
 
   productDescription: {
     ...pixelArt.typography.pixelBody,
     color: pixelArt.colors.textLight,
-    marginBottom: pixelArt.spacing.lg,
-    lineHeight: 24,
+    lineHeight: 22,
+    fontSize: 14,
   },
 
   productPrice: {
     ...pixelArt.typography.pixelPrice,
     color: pixelArt.colors.coffeePrimary,
-    fontSize: 24,
-    marginBottom: pixelArt.spacing.lg,
+    fontSize: 28,
   },
 
   // ========================================
@@ -145,7 +204,7 @@ export const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: pixelArt.spacing.xl,
+    marginRight: pixelArt.spacing.md,
   },
 
   quantityLabel: {
@@ -155,9 +214,18 @@ export const styles = StyleSheet.create({
   },
 
   quantityButton: {
-    ...pixelArt.buttons.small,
-    width: 40,
-    height: 40,
+    backgroundColor: '#8B4513',
+    width: 36,
+    height: 36,
+    borderRadius: 6,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 3,
+    borderTopColor: '#a0612f',
+    borderLeftColor: '#a0612f',
+    borderBottomColor: '#6b3410',
+    borderRightColor: '#6b3410',
+    ...pixelArt.shadows.card,
   },
 
   quantityButtonDisabled: {
@@ -165,8 +233,10 @@ export const styles = StyleSheet.create({
   },
 
   quantityButtonText: {
-    ...pixelArt.buttons.text,
-    fontSize: 18,
+    color: '#ffffff',
+    fontSize: 20,
+    fontWeight: 'bold',
+    fontFamily: 'monospace',
   },
 
   quantityValue: {
@@ -181,8 +251,18 @@ export const styles = StyleSheet.create({
   // BOTÃO ADICIONAR AO CARRINHO
   // ========================================
   addButton: {
-    ...pixelArt.buttons.secondary,
-    paddingVertical: pixelArt.spacing.lg,
+    backgroundColor: '#8B4513',
+    flex: 1,
+    paddingVertical: pixelArt.spacing.md,
+    paddingHorizontal: pixelArt.spacing.md,
+    borderRadius: pixelArt.borders.radiusMedium,
+    borderWidth: 3,
+    borderTopColor: '#a0612f',
+    borderLeftColor: '#a0612f',
+    borderBottomColor: '#6b3410',
+    borderRightColor: '#6b3410',
+    ...pixelArt.shadows.card,
+    elevation: 5,
   },
 
   addButtonLoading: {
@@ -192,93 +272,144 @@ export const styles = StyleSheet.create({
   addButtonContent: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
     gap: 8,
   },
 
   addButtonIcon: {
-    width: 32,
-    height: 32,
+    width: 24,
+    height: 24,
+    tintColor: '#ffffff',
   },
 
   addButtonText: {
-    ...pixelArt.buttons.text,
+    color: '#ffffff',
     fontSize: 14,
+    fontWeight: 'bold',
+    fontFamily: 'monospace',
+    textAlign: 'center',
   },
 
   // ========================================
   // MISSING STYLES
   // ========================================
   infoContainer: {
-    padding: pixelArt.spacing.lg,
-    backgroundColor: pixelArt.colors.cardOuterBg,
+    padding: pixelArt.spacing.xl,
+    backgroundColor: '#ffffff',
     borderRadius: pixelArt.borders.radiusMedium,
     margin: pixelArt.spacing.lg,
+    marginTop: 0,
     borderTopWidth: 3,
     borderLeftWidth: 3,
-    borderTopColor: pixelArt.colors.borderLight,
-    borderLeftColor: pixelArt.colors.borderLight,
+    borderTopColor: '#faf8f0',
+    borderLeftColor: '#faf8f0',
     borderBottomWidth: 3,
     borderRightWidth: 3,
-    borderBottomColor: pixelArt.colors.borderDark,
-    borderRightColor: pixelArt.colors.borderDark,
+    borderBottomColor: '#d4c5a0',
+    borderRightColor: '#d4c5a0',
+    ...pixelArt.shadows.card,
+    elevation: 3,
   },
 
   sectionTitle: {
     ...pixelArt.typography.pixelSubtitle,
-    color: pixelArt.colors.textDark,
+    color: '#8B4513',
     marginBottom: pixelArt.spacing.md,
-    marginTop: pixelArt.spacing.lg,
+    fontSize: 14,
+    fontWeight: 'bold',
   },
 
   divider: {
-    height: 2,
-    backgroundColor: pixelArt.colors.borderDark,
-    marginVertical: pixelArt.spacing.lg,
+    height: 1,
+    backgroundColor: '#f0e6d2',
+    marginVertical: pixelArt.spacing.xl,
   },
 
   quantityInput: {
-    backgroundColor: '#ffffff',
+    backgroundColor: '#f5f2e8',
     borderWidth: 2,
-    borderColor: pixelArt.colors.borderDark,
-    borderRadius: 4,
+    borderColor: '#d4c5a0',
+    borderRadius: 6,
     paddingHorizontal: pixelArt.spacing.md,
     paddingVertical: pixelArt.spacing.sm,
     fontSize: 16,
     fontFamily: 'monospace',
+    fontWeight: 'bold',
     textAlign: 'center',
-    marginHorizontal: pixelArt.spacing.md,
-    minWidth: 60,
+    marginHorizontal: pixelArt.spacing.sm,
+    minWidth: 50,
+    color: '#8B4513',
   },
 
   subtotalContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginTop: pixelArt.spacing.lg,
-    paddingTop: pixelArt.spacing.lg,
-    borderTopWidth: 2,
-    borderTopColor: pixelArt.colors.borderDark,
+    marginTop: pixelArt.spacing.xl,
+    paddingTop: pixelArt.spacing.xl,
+    paddingHorizontal: pixelArt.spacing.md,
+    paddingVertical: pixelArt.spacing.lg,
+    backgroundColor: '#fff9f0',
+    borderRadius: pixelArt.borders.radiusSmall,
+    borderWidth: 2,
+    borderColor: '#f0e6d2',
   },
 
   subtotalLabel: {
     ...pixelArt.typography.pixelSubtitle,
     color: pixelArt.colors.textDark,
+    fontSize: 16,
+    fontWeight: 'bold',
   },
 
   subtotalValue: {
     ...pixelArt.typography.pixelPrice,
-    color: pixelArt.colors.coffeePrimary,
-    fontSize: 18,
+    color: '#8B4513',
+    fontSize: 22,
+    fontWeight: 'bold',
   },
 
   footer: {
-    padding: pixelArt.spacing.lg,
-    backgroundColor: pixelArt.colors.headerBg,
+    padding: pixelArt.spacing.md,
+    backgroundColor: '#ffffff',
     borderTopWidth: 3,
-    borderTopColor: pixelArt.colors.borderDark,
+    borderTopColor: '#f0e6d2',
+    elevation: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: -2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+  },
+
+  footerContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+
+  subtotalContainerFooter: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: pixelArt.spacing.sm,
+    paddingHorizontal: pixelArt.spacing.xs,
+  },
+
+  subtotalLabelFooter: {
+    ...pixelArt.typography.pixelBody,
+    color: pixelArt.colors.textDark,
+    fontSize: 12,
+    fontWeight: '600',
+  },
+
+  subtotalValueFooter: {
+    ...pixelArt.typography.pixelPrice,
+    color: '#8B4513',
+    fontSize: 14,
+    fontWeight: 'bold',
   },
 
   addButtonDisabled: {
-    opacity: 0.5,
+    opacity: 0.6,
   },
 });

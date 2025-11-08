@@ -9,6 +9,7 @@ import {
   Alert,
   Image,
 } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useUser } from '../../../hooks/useUser';
 import { styles } from './styles';
@@ -124,7 +125,7 @@ export default function ProfileScreen({
           onPress={onBack}
           activeOpacity={1}
         >
-          <Text style={styles.backButtonText}>← Voltar</Text>
+          <Text style={styles.backButtonText}>←</Text>
         </TouchableOpacity>
         <View style={styles.headerTitleContainer}>
           <Image
@@ -137,7 +138,11 @@ export default function ProfileScreen({
         <View style={{ width: 80 }} />
       </View>
 
-      <ScrollView style={styles.scrollView}>
+      <LinearGradient 
+        colors={['#e0f0ff', '#f0d0e0']} 
+        style={styles.gradientContainer}
+      >
+        <ScrollView style={styles.scrollView}>
         <View style={styles.profileHeader}>
           <View style={styles.avatar}>
             <Text style={styles.avatarText}>{user.username.charAt(0).toUpperCase()}</Text>
@@ -225,6 +230,7 @@ export default function ProfileScreen({
           <Text style={styles.footerText}>E-commerce & Game</Text>
         </View>
       </ScrollView>
+      </LinearGradient>
     </SafeAreaView>
   );
 }

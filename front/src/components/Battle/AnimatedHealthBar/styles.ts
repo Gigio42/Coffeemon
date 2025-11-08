@@ -1,4 +1,5 @@
 import { StyleSheet } from 'react-native';
+import { pixelArt } from '../../../theme/pixelArt';
 
 export const styles = StyleSheet.create({
   hudHpBarContainer: {
@@ -6,26 +7,25 @@ export const styles = StyleSheet.create({
   },
   hudHpBarBackground: {
     width: '100%',
-    height: 12,
-    backgroundColor: '#111',
-    borderRadius: 6,
+    height: 14,
+    backgroundColor: '#e0e0e0',
+    borderRadius: pixelArt.borders.radiusSmall,
     overflow: 'hidden',
-    borderWidth: 1,
-    borderColor: '#444',
+    borderWidth: 2,
+    borderTopColor: pixelArt.colors.borderDark,
+    borderLeftColor: pixelArt.colors.borderDark,
+    borderBottomColor: pixelArt.colors.borderLight,
+    borderRightColor: pixelArt.colors.borderLight,
   },
   hudHpBarFill: {
     height: '100%',
-    borderRadius: 6,
   },
   hudHpText: {
     position: 'absolute',
-    right: 6,
-    top: -2,
-    fontSize: 12,
-    fontWeight: 'bold',
-    color: '#fff',
-    textShadowColor: 'rgba(0, 0, 0, 0.7)',
-    textShadowOffset: { width: 1, height: 1 },
-    textShadowRadius: 1,
+    right: pixelArt.spacing.xs,
+    top: -1,
+    ...pixelArt.typography.pixelBody,
+    fontSize: 10,
+    color: pixelArt.colors.textDark,
   },
 });

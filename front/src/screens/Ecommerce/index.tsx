@@ -70,6 +70,7 @@ export default function EcommerceScreen({
             token={token}
             onViewProduct={handleViewProduct}
             onNavigateToCart={() => setCurrentTab(EcommerceTab.CART)}
+            onNavigateToMatchmaking={onNavigateToMatchmaking}
             cartCount={cartCount}
           />
         );

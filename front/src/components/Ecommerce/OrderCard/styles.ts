@@ -6,43 +6,53 @@ export const styles = StyleSheet.create({
   // CONTAINER DO PEDIDO (Borda Externa 3D)
   // ========================================
   orderCard: {
-    padding: pixelArt.spacing.sm,
-    backgroundColor: pixelArt.colors.cardOuterBg,
+    padding: pixelArt.spacing.md,
+    backgroundColor: '#f5f2e8',
     borderRadius: pixelArt.borders.radiusMedium,
+    marginHorizontal: pixelArt.spacing.lg,
     marginBottom: pixelArt.spacing.md,
     borderTopWidth: 3,
     borderLeftWidth: 3,
-    borderTopColor: pixelArt.colors.borderLight,
-    borderLeftColor: pixelArt.colors.borderLight,
+    borderTopColor: '#faf8f0',
+    borderLeftColor: '#faf8f0',
     borderBottomWidth: 3,
     borderRightWidth: 3,
-    borderBottomColor: pixelArt.colors.borderDark,
-    borderRightColor: pixelArt.colors.borderDark,
+    borderBottomColor: '#d4c5a0',
+    borderRightColor: '#d4c5a0',
     ...pixelArt.shadows.card,
+    elevation: 4,
   },
 
   orderCardInner: {
-    backgroundColor: pixelArt.colors.cardInnerBg,
+    backgroundColor: '#ffffff',
     borderRadius: pixelArt.borders.radiusSmall,
-    padding: pixelArt.spacing.md,
+    padding: pixelArt.spacing.lg,
     borderWidth: 2,
-    borderTopColor: '#e0e0e0',
-    borderLeftColor: '#e0e0e0',
-    borderBottomColor: '#f8f8f8',
-    borderRightColor: '#f8f8f8',
+    borderColor: '#f0e6d2',
   },
 
   // ========================================
   // HEADER DO PEDIDO
   // ========================================
   orderHeader: {
+    flexDirection: 'column',
+    marginBottom: 0,
+  },
+
+  orderMainInfo: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: pixelArt.spacing.md,
-    paddingBottom: pixelArt.spacing.sm,
-    borderBottomWidth: 2,
-    borderBottomColor: pixelArt.colors.borderDark,
+    marginBottom: pixelArt.spacing.sm,
+  },
+
+  orderSummary: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingTop: pixelArt.spacing.sm,
+    borderTopWidth: 1,
+    borderTopColor: '#f0e6d2',
   },
 
   orderLeft: {
@@ -51,12 +61,24 @@ export const styles = StyleSheet.create({
 
   orderId: {
     ...pixelArt.typography.pixelSubtitle,
-    color: pixelArt.colors.textDark,
+    color: '#8B4513',
+    fontSize: 14,
+    fontWeight: 'bold',
+  },
+
+  orderStatus: {
+    ...pixelArt.typography.pixelBody,
     fontSize: 12,
-    marginBottom: pixelArt.spacing.xs,
+    fontWeight: 'bold',
   },
 
   orderDate: {
+    ...pixelArt.typography.pixelBody,
+    color: pixelArt.colors.textLight,
+    fontSize: 11,
+  },
+
+  orderQuantity: {
     ...pixelArt.typography.pixelBody,
     color: pixelArt.colors.textLight,
     fontSize: 11,
@@ -133,8 +155,9 @@ export const styles = StyleSheet.create({
 
   orderTotal: {
     ...pixelArt.typography.pixelPrice,
-    color: pixelArt.colors.coffeePrimary,
+    color: '#8B4513',
     fontSize: 16,
+    fontWeight: 'bold',
   },
 
   // ========================================
@@ -166,6 +189,21 @@ export const styles = StyleSheet.create({
   // ========================================
   // ITENS DO PEDIDO (Expandido)
   // ========================================
+  orderDetails: {
+    marginTop: pixelArt.spacing.md,
+    paddingTop: pixelArt.spacing.md,
+    borderTopWidth: 1,
+    borderTopColor: '#f0e6d2',
+  },
+
+  detailsTitle: {
+    ...pixelArt.typography.pixelSubtitle,
+    color: '#8B4513',
+    marginBottom: pixelArt.spacing.sm,
+    fontSize: 12,
+    fontWeight: 'bold',
+  },
+
   itemsList: {
     marginTop: pixelArt.spacing.md,
     paddingTop: pixelArt.spacing.md,
@@ -184,10 +222,12 @@ export const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     marginBottom: pixelArt.spacing.xs,
-    paddingVertical: pixelArt.spacing.xs,
-    paddingHorizontal: pixelArt.spacing.sm,
-    backgroundColor: '#f8f8f8',
+    paddingVertical: pixelArt.spacing.sm,
+    paddingHorizontal: pixelArt.spacing.md,
+    backgroundColor: '#faf8f0',
     borderRadius: pixelArt.borders.radiusSmall,
+    borderWidth: 1,
+    borderColor: '#f0e6d2',
   },
 
   itemName: {

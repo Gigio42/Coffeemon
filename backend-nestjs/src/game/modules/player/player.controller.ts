@@ -50,6 +50,21 @@ export class PlayerController {
   }
 
   @UseGuards(AuthGuard)
+  @Post('me/coffeemons/give-all')
+  async giveAllCoffeemonsToMe(@GetUser('id') userId: number): Promise<{ message: string; count: number }> {
+    try {
+      const player = await this.playerService.findByUserId(userId);
+      const count = await this.playerService.giveAllCoffeemonsToPlayer(player.id);
+      return {
+        message: count > 0 ? `${count} Coffeemons adicionados com sucesso!` : 'Você já possui todos os Coffeemons!',
+        count,
+      };
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  @UseGuards(AuthGuard)
   @Post('me/coffeemons/:coffeemonId')
   async addCoffeemon(
     @GetUser('id') userId: number,

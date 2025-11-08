@@ -1,13 +1,25 @@
-import { StyleSheet } from 'react-native';
+import { StyleSheet, Platform, StatusBar } from 'react-native';
 import { pixelArt } from '../../../theme';
+
+// Para Android, considera a altura da status bar
+const statusBarHeight = Platform.OS === 'android' ? StatusBar.currentHeight || 0 : 0;
 
 export const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: pixelArt.colors.bgLight,
+    backgroundColor: '#f5f2e8', // Cor creme clara - mesma do header
   },
 
   scrollView: {
+    flex: 1,
+  },
+
+  scrollContent: {
+    padding: 16,
+    paddingBottom: 20,
+  },
+
+  gradientContainer: {
     flex: 1,
   },
 
@@ -23,22 +35,24 @@ export const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     padding: pixelArt.spacing.lg,
-    backgroundColor: pixelArt.colors.headerBg,
+    paddingTop: pixelArt.spacing.lg + statusBarHeight, // Evita sobreposição com status bar
+    backgroundColor: '#f5f2e8', // Cor creme clara
     borderBottomWidth: 3,
-    borderBottomColor: pixelArt.colors.borderDark,
+    borderBottomColor: '#d4c5a0', // Borda creme mais escura
     borderTopWidth: 2,
-    borderTopColor: '#ffffff',
+    borderTopColor: '#faf8f0', // Borda creme mais clara
     ...pixelArt.shadows.innerBorder,
   },
 
   backButton: {
-    ...pixelArt.buttons.action,
     marginRight: pixelArt.spacing.md,
+    padding: 8,
   },
 
   backButtonText: {
-    ...pixelArt.buttons.text,
-    fontSize: 12,
+    fontSize: 24,
+    color: '#8B7355',
+    fontWeight: '700',
   },
 
   headerTitle: {
@@ -68,77 +82,18 @@ export const styles = StyleSheet.create({
   // RESUMO DO CARRINHO
   // ========================================
   summaryCard: {
-    padding: pixelArt.spacing.lg,
     backgroundColor: pixelArt.colors.cardOuterBg,
     borderRadius: pixelArt.borders.radiusMedium,
     marginBottom: pixelArt.spacing.lg,
-    borderTopWidth: 3,
-    borderLeftWidth: 3,
-    borderTopColor: pixelArt.colors.borderLight,
-    borderLeftColor: pixelArt.colors.borderLight,
-    borderBottomWidth: 3,
-    borderRightWidth: 3,
-    borderBottomColor: pixelArt.colors.borderDark,
-    borderRightColor: pixelArt.colors.borderDark,
-    ...pixelArt.shadows.card,
-  },
-
-  summaryInner: {
-    backgroundColor: pixelArt.colors.cardInnerBg,
-    borderRadius: pixelArt.borders.radiusSmall,
-    padding: pixelArt.spacing.lg,
-    borderWidth: 2,
-    borderTopColor: '#e0e0e0',
-    borderLeftColor: '#e0e0e0',
-    borderBottomColor: '#f8f8f8',
-    borderRightColor: '#f8f8f8',
-  },
-
-  summaryTitle: {
-    ...pixelArt.typography.pixelSubtitle,
-    color: pixelArt.colors.textDark,
-    marginBottom: pixelArt.spacing.md,
-    textAlign: 'center',
-  },
-
-  summaryRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: pixelArt.spacing.sm,
-  },
-
-  summaryLabel: {
-    ...pixelArt.typography.pixelBody,
-    color: pixelArt.colors.textLight,
-  },
-
-  summaryValue: {
-    ...pixelArt.typography.pixelBody,
-    color: pixelArt.colors.textDark,
-    fontWeight: '700',
-  },
-
-  summaryDivider: {
-    height: 2,
-    backgroundColor: pixelArt.colors.borderDark,
-    marginVertical: pixelArt.spacing.md,
-  },
-
-  summaryTotal: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginTop: pixelArt.spacing.sm,
-  },
-
-  summaryTotalLabel: {
-    ...pixelArt.typography.pixelSubtitle,
-    color: pixelArt.colors.textDark,
-  },
-
-  summaryTotalValue: {
-    ...pixelArt.typography.pixelPrice,
-    color: pixelArt.colors.coffeePrimary,
-    fontSize: 20,
+    padding: pixelArt.spacing.md,
+    borderTopWidth: 1,
+    borderLeftWidth: 1,
+    borderTopColor: '#faf8f0',
+    borderLeftColor: '#faf8f0',
+    borderBottomWidth: 1,
+    borderRightWidth: 1,
+    borderBottomColor: '#d4c5a0',
+    borderRightColor: '#d4c5a0',
   },
 
   // ========================================
@@ -159,7 +114,6 @@ export const styles = StyleSheet.create({
 
   checkoutButton: {
     ...pixelArt.buttons.secondary,
-    flex: 1,
     paddingVertical: pixelArt.spacing.lg,
   },
 
@@ -231,6 +185,7 @@ export const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    backgroundColor: '#f5f2e8', // Cor creme clara - mesma do header
     padding: pixelArt.spacing.xxl,
   },
 
@@ -259,9 +214,9 @@ export const styles = StyleSheet.create({
   // ========================================
   footer: {
     padding: pixelArt.spacing.lg,
-    backgroundColor: pixelArt.colors.headerBg,
+    backgroundColor: '#f5f2e8',
     borderTopWidth: 3,
-    borderTopColor: pixelArt.colors.borderDark,
+    borderTopColor: '#d4c5a0',
     ...pixelArt.shadows.innerBorder,
   },
 
@@ -271,10 +226,6 @@ export const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: pixelArt.spacing.md,
     paddingVertical: pixelArt.spacing.sm,
-    borderTopWidth: 2,
-    borderTopColor: pixelArt.colors.borderLight,
-    borderBottomWidth: 2,
-    borderBottomColor: pixelArt.colors.borderDark,
   },
 
   totalLabel: {
@@ -286,7 +237,7 @@ export const styles = StyleSheet.create({
   totalValue: {
     ...pixelArt.typography.pixelPrice,
     color: pixelArt.colors.coffeePrimary,
-    fontSize: 18,
+    fontSize: 20,
   },
 
   // ========================================
@@ -332,8 +283,8 @@ export const styles = StyleSheet.create({
   },
 
   checkoutIcon: {
-    width: 32,
-    height: 32,
+    width: 20,
+    height: 20,
   },
 
   // ========================================

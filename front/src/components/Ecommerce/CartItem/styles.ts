@@ -3,121 +3,183 @@ import { pixelArt } from '../../../theme';
 
 export const styles = StyleSheet.create({
   // ========================================
-  // CONTAINER DO ITEM (Borda Externa 3D)
+  // CONTAINER MINIMALISTA
   // ========================================
   cartItem: {
-    padding: pixelArt.spacing.sm,
-    backgroundColor: pixelArt.colors.cardOuterBg,
-    borderRadius: pixelArt.borders.radiusMedium,
-    marginBottom: pixelArt.spacing.md,
-    borderTopWidth: 3,
-    borderLeftWidth: 3,
-    borderTopColor: pixelArt.colors.borderLight,
-    borderLeftColor: pixelArt.colors.borderLight,
-    borderBottomWidth: 3,
-    borderRightWidth: 3,
-    borderBottomColor: pixelArt.colors.borderDark,
-    borderRightColor: pixelArt.colors.borderDark,
-    ...pixelArt.shadows.card,
+    padding: 4,
+    backgroundColor: '#f5f2e8',
+    borderRadius: 8,
+    marginBottom: 10,
+    borderTopWidth: 1,
+    borderLeftWidth: 1,
+    borderTopColor: '#faf8f0',
+    borderLeftColor: '#faf8f0',
+    borderBottomWidth: 1,
+    borderRightWidth: 1,
+    borderBottomColor: '#d4c5a0',
+    borderRightColor: '#d4c5a0',
   },
 
   cartItemInner: {
-    backgroundColor: pixelArt.colors.cardInnerBg,
-    borderRadius: pixelArt.borders.radiusSmall,
-    padding: pixelArt.spacing.md,
-    flexDirection: 'row',
-    borderWidth: 2,
-    borderTopColor: '#e0e0e0',
-    borderLeftColor: '#e0e0e0',
-    borderBottomColor: '#f8f8f8',
-    borderRightColor: '#f8f8f8',
+    backgroundColor: '#ffffff',
+    borderRadius: 6,
+    padding: 10,
   },
 
   // ========================================
-  // IMAGEM DO PRODUTO
+  // LAYOUT HORIZONTAL COMPACTO
+  // ========================================
+  contentRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+
+  // ========================================
+  // IMAGEM PEQUENA E COMPACTA
   // ========================================
   itemImage: {
-    width: 80,
-    height: 80,
-    borderRadius: pixelArt.borders.radiusSmall,
-    marginRight: pixelArt.spacing.md,
-    backgroundColor: '#f0e0d0',
-    borderWidth: 2,
-    borderColor: '#e0e0e0',
+    width: 60,
+    height: 60,
+    borderRadius: 6,
+    resizeMode: 'cover',
+  },
+
+  imagePlaceholder: {
+    width: 60,
+    height: 60,
+    borderRadius: 6,
+    backgroundColor: '#f5f2e8',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+
+  placeholderText: {
+    fontSize: 24,
+    opacity: 0.3,
   },
 
   // ========================================
-  // INFO DO PRODUTO
+  // INFORMAÇÕES CENTRAIS
   // ========================================
-  itemInfo: {
+  centerInfo: {
     flex: 1,
-    justifyContent: 'space-between',
+    gap: 4,
   },
 
   itemName: {
     ...pixelArt.typography.pixelSubtitle,
-    color: pixelArt.colors.textDark,
+    color: '#333333',
     fontSize: 12,
-    marginBottom: pixelArt.spacing.xs,
+    fontWeight: '600',
+    lineHeight: 16,
   },
 
-  itemPrice: {
+  unitPrice: {
     ...pixelArt.typography.pixelBody,
-    color: pixelArt.colors.coffeePrimary,
-    fontWeight: '700',
-    marginBottom: pixelArt.spacing.sm,
-    fontSize: 13,
+    color: '#888888',
+    fontSize: 11,
   },
 
   // ========================================
-  // CONTROLES DE QUANTIDADE
+  // CONTROLES DE QUANTIDADE INLINE
   // ========================================
-  quantityContainer: {
+  quantityRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: pixelArt.spacing.sm,
+    gap: 8,
+    marginTop: 2,
   },
 
   quantityButton: {
-    ...pixelArt.buttons.small,
+    width: 26,
+    height: 26,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#8B4513',
+    borderRadius: 4,
+    borderTopWidth: 1,
+    borderLeftWidth: 1,
+    borderBottomWidth: 1,
+    borderRightWidth: 1,
+    borderTopColor: '#a0612f',
+    borderLeftColor: '#a0612f',
+    borderBottomColor: '#6b3410',
+    borderRightColor: '#6b3410',
+  },
+
+  quantityButtonPressed: {
+    backgroundColor: '#6b3410',
+    borderTopColor: '#6b3410',
+    borderLeftColor: '#6b3410',
+    borderBottomColor: '#a0612f',
+    borderRightColor: '#a0612f',
+  },
+
+  quantityButtonDisabled: {
+    opacity: 0.3,
   },
 
   quantityButtonText: {
-    ...pixelArt.buttons.text,
+    color: '#ffffff',
     fontSize: 16,
+    fontWeight: 'bold',
+    fontFamily: 'monospace',
   },
 
   quantityText: {
     ...pixelArt.typography.pixelBody,
-    color: pixelArt.colors.textDark,
+    color: '#333333',
     fontWeight: '700',
-    marginHorizontal: pixelArt.spacing.md,
-    minWidth: 30,
+    fontSize: 14,
+    minWidth: 20,
     textAlign: 'center',
   },
 
-  subtotal: {
-    ...pixelArt.typography.pixelSubtitle,
-    color: pixelArt.colors.coffeePrimary,
-    fontSize: 13,
+  // ========================================
+  // SEÇÃO DIREITA: REMOVER E SUBTOTAL
+  // ========================================
+  rightSection: {
+    alignItems: 'flex-end',
+    gap: 8,
   },
 
-  // ========================================
-  // BOTÃO REMOVER
-  // ========================================
   removeButton: {
-    ...pixelArt.buttons.danger,
-    alignSelf: 'flex-start',
-    paddingVertical: pixelArt.spacing.xs,
-    paddingHorizontal: pixelArt.spacing.sm,
+    width: 24,
+    height: 24,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#f44336',
+    borderRadius: 4,
+    borderTopWidth: 1,
+    borderLeftWidth: 1,
+    borderBottomWidth: 1,
+    borderRightWidth: 1,
+    borderTopColor: '#ef5350',
+    borderLeftColor: '#ef5350',
+    borderBottomColor: '#c62828',
+    borderRightColor: '#c62828',
+  },
+
+  removeButtonPressed: {
+    backgroundColor: '#c62828',
+    borderTopColor: '#c62828',
+    borderLeftColor: '#c62828',
+    borderBottomColor: '#ef5350',
+    borderRightColor: '#ef5350',
   },
 
   removeButtonText: {
-    fontSize: 16,
+    color: '#ffffff',
+    fontSize: 18,
+    fontWeight: 'bold',
+    lineHeight: 18,
   },
 
-  removeButtonIcon: {
-    width: 32,
-    height: 32,
+  subtotalValue: {
+    ...pixelArt.typography.pixelPrice,
+    color: '#8B4513',
+    fontSize: 14,
+    fontWeight: 'bold',
   },
 });

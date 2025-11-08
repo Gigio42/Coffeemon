@@ -1,13 +1,20 @@
-import { StyleSheet } from 'react-native';
+import { StyleSheet, Platform, StatusBar } from 'react-native';
 import { pixelArt } from '../../../theme';
+
+// Para Android, considera a altura da status bar
+const statusBarHeight = Platform.OS === 'android' ? StatusBar.currentHeight || 0 : 0;
 
 export const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: pixelArt.colors.bgLight,
+    backgroundColor: '#f5f2e8', // Cor creme clara - mesma do header
   },
 
   scrollView: {
+    flex: 1,
+  },
+
+  gradientContainer: {
     flex: 1,
   },
 
@@ -23,22 +30,24 @@ export const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     padding: pixelArt.spacing.lg,
-    backgroundColor: pixelArt.colors.headerBg,
+    paddingTop: pixelArt.spacing.lg + statusBarHeight, // Evita sobreposição com status bar
+    backgroundColor: '#f5f2e8', // Cor creme clara
     borderBottomWidth: 3,
-    borderBottomColor: pixelArt.colors.borderDark,
+    borderBottomColor: '#d4c5a0', // Borda creme mais escura
     borderTopWidth: 2,
-    borderTopColor: '#ffffff',
+    borderTopColor: '#faf8f0', // Borda creme mais clara
     ...pixelArt.shadows.innerBorder,
   },
 
   backButton: {
-    ...pixelArt.buttons.action,
     marginRight: pixelArt.spacing.md,
+    padding: 8,
   },
 
   backButtonText: {
-    ...pixelArt.buttons.text,
-    fontSize: 12,
+    fontSize: 24,
+    color: '#8B7355',
+    fontWeight: '700',
   },
 
   // Botões adicionais para estados de erro
@@ -154,6 +163,7 @@ export const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    backgroundColor: '#f5f2e8', // Cor creme clara - mesma do header
     padding: pixelArt.spacing.xxl,
   },
 

@@ -1,35 +1,51 @@
 import { StyleSheet } from 'react-native';
-import { colors, metrics } from '../../theme';
+import { metrics } from '../../theme';
 
 export const styles = StyleSheet.create({
   teamSection: {
     width: '100%',
-    maxWidth: 400,
-    marginBottom: metrics.spacing.lg,
-    backgroundColor: colors.white,
-    borderRadius: metrics.borderRadius.md,
-    padding: metrics.spacing.md,
-    elevation: 3,
+    marginBottom: 20,
   },
+  
   sectionTitle: {
     fontWeight: 'bold',
-    fontSize: metrics.fontSize.lg,
-    marginBottom: metrics.spacing.md,
-    color: colors.text,
+    fontSize: 16,
+    marginBottom: 12,
+    color: '#8B4513',
+    fontFamily: 'monospace',
+    letterSpacing: 0.5,
+    textAlign: 'center',
   },
+  
+  loadingContainer: {
+    paddingVertical: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  
   emptyText: {
-    fontSize: metrics.fontSize.sm,
-    color: '#999',
+    fontSize: 13,
+    color: '#8B4513',
     fontStyle: 'italic',
     textAlign: 'center',
-    paddingVertical: metrics.spacing.lg,
+    paddingVertical: 32,
+    fontFamily: 'monospace',
+    opacity: 0.7,
   },
+  
   teamGrid: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     flexWrap: 'wrap',
+    justifyContent: 'space-between',
+    gap: 8,
   },
-  availableScroll: {
-    maxHeight: 180,
+  
+  carousel: {
+    width: '100%',
+  },
+  
+  carouselContent: {
+    paddingHorizontal: 4,
+    gap: 12,
   },
 });

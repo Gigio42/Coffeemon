@@ -2,7 +2,9 @@ import { StyleSheet, Dimensions } from 'react-native';
 import { pixelArt } from '../../../theme';
 
 const screenWidth = Dimensions.get('window').width;
-const cardWidth = (screenWidth - 48) / 2; // 2 cards per row with margins
+const padding = 32; // 16px de cada lado
+const spacing = 16; // Espaço entre os cards (aumentado)
+const cardWidth = (screenWidth - padding - spacing) / 2; // Exatamente 2 cards por linha
 
 export const styles = StyleSheet.create({
   // ========================================
@@ -10,47 +12,46 @@ export const styles = StyleSheet.create({
   // ========================================
   cardContainer: {
     width: cardWidth,
-    minWidth: 280, // Mínimo para mobile
-    maxWidth: 320, // width: 320px do HTML
-    padding: 12, // Reduzido para mobile
-    backgroundColor: '#e0e0e0', // --card-outer-bg
-    borderRadius: 4, // border-radius: 4px
-    marginBottom: 15,
-    marginHorizontal: 4,
-    // Sombra mais suave para mobile
-    shadowColor: '#888888',
-    shadowOffset: { width: 3, height: 3 },
+    minWidth: cardWidth, // Força a largura exata
+    maxWidth: cardWidth, // Força a largura exata
+    padding: 8,
+    backgroundColor: '#f5f2e8',
+    borderRadius: 4,
+    marginBottom: 16,
+    marginLeft: 0,
+    marginRight: 0,
+    shadowColor: '#d4c5a0',
+    shadowOffset: { width: 2, height: 2 },
     shadowOpacity: 1,
     shadowRadius: 0,
-    elevation: 8,
-    // Bordas mais finas
+    elevation: 6,
     borderTopWidth: 1,
     borderLeftWidth: 1,
-    borderTopColor: '#cccccc', // --border-light (sombra para cima/esquerda)
-    borderLeftColor: '#cccccc',
+    borderTopColor: '#faf8f0',
+    borderLeftColor: '#faf8f0',
     borderBottomWidth: 1,
     borderRightWidth: 1,
-    borderBottomColor: '#888888', // --border-dark (sombra para baixo/direita)
-    borderRightColor: '#888888',
+    borderBottomColor: '#d4c5a0',
+    borderRightColor: '#d4c5a0',
   },
 
   // ========================================
   // CARD INTERNO - Exatamente como no HTML
   // ========================================
   productCard: {
-    backgroundColor: '#ffffff', // --card-inner-bg
+    backgroundColor: '#ffffff', // --card-inner-bg mantém branco
     borderRadius: 2, // border-radius: 2px
-    padding: 12, // Reduzido para mobile
+    padding: 8, // Reduzido para mobile em 2 colunas
     alignItems: 'center',
-    // Simulação do inset box-shadow com bordas mais finas
+    // Simulação do inset box-shadow com bordas mais finas em tons creme
     borderTopWidth: 1,
     borderLeftWidth: 1,
-    borderTopColor: '#f8f8f8', // Borda clara (simula inset light)
-    borderLeftColor: '#f8f8f8',
+    borderTopColor: '#faf8f0', // Borda creme clara (simula inset light)
+    borderLeftColor: '#faf8f0',
     borderBottomWidth: 1,
     borderRightWidth: 1,
-    borderBottomColor: '#e0e0e0', // Borda escura (simula inset shadow)
-    borderRightColor: '#e0e0e0',
+    borderBottomColor: '#f0e6d2', // Borda creme mais escura (simula inset shadow)
+    borderRightColor: '#f0e6d2',
   },
 
   // ========================================
@@ -59,21 +60,21 @@ export const styles = StyleSheet.create({
   cardHeader: {
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 8,
-    backgroundColor: '#f8f8f8', // --header-bg
-    paddingVertical: 8,
-    paddingHorizontal: 12,
+    marginBottom: 6,
+    backgroundColor: '#faf8f0', // Header com tom creme claro
+    paddingVertical: 6,
+    paddingHorizontal: 8,
     borderRadius: 2,
     width: '100%',
-    // Borda 3D do header mais fina
+    // Borda 3D do header mais fina com tons creme
     borderTopWidth: 1,
     borderLeftWidth: 1,
-    borderTopColor: '#ffffff', // Borda clara (cima/esquerda)
+    borderTopColor: '#ffffff', // Borda mais clara (cima/esquerda)
     borderLeftColor: '#ffffff',
     borderBottomWidth: 1,
     borderRightWidth: 1,
-    borderBottomColor: '#cccccc', // Borda escura (baixo/direita)
-    borderRightColor: '#cccccc',
+    borderBottomColor: '#f0e6d2', // Borda creme mais escura (baixo/direita)
+    borderRightColor: '#f0e6d2',
   },
 
   // ========================================
@@ -83,16 +84,12 @@ export const styles = StyleSheet.create({
     position: 'relative',
     width: '100%',
     aspectRatio: 1, // Proporção quadrada
-    maxWidth: 180, // Reduzido para mobile
-    height: 120, // Altura fixa menor
-    marginBottom: 12,
-    backgroundColor: '#f0e0d0',
-    borderWidth: 2,
-    borderColor: '#aaaaaa',
+    maxWidth: 140,
+    height: 120,
+    marginBottom: 8,
     alignSelf: 'center',
     justifyContent: 'center',
     alignItems: 'center',
-    borderRadius: 2,
   },
 
   productImage: {
@@ -139,7 +136,7 @@ export const styles = StyleSheet.create({
   // ========================================
   productName: {
     ...pixelArt.typography.pixelTitle,
-    fontSize: 12, // Ligeiramente maior já que agora tem mais espaço
+    fontSize: 11, // Reduzido para mobile em 2 colunas
     color: '#333333', // --text-dark
     textAlign: 'center' as const,
     width: '100%', // Ocupar toda a largura disponível
@@ -147,19 +144,19 @@ export const styles = StyleSheet.create({
 
   productDescription: {
     ...pixelArt.typography.pixelBody,
-    fontSize: 11, // Reduzido para mobile
+    fontSize: 9, // Reduzido para mobile em 2 colunas
     color: '#555555', // --text-light
-    marginBottom: 10,
-    lineHeight: 16,
+    marginBottom: 6,
+    lineHeight: 12,
     textAlign: 'center' as const,
-    paddingHorizontal: 4,
+    paddingHorizontal: 2,
   },
 
   productPrice: {
     ...pixelArt.typography.pixelPrice,
-    fontSize: 14, // Reduzido para mobile
+    fontSize: 12, // Reduzido para mobile em 2 colunas
     color: '#333333', // --text-dark
-    marginBottom: 12,
+    marginBottom: 8,
     textAlign: 'center' as const,
   },
 
@@ -169,9 +166,9 @@ export const styles = StyleSheet.create({
   addButton: {
     ...pixelArt.buttons.primary,
     width: '100%',
-    // Adaptações para mobile mantendo a essência do HTML
-    paddingVertical: 10, // Menor que o HTML (15px) mas proporcional
-    paddingHorizontal: 16, // Menor que o HTML (25px) mas proporcional
+    // Adaptações para mobile em 2 colunas
+    paddingVertical: 8, // Menor para mobile em 2 colunas
+    paddingHorizontal: 12, // Menor para mobile em 2 colunas
     // Bordas mais finas
     borderTopWidth: 2,
     borderLeftWidth: 2,
@@ -185,6 +182,6 @@ export const styles = StyleSheet.create({
 
   addButtonText: {
     ...pixelArt.buttons.text,
-    fontSize: 10, // Tamanho adequado para mobile
+    fontSize: 9, // Tamanho adequado para mobile em 2 colunas
   },
 });

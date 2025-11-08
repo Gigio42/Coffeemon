@@ -1,14 +1,6 @@
 import React, { useEffect } from 'react';
 import { View, Text } from 'react-native';
-import Animated, {
-  useSharedValue,
-  useAnimatedStyle,
-  withTiming,
-  interpolateColor,
-} from 'react-native-reanimated';
 import { styles } from './styles';
-
-const AnimatedView = Animated.createAnimatedComponent(View);
 
 interface AnimatedHealthBarProps {
   currentHp: number;
@@ -16,36 +8,34 @@ interface AnimatedHealthBarProps {
 }
 
 const AnimatedHealthBar = React.memo(({ currentHp, maxHp }: AnimatedHealthBarProps) => {
-  const hp = useSharedValue(currentHp);
-  const hpPercent = useSharedValue((currentHp / maxHp) * 100);
-
-  useEffect(() => {
-    hp.value = withTiming(currentHp, { duration: 400 });
-    hpPercent.value = withTiming(maxHp > 0 ? (currentHp / maxHp) * 100 : 0, {
-      duration: 400,
-    });
-  }, [currentHp, maxHp]);
-
-  const animatedHpBar = useAnimatedStyle(() => {
-    const width = Math.max(0, hpPercent.value);
-    const color = interpolateColor(
-      width,
-      [0, 20, 50, 100],
-      ['#e74c3c', '#e74c3c', '#f1c40f', '#2ecc71']
-    );
-    return {
-      width: `${width}%`,
-      backgroundColor: color,
-    };
-  });
+  // Validação de valores
+  const validCurrentHp = Math.max(0, currentHp || 0);
+  const validMaxHp = Math.max(1, maxHp || 1);
+  
+  const hpPercent = (validCurrentHp / validMaxHp) * 100;
+  
+  // Calcular cor baseado no HP
+  const getHpColor = (percent: number) => {
+    if (percent <= 20) return '#e74c3c';
+    if (percent <= 50) return '#f1c40f';
+    return '#2ecc71';
+  };
 
   return (
     <View style={styles.hudHpBarContainer}>
       <View style={styles.hudHpBarBackground}>
-        <AnimatedView style={[styles.hudHpBarFill, animatedHpBar]} />
+        <View 
+          style={[
+            styles.hudHpBarFill, 
+            { 
+              width: `${Math.max(0, hpPercent)}%`,
+              backgroundColor: getHpColor(hpPercent)
+            }
+          ]} 
+        />
       </View>
       <Text style={styles.hudHpText}>
-        {Math.floor(hp.value)}/{maxHp}
+        {Math.floor(validCurrentHp)}/{validMaxHp}
       </Text>
     </View>
   );

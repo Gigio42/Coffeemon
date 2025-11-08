@@ -34,7 +34,7 @@ export async function fetchCart(token: string): Promise<CartItem[]> {
                 name: item.product.name,
                 description: item.product.description,
                 price: item.product.price,
-                image: item.product.image,
+                image: item.product.image ? `${serverUrl}/${item.product.image}` : item.product.image,
               },
               quantity: item.quantity,
             });

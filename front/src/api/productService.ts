@@ -22,7 +22,11 @@ export async function fetchProducts(): Promise<Product[]> {
     const data: ProductsResponse = await response.json();
     
     if (data.products && Array.isArray(data.products)) {
-      return data.products;
+      // Adiciona a URL completa para as imagens
+      return data.products.map(product => ({
+        ...product,
+        image: product.image ? `${serverUrl}/${product.image}` : product.image
+      }));
     }
     
     return [];
@@ -56,7 +60,12 @@ export async function fetchProductById(id: number, token?: string): Promise<Prod
     }
 
     const product: Product = await response.json();
-    return product;
+    
+    // Adiciona a URL completa para a imagem
+    return {
+      ...product,
+      image: product.image ? `${serverUrl}/${product.image}` : product.image
+    };
   } catch (error) {
     console.error(`Erro ao buscar produto ${id}:`, error);
     throw error;
