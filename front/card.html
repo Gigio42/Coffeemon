@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Amoreon Latte Card Pixel Art</title>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
+    <style>
+        /* CSS Integrado */
+        :root {
+            /* Cores para facilitar a alteração */
+            --bg-light: #e0f0ff; /* Fundo claro geral */
+            --bg-dark: #f0d0e0; /* Fundo escuro geral */
+            --card-outer-bg: #e0e0e0; /* Fundo do container externo */
+            --card-inner-bg: #ffffff; /* Fundo do card interno */
+            --border-dark: #888; /* Borda escura pixelada */
+            --border-light: #ccc; /* Borda clara pixelada */
+            --header-bg: #f8f8f8; /* Fundo do header */
+            --button-primary: #8a2be2; /* Cor principal do botão */
+            --button-shadow-dark: #6a0ad6; /* Sombra escura do botão */
+            --button-shadow-light: #a453f2; /* Sombra clara do botão */
+            --text-dark: #333;
+            --text-light: #555;
+            --sparkle-color: orange;
+        }
+
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            background: linear-gradient(to bottom right, var(--bg-light), var(--bg-dark)); /* Gradiente do body */
+            font-family: 'VT323', monospace;
+            overflow: hidden;
+            box-sizing: border-box;
+            position: relative; /* Para o efeito de scanline */
+        }
+
+        /* Efeito de scanline para o body */
+        body::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                repeating-linear-gradient(
+                    0deg,
+                    rgba(0,0,0,0.1) 0px,
+                    rgba(0,0,0,0.1) 1px,
+                    transparent 1px,
+                    transparent 2px
+                );
+            pointer-events: none; /* Garante que não interfira com interações */
+            opacity: 0.3; /* Ajuste a opacidade para mais ou menos visível */
+        }
+
+
+        .card-container {
+            /* Borda mais pronunciada e pixelada */
+            padding: 24px; /* Aumenta o padding para borda mais visível */
+            background-color: var(--card-outer-bg);
+            border-radius: 4px; /* Bordas levemente arredondadas, mas ainda "hard-edged" */
+            box-shadow: 
+                6px 6px 0px 0px var(--border-dark),    /* Sombra para a direita/baixo (borda escura) */
+                -6px -6px 0px 0px var(--border-light),  /* Sombra para a esquerda/cima (borda clara) */
+                0 10px 20px rgba(0, 0, 0, 0.3); /* Sombra de profundidade */
+            width: 320px; /* Largura um pouco maior para acomodar a borda */
+            box-sizing: border-box;
+            position: relative;
+        }
+
+        .product-card {
+            background-color: var(--card-inner-bg);
+            border-radius: 2px; /* Mais quadrado */
+            padding: 20px; /* Aumenta o padding interno */
+            text-align: center;
+            /* Borda interna mais definida e pixelada */
+            box-shadow: 
+                inset 3px 3px 0px 0px #e0e0e0, /* Sombra interna para cima/esquerda */
+                inset -3px -3px 0px 0px #f8f8f8, /* Sombra interna para baixo/direita */
+                0 0 5px rgba(0,0,0,0.05);
+            position: relative;
+            height: auto; /* Garante que o card se ajuste ao conteúdo */
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 12px;
+            background-color: var(--header-bg);
+            padding: 8px 15px; /* Mais padding para o header */
+            border-radius: 2px;
+            /* Borda pixelada para o header */
+            box-shadow: 
+                3px 3px 0px 0px var(--border-light),
+                -3px -3px 0px 0px #fff,
+                0 3px 6px rgba(0,0,0,0.1);
+        }
+
+        .grape-icon {
+            width: 36px; /* Aumenta o tamanho do ícone */
+            height: auto;
+            margin-right: 12px;
+            image-rendering: pixelated;
+            /* Placeholder para imagem não carregada */
+            background-color: #d0c0e0;
+            border: 1px dashed #999;
+            color: #666;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.7em;
+            text-align: center;
+            line-height: 1;
+            box-sizing: border-box;
+            min-width: 36px; /* Garante que o placeholder tenha a largura */
+            min-height: 36px; /* Garante que o placeholder tenha a altura */
+        }
+        .grape-icon:not([src=""])::before { content: none; }
+        .grape-icon[src=""] { content: "Grape"; } /* Texto mais curto para placeholder */
+
+
+        .product-name {
+            font-family: 'Press Start 2P', cursive;
+            font-size: 1.1em; /* Levemente maior */
+            color: var(--text-dark);
+            margin: 0;
+            letter-spacing: 1px;
+            text-shadow: 2px 2px 0 #eee; /* Sombra de texto mais pronunciada */
+        }
+
+        .product-description {
+            font-size: 0.95em; /* Levemente maior */
+            color: var(--text-light);
+            margin-bottom: 20px;
+            line-height: 1.5; /* Mais espaçamento entre linhas */
+            text-align: center;
+        }
+
+        .product-image {
+            position: relative;
+            width: 100%;
+            max-width: 220px; /* Aumenta a largura máxima da imagem */
+            margin: 0 auto 20px auto;
+            min-height: 180px; /* Ajusta a altura mínima para o placeholder */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #f0e0d0;
+            border: 2px dashed #aaa; /* Borda tracejada mais grossa */
+            color: #777;
+            font-size: 0.8em;
+            text-align: center;
+        }
+
+        .latte-pixel-art {
+            width: 100%;
+            height: auto;
+            image-rendering: pixelated;
+            display: block;
+        }
+        .latte-pixel-art:not([src=""])::before { content: none; }
+        .latte-pixel-art[src=""] {
+             content: "Latte"; /* Texto mais curto para placeholder */
+             position: absolute;
+             top: 0;
+             left: 0;
+             width: 100%;
+             height: 100%;
+             background-color: #f0e0d0;
+             border: 2px dashed #aaa;
+             display: flex;
+             align-items: center;
+             justify-content: center;
+             color: #777;
+             font-size: 0.8em;
+             text-align: center;
+        }
+
+
+        .sparkles {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            overflow: hidden; /* Garante que os sparkles não saiam do limite */
+        }
+
+        .sparkles span {
+            position: absolute;
+            width: 6px; /* Tamanho menor para os brilhos */
+            height: 6px;
+            background-color: var(--sparkle-color);
+            transform: rotate(45deg);
+            opacity: 0.9;
+            box-shadow: 
+                1px 1px 0px 0px rgba(255,255,255,0.8), /* Borda branca para simular brilho */
+                -1px -1px 0px 0px rgba(100,100,0,0.5); /* Sombra amarelada */
+        }
+
+        /* Posições dos brilhos - ajustadas para serem mais contidas */
+        .sparkles span:nth-child(1) { top: 25%; left: 15%; }
+        .sparkles span:nth-child(2) { top: 65%; left: 10%; }
+        .sparkles span:nth-child(3) { top: 40%; right: 20%; }
+        .sparkles span:nth-child(4) { top: 15%; right: 35%; }
+        .sparkles span:nth-child(5) { top: 75%; right: 15%; }
+
+
+        .product-price {
+            font-family: 'Press Start 2P', cursive;
+            font-size: 1.3em; /* Preço um pouco maior */
+            color: var(--text-dark);
+            margin-bottom: 25px;
+            letter-spacing: 1px;
+            text-shadow: 2px 2px 0 #eee; /* Sombra de texto mais pronunciada */
+        }
+
+        .add-to-cart-button {
+            background-color: var(--button-primary);
+            color: white;
+            padding: 15px 25px; /* Mais padding para o botão */
+            border: none;
+            border-radius: 4px; /* Bordas um pouco mais quadradas */
+            font-family: 'Press Start 2P', cursive;
+            font-size: 0.9em; /* Texto do botão um pouco maior */
+            cursor: pointer;
+            transition: background-color 0.1s ease; /* Transição mais rápida */
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            /* Borda pixelada para o botão */
+            box-shadow: 
+                4px 4px 0px 0px var(--button-shadow-dark), /* Sombra inferior/direita mais forte */
+                -4px -4px 0px 0px var(--button-shadow-light), /* Sombra superior/esquerda mais forte */
+                0 6px 12px rgba(0, 0, 0, 0.3); /* Sombra de profundidade */
+        }
+
+        .add-to-cart-button:hover {
+            background-color: var(--button-shadow-dark); /* Cor de fundo mais escura no hover */
+            /* Ajusta a sombra no hover */
+            box-shadow: 
+                4px 4px 0px 0px #5008a0, /* Sombra ainda mais escura no hover */
+                -4px -4px 0px 0px var(--button-shadow-light),
+                0 6px 12px rgba(0, 0, 0, 0.3);
+            transform: translateY(1px); /* Pequeno movimento para simular clique */
+        }
+        .add-to-cart-button:active {
+            transform: translateY(2px); /* Efeito de "pressionar" */
+            box-shadow: 
+                2px 2px 0px 0px #5008a0,
+                -2px -2px 0px 0px var(--button-shadow-light),
+                0 3px 6px rgba(0, 0, 0, 0.3);
+        }
+    </style>
+</head>
+<body>
+    <div class="card-container">
+        <div class="product-card">
+            <div class="card-header">
+                <!-- Por favor, verifique se "grape-icon.png" está na mesma pasta -->
+                <img src="grape-icon.png" alt="Ícone de Uva" class="grape-icon">
+                <h2 class="product-name">AMOREON LATTE</h2>
+            </div>
+            <p class="product-description">
+                Café com leite e essência de uva mística, decorado com topping de frutas roxas.
+            </p>
+            <div class="product-image">
+                <!-- Por favor, verifique se "latte-image.png" está na mesma pasta -->
+                <img src="latte-image.png" alt="Amoreon Latte" class="latte-pixel-art">
+                <div class="sparkles">
+                    <span></span><span></span><span></span><span></span><span></span>
+                </div>
+            </div>
+            <p class="product-price">R$ 18,00</p>
+            <button class="add-to-cart-button">ADICIONAR AO CARRINHO</button>
+        </div>
+    </div>
+
+    <script>
+        // JavaScript Integrado
+        document.addEventListener('DOMContentLoaded', () => {
+            const addToCartButton = document.querySelector('.add-to-cart-button');
+
+            if (addToCartButton) {
+                addToCartButton.addEventListener('click', () => {
+                    alert('Amoreon Latte adicionado ao carrinho!');
+                });
+            }
+        });
+    </script>
+</body>
+</html>

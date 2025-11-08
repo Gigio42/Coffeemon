@@ -15,46 +15,84 @@ export async function createSocket(
   token: string,
   callbacks: SocketCallbacks = {}
 ): Promise<Socket> {
-  const url = await getServerUrl();
+  try {
+    const url = await getServerUrl();
+    console.log('Creating socket connection to:', url);
 
-  // Conecta ao servidor Socket.IO com autenticação JWT
-  const socket = io(url, {
-    extraHeaders: { Authorization: `Bearer ${token}` },
-  });
+    // Conecta ao servidor Socket.IO com autenticação JWT e configurações otimizadas
+    const socket = io(url, {
+      extraHeaders: { Authorization: `Bearer ${token}` },
+      transports: ['websocket', 'polling'], // Tenta websocket primeiro
+      reconnection: true,
+      reconnectionAttempts: 5,
+      reconnectionDelay: 1000,
+      timeout: 20000,
+      forceNew: true, // Força nova conexão
+    });
 
-  // Evento: Socket conectado com sucesso
-  socket.on('connect', () => {
-    console.log('Socket connected:', socket.id);
-    if (callbacks.onConnect) {
-      callbacks.onConnect(socket.id || '');
-    }
-  });
+    // Evento: Socket conectado com sucesso
+    socket.on('connect', () => {
+      console.log('Socket connected:', socket.id);
+      if (callbacks.onConnect) {
+        try {
+          callbacks.onConnect(socket.id || '');
+        } catch (err) {
+          console.error('Error in onConnect callback:', err);
+        }
+      }
+    });
 
-  // Evento: Erro de conexão
-  socket.on('connect_error', (err: Error) => {
-    console.error('Socket connection error:', err);
-    if (callbacks.onConnectError) {
-      callbacks.onConnectError(err);
-    }
-  });
+    // Evento: Erro de conexão
+    socket.on('connect_error', (err: Error) => {
+      console.error('Socket connection error:', err.message, err.stack);
+      if (callbacks.onConnectError) {
+        try {
+          callbacks.onConnectError(err);
+        } catch (callbackErr) {
+          console.error('Error in onConnectError callback:', callbackErr);
+        }
+      }
+    });
 
-  // Debug: Log de todos os eventos recebidos
-  socket.onAny((eventName: string, ...args: any[]) => {
-    console.log('Socket event received:', eventName, args);
-    if (callbacks.onAnyEvent) {
-      callbacks.onAnyEvent(eventName, ...args);
-    }
-  });
+    // Evento: Desconexão
+    socket.on('disconnect', (reason: string) => {
+      console.log('Socket disconnected:', reason);
+    });
 
-  // Evento: Partida encontrada! (PvP ou PvE)
-  socket.on('matchFound', (data: any) => {
-    console.log('Match found! Full data:', data);
-    if (callbacks.onMatchFound) {
-      callbacks.onMatchFound(data);
-    }
-  });
+    // Evento: Erro genérico
+    socket.on('error', (err: Error) => {
+      console.error('Socket error:', err.message, err.stack);
+    });
 
-  return socket;
+    // Debug: Log de todos os eventos recebidos
+    socket.onAny((eventName: string, ...args: any[]) => {
+      console.log('Socket event received:', eventName);
+      if (callbacks.onAnyEvent) {
+        try {
+          callbacks.onAnyEvent(eventName, ...args);
+        } catch (err) {
+          console.error('Error in onAnyEvent callback:', err);
+        }
+      }
+    });
+
+    // Evento: Partida encontrada! (PvP ou PvE)
+    socket.on('matchFound', (data: any) => {
+      console.log('Match found! Battle ID:', data?.battleId);
+      if (callbacks.onMatchFound) {
+        try {
+          callbacks.onMatchFound(data);
+        } catch (err) {
+          console.error('Error in onMatchFound callback:', err);
+        }
+      }
+    });
+
+    return socket;
+  } catch (err) {
+    console.error('Error creating socket:', err);
+    throw err;
+  }
 }
 
 /**

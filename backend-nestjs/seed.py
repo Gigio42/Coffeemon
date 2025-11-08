@@ -81,16 +81,16 @@ def update_admin_role():
 def create_products():
     print("[4/8] Creating products...")
     products = [
-        {"name": "Cappuccino Classico", "description": "Cafe espresso com leite vaporizado e espuma cremosa. Perfeito para comecar o dia!", "price": 12.50, "image": "https://images.unsplash.com/photo-1572442388796-11668a67e53d?w=400"},
-        {"name": "Cafe Expresso", "description": "Cafe puro e intenso, preparado sob pressao. Para os verdadeiros amantes de cafe.", "price": 8.00, "image": "https://images.unsplash.com/photo-1510591509098-f4fdc6d0ff04?w=400"},
-        {"name": "Cafe Latte", "description": "Espresso suave com muito leite vaporizado. Cremoso e delicioso.", "price": 13.00, "image": "https://images.unsplash.com/photo-1461023058943-07fcbe16d735?w=400"},
-        {"name": "Mocha", "description": "Espresso com chocolate e leite vaporizado. Uma combinacao irresistivel!", "price": 15.00, "image": "https://images.unsplash.com/photo-1578314675249-a6910f80cc4e?w=400"},
-        {"name": "Macchiato", "description": "Espresso manchado com espuma de leite. Forte e marcante.", "price": 10.00, "image": "https://images.unsplash.com/photo-1557006021-b85faa2bc5e2?w=400"},
-        {"name": "Cafe Americano", "description": "Espresso diluido em agua quente. Suave e aromatico.", "price": 9.00, "image": "https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?w=400"},
-        {"name": "Flat White", "description": "Espresso duplo com microespuma aveludada. Textura perfeita.", "price": 14.00, "image": "https://images.unsplash.com/photo-1570968915860-54d5c301fa9f?w=400"},
-        {"name": "Cafe Gelado", "description": "Cafe frio refrescante com gelo. Ideal para dias quentes.", "price": 11.00, "image": "https://images.unsplash.com/photo-1517487881594-2787fef5ebf7?w=400"},
-        {"name": "Affogato", "description": "Sorvete de baunilha coberto com espresso quente. Uma sobremesa deliciosa!", "price": 16.00, "image": "https://images.unsplash.com/photo-1563729784474-d77dbb933a9e?w=400"},
-        {"name": "Cafe com Caramelo", "description": "Latte cremoso com calda de caramelo. Doce e saboroso.", "price": 14.50, "image": "https://images.unsplash.com/photo-1534778101976-62847782c213?w=400"}
+        {"name": "Cappuccino Classico", "description": "Cafe espresso com leite vaporizado e espuma cremosa. Perfeito para comecar o dia!", "price": 12.50, "image": "uploads/products/capuccino.png"},
+        {"name": "Cafe Expresso", "description": "Cafe puro e intenso, preparado sob pressao. Para os verdadeiros amantes de cafe.", "price": 8.00, "image": "uploads/products/expresso.png"},
+        {"name": "Cafe Latte", "description": "Espresso suave com muito leite vaporizado. Cremoso e delicioso.", "price": 11.00, "image": "uploads/products/cafelatte.png"},
+        {"name": "Mocha", "description": "Espresso com chocolate e leite vaporizado. Uma combinacao irresistivel!", "price": 13.50, "image": "uploads/products/mocha.png"},
+        {"name": "Macchiato", "description": "Espresso manchado com espuma de leite. Forte e marcante.", "price": 9.50, "image": "uploads/products/macchiato.png"},
+        {"name": "Cafe Americano", "description": "Espresso diluido em agua quente. Suave e aromatico.", "price": 7.50, "image": "uploads/products/americano.png"},
+        {"name": "Flat White", "description": "Espresso duplo com microespuma aveludada. Textura perfeita.", "price": 11.50, "image": "uploads/products/coldbrew.png"},
+        {"name": "Cafe Gelado", "description": "Cafe frio refrescante com gelo. Ideal para dias quentes.", "price": 10.00, "image": "uploads/products/coldbrew.png"},
+        {"name": "Affogato", "description": "Sorvete de baunilha coberto com espresso quente. Uma sobremesa deliciosa!", "price": 15.00, "image": "uploads/products/affogato.png"},
+        {"name": "Cafe com Caramelo", "description": "Latte cremoso com calda de caramelo. Doce e saboroso.", "price": 14.00, "image": "uploads/products/cafecomcaramelo.png"}
     ]
     
     conn = sqlite3.connect(DB_PATH)

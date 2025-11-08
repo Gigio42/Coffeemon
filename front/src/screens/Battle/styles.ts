@@ -1,107 +1,343 @@
-import { StyleSheet } from 'react-native';
+import { StyleSheet, Dimensions } from 'react-native';
+import { pixelArt } from '../../theme/pixelArt';
+
+const { width, height } = Dimensions.get('window');
 
 export const styles = StyleSheet.create({
+  // ========================================
+  // CONTAINER PRINCIPAL
+  // ========================================
   battleContainer: {
     flex: 1,
-    backgroundColor: '#333',
+    backgroundColor: '#87CEEB',
   },
+  
+  // ========================================
+  // ARENA DE BATALHA - Fundo com Sprites
+  // ========================================
   battleArena: {
     position: 'relative',
     width: '100%',
-    flex: 1.1,
-    overflow: 'hidden',
+    flex: 1,
+    backgroundColor: '#87CEEB',
   },
+  
+  // ========================================
+  // BARRAS DE HP - Topo da Tela (Estilo Pixel Art)
+  // Container Principal - background-color semi-transparente, border-radius, padding
+  // ========================================
+  hudContainer: {
+    position: 'absolute',
+    backgroundColor: 'rgba(245, 230, 211, 0.85)',
+    borderRadius: 8,
+    borderWidth: 2,
+    borderColor: 'rgba(139, 115, 85, 0.8)',
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    minWidth: 160,
+    maxWidth: 180,
+    zIndex: 30,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  
+  // HUD do Player (esquerda superior)
+  playerHudPosition: {
+    top: 60,
+    left: 20,
+  },
+  
+  // HUD do Oponente (direita superior)
+  opponentHudPosition: {
+    top: 60,
+    right: 20,
+  },
+  
+  // Container Principal com display: flex e align-items: center
+  hudMainContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  
+  // Seção do Ícone - Pixel Art com image-rendering: pixelated
+  hudPixelIcon: {
+    width: 34,
+    height: 34,
+    marginRight: 8,
+  },
+  
+  // Bloco de Informações - flex-direction: column
+  hudInfoBlock: {
+    flex: 1,
+    flexDirection: 'column',
+  },
+  
+  // Rótulo de Texto - font-family pixelada, text-transform: uppercase
+  hudNameLabel: {
+    fontFamily: 'monospace',
+    fontSize: 12,
+    fontWeight: 'bold',
+    color: '#333333',
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+    marginBottom: 4,
+  },
+  
+  // Container da Barra de Status - display: flex, flex-direction: row
+  hudStatusBarContainer: {
+    flexDirection: 'row',
+    height: 12,
+    borderWidth: 2,
+    borderColor: '#444444',
+    backgroundColor: 'rgba(224, 224, 224, 0.5)',
+    borderRadius: 2,
+    paddingHorizontal: 2,
+  },
+  
+  // Segmentos da Barra (Filhos) - flex: 1, height fixo
+  hudStatusSegment: {
+    flex: 1,
+    height: '100%',
+    marginHorizontal: 0.6,
+    borderRadius: 1,
+  },
+  
+  // Removido hudHeader, hudIcon, hudName, hudHpBarContainer, hudHpBarSegments, hudHpSegment, hudHpFraction
+  // pois agora usamos a nova estrutura
+  
+  // ========================================
+  // SPRITES DOS COFFEEMON
+  // ========================================
   coffeemonSpriteContainer: {
     position: 'absolute',
-    width: '50%',
-    height: '50%',
     alignItems: 'center',
     justifyContent: 'center',
   },
+  
+  // Player (esquerda, maior)
   playerSpritePosition: {
-    bottom: '5%',
-    right: '5%',
+    bottom: '8%',
+    left: '8%',
+    width: width * 0.45,
+    height: height * 0.35,
   },
+  
+  // Oponente (direita, menor)
   opponentSpritePosition: {
-    top: '10%',
-    left: '5%',
+    top: '15%',
+    right: '8%',
+    width: width * 0.32,
+    height: height * 0.25,
   },
+  
   pokemonImg: {
     width: '100%',
     height: '100%',
-    resizeMode: 'contain',
   },
+  
+  // ========================================
+  // ÁREA DE LOGS (Lado Direito sem caixa)
+  // ========================================
+  battleLogContainer: {
+    position: 'absolute',
+    right: 0,
+    top: '70%', // Ajustado para 70% para permitir expansão para cima
+    width: '350%', // Expansão máxima
+    zIndex: 10, // Menor que o battleActionsContainer (que é 20)
+    alignItems: 'flex-end',
+  },
+  
+  logGradient: {
+    flex: 1,
+    paddingTop: 12,
+    paddingBottom: 12,
+    paddingRight: 12, // Reduzido de 120 para 12 para aproximar texto da lateral
+    paddingLeft: 0,
+    borderTopLeftRadius: 16,
+  },
+
+  logScrollView: {
+    maxHeight: height * 0.65, // Aumentado de 0.45 para 0.65 para permitir mais expansão
+  },
+
+  logScrollContent: {
+    gap: 6,
+  },
+
+  logEmptyState: {
+    fontSize: 11,
+    fontFamily: 'monospace',
+    color: 'rgba(255, 255, 255, 0.7)',
+    textAlign: 'right',
+  },
+
+  logEntryRow: {
+    flexDirection: 'column',
+    alignItems: 'flex-end',
+    marginBottom: 4,
+  },
+
+  logEntryTextContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'flex-end',
+  },
+
+  logEntryText: {
+    fontSize: 12,
+    fontFamily: 'monospace',
+    color: '#FFFFFF',
+    textAlign: 'right',
+    letterSpacing: 0.5,
+  },
+  
+  // ========================================
+  // MENSAGENS DE EVENTO - Centro da Tela (Popup)
+  // ========================================
   popupContainer: {
     position: 'absolute',
-    bottom: '40%',
-    left: 0,
-    right: 0,
+    top: '50%',
+    left: '50%',
+    transform: [{ translateX: -150 }, { translateY: -50 }],
+    width: 300,
     alignItems: 'center',
     zIndex: 100,
   },
+  
   popupText: {
-    backgroundColor: 'rgba(0, 0, 0, 0.8)',
-    color: 'white',
+    backgroundColor: '#FFFFF0',
+    color: '#333',
     paddingHorizontal: 20,
-    paddingVertical: 10,
-    borderRadius: 20,
-    fontSize: 16,
-    fontWeight: 'bold',
+    paddingVertical: 16,
+    borderRadius: 8,
+    borderWidth: 3,
+    borderColor: '#333',
     textAlign: 'center',
-    overflow: 'hidden',
-  },
-  gamifiedLogContainer: {
-    backgroundColor: 'rgba(0, 0, 0, 0.75)',
-    borderRadius: 15,
-    paddingHorizontal: 16,
-    paddingTop: 12,
-    paddingBottom: 8,
-    marginBottom: 12,
-    minHeight: 110,
-    maxHeight: 110,
-    borderWidth: 2,
-    borderColor: 'rgba(255, 255, 255, 0.2)',
-  },
-  logStatusText: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#fff',
-    textAlign: 'center',
-    marginBottom: 8,
-  },
-  logStatusTurn: {
-    color: '#2ecc71',
-  },
-  logStatusWait: {
-    color: '#f39c12',
-  },
-  logStatusResolving: {
-    color: '#e74c3c',
-  },
-  logSeparator: {
-    height: 1,
-    backgroundColor: 'rgba(255, 255, 255, 0.3)',
-    marginBottom: 8,
-  },
-  logScrollView: {
-    flex: 1,
-  },
-  logText: {
     fontSize: 14,
-    color: '#fff',
-    marginBottom: 4,
+    fontWeight: 'bold',
     fontFamily: 'monospace',
+    lineHeight: 20,
   },
+  
+  // ========================================
+  // CONTAINER DE AÇÕES - Painel Inferior
+  // ========================================
   battleActionsContainer: {
-    backgroundColor: '#3b3b3b',
-    padding: 16,
-    flex: 1,
-    borderTopWidth: 2,
-    borderTopColor: '#555',
-    minHeight: 400,
+    backgroundColor: '#F5E6D3',
+    paddingHorizontal: 12,
+    paddingTop: 13,
+    borderTopWidth: 3,
+    borderTopColor: '#8B7355',
+    zIndex: 20, // Garantir que fique acima dos logs (zIndex: 10)
   },
+  
+  // ========================================
+  // ÁREA DE PROMPT DE AÇÃO
+  // ========================================
+  actionPromptContainer: {
+    backgroundColor: '#FFFFF0',
+    borderRadius: 6,
+    borderWidth: 3,
+    borderColor: '#333',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    marginBottom: 12,
+    alignItems: 'center',
+  },
+  actionPromptText: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    fontFamily: 'monospace',
+    color: '#333',
+    textAlign: 'center',
+    textTransform: 'uppercase',
+  },
+  
+  // ========================================
+  // GRID DE BOTÕES DE AÇÃO (4 botões principais)
+  // ========================================
+  mainActionsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+    marginBottom: 12,
+  },
+  mainActionButton: {
+    width: '48%',
+    paddingVertical: 14,
+    paddingHorizontal: 12,
+    marginBottom: 8,
+    borderRadius: 6,
+    borderWidth: 3,
+    borderColor: '#333',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  // Botão Atacar (Vermelho/Laranja)
+  attackActionButton: {
+    backgroundColor: '#E57C5C',
+    borderTopWidth: 4,
+    borderLeftWidth: 4,
+    borderTopColor: '#F5A88E',
+    borderLeftColor: '#F5A88E',
+  },
+  // Botão Habilidade Especial (Roxo)
+  specialActionButton: {
+    backgroundColor: '#9C7DBF',
+    borderTopWidth: 4,
+    borderLeftWidth: 4,
+    borderTopColor: '#C5A8E0',
+    borderLeftColor: '#C5A8E0',
+  },
+  // Botão Item (Amarelo)
+  itemActionButton: {
+    backgroundColor: '#F5D663',
+    borderTopWidth: 4,
+    borderLeftWidth: 4,
+    borderTopColor: '#FFE896',
+    borderLeftColor: '#FFE896',
+  },
+  // Botão Fugir (Azul)
+  fleeActionButton: {
+    backgroundColor: '#7DB8D9',
+    borderTopWidth: 4,
+    borderLeftWidth: 4,
+    borderTopColor: '#A8D5ED',
+    borderLeftColor: '#A8D5ED',
+  },
+  actionButtonDisabled: {
+    opacity: 0.5,
+    backgroundColor: '#C0C0C0',
+    borderTopColor: '#D0D0D0',
+    borderLeftColor: '#D0D0D0',
+  },
+  actionButtonContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  actionButtonIcon: {
+    fontSize: 24,
+    marginRight: pixelArt.spacing.sm,
+  },
+  actionButtonText: {
+    ...pixelArt.typography.pixelButton,
+    fontSize: 13,
+    color: '#FFFFFF',
+    textShadowColor: 'rgba(0,0,0,0.5)',
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 0,
+  },
+  
+  // ========================================
+  // GRID DE ATAQUES (quando modo ataque ativo)
+  // ========================================
   attacksContainer: {
-    marginBottom: 16,
+    marginBottom: pixelArt.spacing.md,
   },
   attacksGrid: {
     flexDirection: 'row',
@@ -109,40 +345,53 @@ export const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   attackButton: {
-    width: '48%',
-    marginBottom: 8,
-    borderRadius: 8,
-    paddingVertical: 12,
-    paddingHorizontal: 8,
-    minHeight: 60,
-    backgroundColor: '#4CAF50',
+    marginBottom: pixelArt.spacing.sm,
+    borderRadius: pixelArt.borders.radiusMedium,
+    paddingVertical: pixelArt.spacing.lg,
+    paddingHorizontal: pixelArt.spacing.md,
+    backgroundColor: '#9C7DBF',
+    borderWidth: pixelArt.borders.widthBold,
+    borderColor: '#333',
+    borderTopWidth: 4,
+    borderLeftWidth: 4,
+    borderTopColor: '#C5A8E0',
+    borderLeftColor: '#C5A8E0',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   attackButtonDisabled: {
-    backgroundColor: '#bdc3c7',
-    opacity: 0.6,
+    backgroundColor: '#C0C0C0',
+    opacity: 0.5,
+    borderTopColor: '#D0D0D0',
+    borderLeftColor: '#D0D0D0',
   },
   attackButtonContent: {
-    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
   },
   attackTypeIcon: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    marginRight: 8,
-    backgroundColor: '#FF6B6B',
+    fontSize: 28,
+    marginBottom: pixelArt.spacing.xs,
   },
   attackButtonText: {
-    color: '#fff',
-    fontSize: 14,
-    fontWeight: 'bold',
-    textAlign: 'center',
-    flex: 1,
+    ...pixelArt.typography.pixelButton,
+    fontSize: 12,
+    color: '#FFFFFF',
+    textShadowColor: 'rgba(0,0,0,0.5)',
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 0,
   },
-  pokemonSwitchContainer: {
-    marginBottom: 16,
+  movePowerBadge: {
+    ...pixelArt.typography.pixelBody,
+    fontSize: 10,
+    color: '#FFFFFF',
+    marginTop: pixelArt.spacing.xs,
+    opacity: 0.9,
   },
+  
+  // ========================================
+  // BOTÕES DE TROCA - Pixel Art Cards
+  // ========================================
   switchGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -150,45 +399,58 @@ export const styles = StyleSheet.create({
   },
   switchButton: {
     width: '48%',
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    paddingVertical: 12,
-    paddingHorizontal: 8,
-    marginBottom: 8,
+    backgroundColor: '#FFFFFF',
+    borderRadius: pixelArt.borders.radiusMedium,
+    paddingVertical: pixelArt.spacing.md,
+    paddingHorizontal: pixelArt.spacing.sm,
+    marginBottom: pixelArt.spacing.sm,
     alignItems: 'center',
     justifyContent: 'center',
-    minHeight: 100,
-    elevation: 3,
-    borderWidth: 2,
-    borderColor: '#e0e0e0',
+    minHeight: 120,
+    borderWidth: pixelArt.borders.widthBold,
+    borderColor: '#333',
   },
   switchButtonDisabled: {
-    backgroundColor: '#f5f5f5',
+    backgroundColor: '#C0C0C0',
     opacity: 0.5,
   },
   switchButtonImage: {
-    width: 60,
-    height: 60,
-    marginBottom: 6,
+    width: 70,
+    height: 70,
+    marginBottom: pixelArt.spacing.sm,
   },
   switchButtonName: {
+    ...pixelArt.typography.pixelSubtitle,
+    fontSize: 12,
     color: '#333',
-    fontSize: 13,
-    fontWeight: 'bold',
     textAlign: 'center',
-    marginBottom: 6,
+    marginBottom: pixelArt.spacing.xs,
   },
   switchButtonHpBar: {
     width: '90%',
-    height: 6,
-    backgroundColor: '#e0e0e0',
-    borderRadius: 3,
+    height: 10,
+    backgroundColor: '#E0E0E0',
+    borderRadius: pixelArt.borders.radiusSmall,
+    borderWidth: 2,
+    borderColor: '#333',
     overflow: 'hidden',
+    marginTop: pixelArt.spacing.xs,
   },
   switchButtonHpFill: {
     height: '100%',
     backgroundColor: '#4CAF50',
   },
+  switchButtonHpText: {
+    ...pixelArt.typography.pixelBody,
+    fontSize: 10,
+    color: '#666',
+    marginTop: 4,
+    fontWeight: 'bold',
+  },
+  
+  // ========================================
+  // BOTÕES INFERIORES - Pixel Art
+  // ========================================
   bottomButtonsContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -196,31 +458,36 @@ export const styles = StyleSheet.create({
   },
   bagButton: {
     width: '48%',
-    backgroundColor: '#666',
-    borderRadius: 8,
-    paddingVertical: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
-    opacity: 0.6,
+    ...pixelArt.buttons.action,
+    opacity: 0.5,
   },
   bagButtonText: {
-    color: '#fff',
-    fontSize: 14,
-    fontWeight: 'bold',
+    ...pixelArt.buttons.text,
   },
   runButton: {
     width: '48%',
-    backgroundColor: '#e74c3c',
-    borderRadius: 8,
-    paddingVertical: 16,
+    backgroundColor: pixelArt.buttons.danger.backgroundColor,
+    borderRadius: pixelArt.buttons.danger.borderRadius,
+    paddingVertical: pixelArt.buttons.danger.paddingVertical,
     alignItems: 'center',
     justifyContent: 'center',
+    borderTopWidth: pixelArt.buttons.danger.borderTopWidth,
+    borderLeftWidth: pixelArt.buttons.danger.borderLeftWidth,
+    borderTopColor: pixelArt.buttons.danger.borderTopColor,
+    borderLeftColor: pixelArt.buttons.danger.borderLeftColor,
+    borderBottomWidth: pixelArt.buttons.danger.borderBottomWidth,
+    borderRightWidth: pixelArt.buttons.danger.borderRightWidth,
+    borderBottomColor: pixelArt.buttons.danger.borderBottomColor,
+    borderRightColor: pixelArt.buttons.danger.borderRightColor,
+    ...pixelArt.shadows.button,
   },
   runButtonText: {
-    color: '#fff',
-    fontSize: 14,
-    fontWeight: 'bold',
+    ...pixelArt.buttons.text,
   },
+  
+  // ========================================
+  // OVERLAY DE FIM DE BATALHA
+  // ========================================
   battleEndOverlay: {
     position: 'absolute',
     top: 0,
@@ -233,50 +500,51 @@ export const styles = StyleSheet.create({
     alignItems: 'center',
   },
   battleEndCard: {
-    backgroundColor: '#fff',
-    borderRadius: 20,
-    padding: 30,
+    backgroundColor: pixelArt.colors.cardInnerBg,
+    borderRadius: pixelArt.borders.radiusMedium,
+    padding: pixelArt.spacing.xxl,
     alignItems: 'center',
     width: '85%',
     maxWidth: 400,
-    elevation: 10,
+    borderWidth: pixelArt.borders.widthBold,
+    borderTopColor: pixelArt.colors.borderLight,
+    borderLeftColor: pixelArt.colors.borderLight,
+    borderBottomColor: pixelArt.colors.borderDark,
+    borderRightColor: pixelArt.colors.borderDark,
+    ...pixelArt.shadows.outerBorder,
   },
   battleEndTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#FFD700',
+    ...pixelArt.typography.pixelTitle,
+    fontSize: 20,
+    color: pixelArt.colors.sparkleColor,
     textAlign: 'center',
-    marginBottom: 20,
-    textShadowColor: 'rgba(0, 0, 0, 0.3)',
-    textShadowOffset: { width: 2, height: 2 },
-    textShadowRadius: 4,
+    marginBottom: pixelArt.spacing.lg,
   },
   battleEndWinner: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#333',
+    ...pixelArt.typography.pixelSubtitle,
+    fontSize: 16,
+    color: pixelArt.colors.textDark,
     textAlign: 'center',
-    marginBottom: 15,
+    marginBottom: pixelArt.spacing.md,
   },
   battleEndSubtext: {
-    fontSize: 14,
-    color: '#666',
+    ...pixelArt.typography.pixelBody,
+    fontSize: 12,
+    color: pixelArt.colors.textLight,
     textAlign: 'center',
-    marginBottom: 25,
+    marginBottom: pixelArt.spacing.xl,
   },
   battleEndButton: {
-    backgroundColor: '#2ecc71',
-    borderRadius: 10,
-    paddingVertical: 15,
-    paddingHorizontal: 40,
+    ...pixelArt.buttons.primary,
     minWidth: 200,
   },
   battleEndButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: 'bold',
-    textAlign: 'center',
+    ...pixelArt.buttons.text,
   },
+  
+  // ========================================
+  // MODAL DE SELEÇÃO - Pixel Art
+  // ========================================
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0, 0, 0, 0.7)',
@@ -284,49 +552,60 @@ export const styles = StyleSheet.create({
     alignItems: 'center',
   },
   modalContent: {
-    backgroundColor: '#fff',
-    borderRadius: 15,
-    padding: 25,
+    backgroundColor: pixelArt.colors.cardInnerBg,
+    borderRadius: pixelArt.borders.radiusMedium,
+    padding: pixelArt.spacing.lg,
     width: '90%',
     maxWidth: 600,
     maxHeight: '80%',
-    elevation: 10,
+    borderWidth: pixelArt.borders.widthBold,
+    borderTopColor: pixelArt.colors.borderLight,
+    borderLeftColor: pixelArt.colors.borderLight,
+    borderBottomColor: pixelArt.colors.borderDark,
+    borderRightColor: pixelArt.colors.borderDark,
+    ...pixelArt.shadows.outerBorder,
   },
   modalTitle: {
-    fontSize: 22,
-    fontWeight: 'bold',
-    color: '#333',
+    ...pixelArt.typography.pixelTitle,
+    fontSize: 16,
+    color: pixelArt.colors.textDark,
     textAlign: 'center',
-    marginBottom: 20,
+    marginBottom: pixelArt.spacing.lg,
   },
   modalScroll: {
     maxHeight: 500,
   },
   teamColumn: {
-    marginBottom: 20,
-    borderWidth: 1,
-    borderColor: '#e0e0e0',
-    borderRadius: 10,
-    padding: 15,
+    marginBottom: pixelArt.spacing.lg,
+    borderWidth: pixelArt.borders.widthThick,
+    borderTopColor: pixelArt.colors.borderLight,
+    borderLeftColor: pixelArt.colors.borderLight,
+    borderBottomColor: pixelArt.colors.borderDark,
+    borderRightColor: pixelArt.colors.borderDark,
+    borderRadius: pixelArt.borders.radiusMedium,
+    padding: pixelArt.spacing.md,
     backgroundColor: '#f9f9f9',
   },
   teamColumnTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#555',
+    ...pixelArt.typography.pixelSubtitle,
+    fontSize: 14,
+    color: pixelArt.colors.textLight,
     textAlign: 'center',
-    marginBottom: 15,
+    marginBottom: pixelArt.spacing.md,
   },
   teamCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#fff',
-    borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 10,
-    padding: 12,
-    marginBottom: 10,
-    elevation: 3,
+    backgroundColor: pixelArt.colors.cardInnerBg,
+    borderWidth: pixelArt.borders.widthThick,
+    borderTopColor: pixelArt.colors.borderLight,
+    borderLeftColor: pixelArt.colors.borderLight,
+    borderBottomColor: pixelArt.colors.borderDark,
+    borderRightColor: pixelArt.colors.borderDark,
+    borderRadius: pixelArt.borders.radiusMedium,
+    padding: pixelArt.spacing.md,
+    marginBottom: pixelArt.spacing.sm,
+    ...pixelArt.shadows.innerBorder,
   },
   teamCardDisabled: {
     opacity: 0.5,
@@ -338,19 +617,70 @@ export const styles = StyleSheet.create({
   teamCardImage: {
     width: 60,
     height: 60,
-    marginRight: 12,
+    marginRight: pixelArt.spacing.md,
   },
   teamCardInfo: {
     flex: 1,
   },
   teamCardName: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 4,
+    ...pixelArt.typography.pixelSubtitle,
+    fontSize: 13,
+    color: pixelArt.colors.textDark,
+    marginBottom: pixelArt.spacing.xs,
   },
   teamCardHp: {
-    fontSize: 14,
-    color: '#666',
+    ...pixelArt.typography.pixelBody,
+    fontSize: 11,
+    color: pixelArt.colors.textLight,
+  },
+  
+  // ========================================
+  // TELAS DE ERRO E LOADING
+  // ========================================
+  container: {
+    flex: 1,
+    backgroundColor: pixelArt.colors.bgLight,
+  },
+  errorContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: pixelArt.spacing.xl,
+  },
+  errorText: {
+    ...pixelArt.typography.pixelTitle,
+    fontSize: 16,
+    color: pixelArt.colors.error,
+    marginBottom: pixelArt.spacing.sm,
+    textAlign: 'center',
+  },
+  errorSubtext: {
+    ...pixelArt.typography.pixelBody,
+    fontSize: 12,
+    color: pixelArt.colors.textLight,
+    marginBottom: pixelArt.spacing.lg,
+    textAlign: 'center',
+  },
+  loadingText: {
+    ...pixelArt.typography.pixelTitle,
+    fontSize: 18,
+    color: pixelArt.colors.sparkleColor,
+    marginBottom: pixelArt.spacing.sm,
+    textAlign: 'center',
+  },
+  loadingSubtext: {
+    ...pixelArt.typography.pixelBody,
+    fontSize: 12,
+    color: pixelArt.colors.textLight,
+    textAlign: 'center',
+  },
+  returnButton: {
+    ...pixelArt.buttons.primary,
+    paddingHorizontal: pixelArt.spacing.xxl,
+    paddingVertical: pixelArt.spacing.md,
+  },
+  returnButtonText: {
+    ...pixelArt.buttons.text,
   },
 });
+

@@ -1,15 +1,19 @@
 import { StyleSheet } from 'react-native';
+import { pixelArt } from '../../../theme/pixelArt';
 
 export const styles = StyleSheet.create({
   hudInfoBox: {
     position: 'absolute',
     width: '45%',
-    padding: 8,
-    backgroundColor: 'rgba(40, 40, 40, 0.85)',
-    borderRadius: 8,
-    borderWidth: 2,
-    borderColor: '#666',
-    elevation: 5,
+    padding: pixelArt.spacing.sm,
+    backgroundColor: pixelArt.colors.cardInnerBg,
+    borderRadius: pixelArt.borders.radiusMedium,
+    borderWidth: pixelArt.borders.widthThick,
+    borderTopColor: pixelArt.colors.borderLight,
+    borderLeftColor: pixelArt.colors.borderLight,
+    borderBottomColor: pixelArt.colors.borderDark,
+    borderRightColor: pixelArt.colors.borderDark,
+    ...pixelArt.shadows.card,
   },
   playerHudContainer: {
     top: '5%',
@@ -20,9 +24,9 @@ export const styles = StyleSheet.create({
     left: '5%',
   },
   hudName: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#fff',
-    marginBottom: 6,
+    ...pixelArt.typography.pixelSubtitle,
+    fontSize: 14,
+    color: pixelArt.colors.textDark,
+    marginBottom: pixelArt.spacing.xs,
   },
 });

@@ -17,6 +17,23 @@ export interface Move {
   power: number;
 }
 
+export interface StatusEffect {
+  type: string;
+  chance?: number;
+  duration?: number;
+  value?: number;
+  target?: 'self' | 'enemy' | 'ally';
+}
+
+export interface CoffeemonModifiers {
+  attackModifier: number;
+  defenseModifier: number;
+  dodgeChance: number;
+  hitChance: number;
+  critChance: number;
+  blockChance: number;
+}
+
 export interface Coffeemon {
   name: string;
   currentHp: number;
@@ -24,6 +41,13 @@ export interface Coffeemon {
   isFainted: boolean;
   canAct: boolean;
   moves: Move[];
+  statusEffects?: StatusEffect[];
+  // Stats base
+  attack?: number;
+  defense?: number;
+  speed?: number;
+  // Modifiers
+  modifiers?: CoffeemonModifiers;
 }
 
 export interface PlayerState {

@@ -9,6 +9,16 @@ export function getBaseName(name: string): string {
 }
 
 /**
+ * Obtém URL da imagem do Coffeemon com fallback
+ */
+export function getCoffeemonImageUrl(name: string, variant: 'default' | 'back' = 'default'): string {
+  const baseName = getBaseName(name);
+  
+  const BASE_IMAGE_URL = 'https://gigio42.github.io/Coffeemon/';
+  return `${BASE_IMAGE_URL}${baseName}/${variant}.png`;
+}
+
+/**
  * Verifica qual jogador é o atual com base no playerId
  */
 export function getPlayerStates(battleState: BattleState, playerId: number) {

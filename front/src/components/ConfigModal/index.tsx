@@ -6,11 +6,12 @@ import {
   TextInput,
   TouchableOpacity,
   ActivityIndicator,
-  Alert,
 } from 'react-native';
 import { getServerUrl, setServerUrl } from '../../utils/config';
 import { colors } from '../../theme';
 import { styles } from './styles';
+import CustomAlert from '../Ecommerce/CustomAlert';
+import { useCustomAlert } from '../../hooks/useCustomAlert';
 
 interface ConfigModalProps {
   visible: boolean;
@@ -20,6 +21,7 @@ interface ConfigModalProps {
 export default function ConfigModal({ visible, onClose }: ConfigModalProps) {
   const [urlInput, setUrlInput] = useState('');
   const [loading, setLoading] = useState(true);
+  const { alertState, hideAlert, showError, showSuccess } = useCustomAlert();
 
   useEffect(() => {
     if (visible) {
@@ -35,12 +37,11 @@ export default function ConfigModal({ visible, onClose }: ConfigModalProps) {
 
   const handleSave = async () => {
     if (!urlInput.trim()) {
-      Alert.alert('Erro', 'A URL não pode estar vazia.');
+      showError('Erro', 'A URL não pode estar vazia.');
       return;
     }
     await setServerUrl(urlInput);
-    Alert.alert('Sucesso', 'Endereço do servidor salvo!');
-    onClose();
+    showSuccess('Sucesso', 'Endereço do servidor salvo!', onClose);
   };
 
   return (
@@ -80,6 +81,18 @@ export default function ConfigModal({ visible, onClose }: ConfigModalProps) {
             </TouchableOpacity>
           </View>
         </View>
+
+        <CustomAlert
+          visible={alertState.visible}
+          type={alertState.type}
+          title={alertState.title}
+          message={alertState.message}
+          onClose={hideAlert}
+          showCancel={alertState.showCancel}
+          onConfirm={alertState.onConfirm}
+          confirmText={alertState.confirmText}
+          cancelText={alertState.cancelText}
+        />
       </View>
     </Modal>
   );

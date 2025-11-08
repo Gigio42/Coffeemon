@@ -7,6 +7,7 @@ import {
   ScrollView,
   Alert,
 } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { Socket } from 'socket.io-client';
 import { BattleState } from '../../../types';
 import { useMatchmaking } from '../../hooks/useMatchmaking';
@@ -53,6 +54,7 @@ export default function MatchmakingScreen({
     availableCoffeemons,
     fetchCoffeemons,
     toggleParty,
+    giveAllCoffeemons,
   } = useCoffeemons({
     token,
     onLog: (msg) => console.log('Coffeemons:', msg),
@@ -95,91 +97,142 @@ export default function MatchmakingScreen({
 
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView
-        style={styles.scrollView}
-        showsVerticalScrollIndicator={false}
+      {/* Header Fixo */}
+      <View style={styles.header}>
+        {onNavigateToEcommerce && (
+          <TouchableOpacity
+            style={styles.backButton}
+            onPress={onNavigateToEcommerce}
+          >
+            <Text style={styles.backButtonText}>←</Text>
+          </TouchableOpacity>
+        )}
+        <Text style={styles.headerTitle}>Arena de Batalha</Text>
+        <View style={{ width: 60 }} />
+      </View>
+
+      <LinearGradient 
+        colors={['#e0f0ff', '#f0d0e0']} 
+        style={styles.gradientContainer}
       >
-        <View style={styles.matchmakingContainer}>
-          {onNavigateToEcommerce && (
-            <TouchableOpacity
-              style={styles.backButton}
-              onPress={onNavigateToEcommerce}
-            >
-              <Text style={styles.backButtonText}>← Voltar</Text>
-            </TouchableOpacity>
-          )}
-
-          <Text style={styles.matchTitle}>Procurar Partida</Text>
-
+        <ScrollView
+          style={styles.scrollView}
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={styles.scrollContent}
+        >
+          {/* Status de Matchmaking */}
           {matchStatus && (
-            <View style={styles.statusContainer}>
+            <View style={styles.statusCard}>
               <Text style={styles.statusText}>{matchStatus}</Text>
             </View>
           )}
 
-          <TeamSection
-            title={`🎮 Meu Time (${partyMembers.length}/3)`}
-            coffeemons={partyMembers}
-            loading={loading}
-            emptyMessage="Nenhum Coffeemon no time ainda"
-            onToggleParty={toggleParty}
-            partyLoading={partyLoading}
-            variant="grid"
-          />
+          {/* Seção de Times */}
+          <View style={styles.teamsSection}>
+            <TeamSection
+              title={`Meu Time (${partyMembers.length}/3)`}
+              coffeemons={partyMembers}
+              loading={loading}
+              emptyMessage="Adicione Coffeemons ao seu time"
+              onToggleParty={toggleParty}
+              partyLoading={partyLoading}
+              variant="grid"
+            />
 
-          <TeamSection
-            title={`📦 Disponíveis (${availableCoffeemons.length})`}
-            coffeemons={availableCoffeemons}
-            loading={loading}
-            emptyMessage="Todos os Coffeemons estão no time"
-            onToggleParty={toggleParty}
-            partyLoading={partyLoading}
-            variant="horizontal"
-          />
+            <View style={styles.divider} />
 
-          <TouchableOpacity
-            style={styles.captureButton}
-            onPress={handleOpenQRScanner}
-          >
-            <Text style={styles.captureButtonText}>📷 Capturar Coffeemon</Text>
-          </TouchableOpacity>
+            <TeamSection
+              title={`Disponíveis (${availableCoffeemons.length})`}
+              coffeemons={availableCoffeemons}
+              loading={loading}
+              emptyMessage="Capture mais Coffeemons"
+              onToggleParty={toggleParty}
+              partyLoading={partyLoading}
+              variant="horizontal"
+            />
+          </View>
 
-          <TouchableOpacity
-            style={[styles.findMatchButton, styles.pvpButton]}
-            onPress={handleFindMatch}
-          >
-            <Text style={styles.findMatchButtonText}>
-              🎮 PROCURAR PARTIDA ONLINE (PvP)
-            </Text>
-          </TouchableOpacity>
-
-          <View style={styles.botButtonsContainer}>
-            <Text style={styles.botSectionTitle}>Ou lute contra um bot:</Text>
-
+          {/* Botão Capturar */}
+          <View style={styles.actionCard}>
+            <Text style={styles.cardTitle}>Capturar Coffeemons</Text>
             <TouchableOpacity
-              style={[styles.findMatchButton, styles.jessieButton]}
-              onPress={() => handleFindBotMatch('jessie')}
+              style={styles.captureButton}
+              onPress={handleOpenQRScanner}
             >
-              <Text style={styles.findMatchButtonText}>
-                👾 LUTAR CONTRA JESSIE (Bot)
-              </Text>
+              <Text style={styles.captureButtonText}>📷 Escanear QR Code</Text>
             </TouchableOpacity>
-
+            
             <TouchableOpacity
-              style={[styles.findMatchButton, styles.jamesButton]}
-              onPress={() => handleFindBotMatch('pro-james')}
+              style={[styles.captureButton, { marginTop: 8, backgroundColor: '#27ae60' }]}
+              onPress={giveAllCoffeemons}
+              disabled={loading}
             >
-              <Text style={styles.findMatchButtonText}>
-                🤖 LUTAR CONTRA JAMES (Bot Avançado)
+              <Text style={styles.captureButtonText}>
+                {loading ? '⏳ Capturando...' : '🎁 Capturar Todos'}
               </Text>
             </TouchableOpacity>
           </View>
 
-          <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-            <Text style={styles.logoutButtonText}>Logout</Text>
+          {/* Seção de Batalhas */}
+          <View style={styles.battleSection}>
+            <Text style={styles.sectionTitle}>Modos de Batalha</Text>
+            
+            <TouchableOpacity
+              style={[styles.battleButton, styles.pvpButton]}
+              onPress={handleFindMatch}
+              disabled={partyMembers.length === 0}
+            >
+              <View style={styles.buttonContent}>
+                <Text style={styles.battleButtonEmoji}>🎮</Text>
+                <View style={styles.buttonTextContainer}>
+                  <Text style={styles.battleButtonTitle}>Partida Online</Text>
+                  <Text style={styles.battleButtonSubtitle}>Jogador vs Jogador</Text>
+                </View>
+              </View>
+            </TouchableOpacity>
+
+            <View style={styles.dividerSmall} />
+            <Text style={styles.orText}>ou escolha um desafio</Text>
+            <View style={styles.dividerSmall} />
+
+            <TouchableOpacity
+              style={[styles.battleButton, styles.jessieButton]}
+              onPress={() => handleFindBotMatch('jessie')}
+              disabled={partyMembers.length === 0}
+            >
+              <View style={styles.buttonContent}>
+                <Text style={styles.battleButtonEmoji}>👾</Text>
+                <View style={styles.buttonTextContainer}>
+                  <Text style={styles.battleButtonTitle}>Desafio Jessie</Text>
+                  <Text style={styles.battleButtonSubtitle}>Nível Iniciante</Text>
+                </View>
+              </View>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[styles.battleButton, styles.jamesButton]}
+              onPress={() => handleFindBotMatch('pro-james')}
+              disabled={partyMembers.length === 0}
+            >
+              <View style={styles.buttonContent}>
+                <Text style={styles.battleButtonEmoji}>🤖</Text>
+                <View style={styles.buttonTextContainer}>
+                  <Text style={styles.battleButtonTitle}>Desafio James</Text>
+                  <Text style={styles.battleButtonSubtitle}>Nível Avançado</Text>
+                </View>
+              </View>
+            </TouchableOpacity>
+          </View>
+
+          {/* Botão Logout */}
+          <TouchableOpacity 
+            style={styles.logoutButton} 
+            onPress={handleLogout}
+          >
+            <Text style={styles.logoutButtonText}>Sair da Conta</Text>
           </TouchableOpacity>
-        </View>
-      </ScrollView>
+        </ScrollView>
+      </LinearGradient>
 
       <QRScanner
         visible={qrScannerVisible}

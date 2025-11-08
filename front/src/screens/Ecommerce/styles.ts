@@ -1,9 +1,13 @@
-import { StyleSheet } from 'react-native';
+import { StyleSheet, Platform } from 'react-native';
+import { pixelArt } from '../../theme';
+
+// Para Android, adiciona padding para navigation bar
+const navigationBarHeight = Platform.OS === 'android' ? 20 : 0;
 
 export const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: '#f5f2e8', // Cor creme clara - mesma do header
   },
   
   // ========================================
@@ -11,56 +15,73 @@ export const styles = StyleSheet.create({
   // ========================================
   tabBar: {
     flexDirection: 'row',
-    backgroundColor: '#fff',
-    borderTopWidth: 1,
-    borderTopColor: '#ddd',
-    paddingBottom: 5,
-    paddingTop: 5,
-    elevation: 8,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: -2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
+    backgroundColor: '#f5f2e8', // Cor creme clara
+    borderTopWidth: 3,
+    borderTopColor: '#d4c5a0', // Borda creme mais escura
+    paddingBottom: 20 + navigationBarHeight, // Padding adicional na parte de baixo
+    paddingTop: 6, // Reduzido
+    // Borda 3D sutil
+    borderBottomWidth: 2,
+    borderBottomColor: '#faf8f0', // Borda creme mais clara
+    ...pixelArt.shadows.innerBorder,
   },
+  
   tabButton: {
     flex: 1,
     alignItems: 'center',
-    paddingVertical: 8,
+    paddingVertical: 4, // Reduzido
     position: 'relative',
   },
+  
   tabIcon: {
     fontSize: 24,
     marginBottom: 4,
     opacity: 0.6,
   },
+
+  tabIconImage: {
+    width: 28,
+    height: 28,
+    marginBottom: 2,
+    opacity: 0.6,
+  },
+  
   tabIconActive: {
     opacity: 1,
-    transform: [{ scale: 1.1 }],
+    transform: [{ scale: 1.15 }],
   },
+  
   tabLabel: {
-    fontSize: 11,
-    color: '#666',
-    fontWeight: '500',
+    ...pixelArt.typography.pixelButton,
+    fontSize: 9,
+    color: pixelArt.colors.textLight,
   },
+  
   tabLabelActive: {
-    color: '#8B4513',
-    fontWeight: '700',
+    color: pixelArt.colors.coffeePrimary,
+    fontWeight: '900',
   },
+  
   badge: {
     position: 'absolute',
     top: -4,
-    right: -8,
-    backgroundColor: '#e74c3c',
+    right: '25%',
+    backgroundColor: pixelArt.colors.error,
     borderRadius: 10,
     minWidth: 20,
     height: 20,
     justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: 4,
+    // Borda do badge
+    borderWidth: 2,
+    borderColor: '#ffffff',
+    ...pixelArt.shadows.button,
   },
+  
   badgeText: {
-    color: '#fff',
-    fontSize: 11,
-    fontWeight: 'bold',
+    ...pixelArt.typography.pixelButton,
+    color: '#ffffff',
+    fontSize: 10,
   },
 });

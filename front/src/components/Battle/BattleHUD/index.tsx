@@ -1,13 +1,27 @@
 import React from 'react';
-import { View, Text } from 'react-native';
+import { View, Text, Image } from 'react-native';
 import { PlayerState } from '../../../types';
-import AnimatedHealthBar from '../AnimatedHealthBar';
-import { styles } from './styles';
+import { styles } from '../../../screens/Battle/styles';
+import { getCoffeemonImageUrl } from '../../../utils/battleUtils';
 
 interface BattleHUDProps {
   playerState: PlayerState | null;
   isMe: boolean;
 }
+
+// Ícones baseados no tipo do Coffeemon
+const getTypeIcon = (type: string) => {
+  const icons: { [key: string]: string } = {
+    floral: '🍇',
+    sweet: '🔥',
+    fruity: '🍋',
+    nutty: '🌰',
+    roasted: '🔥',
+    spicy: '🌶️',
+    sour: '🍃',
+  };
+  return icons[type?.toLowerCase()] || '☕';
+};
 
 export default function BattleHUD({ playerState, isMe }: BattleHUDProps) {
   const activeMon =
@@ -15,16 +29,56 @@ export default function BattleHUD({ playerState, isMe }: BattleHUDProps) {
       ? playerState.coffeemons[playerState.activeCoffeemonIndex]
       : null;
 
-  const containerStyle = isMe ? styles.playerHudContainer : styles.opponentHudContainer;
-
   if (!activeMon) {
-    return <View style={[styles.hudInfoBox, containerStyle, { opacity: 0 }]} />;
+    return null;
   }
 
+  const hpPercent = Math.max(0, Math.min(100, (activeMon.currentHp / activeMon.maxHp) * 100));
+  const totalSegments = 20; // Total de quadradinhos na barra
+  const filledSegments = Math.ceil((hpPercent / 100) * totalSegments);
+  
+  const containerStyle = isMe ? styles.playerHudPosition : styles.opponentHudPosition;
+  const imageUrl = getCoffeemonImageUrl(activeMon.name, 'default');
+
   return (
-    <View style={[styles.hudInfoBox, containerStyle]}>
-      <Text style={styles.hudName}>{activeMon.name}</Text>
-      <AnimatedHealthBar currentHp={activeMon.currentHp} maxHp={activeMon.maxHp} />
+    <View style={[styles.hudContainer, containerStyle]}>
+      {/* Container Principal com display: flex e align-items: center */}
+      <View style={styles.hudMainContent}>
+        {/* Seção do Ícone - Pixel Art com image-rendering: pixelated */}
+        <Image
+          source={{ uri: imageUrl }}
+          style={styles.hudPixelIcon}
+          resizeMode="contain"
+        />
+        
+        {/* Bloco de Informações - flex: 1 para ocupar espaço restante */}
+        <View style={styles.hudInfoBlock}>
+          {/* Rótulo de Texto - text-transform: uppercase */}
+          <Text style={styles.hudNameLabel}>{activeMon.name}</Text>
+          
+          {/* Container da Barra de Status */}
+          <View style={styles.hudStatusBarContainer}>
+            {/* Segmentos da Barra - flex: 1 para largura igual */}
+            {Array.from({ length: totalSegments }).map((_, index) => {
+              const isFilled = index < filledSegments;
+              // Classes distintas para verde (#8bc34a) e vermelho (#f44336)
+              const segmentColor = isFilled 
+                ? (hpPercent <= 20 ? '#f44336' : hpPercent <= 50 ? '#FFD700' : '#8bc34a')
+                : 'transparent'; // Vazios transparentes para mostrar fundo
+              
+              return (
+                <View
+                  key={index}
+                  style={[
+                    styles.hudStatusSegment,
+                    { backgroundColor: segmentColor },
+                  ]}
+                />
+              );
+            })}
+          </View>
+        </View>
+      </View>
     </View>
   );
 }

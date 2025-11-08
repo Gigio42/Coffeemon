@@ -106,3 +106,25 @@ export async function removeFromParty(
     throw new Error(error.message || 'Erro ao remover do time');
   }
 }
+
+/**
+ * Dá todos os Coffeemons disponíveis para o jogador atual
+ */
+export async function giveAllCoffeemons(token: string): Promise<{ message: string; count: number }> {
+  const url = await getServerUrl();
+  const response = await fetch(`${url}/game/players/me/coffeemons/give-all`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+  });
+
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.message || 'Erro ao dar Coffeemons');
+  }
+
+  return await response.json();
+}
+
