@@ -15,7 +15,8 @@ class LoginScreen {
   }
 
   public get ecommerceHeaderTitle() {
-    return $("~ecommerceTitle");
+    const selector = 'android=new UiSelector().resourceId("ecommerceTitle")';
+    return $(selector);
   }
 
   public async waitForScreen(): Promise<void> {

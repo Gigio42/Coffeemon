@@ -15,6 +15,7 @@ export class AttackAction implements IBattleAction<BattleActionType.ATTACK> {
 
   constructor(private readonly statusEffectsService: StatusEffectsService) {}
 
+  // eslint-disable-next-line @typescript-eslint/require-await
   async execute(
     context: BattleActionContext<BattleActionType.ATTACK>
   ): Promise<BattleActionResult> {
@@ -48,17 +49,18 @@ export class AttackAction implements IBattleAction<BattleActionType.ATTACK> {
       };
     }
 
-    if (move.type !== moveType.ATTACK) {
-      return {
-        advanceTurn: false,
-        notifications: [
-          {
-            eventKey: 'ACTION_ERROR',
-            payload: { playerId, error: 'The selected move is not an attack.' },
-          },
-        ],
-      };
-    }
+    // implementar após resolver tipos de move com status
+    // if (move.type !== moveType.ATTACK) {
+    //   return {
+    //     advanceTurn: false,
+    //     notifications: [
+    //       {
+    //         eventKey: 'ACTION_ERROR',
+    //         payload: { playerId, error: 'The selected move is not an attack.' },
+    //       },
+    //     ],
+    //   };
+    // }
 
     // Verificação de (Dodge/Miss)
     if (
