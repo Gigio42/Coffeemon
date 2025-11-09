@@ -1,0 +1,56 @@
+[
+  {
+    "name": "Affogato",
+    "description": "Café expresso com sorvete de baunilha, uma sobremesa perfeita.",
+    "price": 8.50,
+    "image": "affogato.png"
+  },
+  {
+    "name": "Americano",
+    "description": "Café expresso diluído em água quente, leve e refrescante.",
+    "price": 5.00,
+    "image": "americano.png"
+  },
+  {
+    "name": "Café com Caramelo",
+    "description": "Café expresso com calda de caramelo, doce e cremoso.",
+    "price": 6.50,
+    "image": "cafecomcaramelo.png"
+  },
+  {
+    "name": "Café Latte",
+    "description": "Café expresso com leite vaporizado, clássico e suave.",
+    "price": 7.00,
+    "image": "cafelatte.png"
+  },
+  {
+    "name": "Cappuccino",
+    "description": "Café expresso com leite vaporizado e espuma, equilibrado.",
+    "price": 7.50,
+    "image": "capuccino.png"
+  },
+  {
+    "name": "Cold Brew",
+    "description": "Café preparado a frio, suave e menos ácido.",
+    "price": 6.00,
+    "image": "coldbrew.png"
+  },
+  {
+    "name": "Expresso",
+    "description": "Café concentrado, forte e aromático.",
+    "price": 4.50,
+    "image": "expresso.png"
+  },
+  {
+    "name": "Macchiato",
+    "description": "Café expresso com um toque de leite vaporizado.",
+    "price": 5.50,
+    "image": "macchiato.png"
+  },
+  {
+    "name": "Mocha",
+    "description": "Café expresso com chocolate e leite, indulgente.",
+    "price": 8.00,
+    "image": "mocha.png"
+  }
+]

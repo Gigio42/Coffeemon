@@ -1,0 +1,19 @@
+{
+    "BATTLE_FINISHED": "finished!",
+    "TURN_END": "turn {turn}!",
+    "KNOCKOUT_BLOCK": "switch!",
+    "STATUS_BLOCK": "paralyzed!",
+    "ACTION_ERROR": "error: {error}",
+    "SWITCH_SUCCESS": "{newActiveCoffeemonName} entered!",
+    "SWITCH_FAILED_SAME_COFFEEMON": "same!",
+    "SWITCH_FAILED_FAINTED_COFFEEMON": "fainted!",
+    "SWITCH_FAILED_INVALID_INDEX": "invalid!",
+    "ATTACK_HIT": "{attackerName} hit!",
+    "ATTACK_MISS": "{attackerName} missed!",
+    "ATTACK_CRIT": "{attackerName} critical!",
+    "ATTACK_BLOCKED": "{targetName} blocked!",
+    "COFFEEMON_FAINTED": "{coffeemonName} fainted!",
+    "STATUS_APPLIED": "{targetName} affected!",
+    "STATUS_DAMAGE": "{coffeemonName} damage!",
+    "STATUS_REMOVED": "{coffeemonName} cured!"
+  }

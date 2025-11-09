@@ -1,13 +1,26 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
+import { NestExpressApplication } from '@nestjs/platform-express';
+import { join } from 'path';
 import * as morgan from 'morgan';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 
 async function bootstrap() {
   // NESTJS
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create<NestExpressApplication>(AppModule);
   app.enableCors();
+  
+  // Servir arquivos estáticos da pasta uploads
+  app.useStaticAssets(join(__dirname, '..', 'uploads'), {
+    prefix: '/uploads/',
+  });
+  
+  // Servir arquivos estáticos da pasta imgs (imagens dos Coffeemons)
+  app.useStaticAssets(join(__dirname, '..', '..', 'imgs'), {
+    prefix: '/imgs/',
+  });
+  
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,

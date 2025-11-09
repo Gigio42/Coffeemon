@@ -1,6 +1,6 @@
 import { Column, Entity, OneToMany, OneToOne, PrimaryGeneratedColumn } from 'typeorm';
 import { Order } from '../../orders/entities/order.entity';
-import { Player } from 'src/game/player/entities/player.entity';
+import { Player } from 'src/game/modules/player/entities/player.entity';
 
 export enum UserRole {
   USER = 'user',
@@ -32,5 +32,5 @@ export class User {
   orders: Order[];
 
   @OneToOne(() => Player, (player) => player.user, { nullable: true })
-  player: Player;
+  player: Player | null;
 }

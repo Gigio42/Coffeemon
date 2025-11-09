@@ -8,15 +8,19 @@ on:
 
 env:
   NODE_VERSION: '20'
-  WORKING_DIR: 'backend-nestjs'
+  JAVA_VERSION: '17'
+
+  DIR_BACKEND: 'backend-nestjs'
+  DIR_FRONTEND: 'front'
+  DIR_TESTS_E2E: 'tests'
 
 jobs:
   setup:
-    name: Setup Dependencies
+    name: Setup Dependencies (Backend)
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: ${{ env.WORKING_DIR }}
+        working-directory: ${{ env.DIR_BACKEND }}
     steps:
       - name: 📥 Checkout
         uses: actions/checkout@v4
@@ -26,7 +30,7 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
-          cache-dependency-path: ${{ env.WORKING_DIR }}/package-lock.json
+          cache-dependency-path: ${{ env.DIR_BACKEND }}/package-lock.json
 
       - name: 📦 Install Dependencies
         run: npm ci
@@ -34,78 +38,81 @@ jobs:
       - name: 💾 Cache Dependencies
         uses: actions/cache@v4
         with:
-          path: ${{ env.WORKING_DIR }}/node_modules
-          key: ${{ runner.os }}-node-${{ hashFiles('backend-nestjs/package-lock.json') }}
+          path: ${{ env.DIR_BACKEND }}/node_modules
+          key: ${{ runner.os }}-node-backend-${{ hashFiles(format('{0}/package-lock.json', env.DIR_BACKEND)) }}
 
   format:
-    name: Code Formatting
+    name: Code Formatting (Backend)
     needs: setup
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: ${{ env.WORKING_DIR }}
+        working-directory: ${{ env.DIR_BACKEND }}
     steps:
       - name: 📥 Checkout
         uses: actions/checkout@v4
-
       - name: 🟢 Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
-          cache-dependency-path: ${{ env.WORKING_DIR }}/package-lock.json
-
       - name: 📂 Restore Dependencies
         uses: actions/cache@v4
         with:
-          path: ${{ env.WORKING_DIR }}/node_modules
-          key: ${{ runner.os }}-node-${{ hashFiles('backend-nestjs/package-lock.json') }}
-
+          path: ${{ env.DIR_BACKEND }}/node_modules
+          key: ${{ runner.os }}-node-backend-${{ hashFiles(format('{0}/package-lock.json', env.DIR_BACKEND)) }}
       - name: 🎨 Check Formatting
-        run: |
-          echo "::notice::Checking code formatting..."
-          npx prettier --check "src/**/*.ts" "test/**/*.ts" || {
-            echo "::warning::Formatting issues found. Run 'npm run format' to fix."
-            npx prettier --list-different "src/**/*.ts" "test/**/*.ts"
-          }
+        run: npx prettier --check "src/**/*.ts" "test/**/*.ts"
         continue-on-error: true
 
   lint:
-    name: Code Linting
+    name: Code Linting (Backend)
     needs: setup
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: ${{ env.WORKING_DIR }}
+        working-directory: ${{ env.DIR_BACKEND }}
     steps:
       - name: 📥 Checkout
         uses: actions/checkout@v4
-
       - name: 🟢 Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
-          cache-dependency-path: ${{ env.WORKING_DIR }}/package-lock.json
-
       - name: 📂 Restore Dependencies
         uses: actions/cache@v4
         with:
-          path: ${{ env.WORKING_DIR }}/node_modules
-          key: ${{ runner.os }}-node-${{ hashFiles('backend-nestjs/package-lock.json') }}
-
+          path: ${{ env.DIR_BACKEND }}/node_modules
+          key: ${{ runner.os }}-node-backend-${{ hashFiles(format('{0}/package-lock.json', env.DIR_BACKEND)) }}
       - name: 🔍 Run Linter
-        run: |
-          echo "::notice::Running ESLint..."
-          npm run lint || echo "::warning::Linting issues found. Run 'npm run lint:fix' to fix."
+        run: npm run lint
 
   unit-tests:
-    name: Unit Tests
+    name: Unit Tests (Backend)
     needs: [format, lint]
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: ${{ env.WORKING_DIR }}
+        working-directory: ${{ env.DIR_BACKEND }}
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+      - name: 🟢 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      - name: 📂 Restore Dependencies
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.DIR_BACKEND }}/node_modules
+          key: ${{ runner.os }}-node-backend-${{ hashFiles(format('{0}/package-lock.json', env.DIR_BACKEND)) }}
+      - name: 🧪 Run Unit Tests
+        run: npm run test
+
+  build-android-apk:
+    name: Build Android APK (Expo)
+    if: github.event_name == 'workflow_dispatch'
+    needs: unit-tests
+    runs-on: ubuntu-latest
     steps:
       - name: 📥 Checkout
         uses: actions/checkout@v4
@@ -115,29 +122,98 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
-          cache-dependency-path: ${{ env.WORKING_DIR }}/package-lock.json
-
-      - name: 📂 Restore Dependencies
-        uses: actions/cache@v4
+          cache-dependency-path: ${{ env.DIR_FRONTEND }}/package-lock.json
+      
+      - name: ☕ Setup Java (para Gradle)
+        uses: actions/setup-java@v4
         with:
-          path: ${{ env.WORKING_DIR }}/node_modules
-          key: ${{ runner.os }}-node-${{ hashFiles('backend-nestjs/package-lock.json') }}
+          distribution: 'temurin'
+          java-version: ${{ env.JAVA_VERSION }}
 
-      - name: 🧪 Run Unit Tests
+      - name: 📦 Install Dependencies (Frontend)
+        run: npm ci
+        working-directory: ${{ env.DIR_FRONTEND }}
+      
+      - name: 🛠️ Create Android Build Files
+        run: npx expo prebuild --platform android --non-interactive
+        working-directory: ${{ env.DIR_FRONTEND }}
+        
+      - name: 🏗️ Build Debug APK (com Gradle)
         run: |
-          echo "::notice::Running unit tests..."
-          npm run test
+          chmod +x ./gradlew
+          ./gradlew assembleDebug
+        working-directory: ${{ env.DIR_FRONTEND }}/android
+        
+      - name: 📤 Upload APK as Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-apk-debug
+          path: ${{ env.DIR_FRONTEND }}/android/app/build/outputs/apk/debug/app-debug.apk
+          retention-days: 1
 
   regressive-tests:
-    name: Regressive Tests
+    name: Regressive Tests (Appium E2E)
     if: github.event_name == 'workflow_dispatch'
-    needs: unit-tests
-    runs-on: ubuntu-latest
+    needs: build-android-apk
+    runs-on: macos-latest
+
     steps:
-      - name: 🚧 Skip Regressive Tests
-        run: |
-          echo "::notice::Regressive tests temporarily disabled"
-          echo "✅ Job skipped successfully"
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+
+      - name: 🟢 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: ${{ env.DIR_TESTS_E2E }}/package-lock.json
+          
+      - name: ☕ Setup Java (para Appium)
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: ${{ env.JAVA_VERSION }}
+
+      - name: 📦 Install Dependencies (E2E Tests)
+        run: npm ci
+        working-directory: ${{ env.DIR_TESTS_E2E }}
+
+      - name: 📲 Install Appium
+        run: npm install -g appium@latest
+        
+      - name: 📥 Download APK Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: android-apk-debug
+          path: ${{ env.DIR_TESTS_E2E }}/apps 
+          
+      - name: 🤖 Run Android Emulator & Appium Tests
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 33
+          target: default
+          arch: arm64-v8a
+          ram-size: 2048M
+          emulator-boot-timeout: 480
+          disable-animations: true
+          script: |
+            echo "::notice::Starting Appium Server in background..."
+            appium &
+            
+            echo "::notice::Waiting for Appium server to be ready on 4723..."
+            wait-on tcp:4723 -t 60000
+            
+            echo "::notice::Running WebdriverIO tests..."
+            cd ${{ env.DIR_TESTS_E2E }}
+            npx wdio run wdio.conf.ts
+            
+      - name: 📼 Upload Test Recording
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-recording
+          path: /Users/runner/work/**/emulator-recording.mp4
+          retention-days: 1
 
   build:
     name: Build Application
@@ -149,3 +225,5 @@ jobs:
         run: |
           echo "::notice::Build temporarily disabled"
           echo "✅ Job skipped successfully"
+
+

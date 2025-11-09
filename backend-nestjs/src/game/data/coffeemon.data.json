@@ -1,0 +1,83 @@
+[
+  {
+    "id": 1,
+    "name": "Jasminelle",
+    "type": "floral",
+    "baseHp": 95,
+    "baseAttack": 50,
+    "baseDefense": 55,
+    "baseSpeed": 60,
+    "defaultImage": "/imgs/Jasminelle/default.png",
+    "backImage": "/imgs/Jasminelle/back.png",
+    "hurtImage": "/imgs/Jasminelle/hurt.png"
+  },
+  {
+    "id": 2,
+    "name": "Limonetto",
+    "type": "fruity",
+    "baseHp": 80,
+    "baseAttack": 65,
+    "baseDefense": 35,
+    "baseSpeed": 85,
+    "defaultImage": "/imgs/Limonetto/default.png",
+    "backImage": "/imgs/Limonetto/back.png",
+    "hurtImage": "/imgs/Limonetto/hurt.png"
+  },
+  {
+    "id": 3,
+    "name": "Maprion",
+    "type": "sweet",
+    "baseHp": 110,
+    "baseAttack": 50,
+    "baseDefense": 50,
+    "baseSpeed": 50,
+    "defaultImage": "/imgs/Maprion/default.png",
+    "backImage": "/imgs/Maprion/back.png",
+    "hurtImage": "/imgs/Maprion/hurt.png"
+  },
+  {
+    "id": 4,
+    "name": "Cocoly",
+    "type": "nutty",
+    "baseHp": 85,
+    "baseAttack": 55,
+    "baseDefense": 60,
+    "baseSpeed": 55
+  },
+  {
+    "id": 5,
+    "name": "Emberly",
+    "type": "roasted",
+    "baseHp": 90,
+    "baseAttack": 70,
+    "baseDefense": 45,
+    "baseSpeed": 70
+  },
+  {
+    "id": 6,
+    "name": "Cinnara",
+    "type": "spicy",
+    "baseHp": 75,
+    "baseAttack": 75,
+    "baseDefense": 40,
+    "baseSpeed": 90
+  },
+  {
+    "id": 7,
+    "name": "Herban",
+    "type": "sour",
+    "baseHp": 80,
+    "baseAttack": 50,
+    "baseDefense": 65,
+    "baseSpeed": 65
+  },
+  {
+    "id": 8,
+    "name": "Chocobrawl",
+    "type": "sweet",
+    "baseHp": 70,
+    "baseAttack": 80,
+    "baseDefense": 45,
+    "baseSpeed": 80
+  }
+]

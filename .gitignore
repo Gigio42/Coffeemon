@@ -2,6 +2,8 @@
 
 # dependencies
 /node_modules
+/tests/node_modules
+
 /.pnp
 .pnp.*
 .yarn/*
@@ -43,3 +45,6 @@ next-env.d.ts
 prisma/migrations*.sqlite
 backend(NestJS)/database.sqlite
 *.sqlite
+.idea/*
+*.apk
+tests/apps/
