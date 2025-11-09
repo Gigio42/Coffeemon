@@ -30,6 +30,9 @@ interface ICoffeemonData {
   baseAttack: number;
   baseDefense: number;
   baseSpeed: number;
+  defaultImage?: string;
+  backImage?: string;
+  hurtImage?: string;
 }
 interface ILearnsetData {
   coffeemonId: number;
@@ -54,15 +57,12 @@ export class SeedService implements OnModuleInit {
       console.log('[SeedService] Seeding Moves...');
       await this.seedMoves();
     } else {
-      console.log('[SeedService] Coffeemon Learnset already seeded.');
+      console.log('[SeedService] Moves already seeded.');
     }
 
-    if ((await this.coffeemonRepository.count()) === 0) {
-      console.log('Seeding Coffeemons...');
-      await this.seedCoffeemons();
-    } else {
-      console.log('[SeedService] Coffeemons already seeded.');
-    }
+    // Always seed/update Coffeemons to ensure latest data
+    console.log('Seeding/Updating Coffeemons...');
+    await this.seedCoffeemons();
 
     if ((await this.learnsetRepository.count()) === 0) {
       console.log('[SeedService] Seeding Coffeemon Learnset...');
@@ -92,6 +92,9 @@ export class SeedService implements OnModuleInit {
         baseAttack: data.baseAttack,
         baseDefense: data.baseDefense,
         baseSpeed: data.baseSpeed,
+        defaultImage: data.defaultImage,
+        backImage: data.backImage,
+        hurtImage: data.hurtImage,
       };
       const newCoffeemon = this.coffeemonRepository.create(coffeemonToCreate);
       await this.coffeemonRepository.save(newCoffeemon);

@@ -16,6 +16,11 @@ async function bootstrap() {
     prefix: '/uploads/',
   });
   
+  // Servir arquivos estáticos da pasta imgs (imagens dos Coffeemons)
+  app.useStaticAssets(join(__dirname, '..', '..', 'imgs'), {
+    prefix: '/imgs/',
+  });
+  
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
