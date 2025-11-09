@@ -19,25 +19,33 @@ export class SeedService implements OnModuleInit {
   ) {}
 
   async onModuleInit() {
-    if ((await this.productRepository.count()) === 0) {
-      console.log('[ProductsSeedService] Seeding Products...');
-      await this.seedProducts();
-    } else {
-      console.log('[ProductsSeedService] Products already seeded.');
-    }
+    console.log('[ProductsSeedService] Seeding/Updating Products...');
+    await this.seedProducts();
   }
 
   private async seedProducts() {
     const typedProductData = productData as IProductData[];
 
-    const productsToCreate: Partial<Product>[] = typedProductData.map((data) => ({
-      name: data.name,
-      description: data.description,
-      price: data.price,
-      image: `/imgs/products/${data.image}`,
-    }));
+    for (const data of typedProductData) {
+      const imageUrl = `https://gigio42.github.io/Coffeemon/products/${data.image}`;
+      const existingProduct = await this.productRepository.findOne({ where: { name: data.name } });
 
-    await this.productRepository.save(productsToCreate);
+      if (existingProduct) {
+        if (existingProduct.image !== imageUrl) {
+          existingProduct.image = imageUrl;
+          await this.productRepository.save(existingProduct);
+        }
+      } else {
+        const productToCreate = this.productRepository.create({
+          name: data.name,
+          description: data.description,
+          price: data.price,
+          image: imageUrl,
+        });
+        await this.productRepository.save(productToCreate);
+      }
+    }
+
     console.log('[ProductsSeedService] Product seeding complete!');
   }
 }

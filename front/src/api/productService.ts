@@ -22,10 +22,17 @@ export async function fetchProducts(): Promise<Product[]> {
     const data: ProductsResponse = await response.json();
     
     if (data.products && Array.isArray(data.products)) {
-      // Adiciona a URL completa para as imagens
+      const buildImageUrl = (imagePath?: string): string => {
+        if (!imagePath) return '';
+        return /^https?:\/\//i.test(imagePath)
+          ? imagePath
+          : `${serverUrl}/${imagePath.replace(/^\/+/, '')}`;
+      };
+
+      // Adiciona a URL completa apenas quando necessário
       return data.products.map(product => ({
         ...product,
-        image: product.image ? `${serverUrl}/${product.image}` : product.image
+        image: buildImageUrl(product.image)
       }));
     }
     
@@ -61,10 +68,17 @@ export async function fetchProductById(id: number, token?: string): Promise<Prod
 
     const product: Product = await response.json();
     
-    // Adiciona a URL completa para a imagem
+    const buildImageUrl = (imagePath?: string): string => {
+      if (!imagePath) return '';
+      return /^https?:\/\//i.test(imagePath)
+        ? imagePath
+        : `${serverUrl}/${imagePath.replace(/^\/+/, '')}`;
+    };
+
+    // Adiciona a URL completa apenas quando necessário
     return {
       ...product,
-      image: product.image ? `${serverUrl}/${product.image}` : product.image
+      image: buildImageUrl(product.image)
     };
   } catch (error) {
     console.error(`Erro ao buscar produto ${id}:`, error);

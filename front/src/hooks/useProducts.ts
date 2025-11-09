@@ -30,15 +30,8 @@ export function useProducts(): UseProductsReturn {
       }
       
       const data = await fetchProducts();
-      const serverUrl = await getServerUrl();
-      
-      // Prepend server URL to image paths
-      const updatedData = data.map(product => ({
-        ...product,
-        image: product.image.startsWith('http') ? product.image : `${serverUrl}${product.image}`,
-      }));
-      
-      setProducts(updatedData);
+
+      setProducts(data);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erro desconhecido');
       console.error('Erro ao buscar produtos:', err);
