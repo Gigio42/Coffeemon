@@ -48,52 +48,36 @@ export class PlayerService {
     });
 
     const savedPlayer = await this.playerRepository.save(player);
-
-    // Automaticamente adiciona todos os Coffeemons para o novo player
     await this.giveAllCoffeemonsToPlayer(savedPlayer.id);
 
     return savedPlayer;
   }
 
-  /**
-   * Dá todos os Coffeemons disponíveis para um player
-   * Retorna o número de Coffeemons adicionados
-   */
   async giveAllCoffeemonsToPlayer(playerId: number): Promise<number> {
-    try {
-      // Busca todos os Coffeemons base disponíveis
-      const allCoffeemons = await this.coffeemonService.findAll();
-      
-      // Verifica quais Coffeemons o player já possui
-      const existingCoffeemons = await this.playerCoffeemonRepository.find({
-        where: { player: { id: playerId } },
-        select: ['id'],
-        relations: ['coffeemon'],
-      });
+    const allCoffeemons = await this.coffeemonService.findAll();
 
-      const existingCoffeemonIds = new Set(
-        existingCoffeemons.map((pc) => pc.coffeemon.id)
-      );
+    const existingCoffeemons = await this.playerCoffeemonRepository.find({
+      where: { player: { id: playerId } },
+      select: ['id'],
+      relations: ['coffeemon'],
+    });
 
-      let addedCount = 0;
+    const existingCoffeemonIds = new Set(existingCoffeemons.map((pc) => pc.coffeemon.id));
 
-      // Adiciona apenas os Coffeemons que o player ainda não possui
-      for (const coffeemon of allCoffeemons) {
-        // Validate coffeemon has a valid ID
-        if (!coffeemon || !coffeemon.id || isNaN(coffeemon.id)) {
-          continue;
-        }
-        
-        if (!existingCoffeemonIds.has(coffeemon.id)) {
-          await this.addCoffeemonToPlayer(playerId, coffeemon.id);
-          addedCount++;
-        }
+    let addedCount = 0;
+
+    for (const coffeemon of allCoffeemons) {
+      if (!coffeemon || !coffeemon.id || isNaN(coffeemon.id)) {
+        continue;
       }
 
-      return addedCount;
-    } catch (error) {
-      throw error;
+      if (!existingCoffeemonIds.has(coffeemon.id)) {
+        await this.addCoffeemonToPlayer(playerId, coffeemon.id);
+        addedCount++;
+      }
     }
+
+    return addedCount;
   }
 
   async findOne(id: number): Promise<Player> {
@@ -149,7 +133,7 @@ export class PlayerService {
     if (!coffeemonId || isNaN(coffeemonId)) {
       throw new BadRequestException(`Invalid coffeemonId: ${coffeemonId}`);
     }
-    
+
     const player = await this.findOne(playerId);
     const coffeemonBase = await this.coffeemonService.findOne(coffeemonId);
 
