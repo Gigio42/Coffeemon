@@ -46,3 +46,5 @@ prisma/migrations*.sqlite
 backend(NestJS)/database.sqlite
 *.sqlite
 .idea/*
+*.apk
+tests/apps/

@@ -51,12 +51,12 @@ export class BattlePhaseManager {
       return this.handleSelectionPhase(battleState, playerId, action);
     }
 
+    // RESOLUTION
     battleState.pendingActions[playerId] = action;
     const allActionsSubmitted = Object.values(battleState.pendingActions).every(
       (act) => act !== null
     );
 
-    // RESOLUTION
     if (allActionsSubmitted) {
       console.log('[BattlePhaseManager] All actions submitted, resolving turn.');
       return this.resolveTurn(battleState);

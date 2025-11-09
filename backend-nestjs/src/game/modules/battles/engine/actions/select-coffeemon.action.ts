@@ -6,6 +6,7 @@ import { BattleActionContext, BattleActionResult, IBattleAction } from './battle
 export class SelectCoffeemonAction implements IBattleAction<BattleActionType.SELECT_COFFEEMON> {
   readonly priority = 100;
 
+  // eslint-disable-next-line @typescript-eslint/require-await
   async execute(
     context: BattleActionContext<BattleActionType.SELECT_COFFEEMON>
   ): Promise<BattleActionResult> {
