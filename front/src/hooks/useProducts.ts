@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { fetchProducts } from '../api/productService';
+import { getServerUrl } from '../utils/config';
 import { Product } from '../types';
 
 interface UseProductsReturn {
@@ -29,7 +30,15 @@ export function useProducts(): UseProductsReturn {
       }
       
       const data = await fetchProducts();
-      setProducts(data);
+      const serverUrl = await getServerUrl();
+      
+      // Prepend server URL to image paths
+      const updatedData = data.map(product => ({
+        ...product,
+        image: product.image.startsWith('http') ? product.image : `${serverUrl}${product.image}`,
+      }));
+      
+      setProducts(updatedData);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erro desconhecido');
       console.error('Erro ao buscar produtos:', err);

@@ -1,8 +1,8 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, Image } from 'react-native';
 import { PlayerState } from '../../../types';
 import { styles } from '../../../screens/Battle/styles';
-import { getCoffeemonImageUrl } from '../../../utils/battleUtils';
+import { getServerUrl } from '../../../utils/config';
 
 interface BattleHUDProps {
   playerState: PlayerState | null;
@@ -24,10 +24,30 @@ const getTypeIcon = (type: string) => {
 };
 
 export default function BattleHUD({ playerState, isMe }: BattleHUDProps) {
+  const [serverUrl, setServerUrl] = useState<string>('');
+  const [imageUrl, setImageUrl] = useState<string>('');
+
+  useEffect(() => {
+    const loadServerUrl = async () => {
+      const url = await getServerUrl();
+      setServerUrl(url);
+    };
+    loadServerUrl();
+  }, []);
+
   const activeMon =
     playerState && playerState.activeCoffeemonIndex !== null
       ? playerState.coffeemons[playerState.activeCoffeemonIndex]
       : null;
+
+  useEffect(() => {
+    if (activeMon && serverUrl) {
+      const baseName = activeMon.name.split(' (Lvl')[0];
+      setImageUrl(`${serverUrl}/imgs/${baseName}/default.png`);
+    } else {
+      setImageUrl('');
+    }
+  }, [activeMon, serverUrl]);
 
   if (!activeMon) {
     return null;
@@ -38,7 +58,6 @@ export default function BattleHUD({ playerState, isMe }: BattleHUDProps) {
   const filledSegments = Math.ceil((hpPercent / 100) * totalSegments);
   
   const containerStyle = isMe ? styles.playerHudPosition : styles.opponentHudPosition;
-  const imageUrl = getCoffeemonImageUrl(activeMon.name, 'default');
 
   return (
     <View style={[styles.hudContainer, containerStyle]}>

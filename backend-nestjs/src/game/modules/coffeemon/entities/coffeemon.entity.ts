@@ -34,6 +34,15 @@ export class Coffeemon {
   @Column()
   baseSpeed: number;
 
+  @Column({ nullable: true })
+  defaultImage?: string;
+
+  @Column({ nullable: true })
+  backImage?: string;
+
+  @Column({ nullable: true })
+  hurtImage?: string;
+
   @OneToMany(() => CoffeemonLearnsetMove, (learnsetMove) => learnsetMove.coffeemon)
   learnset: CoffeemonLearnsetMove[];
 }

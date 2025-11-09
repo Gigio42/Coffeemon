@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Socket } from 'socket.io-client';
 import { BattleState, BattleStatus, PlayerState } from '../types';
-import { getCoffeemonImageUrl } from '../utils/battleUtils';
+import { getCoffeemonImageUrl, getBaseName } from '../utils/battleUtils';
 import { getEventMessage } from '../utils/battleMessages';
+import { getServerUrl } from '../utils/config';
 
 interface BattleEvent {
   type: string;
@@ -200,7 +201,7 @@ export function useBattle({
     }
   };
 
-  const updateCoffeemonImages = (state: BattleState) => {
+  const updateCoffeemonImages = async (state: BattleState) => {
     if (!state || !playerId) {
       console.log('updateCoffeemonImages: Invalid state or playerId');
       return;
@@ -212,10 +213,13 @@ export function useBattle({
       const opponentPlayerState =
         state.player1Id === playerId ? state.player2 : state.player1;
 
+      const serverUrl = await getServerUrl();
+
       if (myPlayerState && myPlayerState.activeCoffeemonIndex !== null) {
         const myActiveMon = myPlayerState.coffeemons[myPlayerState.activeCoffeemonIndex];
         if (myActiveMon && myActiveMon.name) {
-          const imageUrl = getCoffeemonImageUrl(myActiveMon.name, 'back');
+          const baseName = getBaseName(myActiveMon.name);
+          const imageUrl = `${serverUrl}/imgs/${baseName}/back.png`;
           console.log('updateCoffeemonImages: Player image URL:', imageUrl);
           setPlayerImageUrl(imageUrl);
         }
@@ -227,7 +231,8 @@ export function useBattle({
         const opponentActiveMon =
           opponentPlayerState.coffeemons[opponentPlayerState.activeCoffeemonIndex];
         if (opponentActiveMon && opponentActiveMon.name) {
-          const imageUrl = getCoffeemonImageUrl(opponentActiveMon.name, 'default');
+          const baseName = getBaseName(opponentActiveMon.name);
+          const imageUrl = `${serverUrl}/imgs/${baseName}/default.png`;
           console.log('updateCoffeemonImages: Opponent image URL:', imageUrl);
           setOpponentImageUrl(imageUrl);
         }
@@ -295,7 +300,9 @@ export function useBattle({
             
             // Atualizar estado primeiro (síncrono)
             setBattleState(newBattleState);
-            updateCoffeemonImages(newBattleState);
+            (async () => {
+              await updateCoffeemonImages(newBattleState);
+            })();
 
             // Processar eventos com animações otimizadas
             if (newBattleState.events && newBattleState.events.length > 0) {
@@ -382,7 +389,9 @@ export function useBattle({
   useEffect(() => {
     setupBattleEvents();
     socket.emit('joinBattle', { battleId });
-    updateCoffeemonImages(extractedBattleState);
+    (async () => {
+      await updateCoffeemonImages(extractedBattleState);
+    })();
     
     if (extractedBattleState.turnPhase === 'SELECTION') {
       const myState =

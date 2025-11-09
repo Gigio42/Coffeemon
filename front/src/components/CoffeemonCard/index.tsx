@@ -1,7 +1,7 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, Image, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { BASE_IMAGE_URL } from '../../utils/config';
+import { getServerUrl } from '../../utils/config';
 import { PlayerCoffeemon } from '../../api/coffeemonService';
 import { styles, getTypeColor } from './styles';
 
@@ -35,6 +35,17 @@ export default function CoffeemonCard({
   const isSmall = variant === 'small';
   const isInParty = coffeemon.isInParty;
   const typeColor = getTypeColor(coffeemon.coffeemon.type, coffeemon.coffeemon.name);
+
+  const [imageUri, setImageUri] = useState<string>('');
+
+  useEffect(() => {
+    const loadImageUri = async () => {
+      const serverUrl = await getServerUrl();
+      const imagePath = coffeemon.coffeemon.defaultImage || `${coffeemon.coffeemon.name}/default.png`;
+      setImageUri(`${serverUrl}${imagePath}`);
+    };
+    loadImageUri();
+  }, [coffeemon.coffeemon.defaultImage, coffeemon.coffeemon.name]);
 
   // Calcula porcentagens das barras
   const hpPercent = Math.min((coffeemon.hp / 120) * 100, 100);
@@ -87,7 +98,7 @@ export default function CoffeemonCard({
       <View style={styles.imageContainer}>
         <Image
           source={{
-            uri: `${BASE_IMAGE_URL}${coffeemon.coffeemon.name}/default.png`,
+            uri: imageUri,
           }}
           style={styles.coffeemonImage}
           resizeMode="contain"

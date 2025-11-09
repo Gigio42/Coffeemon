@@ -14,6 +14,8 @@ import { Socket } from 'socket.io-client';
 import { useBattleAnimations } from '../../hooks/useBattleAnimations';
 import { useBattle } from '../../hooks/useBattle';
 import { getCoffeemonImageUrl } from '../../utils/battleUtils';
+import { getEventMessage } from '../../utils/battleMessages';
+import { getServerUrl } from '../../utils/config'; 
 import {
   canCoffeemonAttack,
   canSwitchToCoffeemon,
@@ -117,12 +119,27 @@ export default function BattleScreen({
   // Estado local para controle de tooltip de moves e modo de ação
   const [hoveredMoveId, setHoveredMoveId] = React.useState<number | null>(null);
   const [actionMode, setActionMode] = React.useState<'main' | 'attack' | 'switch' | 'item'>('main');
+  const [serverUrl, setServerUrl] = React.useState<string>('');
 
   // Selecionar cenário aleatório (mantém o mesmo durante toda a batalha)
   const randomScenario = useMemo(() => {
     const randomIndex = Math.floor(Math.random() * SCENARIOS.length);
     return SCENARIOS[randomIndex];
   }, [battleId]); // Muda apenas quando a batalha muda
+
+  React.useEffect(() => {
+    const loadServerUrl = async () => {
+      const url = await getServerUrl();
+      setServerUrl(url);
+    };
+    loadServerUrl();
+  }, []);
+
+  const getCoffeemonImageUrlLocal = (name: string, variant: 'default' | 'back' = 'default'): string => {
+    if (!serverUrl) return '';
+    const baseName = name.split(' (Lvl')[0];
+    return `${serverUrl}/imgs/${baseName}/${variant}.png`;
+  };
 
   const renderCoffeemonSprite = (imageUrl: string, isMe: boolean) => {
     // Fallback para imagem placeholder se não houver URL
@@ -436,7 +453,7 @@ export default function BattleScreen({
 
         <View style={styles.switchGrid}>
           {availablePokemon.slice(0, 4).map((mon: any, idx: number) => {
-            const imageUrl = getCoffeemonImageUrl(mon.name, 'default');
+            const imageUrl = getCoffeemonImageUrlLocal(mon.name, 'default');
             const hpPercent = (mon.currentHp / mon.maxHp) * 100;
             const originalIndex = myPlayerState.coffeemons.findIndex((m: any) => m === mon);
             
@@ -604,7 +621,7 @@ export default function BattleScreen({
                 {myPlayerState?.coffeemons && Array.isArray(myPlayerState.coffeemons) ? (
                   myPlayerState.coffeemons.map((mon: Coffeemon, index: number) => {
                     if (!mon || !mon.name) return null;
-                    const imageUrl = getCoffeemonImageUrl(mon.name, 'default');
+                    const imageUrl = getCoffeemonImageUrlLocal(mon.name, 'default');
                     
                     // ✅ VALIDAÇÃO: Verificar se pode selecionar este Coffeemon
                     const selectionValidation = canSelectInitialCoffeemon(myPlayerState, index);
@@ -650,7 +667,7 @@ export default function BattleScreen({
                 {opponentPlayerState?.coffeemons && Array.isArray(opponentPlayerState.coffeemons) ? (
                   opponentPlayerState.coffeemons.map((mon: Coffeemon, index: number) => {
                     if (!mon || !mon.name) return null;
-                    const imageUrl = getCoffeemonImageUrl(mon.name, 'default');
+                    const imageUrl = getCoffeemonImageUrlLocal(mon.name, 'default');
                     return (
                       <View key={index} style={[styles.teamCard, styles.teamCardOpponent]}>
                         <Image
