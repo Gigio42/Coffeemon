@@ -13,6 +13,7 @@ type TurnEndPayload = { turn: number };
 type StatusAppliedPayload = { targetName: string; effectType: string };
 type StatusDamagePayload = { coffeemonName: string; damage: number; effectType: string };
 type StatusRemovedPayload = { coffeemonName: string; effectType: string };
+type StatusHealPayload = { coffeemonName: string; amount: number; effectType: string };
 
 export const BattleEventRegistry = {
   // --- Eventos de Turno ---
@@ -90,6 +91,10 @@ export const BattleEventRegistry = {
   }),
   STATUS_REMOVED: (payload: StatusRemovedPayload): BattleEvent => ({
     type: 'STATUS_REMOVED',
+    payload,
+  }),
+  STATUS_HEAL: (payload: StatusHealPayload): BattleEvent => ({
+    type: 'STATUS_HEAL',
     payload,
   }),
 };

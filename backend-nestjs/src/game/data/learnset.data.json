@@ -1,31 +1,36 @@
 [
-    { "coffeemonId": 1, "moveId": 1, "learnMethod": "start", "levelLearned": 1 },
-    { "coffeemonId": 1, "moveId": 2, "learnMethod": "level_up", "levelLearned": 7 },
-    { "coffeemonId": 1, "moveId": 13, "learnMethod": "level_up", "levelLearned": 12 },
-    { "coffeemonId": 1, "moveId": 14, "learnMethod": "machine" },
-  
-    { "coffeemonId": 2, "moveId": 3, "learnMethod": "start", "levelLearned": 1 },
-    { "coffeemonId": 2, "moveId": 4, "learnMethod": "level_up", "levelLearned": 6 },
-    { "coffeemonId": 2, "moveId": 9, "learnMethod": "level_up", "levelLearned": 11 },
-    { "coffeemonId": 2, "moveId": 10, "learnMethod": "tutor" },
-  
-    { "coffeemonId": 3, "moveId": 5, "learnMethod": "start", "levelLearned": 1 },
-    { "coffeemonId": 3, "moveId": 6, "learnMethod": "level_up", "levelLearned": 8 },
-    { "coffeemonId": 3, "moveId": 15, "learnMethod": "level_up", "levelLearned": 14 },
-    { "coffeemonId": 3, "moveId": 16, "learnMethod": "machine" },
-  
-    { "coffeemonId": 4, "moveId": 7, "learnMethod": "start", "levelLearned": 1 },
-    { "coffeemonId": 4, "moveId": 8, "learnMethod": "level_up", "levelLearned": 5 },
-  
-    { "coffeemonId": 5, "moveId": 9, "learnMethod": "start", "levelLearned": 1 },
-    { "coffeemonId": 5, "moveId": 10, "learnMethod": "level_up", "levelLearned": 9 },
-  
-    { "coffeemonId": 6, "moveId": 11, "learnMethod": "start", "levelLearned": 1 },
-    { "coffeemonId": 6, "moveId": 12, "learnMethod": "level_up", "levelLearned": 7 },
-  
-    { "coffeemonId": 7, "moveId": 13, "learnMethod": "start", "levelLearned": 1 },
-    { "coffeemonId": 7, "moveId": 14, "learnMethod": "level_up", "levelLearned": 10 },
-  
-    { "coffeemonId": 8, "moveId": 15, "learnMethod": "start", "levelLearned": 1 },
-    { "coffeemonId": 8, "moveId": 16, "learnMethod": "level_up", "levelLearned": 9 }
-  ]
+  { "coffeemonId": 1, "moveId": 1, "learnMethod": "start", "levelLearned": 1 },
+  { "coffeemonId": 1, "moveId": 14, "learnMethod": "start", "levelLearned": 1 },
+  { "coffeemonId": 1, "moveId": 22, "learnMethod": "level_up", "levelLearned": 5 },
+  { "coffeemonId": 1, "moveId": 2, "learnMethod": "level_up", "levelLearned": 7 },
+  { "coffeemonId": 1, "moveId": 13, "learnMethod": "level_up", "levelLearned": 12 },
+
+  { "coffeemonId": 2, "moveId": 3, "learnMethod": "start", "levelLearned": 1 },
+  { "coffeemonId": 2, "moveId": 9, "learnMethod": "start", "levelLearned": 1 },
+  { "coffeemonId": 2, "moveId": 17, "learnMethod": "level_up", "levelLearned": 5 },
+  { "coffeemonId": 2, "moveId": 23, "learnMethod": "level_up", "levelLearned": 9 },
+  { "coffeemonId": 2, "moveId": 4, "learnMethod": "level_up", "levelLearned": 11 },
+  { "coffeemonId": 2, "moveId": 10, "learnMethod": "tutor" },
+
+  { "coffeemonId": 3, "moveId": 5, "learnMethod": "start", "levelLearned": 1 },
+  { "coffeemonId": 3, "moveId": 15, "learnMethod": "start", "levelLearned": 1 },
+  { "coffeemonId": 3, "moveId": 18, "learnMethod": "level_up", "levelLearned": 6 },
+  { "coffeemonId": 3, "moveId": 6, "learnMethod": "level_up", "levelLearned": 8 },
+  { "coffeemonId": 3, "moveId": 24, "learnMethod": "level_up", "levelLearned": 14 },
+  { "coffeemonId": 3, "moveId": 16, "learnMethod": "machine" },
+
+  { "coffeemonId": 4, "moveId": 9, "learnMethod": "start", "levelLearned": 1 },
+  { "coffeemonId": 4, "moveId": 4, "learnMethod": "start", "levelLearned": 1 },
+  { "coffeemonId": 4, "moveId": 19, "learnMethod": "level_up", "levelLearned": 5 },
+  { "coffeemonId": 4, "moveId": 10, "learnMethod": "level_up", "levelLearned": 8 },
+  { "coffeemonId": 4, "moveId": 7, "learnMethod": "level_up", "levelLearned": 11 },
+
+  { "coffeemonId": 5, "moveId": 7, "learnMethod": "start", "levelLearned": 1 },
+  { "coffeemonId": 5, "moveId": 8, "learnMethod": "start", "levelLearned": 1 },
+  { "coffeemonId": 5, "moveId": 2, "learnMethod": "level_up", "levelLearned": 5 },
+  { "coffeemonId": 5, "moveId": 20, "learnMethod": "level_up", "levelLearned": 9 },
+
+  { "coffeemonId": 6, "moveId": 11, "learnMethod": "start", "levelLearned": 1 },
+  { "coffeemonId": 6, "moveId": 12, "learnMethod": "start", "levelLearned": 1 },
+  { "coffeemonId": 6, "moveId": 21, "learnMethod": "level_up", "levelLearned": 7 }
+]

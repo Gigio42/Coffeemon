@@ -192,7 +192,7 @@ export class BattleValidatorService {
     playerId: number
   ): ValidationResult | null {
     const activeMon = player.coffeemons[player.activeCoffeemonIndex!];
-    const { moveId } = payload;
+    const { moveId, targetCoffeemonIndex } = payload;
 
     const move = activeMon.moves.find((m) => m.id === moveId);
     if (!move) {
@@ -200,6 +200,31 @@ export class BattleValidatorService {
         playerId,
         error: 'Invalid Move ID or Coffeemon does not know this move.',
       });
+    }
+
+    const requiresAllyTarget = move.effects?.some((effect) => effect.target === 'ally');
+    if (requiresAllyTarget) {
+      if (targetCoffeemonIndex === undefined || targetCoffeemonIndex === null) {
+        return this.fail('ACTION_ERROR', {
+          playerId,
+          error: 'Move requires a specific ally target index.',
+        });
+      }
+      
+      if (
+        targetCoffeemonIndex < 0 ||
+        targetCoffeemonIndex >= player.coffeemons.length
+      ) {
+        return this.fail('SWITCH_FAILED_INVALID_INDEX', { playerId }); 
+      }
+
+      const targetMon = player.coffeemons[targetCoffeemonIndex];
+      if (targetMon.isFainted) {
+        return this.fail('ACTION_ERROR', {
+            playerId,
+            error: 'Cannot target a fainted Coffeemon.',
+        });
+      }
     }
 
     return null;

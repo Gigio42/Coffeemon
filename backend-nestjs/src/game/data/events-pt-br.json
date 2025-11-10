@@ -15,5 +15,6 @@
     "COFFEEMON_FAINTED": "{coffeemonName} derrotado!",
     "STATUS_APPLIED": "{targetName} afetado!",
     "STATUS_DAMAGE": "{coffeemonName} dano!",
-    "STATUS_REMOVED": "{coffeemonName} curado!"
+    "STATUS_REMOVED": "{coffeemonName} curado!",
+    "STATUS_HEAL": "{coffeemonName} curou {amount} HP!"
   }
