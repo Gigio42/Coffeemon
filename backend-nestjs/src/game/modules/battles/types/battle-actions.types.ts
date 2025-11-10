@@ -2,6 +2,7 @@ import { BattleActionType } from './enums';
 
 export interface AttackPayload {
   moveId: number;
+  targetCoffeemonIndex?: number;
 }
 
 export interface SwitchPayload {

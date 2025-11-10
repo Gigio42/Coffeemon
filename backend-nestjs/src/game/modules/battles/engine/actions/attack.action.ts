@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
-import { moveType } from 'src/game/modules/coffeemon/Types/coffeemon.types';
+import { Move, moveType } from '../../../moves/entities/move.entity';
+import { CoffeemonState, PlayerBattleState } from '../../types/battle-state.types';
 import { BattleActionType } from '../../types/enums';
 import { StatusEffectsService } from '../effects/status-effects.service';
 import {
@@ -21,6 +22,7 @@ export class AttackAction implements IBattleAction<BattleActionType.ATTACK> {
   ): Promise<BattleActionResult> {
     const notifications: ActionEventNotification[] = [];
     const { battleState, playerId, payload } = context;
+    const { targetCoffeemonIndex } = payload;
 
     const isPlayer1 = battleState.player1Id === playerId;
     const attacker = isPlayer1 ? battleState.player1 : battleState.player2;
@@ -40,7 +42,6 @@ export class AttackAction implements IBattleAction<BattleActionType.ATTACK> {
 
     const attackingMon = attacker.coffeemons[attacker.activeCoffeemonIndex];
     const defendingMon = defender.coffeemons[defender.activeCoffeemonIndex];
-
     const move = attackingMon.moves.find((m) => m.id === payload.moveId);
     if (!move) {
       return {
@@ -49,18 +50,21 @@ export class AttackAction implements IBattleAction<BattleActionType.ATTACK> {
       };
     }
 
-    // implementar após resolver tipos de move com status
-    // if (move.type !== moveType.ATTACK) {
-    //   return {
-    //     advanceTurn: false,
-    //     notifications: [
-    //       {
-    //         eventKey: 'ACTION_ERROR',
-    //         payload: { playerId, error: 'The selected move is not an attack.' },
-    //       },
-    //     ],
-    //   };
-    // }
+    // se for suporte, não faz cálculo de dano
+    if (move.type === moveType.SUPPORT) {
+      if (move.effects) {
+        const effectNotifications = this.processMoveEffects(
+          move,
+          attackingMon,
+          defendingMon,
+          attacker,
+          targetCoffeemonIndex,
+          0
+        );
+        notifications.push(...effectNotifications);
+      }
+      return { advanceTurn: true, notifications };
+    }
 
     // Verificação de (Dodge/Miss)
     if (
@@ -79,22 +83,24 @@ export class AttackAction implements IBattleAction<BattleActionType.ATTACK> {
     }
 
     // --- FÓRMULA DE DANO ---
-    //const attackerLevel = this.getLevelFromName(attackingMon.name); //TODO redefinir
+    // Formula original do pokemon. TODO implementar depois de ter níveis
+    //let damage = (((2 * attackerLevel) / 5 + 2) * move.power * (modifiedAttack / modifiedDefense)) / 50 + 2;
+    //const attackerLevel = this.getLevelFromName(attackingMon.name); //TODO redefinir quando implementar níveis
     const modifiedAttack = attackingMon.attack * attackingMon.modifiers.attackModifier;
     const modifiedDefense = defendingMon.defense * defendingMon.modifiers.defenseModifier;
 
-    //let damage = (((2 * attackerLevel) / 5 + 2) * move.power * (modifiedAttack / modifiedDefense)) / 50 + 2; //TODO Está usando a do Pokémon, criar uma própria
-    let damage = move.power * (modifiedAttack / modifiedDefense) * 1.2;
+    let damage = move.power * (modifiedAttack / modifiedDefense) * 0.4;
 
     // --- Multiplicadores ---
+
+    // TODO: Adicionar multiplicador de tipo aqui no futuro (Sistema elemental)
+
     // Critical Hit
     let isCriticalHit = false;
     if (Math.random() < attackingMon.modifiers.critChance) {
       damage *= 1.5;
       isCriticalHit = true;
     }
-
-    // TODO: Adicionar multiplicador de tipo aqui no futuro (Sistema elemental)
 
     // Bloqueio (Block)
     if (Math.random() < defendingMon.modifiers.blockChance) {
@@ -132,22 +138,94 @@ export class AttackAction implements IBattleAction<BattleActionType.ATTACK> {
       });
     }
 
-    if (move.effects) {
-      move.effects.forEach((effect) => {
-        if (Math.random() <= effect.chance) {
-          const target = effect.target === 'self' ? attackingMon : defendingMon;
-          const effectNotifications = this.statusEffectsService.applyEffect(effect, target);
-          notifications.push(...effectNotifications);
-        }
-      });
+    if (move.effects && move.effects.length > 0) {
+      const effectNotifications = this.processMoveEffects(
+        move,
+        attackingMon,
+        defendingMon,
+        attacker,
+        targetCoffeemonIndex,
+        finalDamage
+      );
+      notifications.push(...effectNotifications);
     }
 
     return { advanceTurn: true, notifications };
   }
 
-  //TODO pegar da forma certa
-  private getLevelFromName(name: string): number {
-    const match = name.match(/\(Lvl (\d+)\)/);
-    return match ? parseInt(match[1], 10) : 1;
+  private processMoveEffects(
+    move: Move,
+    attackingMon: CoffeemonState,
+    defenderMon: CoffeemonState,
+    attackerPlayer: PlayerBattleState,
+    targetCoffeemonIndex: number | undefined,
+    finalDamage: number = 0
+  ): ActionEventNotification[] {
+    const newNotifications: ActionEventNotification[] = [];
+
+    if (!move.effects || move.effects.length === 0) {
+      return newNotifications;
+    }
+
+    move.effects.forEach((effect) => {
+      if (Math.random() <= effect.chance) {
+        let target: CoffeemonState;
+
+        switch (effect.target) {
+          case 'self':
+            target = attackingMon;
+            break;
+
+          case 'enemy':
+            target = defenderMon;
+            break;
+
+          case 'ally': {
+            const isDistinctAlly =
+              targetCoffeemonIndex !== undefined &&
+              targetCoffeemonIndex !== attackerPlayer.activeCoffeemonIndex;
+
+            if (isDistinctAlly) {
+              target = attackerPlayer.coffeemons[targetCoffeemonIndex];
+            } else {
+              target = attackingMon;
+            }
+            break;
+          }
+
+          default:
+            console.warn(
+              `[AttackAction] Target type '${String(effect.target)}' unknown, defaulting to self.`
+            );
+            target = attackingMon;
+            break;
+        }
+
+        if (move.type === moveType.ATTACK && effect.type === 'lifesteal') {
+          const lifestealPercentage = effect.value ?? 0.5;
+          const lifestealHeal = Math.floor(finalDamage * lifestealPercentage);
+
+          if (lifestealHeal > 0) {
+            const newHp = Math.min(attackingMon.maxHp, attackingMon.currentHp + lifestealHeal);
+            const actualHeal = newHp - attackingMon.currentHp;
+            attackingMon.currentHp = newHp;
+
+            newNotifications.push({
+              eventKey: 'STATUS_HEAL',
+              payload: {
+                coffeemonName: attackingMon.name,
+                amount: actualHeal,
+                effectType: 'lifesteal',
+              },
+            });
+          }
+        } else if (effect.type !== 'lifesteal') {
+          const effectNotifications = this.statusEffectsService.applyEffect(effect, target);
+          newNotifications.push(...effectNotifications);
+        }
+      }
+    });
+
+    return newNotifications;
   }
 }

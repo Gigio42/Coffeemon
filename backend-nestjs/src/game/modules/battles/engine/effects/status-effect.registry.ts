@@ -32,6 +32,21 @@ export const defenseUp: IStatusEffect = {
   },
 };
 
+export const defenseDown: IStatusEffect = {
+  type: 'defenseDown',
+  name: 'Defense Down',
+  description: 'Decreases defense.',
+  categories: [StatusEffectCategory.MODIFIER],
+  onApply: (target, effect) => {
+    target.modifiers.defenseModifier *= effect.value ?? 0.8;
+    return { notifications: [] };
+  },
+  onRemove: (target, effect) => {
+    target.modifiers.defenseModifier /= effect.value ?? 0.8;
+    return { notifications: [] };
+  },
+};
+
 // --- Efeitos de Dano ---
 
 export const burn: IStatusEffect = {
@@ -88,6 +103,40 @@ export const freeze: IStatusEffect = {
   categories: [StatusEffectCategory.BLOCKING],
 };
 
+// --- Efeitos Instantâneos ---
+
+export const fixedHeal: IStatusEffect = {
+  type: 'fixedHeal',
+  name: 'Fixed Healing',
+  description: 'Restores HP instantly by a fixed amount.',
+  categories: [],
+  onApply: (target, effect) => {
+    const healAmount = effect.value ?? 15;
+    const newHp = Math.min(target.maxHp, target.currentHp + healAmount);
+    const actualHeal = newHp - target.currentHp;
+    target.currentHp = newHp;
+    
+    if (actualHeal > 0) {
+      return {
+        notifications: [
+          {
+            eventKey: 'STATUS_HEAL',
+            payload: { coffeemonName: target.name, amount: actualHeal, effectType: 'fixedHeal' },
+          },
+        ],
+      };
+    }
+    return { notifications: [] };
+  },
+};
+
+export const lifesteal: IStatusEffect = {
+  type: 'lifesteal',
+  name: 'Lifesteal',
+  description: 'Restores HP based on damage dealt.',
+  categories: [], 
+};
+
 export const statusEffectRegistry: Record<string, IStatusEffect> = {
   burn,
   poison,
@@ -95,4 +144,7 @@ export const statusEffectRegistry: Record<string, IStatusEffect> = {
   freeze,
   attackUp,
   defenseUp,
+  defenseDown,
+  fixedHeal,
+  lifesteal,
 };
