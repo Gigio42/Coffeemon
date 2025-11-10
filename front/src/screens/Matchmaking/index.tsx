@@ -129,6 +129,7 @@ function TeamCarouselInline({ coffeemons, onToggleParty, partyLoading }: {
               key={coffeemon.id}
               style={[
                 styles.carouselCard,
+                // Removido z-index conforme funcionou para o usuário
               ]}
               onPress={() => {
                 if (!isActive) {
@@ -146,7 +147,7 @@ function TeamCarouselInline({ coffeemons, onToggleParty, partyLoading }: {
                   {
                     transform: [{ scale: scaleValue }],
                     opacity: opacityValue,
-                    zIndex: isActive ? 300 : position === 0 ? 10 : 5, // Centro: 300 (prioridade máxima)
+                    // Removido z-index para evitar conflitos
                   },
                 ]}
               >
