@@ -37,47 +37,38 @@
   },
   {
     "id": 4,
-    "name": "Cocoly",
-    "type": "nutty",
-    "baseHp": 85,
-    "baseAttack": 55,
-    "baseDefense": 60,
-    "baseSpeed": 55
-  },
-  {
-    "id": 5,
     "name": "Emberly",
     "type": "roasted",
     "baseHp": 90,
     "baseAttack": 70,
     "baseDefense": 45,
-    "baseSpeed": 70
+    "baseSpeed": 70,
+    "defaultImage": "/imgs/Emberly/default.png",
+    "backImage": "/imgs/Emberly/back.png",
+    "hurtImage": "/imgs/Emberly/hurt.png"
+  },
+  {
+    "id": 5,
+    "name": "Almondino",
+    "type": "nutty",
+    "baseHp": 95,
+    "baseAttack": 55,
+    "baseDefense": 75,
+    "baseSpeed": 45,
+    "defaultImage": "/imgs/Almondino/default.png",
+    "backImage": "/imgs/Almondino/back.png",
+    "hurtImage": "/imgs/Almondino/hurt.png"
   },
   {
     "id": 6,
-    "name": "Cinnara",
+    "name": "Gingerlynn",
     "type": "spicy",
-    "baseHp": 75,
+    "baseHp": 85,
     "baseAttack": 75,
-    "baseDefense": 40,
-    "baseSpeed": 90
-  },
-  {
-    "id": 7,
-    "name": "Herban",
-    "type": "sour",
-    "baseHp": 80,
-    "baseAttack": 50,
-    "baseDefense": 65,
-    "baseSpeed": 65
-  },
-  {
-    "id": 8,
-    "name": "Chocobrawl",
-    "type": "sweet",
-    "baseHp": 70,
-    "baseAttack": 80,
-    "baseDefense": 45,
-    "baseSpeed": 80
+    "baseDefense": 50,
+    "baseSpeed": 80,
+    "defaultImage": "/imgs/Gingerlynn/default.png",
+    "backImage": "/imgs/Gingerlynn/back.png",
+    "hurtImage": "/imgs/Gingerlynn/hurt.png"
   }
 ]

@@ -15,5 +15,6 @@
     "COFFEEMON_FAINTED": "{coffeemonName} fainted!",
     "STATUS_APPLIED": "{targetName} affected!",
     "STATUS_DAMAGE": "{coffeemonName} damage!",
-    "STATUS_REMOVED": "{coffeemonName} cured!"
+    "STATUS_REMOVED": "{coffeemonName} cured!",
+    "STATUS_HEAL": "{coffeemonName} healed {amount} HP!"
   }

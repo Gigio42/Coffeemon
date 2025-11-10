@@ -4,7 +4,7 @@ import { Repository } from 'typeorm';
 import * as coffeemonData from '../../data/coffeemon.data.json';
 import * as learnsetData from '../../data/learnset.data.json';
 import * as moveData from '../../data/moves.data.json';
-import { Move } from '../moves/entities/move.entity';
+import { Move, moveType } from '../moves/entities/move.entity';
 import { CoffeemonLearnsetMove, MoveLearnMethod } from './entities/coffeemon-learnset-move.entity';
 import { Coffeemon, CoffeemonType } from './entities/coffeemon.entity';
 
@@ -12,7 +12,7 @@ interface IMoveData {
   id: number;
   name: string;
   power: number;
-  type: string;
+  type: moveType;
   description: string;
   effects?: {
     type: string;
@@ -22,6 +22,7 @@ interface IMoveData {
     value?: number;
   }[];
 }
+
 interface ICoffeemonData {
   id: number;
   name: string;
@@ -34,6 +35,7 @@ interface ICoffeemonData {
   backImage?: string;
   hurtImage?: string;
 }
+
 interface ILearnsetData {
   coffeemonId: number;
   moveId: number;
@@ -60,7 +62,6 @@ export class SeedService implements OnModuleInit {
       console.log('[SeedService] Moves already seeded.');
     }
 
-    // Always seed/update Coffeemons to ensure latest data
     console.log('Seeding/Updating Coffeemons...');
     await this.seedCoffeemons();
 
