@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, ActivityIndicator, ScrollView } from 'react-native';
+import { View, Text, ActivityIndicator, ScrollView, TouchableOpacity } from 'react-native';
 import CoffeemonCard from '../CoffeemonCard';
 import { PlayerCoffeemon } from '../../api/coffeemonService';
 import { styles } from './styles';
@@ -9,8 +9,11 @@ interface TeamSectionProps {
   coffeemons: PlayerCoffeemon[];
   loading: boolean;
   emptyMessage: string;
-  onToggleParty: (coffeemon: PlayerCoffeemon) => void;
+  onToggleParty: (coffeemon: PlayerCoffeemon) => Promise<void>;
   partyLoading: number | null;
+  variant: 'grid' | 'horizontal';
+  showAddButton?: boolean;
+  onAddCoffeemon?: () => void;
 }
 
 export default function TeamSection({
@@ -20,6 +23,9 @@ export default function TeamSection({
   emptyMessage,
   onToggleParty,
   partyLoading,
+  variant,
+  showAddButton = false,
+  onAddCoffeemon,
 }: TeamSectionProps) {
   const renderContent = () => {
     if (loading) {
@@ -35,28 +41,55 @@ export default function TeamSection({
     }
 
     return (
-      <ScrollView 
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.carouselContent}
-        style={styles.carousel}
-      >
-        {coffeemons.map((pc) => (
-          <CoffeemonCard
-            key={pc.id}
-            coffeemon={pc}
-            onToggleParty={onToggleParty}
-            isLoading={partyLoading === pc.id}
-            variant="large"
-          />
-        ))}
-      </ScrollView>
+      variant === 'horizontal' ? (
+        <ScrollView 
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.carouselContent}
+          style={styles.carousel}
+        >
+          {coffeemons.map((pc) => (
+            <CoffeemonCard
+              key={pc.id}
+              coffeemon={pc}
+              onToggleParty={onToggleParty}
+              isLoading={partyLoading === pc.id}
+              variant="large"
+            />
+          ))}
+        </ScrollView>
+      ) : (
+        <ScrollView 
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={styles.gridContent}
+          style={styles.grid}
+        >
+          <View style={styles.gridContainer}>
+            {coffeemons.map((pc) => (
+              <CoffeemonCard
+                key={pc.id}
+                coffeemon={pc}
+                onToggleParty={onToggleParty}
+                isLoading={partyLoading === pc.id}
+                variant="small" // Assuming small for grid
+              />
+            ))}
+          </View>
+        </ScrollView>
+      )
     );
   };
 
   return (
     <View style={styles.teamSection}>
-      <Text style={styles.sectionTitle}>{title}</Text>
+      <View style={styles.sectionHeader}>
+        <Text style={styles.sectionTitle}>{title}</Text>
+        {showAddButton && onAddCoffeemon && (
+          <TouchableOpacity style={styles.addButton} onPress={onAddCoffeemon}>
+            <Text style={styles.addButtonText}>+ Adicionar</Text>
+          </TouchableOpacity>
+        )}
+      </View>
       {renderContent()}
     </View>
   );

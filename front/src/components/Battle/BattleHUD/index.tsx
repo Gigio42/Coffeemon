@@ -1,12 +1,25 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, Image } from 'react-native';
+import { View, Text, Image, Animated } from 'react-native';
 import { PlayerState } from '../../../types';
 import { styles } from '../../../screens/Battle/styles';
-import { getServerUrl } from '../../../utils/config';
+
+// Mapping de imagens locais dos Coffeemons para HUD
+const hudImageMap: { [key: string]: any } = {
+  jasminelle: require('../../../../assets/coffeemons/jasminelle/default.png'),
+  limonetto: require('../../../../assets/coffeemons/limonetto/default.png'),
+  maprion: require('../../../../assets/coffeemons/maprion/default.png'),
+  emberly: require('../../../../assets/coffeemons/emberly/default.png'),
+  // Adicionar outros quando disponíveis
+  cocoly: require('../../../../assets/coffeemons/jasminelle/default.png'), // Temporário - usar Jasminelle
+  cinnara: require('../../../../assets/coffeemons/jasminelle/default.png'), // Temporário
+  herban: require('../../../../assets/coffeemons/jasminelle/default.png'), // Temporário
+  chocobrawl: require('../../../../assets/coffeemons/jasminelle/default.png'), // Temporário
+};
 
 interface BattleHUDProps {
   playerState: PlayerState | null;
   isMe: boolean;
+  damage?: number | null;
 }
 
 // Ícones baseados no tipo do Coffeemon
@@ -23,31 +36,48 @@ const getTypeIcon = (type: string) => {
   return icons[type?.toLowerCase()] || '☕';
 };
 
-export default function BattleHUD({ playerState, isMe }: BattleHUDProps) {
-  const [serverUrl, setServerUrl] = useState<string>('');
-  const [imageUrl, setImageUrl] = useState<string>('');
-
-  useEffect(() => {
-    const loadServerUrl = async () => {
-      const url = await getServerUrl();
-      setServerUrl(url);
-    };
-    loadServerUrl();
-  }, []);
+export default function BattleHUD({ playerState, isMe, damage }: BattleHUDProps) {
+  const [damageAnim] = useState(new Animated.Value(0));
+  const [currentDamage, setCurrentDamage] = useState<number | null>(null);
 
   const activeMon =
     playerState && playerState.activeCoffeemonIndex !== null
       ? playerState.coffeemons[playerState.activeCoffeemonIndex]
       : null;
 
+  // Get local image for the active Coffeemon
+  const getCoffeemonImage = (name: string) => {
+    const baseName = name.split(' (Lvl')[0].toLowerCase();
+    return hudImageMap[baseName] || hudImageMap.jasminelle; // Fallback para Jasminelle
+  };
+
+  // Handle damage animation
   useEffect(() => {
-    if (activeMon && serverUrl) {
-      const baseName = activeMon.name.split(' (Lvl')[0];
-      setImageUrl(`${serverUrl}/imgs/${baseName}/default.png`);
-    } else {
-      setImageUrl('');
+    if (damage && damage > 0) {
+      setCurrentDamage(damage);
+      console.log('BattleHUD received damage:', { isMe, damage });
+      
+      // Reset animation
+      damageAnim.setValue(0);
+      
+      // Animate damage text
+      Animated.sequence([
+        Animated.timing(damageAnim, {
+          toValue: 1,
+          duration: 300,
+          useNativeDriver: true,
+        }),
+        Animated.delay(1000),
+        Animated.timing(damageAnim, {
+          toValue: 0,
+          duration: 300,
+          useNativeDriver: true,
+        }),
+      ]).start(() => {
+        setCurrentDamage(null);
+      });
     }
-  }, [activeMon, serverUrl]);
+  }, [damage, damageAnim]);
 
   if (!activeMon) {
     return null;
@@ -58,6 +88,7 @@ export default function BattleHUD({ playerState, isMe }: BattleHUDProps) {
   const filledSegments = Math.ceil((hpPercent / 100) * totalSegments);
   
   const containerStyle = isMe ? styles.playerHudPosition : styles.opponentHudPosition;
+  const imageSource = getCoffeemonImage(activeMon.name);
 
   return (
     <View style={[styles.hudContainer, containerStyle]}>
@@ -65,7 +96,7 @@ export default function BattleHUD({ playerState, isMe }: BattleHUDProps) {
       <View style={styles.hudMainContent}>
         {/* Seção do Ícone - Pixel Art com image-rendering: pixelated */}
         <Image
-          source={{ uri: imageUrl }}
+          source={imageSource}
           style={styles.hudPixelIcon}
           resizeMode="contain"
         />
@@ -98,6 +129,31 @@ export default function BattleHUD({ playerState, isMe }: BattleHUDProps) {
           </View>
         </View>
       </View>
+      
+      {/* Damage Display */}
+      {currentDamage && (
+        <Animated.Text
+          style={[
+            styles.damageText,
+            {
+              opacity: damageAnim.interpolate({
+                inputRange: [0, 0.5, 1],
+                outputRange: [0, 1, 1],
+              }),
+              transform: [
+                {
+                  translateY: damageAnim.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [10, -10],
+                  }),
+                },
+              ],
+            },
+          ]}
+        >
+          -{currentDamage}
+        </Animated.Text>
+      )}
     </View>
   );
 }

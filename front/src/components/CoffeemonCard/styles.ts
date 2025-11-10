@@ -43,7 +43,6 @@ export const styles = StyleSheet.create({
     overflow: 'hidden',
     borderWidth: pixelArt.borders.widthBold,
     // borderColor é definido no componente
-    ...pixelArt.shadows.card,
     minHeight: 280,
   },
 
@@ -251,7 +250,6 @@ export const styles = StyleSheet.create({
     borderRightWidth: 0,
     borderBottomWidth: 0,
     // borderColor é definido no componente
-    ...pixelArt.shadows.button,
   },
 
   selectedButton: {

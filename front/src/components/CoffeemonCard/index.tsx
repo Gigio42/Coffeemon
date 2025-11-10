@@ -5,11 +5,21 @@ import { getServerUrl } from '../../utils/config';
 import { PlayerCoffeemon } from '../../api/coffeemonService';
 import { styles, getTypeColor } from './styles';
 
+// Mapping de imagens locais dos Coffeemons
+const imageMap: { [key: string]: any } = {
+  jasminelle: require('../../../assets/coffeemons/jasminelle/default.png'),
+  limonetto: require('../../../assets/coffeemons/limonetto/default.png'),
+  maprion: require('../../../assets/coffeemons/maprion/default.png'),
+  emberly: require('../../../assets/coffeemons/emberly/default.png'),
+};
+
 interface CoffeemonCardProps {
   coffeemon: PlayerCoffeemon;
-  onToggleParty: (coffeemon: PlayerCoffeemon) => void;
+  onToggleParty: (coffeemon: PlayerCoffeemon) => Promise<void>;
   isLoading?: boolean;
   variant?: 'large' | 'small';
+  maxHp?: number;
+  disabled?: boolean;
 }
 
 // Função de ícone atualizada para BATER com a imagem (Uva, Fogo)
@@ -31,24 +41,27 @@ export default function CoffeemonCard({
   onToggleParty,
   isLoading = false,
   variant = 'large',
+  maxHp,
+  disabled = false,
 }: CoffeemonCardProps) {
   const isSmall = variant === 'small';
   const isInParty = coffeemon.isInParty;
   const typeColor = getTypeColor(coffeemon.coffeemon.type, coffeemon.coffeemon.name);
 
-  const [imageUri, setImageUri] = useState<string>('');
+  const [imageUri, setImageUri] = useState<string | null>(null);
 
   useEffect(() => {
     const loadImageUri = async () => {
       const serverUrl = await getServerUrl();
-      const imagePath = coffeemon.coffeemon.defaultImage || `${coffeemon.coffeemon.name}/default.png`;
-      setImageUri(`${serverUrl}${imagePath}`);
+      const normalizedPath = coffeemon.coffeemon.defaultImage?.replace(/^\/+/, '')
+        || `${coffeemon.coffeemon.name}/default.png`;
+      setImageUri(`${serverUrl.replace(/\/$/, '')}/${normalizedPath}`);
     };
     loadImageUri();
   }, [coffeemon.coffeemon.defaultImage, coffeemon.coffeemon.name]);
 
   // Calcula porcentagens das barras
-  const hpPercent = Math.min((coffeemon.hp / 120) * 100, 100);
+  const hpPercent = Math.min((coffeemon.hp / (maxHp || 120)) * 100, 100);
   const expPercent = 60; // Valor fixo para o design, já que não temos o prop
 
   return (
@@ -97,9 +110,12 @@ export default function CoffeemonCard({
       {/* Imagem do Coffeemon (sem borda interna) */}
       <View style={styles.imageContainer}>
         <Image
-          source={{
-            uri: imageUri,
-          }}
+          source={
+            imageMap[coffeemon.coffeemon.name.toLowerCase()] ||
+            (imageUri
+              ? { uri: imageUri }
+              : require('../../../assets/icon.png'))
+          }
           style={styles.coffeemonImage}
           resizeMode="contain"
           defaultSource={require('../../../assets/icon.png')}
@@ -133,7 +149,7 @@ export default function CoffeemonCard({
             isInParty && styles.selectedButton, // Estilo de selecionado (se houver)
           ]}
           onPress={() => onToggleParty(coffeemon)}
-          disabled={isLoading}
+          disabled={isLoading || disabled}
           activeOpacity={0.8}
         >
           {isLoading ? (

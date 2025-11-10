@@ -1,4 +1,5 @@
 import { io, Socket } from 'socket.io-client';
+import { Platform } from 'react-native';
 import { getServerUrl } from '../utils/config';
 
 export interface SocketCallbacks {
@@ -21,7 +22,10 @@ export async function createSocket(
 
     // Conecta ao servidor Socket.IO com autenticação JWT e configurações otimizadas
     const socket = io(url, {
-      extraHeaders: { Authorization: `Bearer ${token}` },
+      auth: { token },
+      ...(Platform.OS === 'web'
+        ? {}
+        : { extraHeaders: { Authorization: `Bearer ${token}` } }),
       transports: ['websocket', 'polling'], // Tenta websocket primeiro
       reconnection: true,
       reconnectionAttempts: 5,

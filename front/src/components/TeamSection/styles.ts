@@ -7,14 +7,32 @@ export const styles = StyleSheet.create({
     marginBottom: 20,
   },
   
+  sectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+
   sectionTitle: {
     fontWeight: 'bold',
     fontSize: 16,
-    marginBottom: 12,
     color: '#8B4513',
     fontFamily: 'monospace',
     letterSpacing: 0.5,
-    textAlign: 'center',
+  },
+  
+  addButton: {
+    backgroundColor: '#27ae60',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 8,
+  },
+
+  addButtonText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: 'bold',
   },
   
   loadingContainer: {
@@ -47,5 +65,21 @@ export const styles = StyleSheet.create({
   carouselContent: {
     paddingHorizontal: 4,
     gap: 12,
+  },
+  
+  grid: {
+    width: '100%',
+    maxHeight: 300, // Limit height for scroll
+  },
+  
+  gridContent: {
+    paddingVertical: 8,
+  },
+  
+  gridContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+    gap: 8,
   },
 });

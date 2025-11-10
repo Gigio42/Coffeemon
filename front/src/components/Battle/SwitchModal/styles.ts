@@ -1,0 +1,161 @@
+import { StyleSheet, Dimensions } from 'react-native';
+import { pixelArt } from '../../../theme/pixelArt';
+
+const { width, height } = Dimensions.get('window');
+
+export const styles = StyleSheet.create({
+  blurBackdrop: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContainer: {
+    width: width * 0.92,
+    maxHeight: height * 0.85,
+    backgroundColor: 'rgba(255, 255, 255, 0.93)',
+    borderRadius: pixelArt.borders.radiusMedium,
+    padding: pixelArt.spacing.lg,
+    borderWidth: pixelArt.borders.widthBold,
+    borderColor: '#2b1d12',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.25,
+    shadowRadius: 12,
+    elevation: 12,
+  },
+  modalTitle: {
+    ...pixelArt.typography.pixelTitle,
+    fontSize: 20,
+    color: '#2b1d12',
+    textAlign: 'center',
+    marginBottom: pixelArt.spacing.md,
+  },
+  cardsContainer: {
+    paddingBottom: pixelArt.spacing.lg,
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+  },
+  card: {
+    width: '47%',
+    backgroundColor: '#ffffff',
+    borderRadius: pixelArt.borders.radiusMedium,
+    padding: pixelArt.spacing.md,
+    marginBottom: pixelArt.spacing.md,
+    borderWidth: pixelArt.borders.widthBold,
+    borderColor: '#3c2a20',
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 6,
+    elevation: 6,
+  },
+  cardDisabled: {
+    opacity: 0.5,
+    backgroundColor: '#e0dedc',
+  },
+  cardHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: pixelArt.spacing.sm,
+  },
+  cardName: {
+    ...pixelArt.typography.pixelSubtitle,
+    fontSize: 14,
+    color: '#2b1d12',
+    flexShrink: 1,
+  },
+  lockIcon: {
+    fontSize: 14,
+    color: '#8b6f57',
+  },
+  cardImage: {
+    width: '100%',
+    height: 110,
+    marginBottom: pixelArt.spacing.sm,
+  },
+  hpBarContainer: {
+    alignItems: 'center',
+    marginBottom: pixelArt.spacing.sm,
+  },
+  hpBarTrack: {
+    width: '100%',
+    height: 14,
+    borderRadius: pixelArt.borders.radiusSmall,
+    backgroundColor: '#f2dede',
+    borderWidth: pixelArt.borders.widthThick,
+    borderColor: '#3c2a20',
+    overflow: 'hidden',
+    marginBottom: 4,
+  },
+  hpBarFill: {
+    height: '100%',
+    backgroundColor: '#76c893',
+  },
+  hpText: {
+    ...pixelArt.typography.pixelBody,
+    fontSize: 12,
+    color: '#2b1d12',
+  },
+  statsRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: pixelArt.spacing.sm,
+  },
+  statBlock: {
+    alignItems: 'center',
+    flex: 1,
+  },
+  statLabel: {
+    ...pixelArt.typography.pixelBody,
+    fontSize: 10,
+    color: '#8b6f57',
+  },
+  statValue: {
+    ...pixelArt.typography.pixelSubtitle,
+    fontSize: 12,
+    color: '#2b1d12',
+  },
+  cardFooter: {
+    alignItems: 'center',
+    marginBottom: pixelArt.spacing.xs,
+  },
+  selectBadge: {
+    ...pixelArt.typography.pixelSubtitle,
+    fontSize: 13,
+    color: '#ffffff',
+    backgroundColor: '#ff914d',
+    paddingHorizontal: pixelArt.spacing.md,
+    paddingVertical: pixelArt.spacing.xs,
+    borderRadius: pixelArt.borders.radiusMedium,
+  },
+  disabledText: {
+    ...pixelArt.typography.pixelBody,
+    fontSize: 10,
+    color: '#8b6f57',
+    textAlign: 'center',
+    marginTop: pixelArt.spacing.xs,
+  },
+  emptyText: {
+    ...pixelArt.typography.pixelBody,
+    color: '#2b1d12',
+    textAlign: 'center',
+    width: '100%',
+    marginTop: pixelArt.spacing.xl,
+  },
+  closeButton: {
+    marginTop: pixelArt.spacing.sm,
+    paddingVertical: pixelArt.spacing.sm,
+    borderWidth: pixelArt.borders.widthBold,
+    borderColor: '#2b1d12',
+    borderRadius: pixelArt.borders.radiusMedium,
+    backgroundColor: '#f0c987',
+  },
+  closeButtonText: {
+    ...pixelArt.typography.pixelSubtitle,
+    textAlign: 'center',
+    color: '#2b1d12',
+    fontSize: 14,
+  },
+});
