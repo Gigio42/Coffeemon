@@ -64,7 +64,12 @@ export const styles = StyleSheet.create({
   
   carouselContent: {
     paddingHorizontal: 4,
-    gap: 12,
+    gap: 2, // Reduzido para 2 para deixar cards mais juntos
+  },
+  
+  availableCardWrapper: {
+    transform: [{ scale: 0.6 }],
+    marginHorizontal: -20, // Ajusta margem para aproximar mais os cards
   },
   
   grid: {

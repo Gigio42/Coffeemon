@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { View, Text, Image, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { getServerUrl } from '../../utils/config';
 import { PlayerCoffeemon } from '../../api/coffeemonService';
 import { styles, getTypeColor } from './styles';
+import { useDynamicPalette } from '../../utils/colorPalette';
 
 // Mapping de imagens locais dos Coffeemons
 const imageMap: { [key: string]: any } = {
@@ -11,6 +12,8 @@ const imageMap: { [key: string]: any } = {
   limonetto: require('../../../assets/coffeemons/limonetto/default.png'),
   maprion: require('../../../assets/coffeemons/maprion/default.png'),
   emberly: require('../../../assets/coffeemons/emberly/default.png'),
+  almondino: require('../../../assets/coffeemons/almondino/default.png'),
+  gingerlynn: require('../../../assets/coffeemons/gingerlynn/default.png'),
 };
 
 interface CoffeemonCardProps {
@@ -46,7 +49,12 @@ export default function CoffeemonCard({
 }: CoffeemonCardProps) {
   const isSmall = variant === 'small';
   const isInParty = coffeemon.isInParty;
-  const typeColor = getTypeColor(coffeemon.coffeemon.type, coffeemon.coffeemon.name);
+  const fallbackPalette = useMemo(
+    () => getTypeColor(coffeemon.coffeemon.type, coffeemon.coffeemon.name),
+    [coffeemon.coffeemon.type, coffeemon.coffeemon.name],
+  );
+  const assetModule = imageMap[coffeemon.coffeemon.name.toLowerCase()] ?? null;
+  const palette = useDynamicPalette(assetModule, fallbackPalette);
 
   const [imageUri, setImageUri] = useState<string | null>(null);
 
@@ -66,13 +74,13 @@ export default function CoffeemonCard({
 
   return (
     <LinearGradient
-      colors={[typeColor.dark, typeColor.light]}
+      colors={[palette.dark, palette.light]}
       start={{ x: 0, y: 0 }}
       end={{ x: 0, y: 1 }}
       style={[
         styles.coffeemonCard,
         {
-          borderColor: typeColor.dark,
+          borderColor: palette.dark,
         },
       ]}
     >
@@ -81,8 +89,8 @@ export default function CoffeemonCard({
         style={[
           styles.cardHeader,
           {
-            backgroundColor: typeColor.dark,
-            borderBottomColor: typeColor.dark,
+            backgroundColor: palette.dark,
+            borderBottomColor: palette.dark,
           },
         ]}
       >
@@ -94,7 +102,7 @@ export default function CoffeemonCard({
             {coffeemon.coffeemon.name.toUpperCase()}
           </Text>
           {/* Barra de HP abaixo do nome */}
-          <View style={[styles.headerStatBarOuter, { backgroundColor: typeColor.accent }]}>
+          <View style={[styles.headerStatBarOuter, { backgroundColor: palette.accent }]}>
             <View style={styles.headerStatBarInner}>
               <View
                 style={[
@@ -143,10 +151,10 @@ export default function CoffeemonCard({
           style={[
             styles.selectButton,
             {
-              backgroundColor: isInParty ? typeColor.light : typeColor.dark, // Cor do card quando selecionado
-              borderTopColor: typeColor.accent, // Cor da borda superior
+              backgroundColor: isInParty ? palette.light : palette.dark,
+              borderTopColor: palette.accent,
             },
-            isInParty && styles.selectedButton, // Estilo de selecionado (se houver)
+            isInParty && styles.selectedButton,
           ]}
           onPress={() => onToggleParty(coffeemon)}
           disabled={isLoading || disabled}

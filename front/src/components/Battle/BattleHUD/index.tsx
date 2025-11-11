@@ -9,6 +9,8 @@ const hudImageMap: { [key: string]: any } = {
   limonetto: require('../../../../assets/coffeemons/limonetto/default.png'),
   maprion: require('../../../../assets/coffeemons/maprion/default.png'),
   emberly: require('../../../../assets/coffeemons/emberly/default.png'),
+  almondino: require('../../../../assets/coffeemons/almondino/default.png'),
+  gingerlynn: require('../../../../assets/coffeemons/gingerlynn/default.png'),
   // Adicionar outros quando disponíveis
   cocoly: require('../../../../assets/coffeemons/jasminelle/default.png'), // Temporário - usar Jasminelle
   cinnara: require('../../../../assets/coffeemons/jasminelle/default.png'), // Temporário

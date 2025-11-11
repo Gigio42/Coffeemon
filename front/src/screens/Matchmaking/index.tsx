@@ -125,58 +125,64 @@ function TeamCarouselInline({ coffeemons, onToggleParty, partyLoading }: {
           }
 
           return (
-            <TouchableOpacity
+            <View
               key={coffeemon.id}
               style={[
-                styles.carouselCard,
-                // Removido z-index conforme funcionou para o usuário
+                styles.carouselCardWrapper,
+                {
+                  zIndex: isActive ? 300 : 200,
+                  elevation: isActive ? 8 : 2,
+                },
               ]}
-              onPress={() => {
-                if (!isActive) {
-                  swapWithCenter(position);
-                } else {
-                  // Card central clicado - remove do time
-                  onToggleParty(coffeemon);
-                }
-              }}
-              activeOpacity={0.9}
             >
-              <Animated.View
-                style={[
-                  styles.carouselCard,
-                  {
-                    transform: [{ scale: scaleValue }],
-                    opacity: opacityValue,
-                    // Removido z-index para evitar conflitos
-                  },
-                ]}
+              <TouchableOpacity
+                style={styles.carouselCard}
+                onPress={() => {
+                  if (!isActive) {
+                    swapWithCenter(position);
+                  } else {
+                    // Card central clicado - remove do time
+                    onToggleParty(coffeemon);
+                  }
+                }}
+                activeOpacity={0.9}
               >
-                <CoffeemonCard
-                  coffeemon={{
-                    id: coffeemon.id,
-                    hp: coffeemon.hp,
-                    attack: coffeemon.attack,
-                    defense: coffeemon.defense,
-                    level: coffeemon.level,
-                    experience: coffeemon.experience,
-                    isInParty: true,
-                    coffeemon: {
-                      id: coffeemon.coffeemon.id,
-                      name: coffeemon.coffeemon.name,
-                      type: 'floral',
+                <Animated.View
+                  style={[
+                    styles.carouselCard,
+                    {
+                      transform: [{ scale: scaleValue }],
+                      opacity: opacityValue,
                     },
-                  }}
-                  onToggleParty={() => Promise.resolve()} // Função que retorna Promise para satisfazer TypeScript
-                  variant="large"
-                  isLoading={partyLoading === coffeemon.id}
-                />
-                {isActive && (
-                  <View style={styles.activeIndicator}>
-                    <Text style={styles.activeIndicatorText}>★</Text>
-                  </View>
-                )}
-              </Animated.View>
-            </TouchableOpacity>
+                  ]}
+                >
+                  <CoffeemonCard
+                    coffeemon={{
+                      id: coffeemon.id,
+                      hp: coffeemon.hp,
+                      attack: coffeemon.attack,
+                      defense: coffeemon.defense,
+                      level: coffeemon.level,
+                      experience: coffeemon.experience,
+                      isInParty: true,
+                      coffeemon: {
+                        id: coffeemon.coffeemon.id,
+                        name: coffeemon.coffeemon.name,
+                        type: 'floral',
+                      },
+                    }}
+                    onToggleParty={() => Promise.resolve()} // Função que retorna Promise para satisfazer TypeScript
+                    variant="large"
+                    isLoading={partyLoading === coffeemon.id}
+                  />
+                  {isActive && (
+                    <View style={styles.activeIndicator}>
+                      <Text style={styles.activeIndicatorText}>★</Text>
+                    </View>
+                  )}
+                </Animated.View>
+              </TouchableOpacity>
+            </View>
           );
         })}
       </View>
@@ -283,35 +289,32 @@ export default function MatchmakingScreen({
   const currentScenario = React.useMemo(() => getRandomScenario(), []);
 
   return (
-    <SafeAreaView style={styles.container}>
-      {/* Header Fixo */}
-      <View style={styles.header}>
-        {onNavigateToEcommerce && (
-          <TouchableOpacity
-            style={styles.backButton}
-            onPress={onNavigateToEcommerce}
-          >
-            <Text style={styles.backButtonText}>←</Text>
-          </TouchableOpacity>
-        )}
-        <Text style={styles.headerTitle}>Arena de Batalha</Text>
-        <View style={{ width: 60 }} />
-      </View>
-
-      <ImageBackground 
-        source={currentScenario} 
+    <View style={styles.fullScreenContainer}>
+      <ImageBackground
+        source={currentScenario}
         style={styles.backgroundContainer}
         resizeMode="cover"
       >
-        <LinearGradient 
-          colors={['rgba(0,0,0,0.7)', 'rgba(0,0,0,0.3)', 'transparent']} 
+        <LinearGradient
+          colors={['rgba(0,0,0,0.7)', 'rgba(0,0,0,0.3)', 'transparent']}
           style={styles.gradientContainer}
         >
-          <ScrollView
-            style={styles.scrollView}
-            showsVerticalScrollIndicator={false}
-            contentContainerStyle={styles.scrollContent}
-          >
+          <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
+            {/* Botão de voltar flutuante */}
+            {onNavigateToEcommerce && (
+              <TouchableOpacity
+                style={styles.floatingBackButton}
+                onPress={onNavigateToEcommerce}
+              >
+                <Text style={styles.floatingBackButtonText}>←</Text>
+              </TouchableOpacity>
+            )}
+
+            <ScrollView
+              style={styles.scrollView}
+              showsVerticalScrollIndicator={false}
+              contentContainerStyle={styles.scrollContent}
+            >
           {/* Status de Matchmaking */}
           {matchStatus && (
             <View style={styles.statusCard}>
@@ -342,7 +345,6 @@ export default function MatchmakingScreen({
               )}
             </View>
 
-            <View style={styles.divider} />
 
             <TeamSection
               title={`Disponíveis (${availableCoffeemons.length})`}
@@ -435,6 +437,7 @@ export default function MatchmakingScreen({
             <Text style={styles.logoutButtonText}>Sair da Conta</Text>
           </TouchableOpacity>
         </ScrollView>
+          </SafeAreaView>
       </LinearGradient>
       </ImageBackground>
 
@@ -445,6 +448,6 @@ export default function MatchmakingScreen({
         onClose={handleCloseSelectionModal}
         partyLoading={partyLoading}
       />
-    </SafeAreaView>
+    </View>
   );
 }

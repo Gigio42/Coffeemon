@@ -49,13 +49,14 @@ export default function TeamSection({
           style={styles.carousel}
         >
           {coffeemons.map((pc) => (
-            <CoffeemonCard
-              key={pc.id}
-              coffeemon={pc}
-              onToggleParty={onToggleParty}
-              isLoading={partyLoading === pc.id}
-              variant="large"
-            />
+            <View key={pc.id} style={styles.availableCardWrapper}>
+              <CoffeemonCard
+                coffeemon={pc}
+                onToggleParty={onToggleParty}
+                isLoading={partyLoading === pc.id}
+                variant="large"
+              />
+            </View>
           ))}
         </ScrollView>
       ) : (

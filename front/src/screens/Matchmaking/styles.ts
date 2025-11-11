@@ -6,9 +6,14 @@ const statusBarHeight = Platform.OS === 'android' ? StatusBar.currentHeight || 0
 const screenWidth = Dimensions.get('window').width;
 
 export const styles = StyleSheet.create({
+  fullScreenContainer: {
+    flex: 1,
+    position: 'relative',
+  },
+  
   container: {
     flex: 1,
-    backgroundColor: '#faf8f0',
+    backgroundColor: 'transparent',
   },
   
   // ========================================
@@ -17,7 +22,7 @@ export const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
+    justifyContent: 'flex-start',
     paddingHorizontal: pixelArt.spacing.lg,
     paddingTop: pixelArt.spacing.lg + statusBarHeight,
     paddingBottom: pixelArt.spacing.md,
@@ -45,11 +50,28 @@ export const styles = StyleSheet.create({
     fontWeight: '700',
   },
   
+  floatingBackButton: {
+    position: 'absolute',
+    top: pixelArt.spacing.lg + statusBarHeight,
+    left: pixelArt.spacing.lg,
+    zIndex: 1000,
+    padding: 8,
+  },
+  
+  floatingBackButtonText: {
+    fontSize: 24,
+    color: '#8B7355',
+    fontWeight: '700',
+  },
   // ========================================
   // GRADIENTE E SCROLL
   // ========================================
   backgroundContainer: {
-    flex: 1,
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
   },
 
   gradientContainer: {
@@ -366,10 +388,18 @@ export const styles = StyleSheet.create({
     justifyContent: 'center',
   },
 
+  carouselCardWrapper: {
+    width: 110,
+    height: 110,
+    marginHorizontal: -16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    position: 'relative',
+  },
+
   carouselCard: {
-    width: 100, // Reduzido de 120 para 100
-    height: 100, // Reduzido de 120 para 100
-    marginHorizontal: 6, // Reduzido de 8 para 6
+    width: '100%',
+    height: '100%',
     alignItems: 'center',
     justifyContent: 'center',
   },

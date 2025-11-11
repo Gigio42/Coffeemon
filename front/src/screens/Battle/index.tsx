@@ -50,6 +50,14 @@ const coffeemonImageMap: { [key: string]: { default: any; back: any } } = {
     default: require('../../../assets/coffeemons/emberly/default.png'),
     back: require('../../../assets/coffeemons/emberly/back.png'),
   },
+  almondino: {
+    default: require('../../../assets/coffeemons/almondino/default.png'),
+    back: require('../../../assets/coffeemons/almondino/back.png'),
+  },
+  gingerlynn: {
+    default: require('../../../assets/coffeemons/gingerlynn/default.png'),
+    back: require('../../../assets/coffeemons/gingerlynn/back.png'),
+  },
 };
 
 interface BattleScreenProps {
