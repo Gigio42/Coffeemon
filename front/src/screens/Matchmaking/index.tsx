@@ -310,18 +310,21 @@ export default function MatchmakingScreen({
               </TouchableOpacity>
             )}
 
+            {matchStatus && (
+              <View style={styles.statusCardWrapper}>
+                <View style={styles.statusCardOutline} />
+                <View style={styles.statusCardShape} />
+                <View style={styles.statusCardContent}>
+                  <Text style={styles.statusText}>{matchStatus}</Text>
+                </View>
+              </View>
+            )}
+
             <ScrollView
               style={styles.scrollView}
               showsVerticalScrollIndicator={false}
               contentContainerStyle={styles.scrollContent}
             >
-          {/* Status de Matchmaking */}
-          {matchStatus && (
-            <View style={styles.statusCard}>
-              <Text style={styles.statusText}>{matchStatus}</Text>
-            </View>
-          )}
-
           {/* Seção de Times */}
           <View style={styles.teamsSection}>
             {/* Carrossel do Time - 3 cards centralizados com animação */}

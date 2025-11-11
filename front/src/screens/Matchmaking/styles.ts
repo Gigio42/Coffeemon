@@ -52,7 +52,7 @@ export const styles = StyleSheet.create({
   
   floatingBackButton: {
     position: 'absolute',
-    top: pixelArt.spacing.lg + statusBarHeight,
+    top: statusBarHeight + pixelArt.spacing.xxl + pixelArt.spacing.lg,
     left: pixelArt.spacing.lg,
     zIndex: 1000,
     padding: 8,
@@ -84,32 +84,64 @@ export const styles = StyleSheet.create({
 
   scrollContent: {
     padding: pixelArt.spacing.lg,
+    paddingTop: pixelArt.spacing.lg + 56,
     paddingBottom: 40,
   },
   
   // ========================================
   // STATUS CARD
   // ========================================
-  statusCard: {
-    backgroundColor: '#fff9f0',
-    padding: pixelArt.spacing.lg,
-    borderRadius: 8,
-    marginBottom: pixelArt.spacing.lg,
-    borderWidth: 2,
-    borderTopWidth: 3,
-    borderLeftWidth: 3,
-    borderTopColor: '#faf8f0',
-    borderLeftColor: '#faf8f0',
-    borderBottomWidth: 3,
-    borderRightWidth: 3,
-    borderBottomColor: '#d4c5a0',
-    borderRightColor: '#d4c5a0',
-    elevation: 3,
+  statusCardWrapper: {
+    position: 'absolute',
+    top: statusBarHeight + pixelArt.spacing.xxl + pixelArt.spacing.md,
+    alignSelf: 'center',
+    width: '45%',
+    maxWidth: 120,
+    height: 32,
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 500,
   },
-  
+
+  statusCardOutline: {
+    position: 'absolute',
+    top: 0,
+    width: '100%',
+    height: 0,
+    borderTopWidth: 32,
+    borderTopColor: '#d4c5a0',
+    borderLeftWidth: 16,
+    borderLeftColor: 'transparent',
+    borderRightWidth: 16,
+    borderRightColor: 'transparent',
+  },
+
+  statusCardShape: {
+    position: 'absolute',
+    top: 4,
+    width: '100%',
+    height: 0,
+    borderTopWidth: 26,
+    borderTopColor: '#fff9f0',
+    borderLeftWidth: 13,
+    borderLeftColor: 'transparent',
+    borderRightWidth: 13,
+    borderRightColor: 'transparent',
+  },
+
+  statusCardContent: {
+    position: 'absolute',
+    top: 6,
+    left: 18,
+    right: 18,
+    bottom: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+
   statusText: {
     ...pixelArt.typography.pixelBody,
-    fontSize: 14,
+    fontSize: 10,
     color: '#8B4513',
     textAlign: 'center',
     fontWeight: 'bold',

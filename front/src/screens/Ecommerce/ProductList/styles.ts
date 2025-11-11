@@ -94,58 +94,6 @@ export const styles = StyleSheet.create({
   },
 
   // ========================================
-  // BOTÃO DE MATCHMAKING
-  // ========================================
-  matchmakingButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#8B4513', // Cor café
-    width: '100%', // Largura total
-    paddingVertical: 10, // Mais fino
-    paddingHorizontal: 20,
-    // Sem margin e padding externos
-    margin: 0,
-    // Efeito 3D melhorado
-    borderTopWidth: 3,
-    borderLeftWidth: 0,
-    borderRightWidth: 0,
-    borderTopColor: '#A0522D',
-    borderBottomWidth: 4,
-    borderBottomColor: '#5D2E0A',
-    // Sombra
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.3,
-    shadowRadius: 5,
-    elevation: 6,
-  },
-
-  matchmakingButtonPressed: {
-    backgroundColor: '#5D2E0A',
-    borderTopColor: '#5D2E0A',
-    borderBottomColor: '#8B4513',
-    transform: [{ translateY: 1 }],
-  },
-
-  matchmakingIcon: {
-    width: 28, // Maior
-    height: 28,
-    marginRight: 12, // Mais espaço
-    tintColor: '#ffffff',
-  },
-
-  matchmakingText: {
-    ...pixelArt.typography.pixelButton,
-    color: '#ffffff',
-    fontSize: 16, // Maior
-    fontWeight: 'bold',
-    textShadowColor: 'rgba(0, 0, 0, 0.3)',
-    textShadowOffset: { width: 1, height: 1 },
-    textShadowRadius: 2,
-  },
-
-  // ========================================
   // BOTÃO DO CARRINHO (REMOVIDO - mantido para referência)
   // ========================================
   /*

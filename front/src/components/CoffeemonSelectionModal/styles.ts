@@ -65,6 +65,8 @@ export const styles = StyleSheet.create({
     paddingHorizontal: 4,
     gap: 12,
     flexDirection: 'row',
+    alignSelf: 'flex-start',
+    flexGrow: 0,
   },
   emptyText: {
     textAlign: 'center',

@@ -131,97 +131,124 @@ export default function EcommerceScreen({
       {/* Barra de Navegação Inferior - Só mostra nas telas principais, não nos detalhes */}
       {currentTab !== EcommerceTab.PRODUCT_DETAIL && (
         <View style={styles.tabBar}>
-          {/* Tab: Produtos */}
-          <TouchableOpacity
-            style={styles.tabButton}
-            onPress={() => setCurrentTab(EcommerceTab.PRODUCTS)}
-          >
-    
-            <Image
-              source={require('../../../assets/icons/loja.png')}
-              style={[
-                styles.tabIconImage,
-                currentTab === EcommerceTab.PRODUCTS && styles.tabIconActive
-              ]}
-              resizeMode="contain"
-            />
-            <Text style={[
-              styles.tabLabel,
-              currentTab === EcommerceTab.PRODUCTS && styles.tabLabelActive
-            ]}>
-              Produtos
-            </Text>
-          </TouchableOpacity>
-
-          {/* Tab: Carrinho */}
-          <TouchableOpacity
-            style={styles.tabButton}
-            onPress={() => setCurrentTab(EcommerceTab.CART)}
-          >
-            <View>
+          <View style={styles.tabGroup}>
+            {/* Tab: Produtos */}
+            <TouchableOpacity
+              style={styles.tabButton}
+              onPress={() => setCurrentTab(EcommerceTab.PRODUCTS)}
+            >
               <Image
-                source={require('../../../assets/icons/icone_carrinho_compra.png')}
+                source={require('../../../assets/icons/loja.png')}
                 style={[
                   styles.tabIconImage,
-                  currentTab === EcommerceTab.CART && styles.tabIconActive
+                  currentTab === EcommerceTab.PRODUCTS && styles.tabIconActive
                 ]}
                 resizeMode="contain"
               />
-              {cartCount > 0 && (
-                <View style={styles.badge}>
-                  <Text style={styles.badgeText}>{cartCount}</Text>
-                </View>
-              )}
+              <Text
+                style={[
+                  styles.tabLabel,
+                  currentTab === EcommerceTab.PRODUCTS && styles.tabLabelActive
+                ]}
+              >
+                Produtos
+              </Text>
+            </TouchableOpacity>
+
+            {/* Tab: Carrinho */}
+            <TouchableOpacity
+              style={styles.tabButton}
+              onPress={() => setCurrentTab(EcommerceTab.CART)}
+            >
+              <View>
+                <Image
+                  source={require('../../../assets/icons/icone_carrinho_compra.png')}
+                  style={[
+                    styles.tabIconImage,
+                    currentTab === EcommerceTab.CART && styles.tabIconActive
+                  ]}
+                  resizeMode="contain"
+                />
+                {cartCount > 0 && (
+                  <View style={styles.badge}>
+                    <Text style={styles.badgeText}>{cartCount}</Text>
+                  </View>
+                )}
+              </View>
+              <Text
+                style={[
+                  styles.tabLabel,
+                  currentTab === EcommerceTab.CART && styles.tabLabelActive
+                ]}
+              >
+                Carrinho
+              </Text>
+            </TouchableOpacity>
+          </View>
+
+          {/* Botão central: Matchmaking */}
+          <TouchableOpacity
+            style={styles.centerButtonWrapper}
+            onPress={onNavigateToMatchmaking}
+            activeOpacity={0.85}
+          >
+            <View style={styles.centerButton}>
+              <Image
+                source={require('../../../assets/icons/escudo.png')}
+                style={styles.centerButtonIcon}
+                resizeMode="contain"
+              />
             </View>
-            <Text style={[
-              styles.tabLabel,
-              currentTab === EcommerceTab.CART && styles.tabLabelActive
-            ]}>
-              Carrinho
-            </Text>
+            <Text style={styles.centerButtonLabel}>Match</Text>
           </TouchableOpacity>
 
-          {/* Tab: Pedidos */}
-          <TouchableOpacity
-            style={styles.tabButton}
-            onPress={() => setCurrentTab(EcommerceTab.ORDERS)}
-          >
-            <Image
-              source={require('../../../assets/icons/icone_caixa_produto.png')}
-              style={[
-                styles.tabIconImage,
-                currentTab === EcommerceTab.ORDERS && styles.tabIconActive
-              ]}
-              resizeMode="contain"
-            />
-            <Text style={[
-              styles.tabLabel,
-              currentTab === EcommerceTab.ORDERS && styles.tabLabelActive
-            ]}>
-              Pedidos
-            </Text>
-          </TouchableOpacity>
+          <View style={styles.tabGroup}>
+            {/* Tab: Pedidos */}
+            <TouchableOpacity
+              style={styles.tabButton}
+              onPress={() => setCurrentTab(EcommerceTab.ORDERS)}
+            >
+              <Image
+                source={require('../../../assets/icons/icone_caixa_produto.png')}
+                style={[
+                  styles.tabIconImage,
+                  currentTab === EcommerceTab.ORDERS && styles.tabIconActive
+                ]}
+                resizeMode="contain"
+              />
+              <Text
+                style={[
+                  styles.tabLabel,
+                  currentTab === EcommerceTab.ORDERS && styles.tabLabelActive
+                ]}
+              >
+                Pedidos
+              </Text>
+            </TouchableOpacity>
 
-          {/* Tab: Perfil */}
-          <TouchableOpacity
-            style={styles.tabButton}
-            onPress={() => setCurrentTab(EcommerceTab.PROFILE)}
-          >
-            <Image
-              source={require('../../../assets/icons/icone_perfil_usuario_generico.png')}
-              style={[
-                styles.tabIconImage,
-                currentTab === EcommerceTab.PROFILE && styles.tabIconActive
-              ]}
-              resizeMode="contain"
-            />
-            <Text style={[
-              styles.tabLabel,
-              currentTab === EcommerceTab.PROFILE && styles.tabLabelActive
-            ]}>
-              Perfil
-            </Text>
-          </TouchableOpacity>
+            {/* Tab: Perfil */}
+            <TouchableOpacity
+              style={styles.tabButton}
+              onPress={() => setCurrentTab(EcommerceTab.PROFILE)}
+            >
+              <Image
+                source={require('../../../assets/icons/icone_perfil_usuario_generico.png')}
+                style={[
+                  styles.tabIconImage,
+                  currentTab === EcommerceTab.PROFILE && styles.tabIconActive
+                ]}
+                resizeMode="contain"
+              />
+              <Text
+                style={[
+                  styles.tabLabel,
+                  currentTab === EcommerceTab.PROFILE && styles.tabLabelActive
+                ]}
+              >
+                Perfil
+              </Text>
+            </TouchableOpacity>
+          </View>
         </View>
       )}
     </View>
