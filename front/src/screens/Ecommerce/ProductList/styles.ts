@@ -164,6 +164,14 @@ export const styles = StyleSheet.create({
     flex: 1,
   },
 
+  content: {
+    flex: 1,
+  },
+
+  productList: {
+    flex: 1,
+  },
+
   scrollView: {
     flex: 1,
   },

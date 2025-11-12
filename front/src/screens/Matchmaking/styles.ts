@@ -67,15 +67,14 @@ export const styles = StyleSheet.create({
   // GRADIENTE E SCROLL
   // ========================================
   backgroundContainer: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
+    ...StyleSheet.absoluteFillObject,
+    width: '100%',
+    height: '100%',
   },
 
   gradientContainer: {
     flex: 1,
+    width: '100%',
   },
   
   scrollView: {
@@ -85,7 +84,7 @@ export const styles = StyleSheet.create({
   scrollContent: {
     padding: pixelArt.spacing.lg,
     paddingTop: pixelArt.spacing.lg + 56,
-    paddingBottom: 40,
+    paddingBottom: pixelArt.spacing.xxl * 2,
   },
   
   // ========================================
@@ -152,6 +151,8 @@ export const styles = StyleSheet.create({
   // ========================================
   teamsSection: {
     marginBottom: pixelArt.spacing.lg,
+    alignItems: 'flex-start',
+    width: '100%',
   },
 
   sectionTitle: {
@@ -340,6 +341,42 @@ export const styles = StyleSheet.create({
   },
 
   // ========================================
+  // BOTTOM BAR EMOJI BUTTONS
+  // ========================================
+  bottomBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-evenly',
+    paddingVertical: pixelArt.spacing.md,
+    paddingHorizontal: pixelArt.spacing.lg,
+    backgroundColor: 'rgba(0, 0, 0, 0.35)',
+    borderTopWidth: 2,
+    borderTopColor: 'rgba(255, 255, 255, 0.25)',
+  },
+
+  bottomBarButton: {
+    width: 54,
+    height: 54,
+    borderRadius: 12,
+    backgroundColor: 'rgba(0, 0, 0, 0.25)',
+    borderWidth: 2,
+    borderTopColor: 'rgba(255, 255, 255, 0.3)',
+    borderLeftColor: 'rgba(255, 255, 255, 0.3)',
+    borderBottomColor: 'rgba(0, 0, 0, 0.6)',
+    borderRightColor: 'rgba(0, 0, 0, 0.6)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+
+  bottomBarButtonDisabled: {
+    opacity: 0.45,
+  },
+
+  bottomBarEmoji: {
+    fontSize: 26,
+  },
+
+  // ========================================
   // DEPRECATED (mantidos para compatibilidade)
   // ========================================
   matchmakingContainer: {
@@ -411,19 +448,25 @@ export const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     height: 170, // Reduzido de 200 para 170
-    marginVertical: pixelArt.spacing.md,
+    marginTop: pixelArt.spacing.xl,
+    marginBottom: pixelArt.spacing.md,
+    width: '100%',
+    maxWidth: Math.min(screenWidth * 0.85, 340),
+    alignSelf: 'flex-start',
+    marginLeft: -pixelArt.spacing.md,
   },
 
   carouselTrack: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
+    justifyContent: 'flex-start',
+    width: '100%',
   },
 
   carouselCardWrapper: {
     width: 110,
     height: 110,
-    marginHorizontal: -16,
+    marginHorizontal: pixelArt.spacing.xs,
     alignItems: 'center',
     justifyContent: 'center',
     position: 'relative',
@@ -542,13 +585,20 @@ export const styles = StyleSheet.create({
   // ========================================
   teamColumn: {
     marginBottom: pixelArt.spacing.sm,
+    marginTop: pixelArt.spacing.xl,
+    alignItems: 'center',
+    justifyContent: 'center',
+    alignSelf: 'flex-start',
+    marginLeft: 0,
+    width: '100%',
+    maxWidth: Math.min(screenWidth * 0.9, 380),
     // borderWidth: pixelArt.borders.widthThick,
     // borderTopColor: pixelArt.colors.borderLight,
     // borderLeftColor: pixelArt.colors.borderLight,
     // borderBottomColor: pixelArt.colors.borderDark,
     // borderRightColor: pixelArt.colors.borderDark,
     // borderRadius: pixelArt.borders.radiusMedium,
-    paddingHorizontal: pixelArt.spacing.md,
+    paddingHorizontal: 0,
     paddingVertical: pixelArt.spacing.sm,
     // backgroundColor: '#f9f9f9', // Removido - fundo transparente
   },

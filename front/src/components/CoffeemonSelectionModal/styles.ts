@@ -1,7 +1,5 @@
-import { StyleSheet, Dimensions } from 'react-native';
+import { StyleSheet } from 'react-native';
 import { pixelArt } from '../../theme/pixelArt';
-
-const { width, height } = Dimensions.get('window');
 
 export const styles = StyleSheet.create({
   fullscreen: {
@@ -12,12 +10,12 @@ export const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
+  androidBackdrop: {
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+  },
   modalContainer: {
-    width: width * 0.9,
-    maxHeight: height * 0.8,
     backgroundColor: 'transparent',
     borderRadius: 20,
-    padding: 20,
   },
   modalHeader: {
     flexDirection: 'row',
