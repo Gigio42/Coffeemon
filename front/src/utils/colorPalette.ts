@@ -383,8 +383,11 @@ async function loadRawAssetData(source: ImageSourcePropType, resolved: ImageReso
     const baseDir = directories.cacheDirectory ?? directories.documentDirectory ?? '';
     const normalizedDir = baseDir.replace(/\\/g, '/');
     const dirWithSlash = normalizedDir.endsWith('/') ? normalizedDir : `${normalizedDir}/`;
-    const cacheFileName = `palette-${encodeURIComponent(resolved.uri)}-${resolved.width ?? 'w'}x${resolved.height ?? 'h'}.png`;
+    const cacheFileName = `palette-${resolved.uri.replace(/[^a-z0-9._-]/gi, '_')}-${resolved.width ?? 'w'}x${resolved.height ?? 'h'}.png`;
     const targetUri = `${dirWithSlash}${cacheFileName}`;
+    if (typeof FileSystem.makeDirectoryAsync === 'function') {
+      await FileSystem.makeDirectoryAsync(dirWithSlash, { intermediates: true }).catch(() => undefined);
+    }
     const downloadResult = await FileSystem.downloadAsync(baseUri, targetUri);
     fileUri = downloadResult.uri;
   }

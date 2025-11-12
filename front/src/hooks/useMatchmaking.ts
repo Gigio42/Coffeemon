@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { InteractionManager } from 'react-native';
+import { InteractionManager, Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Socket } from 'socket.io-client';
 import * as socketService from '../api/socketService';
@@ -32,6 +32,19 @@ export function useMatchmaking({
   const [log, setLog] = useState<string[]>([]);
 
   useEffect(() => {
+    if (Platform.OS === 'ios') {
+      (async () => {
+        try {
+          const storedStatus = await AsyncStorage.getItem('matchmaking:status');
+          if (storedStatus) {
+            setMatchStatus(storedStatus);
+          }
+        } catch (err) {
+          console.error('Error loading persisted matchmaking status:', err);
+        }
+      })();
+    }
+
     setupSocket();
 
     // Cleanup: desconecta socket quando componente é desmontado
@@ -41,6 +54,22 @@ export function useMatchmaking({
       }
     };
   }, []);
+
+  useEffect(() => {
+    if (Platform.OS !== 'ios') return;
+
+    (async () => {
+      try {
+        if (!matchStatus) {
+          await AsyncStorage.removeItem('matchmaking:status');
+        } else {
+          await AsyncStorage.setItem('matchmaking:status', matchStatus);
+        }
+      } catch (err) {
+        console.error('Error persisting matchmaking status:', err);
+      }
+    })();
+  }, [matchStatus]);
 
   function addLog(msg: string) {
     console.log('LOG:', msg);
@@ -146,6 +175,7 @@ export function useMatchmaking({
       socketService.disconnectSocket(socket);
       setSocket(null);
     }
+    setMatchStatus('');
     onNavigateToLogin();
   }
 

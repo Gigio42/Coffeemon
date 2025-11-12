@@ -221,34 +221,6 @@ export const styles = StyleSheet.create({
   },
   
   // ========================================
-  // MENSAGENS DE EVENTO - Centro da Tela (Popup)
-  // ========================================
-  popupContainer: {
-    position: 'absolute',
-    top: '50%',
-    left: '50%',
-    transform: [{ translateX: -150 }, { translateY: -50 }],
-    width: 300,
-    alignItems: 'center',
-    zIndex: 100,
-  },
-  
-  popupText: {
-    backgroundColor: '#FFFFF0',
-    color: '#333',
-    paddingHorizontal: 20,
-    paddingVertical: 16,
-    borderRadius: 8,
-    borderWidth: 3,
-    borderColor: '#333',
-    textAlign: 'center',
-    fontSize: 14,
-    fontWeight: 'bold',
-    fontFamily: 'monospace',
-    lineHeight: 20,
-  },
-  
-  // ========================================
   // CONTAINER DE AÇÕES - Painel Inferior
   // ========================================
   battleActionsContainer: {

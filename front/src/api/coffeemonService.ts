@@ -1,4 +1,5 @@
 import { getServerUrl } from '../utils/config';
+import { StatusEffect } from '../types';
 
 export interface PlayerCoffeemon {
   id: number;
@@ -8,6 +9,7 @@ export interface PlayerCoffeemon {
   level: number;
   experience: number;
   isInParty: boolean;
+  statusEffects?: StatusEffect[];
   coffeemon: {
     id: number;
     name: string;
@@ -128,12 +130,12 @@ export async function giveAllCoffeemons(token: string): Promise<{ message: strin
   return await response.json();
 }
 
-import { getCoffeemonImage as getImageFromAssets } from '../../assets/coffeemons';
+import { CoffeemonVariant, getCoffeemonImage as getImageFromAssets } from '../../assets/coffeemons';
 
 /**
  * Obtém a imagem de um Coffeemon
  */
-export function getCoffeemonImageSource(name: string, variant: 'default' | 'back' = 'default') {
+export function getCoffeemonImageSource(name: string, variant: CoffeemonVariant = 'default') {
   return getImageFromAssets(name, variant);
 }
 

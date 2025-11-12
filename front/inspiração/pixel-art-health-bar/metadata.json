@@ -1,0 +1,5 @@
+{
+  "name": "Pixel Art Health Bar",
+  "description": "A React application that meticulously recreates a grass-themed, pixel-art style health bar inspired by classic RPGs, built with TypeScript and styled with Tailwind CSS.",
+  "requestFramePermissions": []
+}

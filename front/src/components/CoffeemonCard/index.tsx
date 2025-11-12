@@ -1,11 +1,13 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { View, Text, Image, TouchableOpacity, ActivityIndicator } from 'react-native';
+import type { ImageSourcePropType } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { getServerUrl } from '../../utils/config';
 import { PlayerCoffeemon } from '../../api/coffeemonService';
 import { styles, getTypeColor } from './styles';
 import { useDynamicPalette } from '../../utils/colorPalette';
 import { getCoffeemonImage } from '../../../assets/coffeemons';
+import { getVariantForStatusEffects } from '../../utils/statusEffects';
 
 interface CoffeemonCardProps {
   coffeemon: PlayerCoffeemon;
@@ -43,10 +45,13 @@ export default function CoffeemonCard({
     () => getTypeColor(coffeemon.coffeemon.type, coffeemon.coffeemon.name),
     [coffeemon.coffeemon.type, coffeemon.coffeemon.name],
   );
-  const assetModule = getCoffeemonImage(coffeemon.coffeemon.name, 'default');
+  const spriteVariant = getVariantForStatusEffects(coffeemon.statusEffects, 'default');
+  const assetModule = getCoffeemonImage(coffeemon.coffeemon.name, spriteVariant);
   const palette = useDynamicPalette(assetModule, fallbackPalette);
 
   const [imageUri, setImageUri] = useState<string | null>(null);
+  const fallbackImage = assetModule || require('../../../assets/icon.png');
+  const [imageSource, setImageSource] = useState<ImageSourcePropType>(fallbackImage);
   const [showRemoveOverlay, setShowRemoveOverlay] = useState(false);
 
   useEffect(() => {
@@ -58,6 +63,37 @@ export default function CoffeemonCard({
     };
     loadImageUri();
   }, [coffeemon.coffeemon.defaultImage, coffeemon.coffeemon.name]);
+
+  useEffect(() => {
+    setImageSource(fallbackImage);
+  }, [fallbackImage]);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    if (!imageUri) {
+      setImageSource(fallbackImage);
+      return () => {
+        isMounted = false;
+      };
+    }
+
+    Image.prefetch(imageUri)
+      .then((success) => {
+        if (isMounted) {
+          setImageSource(success ? { uri: imageUri } : fallbackImage);
+        }
+      })
+      .catch(() => {
+        if (isMounted) {
+          setImageSource(fallbackImage);
+        }
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [imageUri, fallbackImage]);
 
   useEffect(() => {
     if (!isInParty) {
@@ -154,14 +190,11 @@ export default function CoffeemonCard({
         {/* Imagem do Coffeemon (sem borda interna) */}
         <View style={styles.imageContainer}>
           <Image
-            source={
-              imageUri
-                ? { uri: imageUri }
-                : assetModule || require('../../../assets/icon.png')
-            }
+            source={imageSource}
             style={styles.coffeemonImage}
             resizeMode="contain"
-            defaultSource={assetModule || require('../../../assets/icon.png')}
+            defaultSource={fallbackImage}
+            onError={() => setImageSource(fallbackImage)}
           />
         </View>
 

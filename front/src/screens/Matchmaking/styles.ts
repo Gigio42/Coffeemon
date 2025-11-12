@@ -92,7 +92,7 @@ export const styles = StyleSheet.create({
   // ========================================
   statusCardWrapper: {
     position: 'absolute',
-    top: statusBarHeight + pixelArt.spacing.xxl + pixelArt.spacing.md,
+    top: statusBarHeight + pixelArt.spacing.xxl * 2,
     alignSelf: 'center',
     width: '45%',
     maxWidth: 120,
@@ -452,15 +452,16 @@ export const styles = StyleSheet.create({
     marginBottom: pixelArt.spacing.md,
     width: '100%',
     maxWidth: Math.min(screenWidth * 0.85, 340),
-    alignSelf: 'flex-start',
-    marginLeft: -pixelArt.spacing.md,
+    alignSelf: Platform.OS === 'ios' ? 'flex-start' : 'center',
+    marginLeft: Platform.OS === 'ios' ? -pixelArt.spacing.md : 0,
   },
 
   carouselTrack: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'flex-start',
+    justifyContent: 'center',
     width: '100%',
+    overflow: 'visible',
   },
 
   carouselCardWrapper: {
@@ -470,6 +471,7 @@ export const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     position: 'relative',
+    ...pixelArt.shadows.card,
   },
 
   carouselCard: {
@@ -477,6 +479,7 @@ export const styles = StyleSheet.create({
     height: '100%',
     alignItems: 'center',
     justifyContent: 'center',
+    overflow: 'visible',
   },
 
   carouselCardContent: {
@@ -585,11 +588,11 @@ export const styles = StyleSheet.create({
   // ========================================
   teamColumn: {
     marginBottom: pixelArt.spacing.sm,
-    marginTop: pixelArt.spacing.xl,
+    marginTop: pixelArt.spacing.lg,
     alignItems: 'center',
     justifyContent: 'center',
-    alignSelf: 'flex-start',
-    marginLeft: 0,
+    alignSelf: Platform.OS === 'ios' ? 'flex-start' : 'center',
+    marginLeft: Platform.OS === 'ios' ? -pixelArt.spacing.md : 0,
     width: '100%',
     maxWidth: Math.min(screenWidth * 0.9, 380),
     // borderWidth: pixelArt.borders.widthThick,
@@ -606,7 +609,7 @@ export const styles = StyleSheet.create({
   teamColumnTitle: {
     ...pixelArt.typography.pixelSubtitle,
     fontSize: 14,
-    color: pixelArt.colors.textLight,
+    color: pixelArt.colors.textDark,
     textAlign: 'center',
     marginBottom: pixelArt.spacing.md,
   },

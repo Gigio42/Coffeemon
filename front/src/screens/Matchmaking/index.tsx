@@ -8,6 +8,7 @@ import {
   ImageBackground,
   Animated,
   PanResponder,
+  Easing,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -23,22 +24,43 @@ import CoffeemonSelectionModal from '../../components/CoffeemonSelectionModal';
 import CoffeemonCard from '../../components/CoffeemonCard';
 
 import { styles } from './styles';
+import { pixelArt } from '../../theme/pixelArt';
+
+const CARD_WIDTH = 110;
+const CARD_HORIZONTAL_MARGIN = pixelArt.spacing.xs;
+const CARD_TOTAL_WIDTH = CARD_WIDTH + CARD_HORIZONTAL_MARGIN * 2;
+const SWIPE_THRESHOLD = CARD_TOTAL_WIDTH * 0.4;
+const SWIPE_VELOCITY_THRESHOLD = 0.4;
+const CARD_ANIMATION_DURATION = 680;
 
 // Componente inline para o carrossel do time
-function TeamCarouselInline({ coffeemons, onToggleParty: onTogglePartyProp, partyLoading }: {
+function TeamCarouselInline({
+  coffeemons,
+  onToggleParty: onTogglePartyProp,
+  partyLoading,
+  onScrollInterruption,
+}: {
   coffeemons: PlayerCoffeemon[];
   onToggleParty: (coffeemon: PlayerCoffeemon) => void;
   partyLoading: number | null;
+  onScrollInterruption?: (interrupting: boolean) => void;
 }) {
   // Ordem visual dos cards (posição 0 = esquerda, 1 = centro, 2 = direita)
   const [displayOrder, setDisplayOrder] = useState<number[]>(() => coffeemons.map((_, index) => index));
   const scaleValuesRef = React.useRef<Animated.Value[]>([]);
   const opacityValuesRef = React.useRef<Animated.Value[]>([]);
+  const translateYValuesRef = React.useRef<Animated.Value[]>([]);
+  const translateXValuesRef = React.useRef<Animated.Value[]>([]);
+  const accumulatedDxRef = React.useRef(0);
+  const previousDxRef = React.useRef(0);
+  const swipeTriggeredRef = React.useRef(false);
 
   // Inicializar arrays de animação
   const initializeAnimationArrays = React.useCallback(() => {
     scaleValuesRef.current = coffeemons.map(() => new Animated.Value(1));
     opacityValuesRef.current = coffeemons.map(() => new Animated.Value(1));
+    translateYValuesRef.current = coffeemons.map(() => new Animated.Value(0));
+    translateXValuesRef.current = coffeemons.map(() => new Animated.Value(0));
   }, [coffeemons.length]);
 
   // Atualizar arrays e ordem quando coffeemons muda
@@ -60,12 +82,41 @@ function TeamCarouselInline({ coffeemons, onToggleParty: onTogglePartyProp, part
 
         const distance = Math.abs(position - centerPosition);
 
-        const scale = distance === 0 ? 0.95 : distance === 1 ? 0.75 : 0.6; // Centro reduzido para 95%
-        const opacity = distance === 0 ? 1 : distance === 1 ? 0.5 : 0.3; // Opacidades reduzidas
+        const scale = distance === 0 ? 0.92 : distance === 1 ? 0.8 : 0.7;
+        const opacity = distance === 0 ? 1 : distance === 1 ? 0.6 : 0.4;
+        const translateY = distance === 0 ? 0 : distance === 1 ? 16 : 26;
+        const translateXTarget = (position - centerPosition) * (CARD_TOTAL_WIDTH * 0.62);
+
+        scaleValuesRef.current[originalIndex]?.stopAnimation?.();
+        opacityValuesRef.current[originalIndex]?.stopAnimation?.();
+        translateYValuesRef.current[originalIndex]?.stopAnimation?.();
+        translateXValuesRef.current[originalIndex]?.stopAnimation?.();
 
         Animated.parallel([
-          Animated.spring(scaleValuesRef.current[originalIndex], { toValue: scale, useNativeDriver: false }),
-          Animated.spring(opacityValuesRef.current[originalIndex], { toValue: opacity, useNativeDriver: false }),
+          Animated.timing(scaleValuesRef.current[originalIndex], {
+            toValue: scale,
+            duration: CARD_ANIMATION_DURATION,
+            easing: Easing.bezier(0.25, 0.8, 0.25, 1),
+            useNativeDriver: false,
+          }),
+          Animated.timing(opacityValuesRef.current[originalIndex], {
+            toValue: opacity,
+            duration: CARD_ANIMATION_DURATION,
+            easing: Easing.bezier(0.25, 0.8, 0.25, 1),
+            useNativeDriver: false,
+          }),
+          Animated.timing(translateYValuesRef.current[originalIndex], {
+            toValue: translateY,
+            duration: CARD_ANIMATION_DURATION,
+            easing: Easing.bezier(0.25, 0.8, 0.25, 1),
+            useNativeDriver: false,
+          }),
+          Animated.timing(translateXValuesRef.current[originalIndex], {
+            toValue: translateXTarget,
+            duration: CARD_ANIMATION_DURATION,
+            easing: Easing.bezier(0.25, 0.8, 0.25, 1),
+            useNativeDriver: false,
+          }),
         ]).start();
       });
     },
@@ -77,52 +128,106 @@ function TeamCarouselInline({ coffeemons, onToggleParty: onTogglePartyProp, part
       animateCards(displayOrder);
     }
   }, [coffeemons.length, displayOrder, animateCards]);
+  const animateSwipe = React.useCallback(
+    (direction: 'left' | 'right') => {
+      setDisplayOrder((prev) => {
+        if (prev.length <= 1) {
+          return prev;
+        }
 
-  const swapWithCenter = React.useCallback(
-    (position: number) => {
-      const centerPosition = Math.floor(displayOrder.length / 2);
-      if (position === centerPosition || displayOrder.length < 2) {
-        return;
-      }
+        const newOrder = direction === 'left'
+          ? [...prev.slice(1), prev[0]]
+          : [prev[prev.length - 1], ...prev.slice(0, prev.length - 1)];
 
-      const newOrder = [...displayOrder];
-      const centerIndex = newOrder[centerPosition];
-      newOrder[centerPosition] = newOrder[position];
-      newOrder[position] = centerIndex;
-      setDisplayOrder(newOrder);
+        animateCards(newOrder);
+        return newOrder;
+      });
     },
-    [displayOrder]
+    [animateCards]
   );
 
-  const panResponder = React.useRef(
-    PanResponder.create({
-      onStartShouldSetPanResponder: () => true,
-      onPanResponderRelease: (evt, gestureState) => {
-        const { dx, vx } = gestureState;
-        if (Math.abs(dx) > 30 || Math.abs(vx) > 0.5) {
-          const direction = dx > 0 ? 0 : 2; // direita => posição esquerda (0) vem ao centro, esquerda => posição direita (2)
-          if (displayOrder[direction] !== undefined) {
-            swapWithCenter(direction);
+  const panResponder = React.useMemo(
+    () =>
+      PanResponder.create({
+        onMoveShouldSetPanResponder: (_, gestureState) => {
+          const { dx, dy } = gestureState;
+          return (
+            displayOrder.length > 1 &&
+            Math.abs(dx) > Math.abs(dy) &&
+            Math.abs(dx) > 5
+          );
+        },
+        onPanResponderGrant: () => {
+          onScrollInterruption?.(true);
+          accumulatedDxRef.current = 0;
+          previousDxRef.current = 0;
+          swipeTriggeredRef.current = false;
+        },
+        onPanResponderMove: (_, { dx }) => {
+          if (displayOrder.length <= 1 || swipeTriggeredRef.current) {
+            return;
           }
-        }
-      },
-    })
-  ).current;
+
+          const delta = dx - previousDxRef.current;
+          previousDxRef.current = dx;
+
+          accumulatedDxRef.current += delta;
+
+          // Trigger swipe only once per gesture
+          if (Math.abs(accumulatedDxRef.current) >= SWIPE_THRESHOLD) {
+            const direction = accumulatedDxRef.current < 0 ? 'left' : 'right';
+            animateSwipe(direction);
+            swipeTriggeredRef.current = true;
+          }
+        },
+        onPanResponderRelease: (_, { dx, vx }) => {
+          if (displayOrder.length > 1 && !swipeTriggeredRef.current) {
+            const shouldSwipeLeft = dx <= -SWIPE_THRESHOLD || vx <= -SWIPE_VELOCITY_THRESHOLD;
+            const shouldSwipeRight = dx >= SWIPE_THRESHOLD || vx >= SWIPE_VELOCITY_THRESHOLD;
+
+            if (shouldSwipeLeft) {
+              animateSwipe('left');
+            } else if (shouldSwipeRight) {
+              animateSwipe('right');
+            }
+          }
+
+          accumulatedDxRef.current = 0;
+          previousDxRef.current = 0;
+          swipeTriggeredRef.current = false;
+          onScrollInterruption?.(false);
+        },
+        onPanResponderTerminate: () => {
+          accumulatedDxRef.current = 0;
+          previousDxRef.current = 0;
+          swipeTriggeredRef.current = false;
+          onScrollInterruption?.(false);
+        },
+      }),
+    [animateSwipe, displayOrder.length]
+  );
   const centerPosition = Math.floor(displayOrder.length / 2);
   const getIsActive = (originalIndex: number) => displayOrder.indexOf(originalIndex) === centerPosition;
 
   return (
     <View style={styles.carouselContainer}>
-      <View style={styles.carouselTrack} {...panResponder.panHandlers}>
+      <Animated.View
+        {...panResponder.panHandlers}
+        style={[
+          styles.carouselTrack,
+        ]}
+      >
         {displayOrder.map((originalIndex, position) => {
           const coffeemon = coffeemons[originalIndex];
-          const isActive = position === centerPosition;
+          const isActive = getIsActive(originalIndex);
 
           // Verificações de segurança para arrays de animação
           const scaleValue = scaleValuesRef.current[originalIndex];
+          const translateYValue = translateYValuesRef.current[originalIndex];
+          const translateXValue = translateXValuesRef.current[originalIndex];
           const opacityValue = opacityValuesRef.current[originalIndex];
 
-          if (!scaleValue || !opacityValue || !coffeemon) {
+          if (!scaleValue || !opacityValue || !translateXValue || !coffeemon) {
             return null; // Não renderizar se os valores não existirem
           }
 
@@ -141,7 +246,9 @@ function TeamCarouselInline({ coffeemons, onToggleParty: onTogglePartyProp, part
                 style={styles.carouselCard}
                 onPress={() => {
                   if (!isActive) {
-                    swapWithCenter(position);
+                    const direction: 'left' | 'right' =
+                      position < centerPosition ? 'right' : 'left';
+                    animateSwipe(direction);
                   }
                 }}
                 activeOpacity={0.9}
@@ -150,7 +257,11 @@ function TeamCarouselInline({ coffeemons, onToggleParty: onTogglePartyProp, part
                   style={[
                     styles.carouselCard,
                     {
-                      transform: [{ scale: scaleValue }],
+                      transform: [
+                        { translateX: translateXValue ?? 0 },
+                        { translateY: translateYValue ?? 0 },
+                        { scale: scaleValue },
+                      ],
                       opacity: opacityValue,
                     },
                   ]}
@@ -186,7 +297,7 @@ function TeamCarouselInline({ coffeemons, onToggleParty: onTogglePartyProp, part
             </View>
           );
         })}
-      </View>
+      </Animated.View>
 
       {/* Indicadores removidos conforme solicitado */}
     </View>
@@ -214,6 +325,7 @@ export default function MatchmakingScreen({
 }: MatchmakingScreenProps) {
   const [qrScannerVisible, setQrScannerVisible] = useState<boolean>(false);
   const [selectionModalVisible, setSelectionModalVisible] = useState<boolean>(false);
+  const [isCarouselInteracting, setCarouselInteracting] = useState(false);
 
   // Hook de Matchmaking (Socket, status, logs)
   const { matchStatus, log, findMatch, findBotMatch, handleLogout } =
@@ -325,6 +437,7 @@ export default function MatchmakingScreen({
               style={styles.scrollView}
               showsVerticalScrollIndicator={false}
               contentContainerStyle={styles.scrollContent}
+              scrollEnabled={!isCarouselInteracting}
             >
           {/* Seção de Times */}
           <View style={styles.teamsSection}>
@@ -339,6 +452,7 @@ export default function MatchmakingScreen({
                   coffeemons={partyMembers}
                   onToggleParty={toggleParty}
                   partyLoading={partyLoading}
+                  onScrollInterruption={setCarouselInteracting}
                 />
               )}
             </View>

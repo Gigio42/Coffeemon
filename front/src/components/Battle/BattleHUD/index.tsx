@@ -1,13 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, Image, Animated } from 'react-native';
+import type { ImageSourcePropType } from 'react-native';
 import { PlayerState } from '../../../types';
 import { styles } from '../../../screens/Battle/styles';
-import { getCoffeemonImage } from '../../../../assets/coffeemons';
+import { CoffeemonVariant, getCoffeemonImage } from '../../../../assets/coffeemons';
 
 interface BattleHUDProps {
   playerState: PlayerState | null;
   isMe: boolean;
   damage?: number | null;
+  spriteVariant?: CoffeemonVariant;
+  imageSourceGetter?: (name: string, variant?: CoffeemonVariant) => ImageSourcePropType;
 }
 
 // Ícones baseados no tipo do Coffeemon
@@ -24,7 +27,13 @@ const getTypeIcon = (type: string) => {
   return icons[type?.toLowerCase()] || '☕';
 };
 
-export default function BattleHUD({ playerState, isMe, damage }: BattleHUDProps) {
+export default function BattleHUD({
+  playerState,
+  isMe,
+  damage,
+  spriteVariant = 'default',
+  imageSourceGetter,
+}: BattleHUDProps) {
   const [damageAnim] = useState(new Animated.Value(0));
   const [currentDamage, setCurrentDamage] = useState<number | null>(null);
 
@@ -70,7 +79,8 @@ export default function BattleHUD({ playerState, isMe, damage }: BattleHUDProps)
   const filledSegments = Math.ceil((hpPercent / 100) * totalSegments);
   
   const containerStyle = isMe ? styles.playerHudPosition : styles.opponentHudPosition;
-  const imageSource = getCoffeemonImage(activeMon.name, 'default');
+  const resolveImage = imageSourceGetter ?? getCoffeemonImage;
+  const imageSource = resolveImage(activeMon.name, spriteVariant);
 
   return (
     <View style={[styles.hudContainer, containerStyle]}>
