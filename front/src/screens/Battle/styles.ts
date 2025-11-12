@@ -10,6 +10,7 @@ export const styles = StyleSheet.create({
   battleContainer: {
     flex: 1,
     backgroundColor: '#87CEEB',
+    flexDirection: 'column', // Layout vertical
   },
   
   // ========================================
@@ -18,7 +19,7 @@ export const styles = StyleSheet.create({
   battleArena: {
     position: 'relative',
     width: '100%',
-    flex: 1,
+    flex: 1, // Ocupa todo espaço restante acima dos botões
     backgroundColor: '#87CEEB',
   },
   
@@ -115,22 +116,23 @@ export const styles = StyleSheet.create({
     position: 'absolute',
     alignItems: 'center',
     justifyContent: 'center',
+    zIndex: 15, // Maior que o battleLogContainer (zIndex: 10)
   },
   
   // Player (esquerda, maior)
   playerSpritePosition: {
-    bottom: '8%',
-    left: '8%',
-    width: width * 0.45,
-    height: height * 0.35,
+    bottom: '-5%',
+    left: '-9%',
+    width: width * 0.75,
+    height: height * 0.45,
   },
   
   // Oponente (direita, menor)
   opponentSpritePosition: {
-    top: '15%',
+    top: '25%',
     right: '8%',
-    width: width * 0.32,
-    height: height * 0.25,
+    width: width * 0.4,
+    height: height * 0.32,
   },
   
   pokemonImg: {
@@ -139,20 +141,39 @@ export const styles = StyleSheet.create({
   },
   
   // ========================================
+  // DAMAGE DISPLAY - Below Health Bar
+  // ========================================
+  damageText: {
+    position: 'absolute',
+    bottom: -25,
+    left: '50%',
+    transform: [{ translateX: -25 }],
+    fontSize: 16,
+    fontWeight: 'bold',
+    fontFamily: 'monospace',
+    color: '#FF4444',
+    textShadowColor: 'rgba(0,0,0,0.8)',
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 0,
+    zIndex: 50,
+  },
+  
+  // ========================================
   // ÁREA DE LOGS (Lado Direito sem caixa)
   // ========================================
   battleLogContainer: {
     position: 'absolute',
     right: 0,
-    top: '70%', // Ajustado para 70% para permitir expansão para cima
+    top: 0,
+    bottom: 0, // Ocupa toda a altura da arena
     width: '350%', // Expansão máxima
-    zIndex: 10, // Menor que o battleActionsContainer (que é 20)
+    zIndex: 10,
     alignItems: 'flex-end',
   },
   
   logGradient: {
     flex: 1,
-    paddingTop: 12,
+    paddingTop: 500, // Aumentado significativamente para fazer texto começar muito mais abaixo
     paddingBottom: 12,
     paddingRight: 12, // Reduzido de 120 para 12 para aproximar texto da lateral
     paddingLeft: 0,
@@ -160,7 +181,7 @@ export const styles = StyleSheet.create({
   },
 
   logScrollView: {
-    maxHeight: height * 0.65, // Aumentado de 0.45 para 0.65 para permitir mais expansão
+    flex: 1, // Ocupa todo espaço disponível no container
   },
 
   logScrollContent: {
@@ -192,6 +213,11 @@ export const styles = StyleSheet.create({
     color: '#FFFFFF',
     textAlign: 'right',
     letterSpacing: 0.5,
+  },
+
+  logEntryDamageText: {
+    color: '#FF4B4B',
+    fontWeight: 'bold',
   },
   
   // ========================================
@@ -229,9 +255,10 @@ export const styles = StyleSheet.create({
     backgroundColor: '#F5E6D3',
     paddingHorizontal: 12,
     paddingTop: 13,
+    height: 200, // Altura fixa para garantir layout preciso
     borderTopWidth: 3,
     borderTopColor: '#8B7355',
-    zIndex: 20, // Garantir que fique acima dos logs (zIndex: 10)
+    zIndex: 20,
   },
   
   // ========================================

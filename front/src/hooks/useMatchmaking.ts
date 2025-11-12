@@ -112,7 +112,7 @@ export function useMatchmaking({
     }
 
     addLog('Procurando partida online (PvP)...');
-    setMatchStatus('Procurando partida online...');
+    setMatchStatus('Procurando');
     socketService.findPvPMatch(socket);
   }
 
@@ -132,7 +132,7 @@ export function useMatchmaking({
 
       const botName = botProfileId === 'jessie' ? 'Jessie' : 'James';
       addLog(`Criando partida contra ${botName} (Bot)...`);
-      setMatchStatus(`Criando partida contra ${botName}...`);
+      setMatchStatus(`Criando contra ${botName}`);
       socketService.findBotMatch(socket, botProfileId);
     } catch (err) {
       console.error('Error finding bot match:', err);

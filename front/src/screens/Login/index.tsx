@@ -4,9 +4,9 @@ import {
   View,
   TouchableOpacity,
   TextInput,
-  SafeAreaView,
   Platform,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import ConfigModal from '../../components/ConfigModal';
 import { useAuth } from '../../hooks/useAuth';
 import { styles } from './styles';

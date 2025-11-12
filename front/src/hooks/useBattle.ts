@@ -1,9 +1,8 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Socket } from 'socket.io-client';
 import { BattleState, BattleStatus, PlayerState } from '../types';
-import { getCoffeemonImageUrl, getBaseName } from '../utils/battleUtils';
+import { getBaseName } from '../utils/battleUtils';
 import { getEventMessage } from '../utils/battleMessages';
-import { getServerUrl } from '../utils/config';
 
 interface BattleEvent {
   type: string;
@@ -17,6 +16,7 @@ interface UseBattleProps {
   playerId: number;
   socket: Socket;
   onNavigateToMatchmaking: () => void;
+  imageSourceGetter: (name: string, variant: 'default' | 'back') => any;
   animationHandlers: {
     playLunge: (isPlayer: boolean) => Promise<unknown>;
     playShake: (isPlayer: boolean) => Promise<unknown>;
@@ -33,6 +33,7 @@ export function useBattle({
   playerId,
   socket,
   onNavigateToMatchmaking,
+  imageSourceGetter,
   animationHandlers,
 }: UseBattleProps) {
   // Validação e extração do estado inicial - usar useMemo para evitar recriação
@@ -87,8 +88,8 @@ export function useBattle({
   
   const [battleState, setBattleState] = useState<BattleState>(extractedBattleState);
   const [log, setLog] = useState<string[]>([]);
-  const [playerImageUrl, setPlayerImageUrl] = useState<string>('');
-  const [opponentImageUrl, setOpponentImageUrl] = useState<string>('');
+  const [playerDamage, setPlayerDamage] = useState<number | null>(null);
+  const [opponentDamage, setOpponentDamage] = useState<number | null>(null);
   const [battleEnded, setBattleEnded] = useState<boolean>(false);
   const [winnerId, setWinnerId] = useState<number | null>(null);
   const [showSelectionModal, setShowSelectionModal] = useState<boolean>(false);
@@ -181,9 +182,59 @@ export function useBattle({
       const event = eventsToProcess[i];
       
       try {
+        const payload = event.payload || {};
+
         // Gerar mensagem amigável usando o helper
         const message = getEventMessage(event);
-        addLog(message);
+        let finalMessage = message;
+
+        if (
+          payload?.damage > 0 &&
+          (event.type === 'ATTACK_HIT' || event.type === 'ATTACK_CRIT' || event.type === 'STATUS_DAMAGE') &&
+          !/\d/.test(message)
+        ) {
+          const damageValue = Math.round(payload.damage);
+          finalMessage = `${message} (-${damageValue} HP)`;
+        }
+
+        console.log('Processing event:', { type: event.type, message: finalMessage, payload: event.payload });
+        addLog(finalMessage);
+        
+        // Handle damage display
+        console.log('Checking for damage:', event.type, payload.damage);
+        if ((event.type === 'ATTACK_HIT' || event.type === 'ATTACK_CRIT' || event.type === 'STATUS_DAMAGE') && payload.damage > 0) {
+          // Para ataques, usar playerId se disponível, senão determinar pelo target
+          let isPlayerTakingDamage = false;
+          
+          if (payload.playerId !== undefined) {
+            // Se temos playerId, é o atacante
+            isPlayerTakingDamage = payload.playerId !== playerId;
+          } else if (payload.targetName) {
+            // Fallback: verificar se o target é o Coffeemon ativo do jogador
+            const myPlayerState =
+              fullState.player1Id === playerId ? fullState.player1 : fullState.player2;
+            const activeMonName =
+              myPlayerState && myPlayerState.activeCoffeemonIndex !== null
+                ? getBaseName(myPlayerState.coffeemons[myPlayerState.activeCoffeemonIndex].name)
+                : '';
+            const targetIsPlayer = payload.targetName === activeMonName;
+            isPlayerTakingDamage = targetIsPlayer;
+          }
+          
+          console.log('Damage event detected:', {
+            type: event.type,
+            playerId,
+            payload,
+            isPlayerTakingDamage,
+            damage: payload.damage
+          });
+          
+          if (isPlayerTakingDamage) {
+            setPlayerDamage(payload.damage);
+          } else {
+            setOpponentDamage(payload.damage);
+          }
+        }
         
         // Sem delay entre eventos - modo performance
         
@@ -198,50 +249,6 @@ export function useBattle({
         console.error('Error processing event:', event, error);
         // Continuar processando próximos eventos mesmo se um falhar
       }
-    }
-  };
-
-  const updateCoffeemonImages = async (state: BattleState) => {
-    if (!state || !playerId) {
-      console.log('updateCoffeemonImages: Invalid state or playerId');
-      return;
-    }
-
-    try {
-      console.log('updateCoffeemonImages: Starting update');
-      const myPlayerState = state.player1Id === playerId ? state.player1 : state.player2;
-      const opponentPlayerState =
-        state.player1Id === playerId ? state.player2 : state.player1;
-
-      const serverUrl = await getServerUrl();
-
-      if (myPlayerState && myPlayerState.activeCoffeemonIndex !== null) {
-        const myActiveMon = myPlayerState.coffeemons[myPlayerState.activeCoffeemonIndex];
-        if (myActiveMon && myActiveMon.name) {
-          const baseName = getBaseName(myActiveMon.name);
-          const imageUrl = `${serverUrl}/imgs/${baseName}/back.png`;
-          console.log('updateCoffeemonImages: Player image URL:', imageUrl);
-          setPlayerImageUrl(imageUrl);
-        }
-      } else {
-        setPlayerImageUrl('');
-      }
-
-      if (opponentPlayerState && opponentPlayerState.activeCoffeemonIndex !== null) {
-        const opponentActiveMon =
-          opponentPlayerState.coffeemons[opponentPlayerState.activeCoffeemonIndex];
-        if (opponentActiveMon && opponentActiveMon.name) {
-          const baseName = getBaseName(opponentActiveMon.name);
-          const imageUrl = `${serverUrl}/imgs/${baseName}/default.png`;
-          console.log('updateCoffeemonImages: Opponent image URL:', imageUrl);
-          setOpponentImageUrl(imageUrl);
-        }
-      } else {
-        setOpponentImageUrl('');
-      }
-      console.log('updateCoffeemonImages: Update complete');
-    } catch (error) {
-      console.error('Erro ao atualizar imagens dos Coffeemon:', error);
     }
   };
 
@@ -300,9 +307,6 @@ export function useBattle({
             
             // Atualizar estado primeiro (síncrono)
             setBattleState(newBattleState);
-            (async () => {
-              await updateCoffeemonImages(newBattleState);
-            })();
 
             // Processar eventos com animações otimizadas
             if (newBattleState.events && newBattleState.events.length > 0) {
@@ -389,9 +393,6 @@ export function useBattle({
   useEffect(() => {
     setupBattleEvents();
     socket.emit('joinBattle', { battleId });
-    (async () => {
-      await updateCoffeemonImages(extractedBattleState);
-    })();
     
     if (extractedBattleState.turnPhase === 'SELECTION') {
       const myState =
@@ -419,17 +420,31 @@ export function useBattle({
     battleState?.player1Id === playerId ? battleState?.player2 : battleState?.player1;
 
   const myPendingAction = battleState?.pendingActions?.[playerId];
+  const hasPendingEvents = battleState?.events && battleState.events.length > 0;
+  const isSubmissionPhase = battleState?.turnPhase === 'SUBMISSION';
+  const isSelectingInitialCoffeemon =
+    battleState?.turnPhase === 'SELECTION' && myPlayerState && !myPlayerState.hasSelectedCoffeemon;
+  const bothPlayersSelected =
+    myPlayerState?.hasSelectedCoffeemon && opponentPlayerState?.hasSelectedCoffeemon;
+  const hasActiveCoffeemon =
+    myPlayerState?.activeCoffeemonIndex !== null &&
+    myPlayerState?.activeCoffeemonIndex !== undefined;
+
   const canAct =
     !battleEnded &&
     !isProcessing &&
     !myPendingAction &&
-    battleState?.turnPhase === 'SUBMISSION';
+    (!hasPendingEvents || isSubmissionPhase) && // ✅ Eventos não bloqueiam em SUBMISSION
+    (isSubmissionPhase ||
+      isSelectingInitialCoffeemon ||
+      battleState?.currentPlayerId === playerId ||
+      (bothPlayersSelected && hasActiveCoffeemon));
 
   return {
     battleState,
     log,
-    playerImageUrl,
-    opponentImageUrl,
+    playerDamage,
+    opponentDamage,
     battleEnded,
     winnerId,
     showSelectionModal,

@@ -4,17 +4,43 @@ import { metrics } from '../../theme';
 export const styles = StyleSheet.create({
   teamSection: {
     width: '100%',
-    marginBottom: 20,
+    marginBottom: 16,
   },
   
+  sectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+
+  sectionHeaderWithAction: {
+    justifyContent: 'space-between',
+  },
+
+  sectionHeaderCentered: {
+    justifyContent: 'center',
+  },
+
   sectionTitle: {
     fontWeight: 'bold',
     fontSize: 16,
-    marginBottom: 12,
-    color: '#8B4513',
+    color: '#f8e7c0',
     fontFamily: 'monospace',
     letterSpacing: 0.5,
     textAlign: 'center',
+  },
+  
+  addButton: {
+    backgroundColor: '#27ae60',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 8,
+  },
+
+  addButtonText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: 'bold',
   },
   
   loadingContainer: {
@@ -46,6 +72,27 @@ export const styles = StyleSheet.create({
   
   carouselContent: {
     paddingHorizontal: 4,
-    gap: 12,
+    gap: 0,
+  },
+  
+  availableCardWrapper: {
+    transform: [{ scale: 0.68 }],
+    marginHorizontal: -16, // Aproxima ainda mais os cards
+  },
+  
+  grid: {
+    width: '100%',
+    maxHeight: 300, // Limit height for scroll
+  },
+  
+  gridContent: {
+    paddingVertical: 8,
+  },
+  
+  gridContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+    gap: 8,
   },
 });

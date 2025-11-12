@@ -40,7 +40,6 @@ export default function ProductListScreen({
   const { products, loading, refreshing, error, refetch, onRefresh } = useProducts();
   const [isRetryPressed, setIsRetryPressed] = useState(false);
   const [searchText, setSearchText] = useState('');
-  const [isMatchmakingPressed, setIsMatchmakingPressed] = useState(false);
   const [addingToCart, setAddingToCart] = useState<number | null>(null);
   const { alertState, hideAlert, showError, showAlert } = useCustomAlert();
 
@@ -100,25 +99,6 @@ export default function ProductListScreen({
           />
         </View>
       </View>
-
-      {/* Botão de Matchmaking */}
-      <TouchableOpacity 
-        style={[
-          styles.matchmakingButton,
-          isMatchmakingPressed && styles.matchmakingButtonPressed
-        ]}
-        onPressIn={() => setIsMatchmakingPressed(true)}
-        onPressOut={() => setIsMatchmakingPressed(false)}
-        onPress={onNavigateToMatchmaking}
-        activeOpacity={1}
-      >
-        <Image
-          source={require('../../../../assets/icons/escudo.png')}
-          style={styles.matchmakingIcon}
-          resizeMode="contain"
-        />
-        <Text style={styles.matchmakingText}>Ir para Batalha</Text>
-      </TouchableOpacity>
 
       {/* Gradiente de fundo para o conteúdo */}
       <LinearGradient 

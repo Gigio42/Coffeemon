@@ -26,7 +26,7 @@ import EcommerceScreen from './src/screens/Ecommerce';
 import MatchmakingScreen from './src/screens/Matchmaking';
 import BattleScreen from './src/screens/Battle';
 import ErrorBoundary from './src/components/ErrorBoundary';
-import { Screen, BattleState } from './types';
+import { Screen, BattleState } from './src/types';
 
 export default function App() {
   // ========================================

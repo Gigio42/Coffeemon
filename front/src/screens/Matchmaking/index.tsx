@@ -3,18 +3,194 @@ import {
   Text,
   View,
   TouchableOpacity,
-  SafeAreaView,
   ScrollView,
   Alert,
+  ImageBackground,
+  Animated,
+  PanResponder,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Socket } from 'socket.io-client';
-import { BattleState } from '../../../types';
+import { BattleState } from '../../types';
+import { getRandomScenario } from '../../utils/battleUtils';
 import { useMatchmaking } from '../../hooks/useMatchmaking';
 import { useCoffeemons } from '../../hooks/useCoffeemons';
+import { PlayerCoffeemon } from '../../api/coffeemonService';
+
 import TeamSection from '../../components/TeamSection';
-import QRScanner from '../../../screens/QRScanner';
+import CoffeemonSelectionModal from '../../components/CoffeemonSelectionModal';
+import CoffeemonCard from '../../components/CoffeemonCard';
+
 import { styles } from './styles';
+
+// Componente inline para o carrossel do time
+function TeamCarouselInline({ coffeemons, onToggleParty, partyLoading }: {
+  coffeemons: PlayerCoffeemon[];
+  onToggleParty: (coffeemon: PlayerCoffeemon) => void;
+  partyLoading: number | null;
+}) {
+  // Ordem visual dos cards (posição 0 = esquerda, 1 = centro, 2 = direita)
+  const [displayOrder, setDisplayOrder] = useState<number[]>(() => coffeemons.map((_, index) => index));
+  const scaleValuesRef = React.useRef<Animated.Value[]>([]);
+  const opacityValuesRef = React.useRef<Animated.Value[]>([]);
+
+  // Inicializar arrays de animação
+  const initializeAnimationArrays = React.useCallback(() => {
+    scaleValuesRef.current = coffeemons.map(() => new Animated.Value(1));
+    opacityValuesRef.current = coffeemons.map(() => new Animated.Value(1));
+  }, [coffeemons.length]);
+
+  // Atualizar arrays e ordem quando coffeemons muda
+  React.useEffect(() => {
+    initializeAnimationArrays();
+    setDisplayOrder(coffeemons.map((_, index) => index));
+  }, [coffeemons.length, initializeAnimationArrays]);
+
+  const animateCards = React.useCallback(
+    (order: number[]) => {
+      coffeemons.forEach((_, originalIndex) => {
+        if (originalIndex >= scaleValuesRef.current.length || originalIndex >= opacityValuesRef.current.length) {
+          return;
+        }
+
+        const position = order.indexOf(originalIndex);
+        if (position === -1) return; // Card não está na ordem atual
+
+        const distance = Math.abs(position - 1); // 1 é o centro
+
+        const scale = distance === 0 ? 0.95 : distance === 1 ? 0.75 : 0.6; // Centro reduzido para 95%
+        const opacity = distance === 0 ? 1 : distance === 1 ? 0.5 : 0.3; // Opacidades reduzidas
+
+        Animated.parallel([
+          Animated.spring(scaleValuesRef.current[originalIndex], { toValue: scale, useNativeDriver: false }),
+          Animated.spring(opacityValuesRef.current[originalIndex], { toValue: opacity, useNativeDriver: false }),
+        ]).start();
+      });
+    },
+    [coffeemons.length]
+  );
+
+  React.useEffect(() => {
+    if (coffeemons.length > 0) {
+      animateCards(displayOrder);
+    }
+  }, [coffeemons.length, displayOrder, animateCards]);
+
+  const swapWithCenter = React.useCallback(
+    (position: number) => {
+      if (position === 1 || displayOrder.length < 2) {
+        return;
+      }
+
+      const newOrder = [...displayOrder];
+      const centerIndex = newOrder[1];
+      newOrder[1] = newOrder[position];
+      newOrder[position] = centerIndex;
+      setDisplayOrder(newOrder);
+    },
+    [displayOrder]
+  );
+
+  const panResponder = React.useRef(
+    PanResponder.create({
+      onStartShouldSetPanResponder: () => true,
+      onPanResponderRelease: (evt, gestureState) => {
+        const { dx, vx } = gestureState;
+        if (Math.abs(dx) > 30 || Math.abs(vx) > 0.5) {
+          const direction = dx > 0 ? 0 : 2; // direita => posição esquerda (0) vem ao centro, esquerda => posição direita (2)
+          if (displayOrder[direction] !== undefined) {
+            swapWithCenter(direction);
+          }
+        }
+      },
+    })
+  ).current;
+
+  const getIsActive = (originalIndex: number) => displayOrder.indexOf(originalIndex) === 1;
+
+  return (
+    <View style={styles.carouselContainer}>
+      <View style={styles.carouselTrack} {...panResponder.panHandlers}>
+        {displayOrder.map((originalIndex, position) => {
+          const coffeemon = coffeemons[originalIndex];
+          const isActive = position === 1;
+
+          // Verificações de segurança para arrays de animação
+          const scaleValue = scaleValuesRef.current[originalIndex];
+          const opacityValue = opacityValuesRef.current[originalIndex];
+
+          if (!scaleValue || !opacityValue || !coffeemon) {
+            return null; // Não renderizar se os valores não existirem
+          }
+
+          return (
+            <View
+              key={coffeemon.id}
+              style={[
+                styles.carouselCardWrapper,
+                {
+                  zIndex: isActive ? 300 : 200,
+                  elevation: isActive ? 8 : 2,
+                },
+              ]}
+            >
+              <TouchableOpacity
+                style={styles.carouselCard}
+                onPress={() => {
+                  if (!isActive) {
+                    swapWithCenter(position);
+                  } else {
+                    // Card central clicado - remove do time
+                    onToggleParty(coffeemon);
+                  }
+                }}
+                activeOpacity={0.9}
+              >
+                <Animated.View
+                  style={[
+                    styles.carouselCard,
+                    {
+                      transform: [{ scale: scaleValue }],
+                      opacity: opacityValue,
+                    },
+                  ]}
+                >
+                  <CoffeemonCard
+                    coffeemon={{
+                      id: coffeemon.id,
+                      hp: coffeemon.hp,
+                      attack: coffeemon.attack,
+                      defense: coffeemon.defense,
+                      level: coffeemon.level,
+                      experience: coffeemon.experience,
+                      isInParty: true,
+                      coffeemon: {
+                        id: coffeemon.coffeemon.id,
+                        name: coffeemon.coffeemon.name,
+                        type: 'floral',
+                      },
+                    }}
+                    onToggleParty={() => Promise.resolve()} // Função que retorna Promise para satisfazer TypeScript
+                    variant="large"
+                    isLoading={partyLoading === coffeemon.id}
+                  />
+                  {isActive && (
+                    <View style={styles.activeIndicator}>
+                      <Text style={styles.activeIndicatorText}>★</Text>
+                    </View>
+                  )}
+                </Animated.View>
+              </TouchableOpacity>
+            </View>
+          );
+        })}
+      </View>
+
+      {/* Indicadores removidos conforme solicitado */}
+    </View>
+  );
+}
 
 interface MatchmakingScreenProps {
   token: string;
@@ -36,6 +212,7 @@ export default function MatchmakingScreen({
   onNavigateToBattle,
 }: MatchmakingScreenProps) {
   const [qrScannerVisible, setQrScannerVisible] = useState<boolean>(false);
+  const [selectionModalVisible, setSelectionModalVisible] = useState<boolean>(false);
 
   // Hook de Matchmaking (Socket, status, logs)
   const { matchStatus, log, findMatch, findBotMatch, handleLogout } =
@@ -95,51 +272,82 @@ export default function MatchmakingScreen({
     fetchCoffeemons();
   }
 
+  function handleOpenSelectionModal() {
+    setSelectionModalVisible(true);
+  }
+
+  function handleCloseSelectionModal() {
+    setSelectionModalVisible(false);
+  }
+
+  async function handleSelectCoffeemon(coffeemon: PlayerCoffeemon) {
+    await toggleParty(coffeemon);
+    setSelectionModalVisible(false);
+  }
+
+  // Selecionar cenário aleatório sempre que carregar a página
+  const currentScenario = React.useMemo(() => getRandomScenario(), []);
+
   return (
-    <SafeAreaView style={styles.container}>
-      {/* Header Fixo */}
-      <View style={styles.header}>
-        {onNavigateToEcommerce && (
-          <TouchableOpacity
-            style={styles.backButton}
-            onPress={onNavigateToEcommerce}
-          >
-            <Text style={styles.backButtonText}>←</Text>
-          </TouchableOpacity>
-        )}
-        <Text style={styles.headerTitle}>Arena de Batalha</Text>
-        <View style={{ width: 60 }} />
-      </View>
-
-      <LinearGradient 
-        colors={['#e0f0ff', '#f0d0e0']} 
-        style={styles.gradientContainer}
+    <View style={styles.fullScreenContainer}>
+      <ImageBackground
+        source={currentScenario}
+        style={styles.backgroundContainer}
+        resizeMode="cover"
       >
-        <ScrollView
-          style={styles.scrollView}
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={styles.scrollContent}
+        <LinearGradient
+          colors={['rgba(0,0,0,0.7)', 'rgba(0,0,0,0.3)', 'transparent']}
+          style={styles.gradientContainer}
         >
-          {/* Status de Matchmaking */}
-          {matchStatus && (
-            <View style={styles.statusCard}>
-              <Text style={styles.statusText}>{matchStatus}</Text>
-            </View>
-          )}
+          <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
+            {/* Botão de voltar flutuante */}
+            {onNavigateToEcommerce && (
+              <TouchableOpacity
+                style={styles.floatingBackButton}
+                onPress={onNavigateToEcommerce}
+              >
+                <Text style={styles.floatingBackButtonText}>←</Text>
+              </TouchableOpacity>
+            )}
 
+            {matchStatus && (
+              <View style={styles.statusCardWrapper}>
+                <View style={styles.statusCardOutline} />
+                <View style={styles.statusCardShape} />
+                <View style={styles.statusCardContent}>
+                  <Text style={styles.statusText}>{matchStatus}</Text>
+                </View>
+              </View>
+            )}
+
+            <ScrollView
+              style={styles.scrollView}
+              showsVerticalScrollIndicator={false}
+              contentContainerStyle={styles.scrollContent}
+            >
           {/* Seção de Times */}
           <View style={styles.teamsSection}>
-            <TeamSection
-              title={`Meu Time (${partyMembers.length}/3)`}
-              coffeemons={partyMembers}
-              loading={loading}
-              emptyMessage="Adicione Coffeemons ao seu time"
-              onToggleParty={toggleParty}
-              partyLoading={partyLoading}
-              variant="grid"
-            />
+            {/* Carrossel do Time - 3 cards centralizados com animação */}
+            <View style={styles.teamColumn}>
+              <Text style={styles.teamColumnTitle}>{`Meu Time (${partyMembers.length}/3)`}</Text>
 
-            <View style={styles.divider} />
+              {partyMembers.length === 0 ? (
+                <Text style={styles.teamEmptyMessage}>Adicione Coffeemons ao seu time</Text>
+              ) : (
+                <TeamCarouselInline
+                  coffeemons={partyMembers}
+                  onToggleParty={toggleParty}
+                  partyLoading={partyLoading}
+                />
+              )}
+
+              {partyMembers.length < 3 && (
+                <TouchableOpacity style={styles.addButton} onPress={handleOpenSelectionModal}>
+                  <Text style={styles.addButtonText}>+ Adicionar</Text>
+                </TouchableOpacity>
+              )}
+            </View>
+
 
             <TeamSection
               title={`Disponíveis (${availableCoffeemons.length})`}
@@ -225,21 +433,24 @@ export default function MatchmakingScreen({
           </View>
 
           {/* Botão Logout */}
-          <TouchableOpacity 
-            style={styles.logoutButton} 
+          <TouchableOpacity
+            style={styles.logoutButton}
             onPress={handleLogout}
           >
             <Text style={styles.logoutButtonText}>Sair da Conta</Text>
           </TouchableOpacity>
         </ScrollView>
+          </SafeAreaView>
       </LinearGradient>
+      </ImageBackground>
 
-      <QRScanner
-        visible={qrScannerVisible}
-        token={token}
-        onClose={handleCloseQRScanner}
-        onCoffeemonAdded={handleCoffeemonAdded}
+      <CoffeemonSelectionModal
+        visible={selectionModalVisible}
+        availableCoffeemons={availableCoffeemons}
+        onSelectCoffeemon={handleSelectCoffeemon}
+        onClose={handleCloseSelectionModal}
+        partyLoading={partyLoading}
       />
-    </SafeAreaView>
+    </View>
   );
 }

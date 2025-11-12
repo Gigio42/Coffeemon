@@ -32,13 +32,50 @@ export const styles = StyleSheet.create({
     paddingVertical: 4, // Reduzido
     position: 'relative',
   },
+
+  tabGroup: {
+    flexDirection: 'row',
+    flex: 1,
+    justifyContent: 'space-evenly',
+    alignItems: 'center',
+  },
+  
+  centerButtonWrapper: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginHorizontal: 12,
+  },
+  
+  centerButton: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: pixelArt.colors.coffeePrimary,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 6,
+    borderWidth: 3,
+    borderColor: '#fdf8ec',
+    ...pixelArt.shadows.button,
+  },
+  
+  centerButtonIcon: {
+    width: 36,
+    height: 36,
+  },
+  
+  centerButtonLabel: {
+    ...pixelArt.typography.pixelButton,
+    fontSize: 9,
+    color: pixelArt.colors.coffeePrimary,
+  },
   
   tabIcon: {
     fontSize: 24,
     marginBottom: 4,
     opacity: 0.6,
   },
-
+  
   tabIconImage: {
     width: 28,
     height: 28,
