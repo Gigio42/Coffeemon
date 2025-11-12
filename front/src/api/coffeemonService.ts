@@ -128,45 +128,12 @@ export async function giveAllCoffeemons(token: string): Promise<{ message: strin
   return await response.json();
 }
 
-// Mapping de imagens locais dos Coffeemons para batalha
-const coffeemonImageMap: { [key: string]: { default: any; back: any } } = {
-  jasminelle: {
-    default: require('../../assets/coffeemons/jasminelle/default.png'),
-    back: require('../../assets/coffeemons/jasminelle/back.png'),
-  },
-  limonetto: {
-    default: require('../../assets/coffeemons/limonetto/default.png'),
-    back: require('../../assets/coffeemons/limonetto/back.png'),
-  },
-  maprion: {
-    default: require('../../assets/coffeemons/maprion/default.png'),
-    back: require('../../assets/coffeemons/maprion/back.png'),
-  },
-  emberly: {
-    default: require('../../assets/coffeemons/emberly/default.png'),
-    back: require('../../assets/coffeemons/emberly/back.png'),
-  },
-  chocobrawl: {
-    default: require('../../assets/coffeemons/jasminelle/default.png'), // Fallback temporário
-    back: require('../../assets/coffeemons/jasminelle/back.png'),     // Fallback temporário
-  },
-};
+import { getCoffeemonImage as getImageFromAssets } from '../../assets/coffeemons';
 
 /**
  * Obtém a imagem de um Coffeemon
  */
 export function getCoffeemonImageSource(name: string, variant: 'default' | 'back' = 'default') {
-  if (!name || typeof name !== 'string') {
-    // Fallback to Jasminelle if name is invalid
-    return coffeemonImageMap.jasminelle?.[variant] || coffeemonImageMap.jasminelle?.default;
-  }
-
-  const baseName = name.split(' (Lvl')[0].toLowerCase();
-  const localImage = coffeemonImageMap[baseName];
-  if (localImage && localImage[variant]) {
-    return localImage[variant];
-  }
-  // Fallback to Jasminelle if not found
-  return coffeemonImageMap.jasminelle?.[variant] || coffeemonImageMap.jasminelle?.default;
+  return getImageFromAssets(name, variant);
 }
 
