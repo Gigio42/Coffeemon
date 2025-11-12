@@ -541,14 +541,15 @@ export const styles = StyleSheet.create({
   // TEAM CAROUSEL - Estilos adicionais
   // ========================================
   teamColumn: {
-    marginBottom: pixelArt.spacing.lg,
+    marginBottom: pixelArt.spacing.sm,
     // borderWidth: pixelArt.borders.widthThick,
     // borderTopColor: pixelArt.colors.borderLight,
     // borderLeftColor: pixelArt.colors.borderLight,
     // borderBottomColor: pixelArt.colors.borderDark,
     // borderRightColor: pixelArt.colors.borderDark,
     // borderRadius: pixelArt.borders.radiusMedium,
-    padding: pixelArt.spacing.md,
+    paddingHorizontal: pixelArt.spacing.md,
+    paddingVertical: pixelArt.spacing.sm,
     // backgroundColor: '#f9f9f9', // Removido - fundo transparente
   },
 

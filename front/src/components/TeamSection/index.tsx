@@ -27,6 +27,7 @@ export default function TeamSection({
   showAddButton = false,
   onAddCoffeemon,
 }: TeamSectionProps) {
+  const hasAction = showAddButton && !!onAddCoffeemon;
   const renderContent = () => {
     if (loading) {
       return (
@@ -83,9 +84,14 @@ export default function TeamSection({
 
   return (
     <View style={styles.teamSection}>
-      <View style={styles.sectionHeader}>
+      <View
+        style={[
+          styles.sectionHeader,
+          hasAction ? styles.sectionHeaderWithAction : styles.sectionHeaderCentered,
+        ]}
+      >
         <Text style={styles.sectionTitle}>{title}</Text>
-        {showAddButton && onAddCoffeemon && (
+        {hasAction && (
           <TouchableOpacity style={styles.addButton} onPress={onAddCoffeemon}>
             <Text style={styles.addButtonText}>+ Adicionar</Text>
           </TouchableOpacity>

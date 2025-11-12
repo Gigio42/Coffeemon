@@ -1,4 +1,17 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Patch,
+  Post,
+  UploadedFile,
+  UseGuards,
+  UseInterceptors,
+} from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { Express } from 'express';
 import { AuthGuard } from '../../auth/guards/auth.guard';
 import { RolesGuard } from '../../auth/guards/roles.guard';
 import { CreateProductDto } from './dto/create-product.dto';
@@ -11,9 +24,17 @@ export class ProductsController {
 
   @Post('/')
   @UseGuards(AuthGuard, RolesGuard)
+  @UseInterceptors(FileInterceptor('image'))
   // @Roles(UserRole.ADMIN)
-  create(@Body() createProductDto: CreateProductDto) {
-    return this.productsService.create(createProductDto);
+  create(
+    @Body() createProductDto: CreateProductDto,
+    @UploadedFile() file?: Express.Multer.File
+  ) {
+    const productData = file?.path
+      ? { ...createProductDto, image: file.path }
+      : createProductDto;
+
+    return this.productsService.create(productData);
   }
 
   @Get()
@@ -27,10 +48,19 @@ export class ProductsController {
   }
 
   @Patch(':productId')
+  @UseInterceptors(FileInterceptor('image'))
   // @UseGuards(AuthGuard, RolesGuard)
   // @Roles(UserRole.ADMIN)
-  update(@Param('productId') productId: string, @Body() updateProductDto: UpdateProductDto) {
-    return this.productsService.update(+productId, updateProductDto);
+  update(
+    @Param('productId') productId: string,
+    @Body() updateProductDto: UpdateProductDto,
+    @UploadedFile() file?: Express.Multer.File
+  ) {
+    const productData = file?.path
+      ? { ...updateProductDto, image: file.path }
+      : updateProductDto;
+
+    return this.productsService.update(+productId, productData);
   }
 
   @Delete(':productId')

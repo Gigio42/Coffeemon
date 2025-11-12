@@ -92,15 +92,16 @@ export default function CoffeemonSelectionModal<T = PlayerCoffeemon>({
                         }
 
                         return (
-                          <CoffeemonCard
-                            key={key}
-                            coffeemon={coffeemon as unknown as PlayerCoffeemon}
-                            onToggleParty={async () => {
-                              await handleSelect();
-                            }}
-                            isLoading={isLoading}
-                            variant={cardVariant}
-                          />
+                          <View key={key} style={styles.carouselItem}>
+                            <CoffeemonCard
+                              coffeemon={coffeemon as unknown as PlayerCoffeemon}
+                              onToggleParty={async () => {
+                                await handleSelect();
+                              }}
+                              isLoading={isLoading}
+                              variant={cardVariant}
+                            />
+                          </View>
                         );
                       })}
                     </View>

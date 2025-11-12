@@ -4,22 +4,30 @@ import { metrics } from '../../theme';
 export const styles = StyleSheet.create({
   teamSection: {
     width: '100%',
-    marginBottom: 20,
+    marginBottom: 16,
   },
   
   sectionHeader: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 12,
+  },
+
+  sectionHeaderWithAction: {
+    justifyContent: 'space-between',
+  },
+
+  sectionHeaderCentered: {
+    justifyContent: 'center',
   },
 
   sectionTitle: {
     fontWeight: 'bold',
     fontSize: 16,
-    color: '#8B4513',
+    color: '#f8e7c0',
     fontFamily: 'monospace',
     letterSpacing: 0.5,
+    textAlign: 'center',
   },
   
   addButton: {
@@ -64,12 +72,12 @@ export const styles = StyleSheet.create({
   
   carouselContent: {
     paddingHorizontal: 4,
-    gap: 2, // Reduzido para 2 para deixar cards mais juntos
+    gap: 0,
   },
   
   availableCardWrapper: {
-    transform: [{ scale: 0.6 }],
-    marginHorizontal: -20, // Ajusta margem para aproximar mais os cards
+    transform: [{ scale: 0.68 }],
+    marginHorizontal: -16, // Aproxima ainda mais os cards
   },
   
   grid: {

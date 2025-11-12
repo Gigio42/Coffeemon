@@ -63,10 +63,12 @@ export const styles = StyleSheet.create({
   },
   carouselContent: {
     paddingHorizontal: 4,
-    gap: 12,
+    paddingRight: 16,
     flexDirection: 'row',
-    alignSelf: 'flex-start',
-    flexGrow: 0,
+    alignItems: 'flex-start',
+  },
+  carouselItem: {
+    marginRight: 12,
   },
   emptyText: {
     textAlign: 'center',
