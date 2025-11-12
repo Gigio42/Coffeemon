@@ -5,9 +5,9 @@
 Coffeemon é um projeto que une um e-commerce de cafés especiais a uma experiência de jogo com criaturas colecionáveis, os **Coffeemons**. Batalhe com seus Coffeemons, gerencie seu inventário e compre produtos, tudo em uma única plataforma.
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/gigio42/Coffeemon/main/imgs/Maprion/default.png" width="150" alt="Maprion">
-  <img src="https://raw.githubusercontent.com/gigio42/Coffeemon/main/imgs/Limonetto/default.png" width="150" alt="Limonetto">
-  <img src="https://raw.githubusercontent.com/gigio42/Coffeemon/main/imgs/Jasminelle/default.png" width="150" alt="Jasminelle">
+  <img src="https://raw.githubusercontent.com/Gigio42/Coffeemon/main/front/assets/coffeemons/maprion/base.png" width="150" alt="Maprion">
+  <img src="https://raw.githubusercontent.com/Gigio42/Coffeemon/main/front/assets/coffeemons/limonetto/base.png" width="150" alt="Limonetto">
+  <img src="https://raw.githubusercontent.com/Gigio42/Coffeemon/main/front/assets/coffeemons/jasminelle/base.png" width="150" alt="Jasminelle">
 </p>
 
 ## 🌟 Visão Geral

@@ -5,16 +5,7 @@ import { getServerUrl } from '../../utils/config';
 import { PlayerCoffeemon } from '../../api/coffeemonService';
 import { styles, getTypeColor } from './styles';
 import { useDynamicPalette } from '../../utils/colorPalette';
-
-// Mapping de imagens locais dos Coffeemons
-const imageMap: { [key: string]: any } = {
-  jasminelle: require('../../../assets/coffeemons/jasminelle/default.png'),
-  limonetto: require('../../../assets/coffeemons/limonetto/default.png'),
-  maprion: require('../../../assets/coffeemons/maprion/default.png'),
-  emberly: require('../../../assets/coffeemons/emberly/default.png'),
-  almondino: require('../../../assets/coffeemons/almondino/default.png'),
-  gingerlynn: require('../../../assets/coffeemons/gingerlynn/default.png'),
-};
+import { getCoffeemonImage } from '../../../assets/coffeemons';
 
 interface CoffeemonCardProps {
   coffeemon: PlayerCoffeemon;
@@ -52,7 +43,7 @@ export default function CoffeemonCard({
     () => getTypeColor(coffeemon.coffeemon.type, coffeemon.coffeemon.name),
     [coffeemon.coffeemon.type, coffeemon.coffeemon.name],
   );
-  const assetModule = imageMap[coffeemon.coffeemon.name.toLowerCase()] ?? null;
+  const assetModule = getCoffeemonImage(coffeemon.coffeemon.name, 'default');
   const palette = useDynamicPalette(assetModule, fallbackPalette);
 
   const [imageUri, setImageUri] = useState<string | null>(null);
@@ -164,14 +155,13 @@ export default function CoffeemonCard({
         <View style={styles.imageContainer}>
           <Image
             source={
-              imageMap[coffeemon.coffeemon.name.toLowerCase()] ||
-              (imageUri
+              imageUri
                 ? { uri: imageUri }
-                : require('../../../assets/icon.png'))
+                : assetModule || require('../../../assets/icon.png')
             }
             style={styles.coffeemonImage}
             resizeMode="contain"
-            defaultSource={require('../../../assets/icon.png')}
+            defaultSource={assetModule || require('../../../assets/icon.png')}
           />
         </View>
 
