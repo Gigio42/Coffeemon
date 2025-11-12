@@ -3,8 +3,10 @@ import {
   Modal,
   View,
   Text,
-  ScrollView,
+  FlatList,
   TouchableWithoutFeedback,
+  Platform,
+  useWindowDimensions,
 } from 'react-native';
 import { BlurView } from 'expo-blur';
 import CoffeemonCard from '../CoffeemonCard';
@@ -41,6 +43,99 @@ export default function CoffeemonSelectionModal<T = PlayerCoffeemon>({
 }: CoffeemonSelectionModalProps<T>) {
   const modalTitle = title ?? 'Escolha seu combatente!';
   const modalEmptyMessage = emptyMessage ?? 'Nenhum Coffeemon disponível';
+  const { width: viewportWidth, height: viewportHeight } = useWindowDimensions();
+
+  const defaultKeyExtractor = React.useCallback(
+    (item: T, index: number) => {
+      if (keyExtractor) {
+        return keyExtractor(item, index);
+      }
+
+      const defaultId = (item as unknown as PlayerCoffeemon)?.id;
+      return String(defaultId ?? index);
+    },
+    [keyExtractor]
+  );
+
+  const renderItem = React.useCallback(
+    ({ item }: { item: T; index: number }) => {
+      const defaultId = (item as unknown as PlayerCoffeemon)?.id;
+      const isLoading = partyLoading != null && defaultId !== undefined
+        ? partyLoading === defaultId
+        : false;
+      const handleSelect = () => onSelectCoffeemon(item);
+
+      let content: React.ReactNode;
+
+      if (renderCoffeemonCard) {
+        const cardNode = renderCoffeemonCard(item, {
+          onSelect: handleSelect,
+          isLoading,
+        });
+
+        content = React.isValidElement(cardNode) ? cardNode : <>{cardNode}</>;
+      } else {
+        content = (
+          <CoffeemonCard
+            coffeemon={item as unknown as PlayerCoffeemon}
+            onToggleParty={async () => {
+              await handleSelect();
+            }}
+            isLoading={isLoading}
+            variant={cardVariant}
+          />
+        );
+      }
+
+      return <View style={styles.carouselItem}>{content}</View>;
+    },
+    [cardVariant, onSelectCoffeemon, partyLoading, renderCoffeemonCard]
+  );
+
+  const modalContainerStyle = React.useMemo(
+    () => [
+      styles.modalContainer,
+      {
+        width: Math.min(viewportWidth * 0.9, 420),
+        maxHeight: Math.min(viewportHeight * 0.85, 640),
+        paddingHorizontal: viewportWidth < 480 ? 16 : 24,
+        paddingVertical: viewportWidth < 480 ? 16 : 24,
+      },
+    ],
+    [viewportHeight, viewportWidth]
+  );
+
+  const modalContent = (
+    <TouchableWithoutFeedback onPress={() => {}}>
+      <View style={modalContainerStyle}>
+        <View style={styles.modalHeader}>
+          <View style={styles.modalTitleWrapper}>
+            <Text style={styles.modalTitle}>{modalTitle}</Text>
+          </View>
+        </View>
+
+        {availableCoffeemons.length === 0 ? (
+          <Text style={styles.emptyText}>{modalEmptyMessage}</Text>
+        ) : (
+          <FlatList
+            horizontal
+            data={availableCoffeemons}
+            keyExtractor={defaultKeyExtractor}
+            renderItem={renderItem}
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.carouselContent}
+            style={styles.carousel}
+          />
+        )}
+      </View>
+    </TouchableWithoutFeedback>
+  );
+
+  const blurIntensity = Platform.OS === 'android' ? 55 : 30;
+  const blurStyle = [
+    styles.blurContainer,
+    Platform.OS === 'android' ? styles.androidBackdrop : null,
+  ];
 
   return (
     <Modal
@@ -51,64 +146,15 @@ export default function CoffeemonSelectionModal<T = PlayerCoffeemon>({
     >
       <TouchableWithoutFeedback onPress={onClose}>
         <View style={styles.fullscreen}>
-          <BlurView intensity={20} style={styles.blurContainer}>
-            <TouchableWithoutFeedback onPress={() => {}}>
-              <View style={styles.modalContainer}>
-                <View style={styles.modalHeader}>
-                  <View style={styles.modalTitleWrapper}>
-                    <Text style={styles.modalTitle}>{modalTitle}</Text>
-                  </View>
-                </View>
-
-                <ScrollView
-                  horizontal
-                  showsHorizontalScrollIndicator={false}
-                  contentContainerStyle={styles.modalContent}
-                  style={styles.carousel}
-                >
-                  {availableCoffeemons.length === 0 ? (
-                    <Text style={styles.emptyText}>{modalEmptyMessage}</Text>
-                  ) : (
-                    <View style={styles.carouselContent}>
-                      {availableCoffeemons.map((coffeemon, index) => {
-                        const defaultId = (coffeemon as unknown as PlayerCoffeemon)?.id;
-                        const key = keyExtractor ? keyExtractor(coffeemon, index) : String(defaultId ?? index);
-                        const isLoading = partyLoading != null && defaultId !== undefined
-                          ? partyLoading === defaultId
-                          : false;
-                        const handleSelect = () => onSelectCoffeemon(coffeemon);
-
-                        if (renderCoffeemonCard) {
-                          const cardNode = renderCoffeemonCard(coffeemon, {
-                            onSelect: handleSelect,
-                            isLoading,
-                          });
-
-                          if (React.isValidElement(cardNode)) {
-                            return React.cloneElement(cardNode, { key });
-                          }
-
-                          return <React.Fragment key={key}>{cardNode}</React.Fragment>;
-                        }
-
-                        return (
-                          <View key={key} style={styles.carouselItem}>
-                            <CoffeemonCard
-                              coffeemon={coffeemon as unknown as PlayerCoffeemon}
-                              onToggleParty={async () => {
-                                await handleSelect();
-                              }}
-                              isLoading={isLoading}
-                              variant={cardVariant}
-                            />
-                          </View>
-                        );
-                      })}
-                    </View>
-                  )}
-                </ScrollView>
-              </View>
-            </TouchableWithoutFeedback>
+          <BlurView
+            intensity={blurIntensity}
+            tint="dark"
+            experimentalBlurMethod={
+              Platform.OS === 'android' ? 'dimezisBlurView' : undefined
+            }
+            style={blurStyle}
+          >
+            {modalContent}
           </BlurView>
         </View>
       </TouchableWithoutFeedback>

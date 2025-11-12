@@ -129,7 +129,7 @@ export default function ProductListScreen({
           </TouchableOpacity>
         </View>
       ) : (
-        <View>
+        <View style={styles.content}>
           {/* Contador de resultados */}
           {searchText && (
             <View style={styles.resultsCounter}>
@@ -141,6 +141,7 @@ export default function ProductListScreen({
           )}
 
           <FlatList
+            style={styles.productList}
             data={filteredProducts}
             numColumns={2}
             key={2} // Força re-render com 2 colunas

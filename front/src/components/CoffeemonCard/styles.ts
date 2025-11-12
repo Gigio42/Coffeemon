@@ -36,6 +36,12 @@ export function getTypeColor(type: string, name: string): { light: string; dark:
 }
 
 export const styles = StyleSheet.create({
+  touchableWrapper: {
+    width: '100%',
+  },
+  touchableWrapperSmall: {
+    width: '100%',
+  },
   coffeemonCard: {
     width: 180,
     marginBottom: 16,
@@ -44,6 +50,14 @@ export const styles = StyleSheet.create({
     borderWidth: pixelArt.borders.widthBold,
     // borderColor é definido no componente
     minHeight: 280,
+    position: 'relative',
+  },
+  coffeemonCardSmall: {
+    width: 140,
+    minHeight: 230,
+  },
+  coffeemonCardSelected: {
+    opacity: 0.95,
   },
 
   // ========================================
@@ -232,39 +246,43 @@ export const styles = StyleSheet.create({
     fontFamily: 'monospace',
   },
 
-  // ========================================
-  // BOTÃO SELECIONAR
-  // ========================================
-  selectButton: {
-    width: '100%',
-    // backgroundColor é definido no componente
-    paddingVertical: 10,
-    paddingHorizontal: 16,
-    borderTopLeftRadius: pixelArt.borders.radiusMedium,
-    borderTopRightRadius: pixelArt.borders.radiusMedium,
-    borderBottomLeftRadius: 0,
-    borderBottomRightRadius: 0,
+  selectionOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    justifyContent: 'center',
     alignItems: 'center',
-    borderTopWidth: pixelArt.borders.widthBold,
-    borderLeftWidth: 0,
-    borderRightWidth: 0,
-    borderBottomWidth: 0,
-    // borderColor é definido no componente
   },
 
-  selectedButton: {
-    // backgroundColor será definido no componente usando typeColor.light
-    opacity: 0.9,
+  removeButton: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    borderWidth: pixelArt.borders.widthBold,
+    borderColor: '#FFFFFF',
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
   },
 
-  selectButtonText: {
+  removeButtonText: {
     color: '#FFFFFF',
-    fontSize: 12,
+    fontSize: 32,
+    lineHeight: 34,
     fontWeight: 'bold',
-    fontFamily: 'monospace',
-    letterSpacing: 1,
-    textShadowColor: 'rgba(0, 0, 0, 0.3)',
-    textShadowOffset: { width: 1, height: 1 },
-    textShadowRadius: 1,
+  },
+
+  loadingOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.4)',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });

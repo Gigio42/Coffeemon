@@ -25,7 +25,7 @@ import CoffeemonCard from '../../components/CoffeemonCard';
 import { styles } from './styles';
 
 // Componente inline para o carrossel do time
-function TeamCarouselInline({ coffeemons, onToggleParty, partyLoading }: {
+function TeamCarouselInline({ coffeemons, onToggleParty: onTogglePartyProp, partyLoading }: {
   coffeemons: PlayerCoffeemon[];
   onToggleParty: (coffeemon: PlayerCoffeemon) => void;
   partyLoading: number | null;
@@ -49,6 +49,7 @@ function TeamCarouselInline({ coffeemons, onToggleParty, partyLoading }: {
 
   const animateCards = React.useCallback(
     (order: number[]) => {
+      const centerPosition = Math.floor(order.length / 2);
       coffeemons.forEach((_, originalIndex) => {
         if (originalIndex >= scaleValuesRef.current.length || originalIndex >= opacityValuesRef.current.length) {
           return;
@@ -57,7 +58,7 @@ function TeamCarouselInline({ coffeemons, onToggleParty, partyLoading }: {
         const position = order.indexOf(originalIndex);
         if (position === -1) return; // Card não está na ordem atual
 
-        const distance = Math.abs(position - 1); // 1 é o centro
+        const distance = Math.abs(position - centerPosition);
 
         const scale = distance === 0 ? 0.95 : distance === 1 ? 0.75 : 0.6; // Centro reduzido para 95%
         const opacity = distance === 0 ? 1 : distance === 1 ? 0.5 : 0.3; // Opacidades reduzidas
@@ -79,13 +80,14 @@ function TeamCarouselInline({ coffeemons, onToggleParty, partyLoading }: {
 
   const swapWithCenter = React.useCallback(
     (position: number) => {
-      if (position === 1 || displayOrder.length < 2) {
+      const centerPosition = Math.floor(displayOrder.length / 2);
+      if (position === centerPosition || displayOrder.length < 2) {
         return;
       }
 
       const newOrder = [...displayOrder];
-      const centerIndex = newOrder[1];
-      newOrder[1] = newOrder[position];
+      const centerIndex = newOrder[centerPosition];
+      newOrder[centerPosition] = newOrder[position];
       newOrder[position] = centerIndex;
       setDisplayOrder(newOrder);
     },
@@ -106,15 +108,15 @@ function TeamCarouselInline({ coffeemons, onToggleParty, partyLoading }: {
       },
     })
   ).current;
-
-  const getIsActive = (originalIndex: number) => displayOrder.indexOf(originalIndex) === 1;
+  const centerPosition = Math.floor(displayOrder.length / 2);
+  const getIsActive = (originalIndex: number) => displayOrder.indexOf(originalIndex) === centerPosition;
 
   return (
     <View style={styles.carouselContainer}>
       <View style={styles.carouselTrack} {...panResponder.panHandlers}>
         {displayOrder.map((originalIndex, position) => {
           const coffeemon = coffeemons[originalIndex];
-          const isActive = position === 1;
+          const isActive = position === centerPosition;
 
           // Verificações de segurança para arrays de animação
           const scaleValue = scaleValuesRef.current[originalIndex];
@@ -140,9 +142,6 @@ function TeamCarouselInline({ coffeemons, onToggleParty, partyLoading }: {
                 onPress={() => {
                   if (!isActive) {
                     swapWithCenter(position);
-                  } else {
-                    // Card central clicado - remove do time
-                    onToggleParty(coffeemon);
                   }
                 }}
                 activeOpacity={0.9}
@@ -171,15 +170,17 @@ function TeamCarouselInline({ coffeemons, onToggleParty, partyLoading }: {
                         type: 'floral',
                       },
                     }}
-                    onToggleParty={() => Promise.resolve()} // Função que retorna Promise para satisfazer TypeScript
+                    onToggleParty={async () => {
+                      if (!isActive) {
+                        return;
+                      }
+                      await Promise.resolve(onTogglePartyProp(coffeemon));
+                    }}
                     variant="large"
                     isLoading={partyLoading === coffeemon.id}
+                    disabled={!isActive}
                   />
-                  {isActive && (
-                    <View style={styles.activeIndicator}>
-                      <Text style={styles.activeIndicatorText}>★</Text>
-                    </View>
-                  )}
+                  {/* Star indicator removed as per request */}
                 </Animated.View>
               </TouchableOpacity>
             </View>
@@ -340,14 +341,7 @@ export default function MatchmakingScreen({
                   partyLoading={partyLoading}
                 />
               )}
-
-              {partyMembers.length < 3 && (
-                <TouchableOpacity style={styles.addButton} onPress={handleOpenSelectionModal}>
-                  <Text style={styles.addButtonText}>+ Adicionar</Text>
-                </TouchableOpacity>
-              )}
             </View>
-
 
             <TeamSection
               title={`Disponíveis (${availableCoffeemons.length})`}
@@ -358,91 +352,67 @@ export default function MatchmakingScreen({
               partyLoading={partyLoading}
               variant="horizontal"
             />
+
           </View>
 
-          {/* Botão Capturar */}
-          <View style={styles.actionCard}>
-            <Text style={styles.cardTitle}>Capturar Coffeemons</Text>
-            <TouchableOpacity
-              style={styles.captureButton}
-              onPress={handleOpenQRScanner}
-            >
-              <Text style={styles.captureButtonText}>📷 Escanear QR Code</Text>
-            </TouchableOpacity>
-            
-            <TouchableOpacity
-              style={[styles.captureButton, { marginTop: 8, backgroundColor: '#27ae60' }]}
-              onPress={giveAllCoffeemons}
-              disabled={loading}
-            >
-              <Text style={styles.captureButtonText}>
-                {loading ? '⏳ Capturando...' : '🎁 Capturar Todos'}
-              </Text>
-            </TouchableOpacity>
-          </View>
-
-          {/* Seção de Batalhas */}
-          <View style={styles.battleSection}>
-            <Text style={styles.sectionTitle}>Modos de Batalha</Text>
-            
-            <TouchableOpacity
-              style={[styles.battleButton, styles.pvpButton]}
-              onPress={handleFindMatch}
-              disabled={partyMembers.length === 0}
-            >
-              <View style={styles.buttonContent}>
-                <Text style={styles.battleButtonEmoji}>🎮</Text>
-                <View style={styles.buttonTextContainer}>
-                  <Text style={styles.battleButtonTitle}>Partida Online</Text>
-                  <Text style={styles.battleButtonSubtitle}>Jogador vs Jogador</Text>
-                </View>
-              </View>
-            </TouchableOpacity>
-
-            <View style={styles.dividerSmall} />
-            <Text style={styles.orText}>ou escolha um desafio</Text>
-            <View style={styles.dividerSmall} />
-
-            <TouchableOpacity
-              style={[styles.battleButton, styles.jessieButton]}
-              onPress={() => handleFindBotMatch('jessie')}
-              disabled={partyMembers.length === 0}
-            >
-              <View style={styles.buttonContent}>
-                <Text style={styles.battleButtonEmoji}>👾</Text>
-                <View style={styles.buttonTextContainer}>
-                  <Text style={styles.battleButtonTitle}>Desafio Jessie</Text>
-                  <Text style={styles.battleButtonSubtitle}>Nível Iniciante</Text>
-                </View>
-              </View>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={[styles.battleButton, styles.jamesButton]}
-              onPress={() => handleFindBotMatch('pro-james')}
-              disabled={partyMembers.length === 0}
-            >
-              <View style={styles.buttonContent}>
-                <Text style={styles.battleButtonEmoji}>🤖</Text>
-                <View style={styles.buttonTextContainer}>
-                  <Text style={styles.battleButtonTitle}>Desafio James</Text>
-                  <Text style={styles.battleButtonSubtitle}>Nível Avançado</Text>
-                </View>
-              </View>
-            </TouchableOpacity>
-          </View>
-
-          {/* Botão Logout */}
-          <TouchableOpacity
-            style={styles.logoutButton}
-            onPress={handleLogout}
-          >
-            <Text style={styles.logoutButtonText}>Sair da Conta</Text>
-          </TouchableOpacity>
         </ScrollView>
-          </SafeAreaView>
-      </LinearGradient>
-      </ImageBackground>
+
+        <View style={styles.bottomBar}>
+          <TouchableOpacity
+            style={styles.bottomBarButton}
+            onPress={handleOpenQRScanner}
+            accessibilityLabel="Escanear QR Code"
+          >
+            <Text style={styles.bottomBarEmoji}>📷</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.bottomBarButton, loading && styles.bottomBarButtonDisabled]}
+            onPress={giveAllCoffeemons}
+            disabled={loading}
+            accessibilityLabel="Capturar todos os Coffeemons"
+          >
+            <Text style={styles.bottomBarEmoji}>{loading ? '⏳' : '🎁'}</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.bottomBarButton, partyMembers.length === 0 && styles.bottomBarButtonDisabled]}
+            onPress={handleFindMatch}
+            disabled={partyMembers.length === 0}
+            accessibilityLabel="Partida online"
+          >
+            <Text style={styles.bottomBarEmoji}>🎮</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.bottomBarButton, partyMembers.length === 0 && styles.bottomBarButtonDisabled]}
+            onPress={() => handleFindBotMatch('jessie')}
+            disabled={partyMembers.length === 0}
+            accessibilityLabel="Desafio Jessie"
+          >
+            <Text style={styles.bottomBarEmoji}>👾</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.bottomBarButton, partyMembers.length === 0 && styles.bottomBarButtonDisabled]}
+            onPress={() => handleFindBotMatch('pro-james')}
+            disabled={partyMembers.length === 0}
+            accessibilityLabel="Desafio James"
+          >
+            <Text style={styles.bottomBarEmoji}>🤖</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.bottomBarButton}
+            onPress={handleLogout}
+            accessibilityLabel="Sair da conta"
+          >
+            <Text style={styles.bottomBarEmoji}>🚪</Text>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
+    </LinearGradient>
+    </ImageBackground>
 
       <CoffeemonSelectionModal
         visible={selectionModalVisible}
