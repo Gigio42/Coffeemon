@@ -12,10 +12,10 @@ export class PvpGameMode implements IGameMode {
   }
 
   async handlePlayerAction(command: BattleActionCommand): Promise<void> {
-    await this.battleService.submitAction(command.battleId, command.playerId, {
-      battleId: command.battleId,
-      actionType: command.actionType,
-      payload: command.payload,
-    } as BattleActionUnion);
+    await this.battleService.submitAction(
+      command.action.battleId,
+      command.playerId,
+      command.action
+    );
   }
 }

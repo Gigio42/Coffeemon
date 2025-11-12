@@ -3,6 +3,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { GameAuthModule } from '../../shared/auth/game-auth.module';
 import { CacheModule } from '../../shared/cache/cache.module';
 import { BotModule } from '../bot/bot.module';
+import { CoffeemonModule } from '../coffeemon/coffeemon.module';
 import { PlayerModule } from '../player/player.module';
 import { BattleGateway } from './battle.gateway';
 import { ActionExecutorService } from './engine/actions/action-executor.service';
@@ -29,6 +30,7 @@ import { BattleService } from './services/battles.service';
     PlayerModule,
     CacheModule,
     BotModule,
+    CoffeemonModule,
   ],
   providers: [
     BattleService,

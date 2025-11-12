@@ -128,11 +128,11 @@ export class BattleService implements OnModuleInit {
 
   @OnEvent('battle.action.command')
   async delegatePlayerAction(command: BattleActionCommand): Promise<void> {
-    const gameMode = this.activeGameModes.get(command.battleId);
+    const gameMode = this.activeGameModes.get(command.action.battleId);
     if (gameMode) {
       await gameMode.handlePlayerAction(command);
     } else {
-      console.error(`No active game mode for battle ${command.battleId}`);
+      console.error(`No active game mode for battle ${command.action.battleId}`);
     }
   }
 

@@ -9,6 +9,7 @@ import {
   PlayerWantsToBattleBotCommand,
 } from '../../../shared/events/game.events';
 import { BotPlayerService } from '../../bot/services/bot-player.service';
+import { StatsCalculatorService } from '../../coffeemon/services/stats-calculator.service';
 import { PlayerCoffeemons } from '../../player/entities/playerCoffeemons.entity';
 import { PlayerService } from '../../player/player.service';
 import { Battle } from '../entities/battle.entity';
@@ -22,7 +23,8 @@ export class BattleCreationService {
     private readonly playerService: PlayerService,
     private readonly botPlayerService: BotPlayerService,
     private readonly battleCache: BattleCacheService,
-    private readonly eventEmitter: EventEmitter2
+    private readonly eventEmitter: EventEmitter2,
+    private readonly statsCalculator: StatsCalculatorService
   ) {}
 
   @OnEvent('match.pair.found')
@@ -100,17 +102,20 @@ export class BattleCreationService {
     return {
       activeCoffeemonIndex: null,
       hasSelectedCoffeemon: false,
-      coffeemons: team.map(
-        (c): CoffeemonState => ({
+      coffeemons: team.map((c): CoffeemonState => {
+        const calculatedStats = this.statsCalculator.calculateAllStats(c.coffeemon, c.level, c.evs);
+        const maxHp = calculatedStats.hp;
+
+        return {
           id: c.id,
           name: c.coffeemon.name,
-          currentHp: c.coffeemon.baseHp,
+          currentHp: maxHp,
           isFainted: false,
           canAct: true,
-          maxHp: c.coffeemon.baseHp,
-          attack: c.coffeemon.baseAttack,
-          defense: c.coffeemon.baseDefense,
-          speed: c.coffeemon.baseSpeed,
+          maxHp: maxHp,
+          attack: calculatedStats.attack,
+          defense: calculatedStats.defense,
+          speed: calculatedStats.speed,
           modifiers: {
             attackModifier: 1.0,
             defenseModifier: 1.0,
@@ -121,8 +126,8 @@ export class BattleCreationService {
           },
           moves: c.learnedMoves.sort((a, b) => a.slot - b.slot).map((lm) => lm.move),
           statusEffects: [],
-        })
-      ),
+        };
+      }),
     };
   }
 }

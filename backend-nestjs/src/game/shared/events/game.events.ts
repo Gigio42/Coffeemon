@@ -1,3 +1,4 @@
+import { BattleActionUnion } from 'src/game/modules/battles/types/battle-actions.types';
 import { BattleState } from 'src/game/modules/battles/types/battle-state.types';
 
 // --- Comandos (Intenções do Usuário ou do Sistema) ---
@@ -38,8 +39,7 @@ export class BattleActionCommand {
     public readonly battleId: string,
     public readonly playerId: number,
     public readonly socketId: string,
-    public readonly actionType: any,
-    public readonly payload: any
+    public readonly action: BattleActionUnion
   ) {}
 }
 
@@ -81,6 +81,28 @@ export class BattleEndedEvent {
     public readonly battleId: string,
     public readonly winnerId: number,
     public readonly battleState: BattleState
+  ) {}
+}
+export class PlayerLeveledUpEvent {
+  constructor(
+    public readonly playerId: number,
+    public readonly newLevel: number
+  ) {}
+}
+export class CoffeemonLeveledUpEvent {
+  constructor(
+    public readonly playerId: number,
+    public readonly playerCoffeemonId: number,
+    public readonly newLevel: number,
+    public readonly expGained: number
+  ) {}
+}
+
+export class CoffeemonLearnedMoveEvent {
+  constructor(
+    public readonly playerId: number,
+    public readonly playerCoffeemonId: number,
+    public readonly moveName: string
   ) {}
 }
 export class PlayerReconnectedEvent {

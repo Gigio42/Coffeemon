@@ -2,6 +2,7 @@ import { Column, Entity, JoinColumn, ManyToOne, OneToMany, PrimaryGeneratedColum
 import { Coffeemon } from '../../coffeemon/entities/coffeemon.entity';
 import { Player } from './player.entity';
 import { PlayerCoffeemonMove } from './playerCoffeemonMove.entity';
+import { CoffeemonStats } from '../../coffeemon/Types/coffeemon-stats.types';
 
 @Entity()
 export class PlayerCoffeemons {
@@ -17,15 +18,6 @@ export class PlayerCoffeemons {
   coffeemon: Coffeemon;
 
   @Column()
-  hp: number;
-
-  @Column()
-  attack: number;
-
-  @Column()
-  defense: number;
-
-  @Column()
   level: number;
 
   @Column()
@@ -33,6 +25,9 @@ export class PlayerCoffeemons {
 
   @Column({ default: false })
   isInParty: boolean;
+
+  @Column({ type: 'simple-json', nullable: true })
+  evs: CoffeemonStats;
 
   @OneToMany(() => PlayerCoffeemonMove, (pcm) => pcm.playerCoffeemon)
   learnedMoves: PlayerCoffeemonMove[];
