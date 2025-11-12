@@ -31,34 +31,7 @@ import { Coffeemon } from '../../types';
 import BattleHUD from '../../components/Battle/BattleHUD';
 import { pixelArt } from '../../theme/pixelArt';
 import { styles } from './styles';
-
-// Mapping de imagens locais dos Coffeemons para batalha
-const coffeemonImageMap: { [key: string]: { default: any; back: any } } = {
-  jasminelle: {
-    default: require('../../../assets/coffeemons/jasminelle/default.png'),
-    back: require('../../../assets/coffeemons/jasminelle/back.png'),
-  },
-  limonetto: {
-    default: require('../../../assets/coffeemons/limonetto/default.png'),
-    back: require('../../../assets/coffeemons/limonetto/back.png'),
-  },
-  maprion: {
-    default: require('../../../assets/coffeemons/maprion/default.png'),
-    back: require('../../../assets/coffeemons/maprion/back.png'),
-  },
-  emberly: {
-    default: require('../../../assets/coffeemons/emberly/default.png'),
-    back: require('../../../assets/coffeemons/emberly/back.png'),
-  },
-  almondino: {
-    default: require('../../../assets/coffeemons/almondino/default.png'),
-    back: require('../../../assets/coffeemons/almondino/back.png'),
-  },
-  gingerlynn: {
-    default: require('../../../assets/coffeemons/gingerlynn/default.png'),
-    back: require('../../../assets/coffeemons/gingerlynn/back.png'),
-  },
-};
+import { getCoffeemonImage } from '../../../assets/coffeemons';
 
 interface BattleScreenProps {
   battleId: string;
@@ -112,13 +85,7 @@ export default function BattleScreen({
     } = animations;
 
     const getCoffeemonImageSource = (name: string, variant: 'default' | 'back' = 'default') => {
-      const baseName = name.split(' (Lvl')[0].toLowerCase();
-      const localImage = coffeemonImageMap[baseName];
-      if (localImage && localImage[variant]) {
-        return localImage[variant];
-      }
-      // Fallback to Jasminelle if not found
-      return coffeemonImageMap.jasminelle?.[variant] || coffeemonImageMap.jasminelle?.default;
+      return getCoffeemonImage(name, variant);
     };
 
     const battle = useBattle({
@@ -332,21 +299,6 @@ export default function BattleScreen({
     []
   );
 
-  const handleOpenSwitchModal = () => {
-    // ✅ PERMITIR TROCA MESMO QUANDO DESMAIADO: Verificar se há candidatos disponíveis
-    const canOpen = hasSwitchCandidate && !isProcessing && !myPendingAction && battleState?.turnPhase !== 'RESOLUTION';
-    if (!canOpen) {
-      console.log('[BattleScreen] Cannot open switch modal:', {
-        hasSwitchCandidate,
-        isProcessing,
-        myPendingAction,
-        turnPhase: battleState?.turnPhase
-      });
-      return;
-    }
-    setSwitchModalVisible(true);
-  };
-
   const handleSelectSwitchCandidate = (index: number) => {
     console.log('[BattleScreen] 🔄 Switch candidate selected:', index, {
       isProcessing,
@@ -391,13 +343,9 @@ export default function BattleScreen({
 
     // ✅ ENVIAR AÇÃO: Executar troca
     sendAction('switch', { newIndex: index });
-
-    // Limpar modal imediatamente após enviar ação
+    
+    // Fechar o modal
     setSwitchModalVisible(false);
-    if (stuckRecoveryTimeout) {
-      clearTimeout(stuckRecoveryTimeout);
-      setStuckRecoveryTimeout(null);
-    }
   };
 
   React.useEffect(() => {
@@ -712,6 +660,8 @@ export default function BattleScreen({
     } else if (needsSwitch && canAct) {
       // ✅ SÓ MOSTRAR TROCA OBRIGATÓRIA quando for realmente o turno do jogador
       statusText = 'SEU COFFEEMON DESMAIOU! ESCOLHA TROCAR OU FUGIR.';
+    } else if (actionMode === 'attack') {
+      statusText = 'ESCOLHA UM ATAQUE.';
     } else if (isSwitchModalVisible) {
       statusText = 'ESCOLHA UM COFFEEMON PARA TROCAR.';
     } else if (battleState?.turnPhase === 'SUBMISSION') {
@@ -755,7 +705,7 @@ export default function BattleScreen({
               (!hasSwitchCandidate || isProcessing || myPendingAction || battleState?.turnPhase === 'RESOLUTION' || !canAct) && styles.actionButtonDisabled,
               (needsSwitch && canAct) && { borderWidth: 3, borderColor: '#FFD700' } // Destaque amarelo apenas quando for o turno E precisar trocar
             ]}
-            onPress={handleOpenSwitchModal}
+            onPress={() => setSwitchModalVisible(true)}
             disabled={!hasSwitchCandidate || isProcessing || myPendingAction || battleState?.turnPhase === 'RESOLUTION' || !canAct}
           >
             <View style={styles.actionButtonContent}>
@@ -819,6 +769,12 @@ export default function BattleScreen({
     return (
       <>
         <View style={styles.actionPromptContainer}>
+          <TouchableOpacity
+            style={styles.backButtonSmall}
+            onPress={() => setActionMode('main')}
+          >
+            <Text style={styles.backButtonIcon}>◀️</Text>
+          </TouchableOpacity>
           <Text style={styles.actionPromptText}>Escolha um ataque:</Text>
         </View>
 
@@ -860,17 +816,6 @@ export default function BattleScreen({
             );
           })}
         </View>
-
-        {/* Botão Voltar */}
-        <TouchableOpacity
-          style={[styles.mainActionButton, styles.fleeActionButton, { width: '100%', marginTop: pixelArt.spacing.md }]}
-          onPress={() => setActionMode('main')}
-        >
-          <View style={styles.actionButtonContent}>
-            <Text style={styles.actionButtonIcon}>◀️</Text>
-            <Text style={styles.actionButtonText}>Voltar</Text>
-          </View>
-        </TouchableOpacity>
       </>
     );
   };

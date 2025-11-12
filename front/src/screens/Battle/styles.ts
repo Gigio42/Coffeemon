@@ -273,6 +273,7 @@ export const styles = StyleSheet.create({
     paddingHorizontal: 16,
     marginBottom: 12,
     alignItems: 'center',
+    flexDirection: 'row',
   },
   actionPromptText: {
     fontSize: 14,
@@ -281,6 +282,25 @@ export const styles = StyleSheet.create({
     color: '#333',
     textAlign: 'center',
     textTransform: 'uppercase',
+    flex: 1,
+  },
+  backButtonSmall: {
+    backgroundColor: '#5A67D8',
+    borderRadius: 4,
+    borderWidth: 2,
+    borderColor: '#434190',
+    paddingHorizontal: 8,
+    paddingVertical: 6,
+    marginRight: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    minWidth: 40,
+  },
+  backButtonIcon: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#FFFFFF',
+    textAlign: 'center',
   },
   
   // ========================================
@@ -709,5 +729,49 @@ export const styles = StyleSheet.create({
   returnButtonText: {
     ...pixelArt.buttons.text,
   },
+  
+  // ========================================
+  // SWITCH MODE - Cards de Troca
+  // ========================================
+  switchCandidateCard: {
+    backgroundColor: 'rgba(245, 230, 211, 0.95)',
+    borderRadius: 12,
+    borderWidth: 3,
+    borderColor: '#8B7355',
+    padding: 12,
+    alignItems: 'center',
+    minHeight: 160,
+  },
+  switchCandidateCardDisabled: {
+    backgroundColor: 'rgba(150, 150, 150, 0.5)',
+    borderColor: '#666',
+  },
+  switchCandidateImage: {
+    width: 80,
+    height: 80,
+    marginBottom: 8,
+  },
+  switchCandidateName: {
+    ...pixelArt.typography.pixelBody,
+    fontSize: 12,
+    fontWeight: 'bold',
+    color: '#333',
+    textAlign: 'center',
+    marginBottom: 4,
+  },
+  switchCandidateHp: {
+    ...pixelArt.typography.pixelBody,
+    fontSize: 10,
+    color: '#666',
+    textAlign: 'center',
+  },
+  switchCandidateReason: {
+    ...pixelArt.typography.pixelBody,
+    fontSize: 9,
+    color: '#ff6b6b',
+    textAlign: 'center',
+    marginTop: 4,
+  },
 });
+
 
