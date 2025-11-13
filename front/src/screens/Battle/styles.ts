@@ -29,32 +29,19 @@ export const styles = StyleSheet.create({
   // ========================================
   hudContainer: {
     position: 'absolute',
-    backgroundColor: 'rgba(245, 230, 211, 0.85)',
-    borderRadius: 8,
-    borderWidth: 2,
-    borderColor: 'rgba(139, 115, 85, 0.8)',
-    paddingVertical: 10,
-    paddingHorizontal: 12,
-    minWidth: 160,
-    maxWidth: 180,
     zIndex: 30,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
   },
   
   // HUD do Player (esquerda superior)
   playerHudPosition: {
-    top: 60,
-    left: 20,
+    bottom: '38%',
+    left: '10%',
   },
   
   // HUD do Oponente (direita superior)
   opponentHudPosition: {
-    top: 60,
-    right: 20,
+    top: '18%',
+    right: '12%',
   },
   
   // Container Principal com display: flex e align-items: center

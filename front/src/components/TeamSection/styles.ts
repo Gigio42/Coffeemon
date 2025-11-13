@@ -5,12 +5,15 @@ export const styles = StyleSheet.create({
   teamSection: {
     width: '100%',
     marginBottom: 16,
+    alignItems: 'center',
   },
   
   sectionHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 12,
+    alignSelf: 'center',
+    maxWidth: 360,
   },
 
   sectionHeaderWithAction: {
@@ -19,6 +22,7 @@ export const styles = StyleSheet.create({
 
   sectionHeaderCentered: {
     justifyContent: 'center',
+    width: '100%',
   },
 
   sectionTitle: {
@@ -28,6 +32,20 @@ export const styles = StyleSheet.create({
     fontFamily: 'monospace',
     letterSpacing: 0.5,
     textAlign: 'center',
+  },
+
+  titleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+
+  expandIcon: {
+    marginLeft: 8,
+    fontSize: 14,
+    color: '#f8e7c0',
+    fontFamily: 'monospace',
+    opacity: 0.9,
   },
   
   addButton: {
@@ -68,11 +86,13 @@ export const styles = StyleSheet.create({
   
   carousel: {
     width: '100%',
+    alignSelf: 'center',
   },
   
   carouselContent: {
     paddingHorizontal: 4,
     gap: 0,
+    justifyContent: 'center',
   },
   
   availableCardWrapper: {

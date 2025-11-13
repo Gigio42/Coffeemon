@@ -4,7 +4,7 @@ import type { ImageSourcePropType } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { getServerUrl } from '../../utils/config';
 import { PlayerCoffeemon } from '../../api/coffeemonService';
-import { styles, getTypeColor } from './styles';
+import { styles, getTypeColor, buildPixelCardColors } from './styles';
 import { useDynamicPalette } from '../../utils/colorPalette';
 import { getCoffeemonImage } from '../../../assets/coffeemons';
 import { getVariantForStatusEffects } from '../../utils/statusEffects';
@@ -48,6 +48,11 @@ export default function CoffeemonCard({
   const spriteVariant = getVariantForStatusEffects(coffeemon.statusEffects, 'default');
   const assetModule = getCoffeemonImage(coffeemon.coffeemon.name, spriteVariant);
   const palette = useDynamicPalette(assetModule, fallbackPalette);
+
+  const pixelColors = useMemo(
+    () => buildPixelCardColors(palette),
+    [palette.light, palette.dark, palette.accent],
+  );
 
   const [imageUri, setImageUri] = useState<string | null>(null);
   const fallbackImage = assetModule || require('../../../assets/icon.png');
@@ -143,95 +148,305 @@ export default function CoffeemonCard({
         isSmallVariant && styles.touchableWrapperSmall,
       ]}
     >
-      <LinearGradient
-        colors={[palette.dark, palette.light]}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 0, y: 1 }}
+      <View
         style={[
-          styles.coffeemonCard,
-          isSmallVariant && styles.coffeemonCardSmall,
-          isInParty && styles.coffeemonCardSelected,
+          styles.cardPixelWrapper,
+          isSmallVariant && styles.cardPixelWrapperSmall,
           {
-            borderColor: palette.dark,
+            backgroundColor: pixelColors.cardOuterFill,
+            borderColor: pixelColors.cardOuterBorder,
           },
         ]}
       >
-        {/* Header com nome e ícone */}
         <View
           style={[
-            styles.cardHeader,
+            styles.cardShadowBlock,
             {
-              backgroundColor: palette.dark,
-              borderBottomColor: palette.dark,
+              backgroundColor: pixelColors.cardShadowBlock,
+              borderColor: pixelColors.cardShadowBorder,
+            },
+          ]}
+        />
+        <LinearGradient
+          colors={[pixelColors.cardGradientTop, pixelColors.cardGradientBottom]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 0, y: 1 }}
+          style={[
+            styles.coffeemonCard,
+            isSmallVariant && styles.coffeemonCardSmall,
+            isInParty && styles.coffeemonCardSelected,
+            {
+              borderColor: pixelColors.cardBorder,
+              backgroundColor: pixelColors.cardBackground,
             },
           ]}
         >
-          <View style={styles.headerIconContainer}>
-            <Text style={styles.headerIcon}>{getTypeIcon(coffeemon.coffeemon.type)}</Text>
+          <View style={styles.pixelOverlayContainer} pointerEvents="none">
+            <View
+              style={[
+                styles.pixelBorderHorizontal,
+                styles.pixelBorderTop,
+                { backgroundColor: pixelColors.cardHighlight },
+              ]}
+            />
+            <View
+              style={[
+                styles.pixelBorderHorizontal,
+                styles.pixelBorderBottom,
+                { backgroundColor: pixelColors.cardLowlight },
+              ]}
+            />
+            <View
+              style={[
+                styles.pixelBorderVertical,
+                styles.pixelBorderLeft,
+                { backgroundColor: pixelColors.cardHighlight },
+              ]}
+            />
+            <View
+              style={[
+                styles.pixelBorderVertical,
+                styles.pixelBorderRight,
+                { backgroundColor: pixelColors.cardLowlight },
+              ]}
+            />
+
+            <View
+              style={[
+                styles.pixelCorner,
+                styles.pixelCornerTopLeft,
+                {
+                  backgroundColor: pixelColors.cornerPixel,
+                  borderColor: pixelColors.cornerBorder,
+                },
+              ]}
+            />
+            <View
+              style={[
+                styles.pixelCorner,
+                styles.pixelCornerTopRight,
+                {
+                  backgroundColor: pixelColors.cornerPixel,
+                  borderColor: pixelColors.cornerBorder,
+                },
+              ]}
+            />
+            <View
+              style={[
+                styles.pixelCorner,
+                styles.pixelCornerBottomLeft,
+                {
+                  backgroundColor: pixelColors.cornerPixel,
+                  borderColor: pixelColors.cornerBorder,
+                },
+              ]}
+            />
+            <View
+              style={[
+                styles.pixelCorner,
+                styles.pixelCornerBottomRight,
+                {
+                  backgroundColor: pixelColors.cornerPixel,
+                  borderColor: pixelColors.cornerBorder,
+                },
+              ]}
+            />
           </View>
-          <View style={styles.headerNameAndHp}>
-            <Text style={styles.coffeemonName}>
-              {coffeemon.coffeemon.name.toUpperCase()}
-            </Text>
-            {/* Barra de HP abaixo do nome */}
-            <View style={[styles.headerStatBarOuter, { backgroundColor: palette.accent }]}>
-              <View style={styles.headerStatBarInner}>
+
+          {/* Header com nome e ícone */}
+          <View
+            style={[
+              styles.cardHeader,
+              {
+                backgroundColor: pixelColors.headerBackground,
+                borderColor: pixelColors.headerBorder,
+                shadowColor: pixelColors.headerShadow,
+              },
+            ]}
+          >
+            <View style={[styles.headerIconContainer, {
+              backgroundColor: pixelColors.iconBackground,
+              borderColor: pixelColors.iconBorder,
+              shadowColor: pixelColors.iconShadow,
+            }]}
+            >
+              <Text
+                style={[styles.headerIcon, { color: pixelColors.statValueColor }]}
+              >
+                {getTypeIcon(coffeemon.coffeemon.type)}
+              </Text>
+            </View>
+
+            <View style={styles.headerNameAndHp}>
+              <Text
+                style={[
+                  styles.coffeemonName,
+                  {
+                    color: pixelColors.titleColor,
+                    textShadowColor: pixelColors.titleShadow,
+                  },
+                ]}
+              >
+                {coffeemon.coffeemon.name.toUpperCase()}
+              </Text>
+              {/* Barra de HP abaixo do nome */}
+              <View
+                style={[
+                  styles.headerStatBarOuter,
+                  {
+                    backgroundColor: pixelColors.barOuterBackground,
+                    borderColor: pixelColors.barOuterBorder,
+                  },
+                ]}
+              >
+                <View
+                  style={[styles.headerStatBarInner, { backgroundColor: pixelColors.barInnerBackground }]}
+                >
+                  <View
+                    style={[
+                      styles.headerStatBarFill,
+                      {
+                        width: `${hpPercent}%`,
+                        backgroundColor: pixelColors.hpFill,
+                      },
+                    ]}
+                  />
+                </View>
+              </View>
+            </View>
+          </View>
+
+          {/* Imagem do Coffeemon (sem borda interna) */}
+          <View
+            style={[
+              styles.imageContainer,
+              {
+                backgroundColor: pixelColors.imageBackground,
+                borderColor: pixelColors.imageBorder,
+                shadowColor: pixelColors.imageShadow,
+              },
+            ]}
+          >
+            <Image
+              source={imageSource}
+              style={[
+                styles.coffeemonImage,
+                { borderColor: pixelColors.imageBorder },
+              ]}
+              resizeMode="contain"
+              defaultSource={fallbackImage}
+              onError={() => setImageSource(fallbackImage)}
+            />
+          </View>
+
+          {/* Stats */}
+          <View style={styles.cardFooter}>
+            <View
+              style={[
+                styles.footerInfoRow,
+                {
+                  backgroundColor: pixelColors.footerBackground,
+                  borderColor: pixelColors.footerBorder,
+                  shadowColor: pixelColors.footerShadow,
+                },
+              ]}
+            >
+              <View style={styles.statsContainer}>
                 <View
                   style={[
-                    styles.headerStatBarFill,
-                    { width: `${hpPercent}%`, backgroundColor: '#8BC34A' },
+                    styles.statItem,
+                    {
+                      backgroundColor: pixelColors.statBackground,
+                      borderColor: pixelColors.statBorder,
+                      shadowColor: pixelColors.statShadow,
+                    },
                   ]}
-                />
+                >
+                  <Text
+                    style={[styles.statLabel, { color: pixelColors.statLabelColor }]}
+                  >
+                    ATK
+                  </Text>
+                  <Text
+                    style={[styles.statValue, {
+                      color: pixelColors.statValueColor,
+                      textShadowColor: pixelColors.statTextShadow,
+                    }]}
+                  >
+                    {coffeemon.attack}
+                  </Text>
+                </View>
+                <View
+                  style={[
+                    styles.statItem,
+                    {
+                      backgroundColor: pixelColors.statBackground,
+                      borderColor: pixelColors.statBorder,
+                      shadowColor: pixelColors.statShadow,
+                    },
+                  ]}
+                >
+                  <Text
+                    style={[styles.statLabel, { color: pixelColors.statLabelColor }]}
+                  >
+                    DEF
+                  </Text>
+                  <Text
+                    style={[styles.statValue, {
+                      color: pixelColors.statValueColor,
+                      textShadowColor: pixelColors.statTextShadow,
+                    }]}
+                  >
+                    {coffeemon.defense}
+                  </Text>
+                </View>
               </View>
+
             </View>
+
           </View>
-        </View>
 
-        {/* Imagem do Coffeemon (sem borda interna) */}
-        <View style={styles.imageContainer}>
-          <Image
-            source={imageSource}
-            style={styles.coffeemonImage}
-            resizeMode="contain"
-            defaultSource={fallbackImage}
-            onError={() => setImageSource(fallbackImage)}
-          />
-        </View>
 
-        {/* Stats */}
-        <View style={styles.cardFooter}>
-          <View style={styles.footerInfoRow}>
-            <View style={styles.statsContainer}>
-              <View style={styles.statItem}>
-                <Text style={styles.statLabel}>ATK</Text>
-                <Text style={styles.statValue}>{coffeemon.attack}</Text>
-              </View>
-              <View style={styles.statItem}>
-                <Text style={styles.statLabel}>DEF</Text>
-                <Text style={styles.statValue}>{coffeemon.defense}</Text>
-              </View>
-            </View>
-          </View>
-        </View>
 
-        {showRemoveOverlay && (
-          <View style={styles.selectionOverlay} pointerEvents="box-none">
-            <TouchableOpacity
-              onPress={handleRemovePress}
-              activeOpacity={0.7}
-              style={styles.removeButton}
+          {showRemoveOverlay && (
+            <View
+              style={[styles.selectionOverlay, { backgroundColor: pixelColors.overlayColor }]}
+              pointerEvents="box-none"
             >
-              <Text style={styles.removeButtonText}>×</Text>
-            </TouchableOpacity>
-          </View>
-        )}
+              <TouchableOpacity
+                onPress={handleRemovePress}
+                activeOpacity={0.7}
+                style={[
+                  styles.removeButton,
+                  {
+                    backgroundColor: pixelColors.removeButtonBackground,
+                    borderColor: pixelColors.removeButtonBorder,
+                  },
+                ]}
+              >
+                <Text
+                  style={[styles.removeButtonText, { color: pixelColors.removeButtonText }]}
+                >
+                  ×
+                </Text>
+              </TouchableOpacity>
 
-        {isLoading && (
-          <View style={styles.loadingOverlay}>
-            <ActivityIndicator size="large" color="#FFFFFF" />
-          </View>
-        )}
-      </LinearGradient>
+            </View>
+
+          )}
+
+
+
+          {isLoading && (
+            <View
+              style={[styles.loadingOverlay, { backgroundColor: pixelColors.loadingOverlay }]}
+            >
+              <ActivityIndicator size="large" color="#FFFFFF" />
+            </View>
+
+          )}
+        </LinearGradient>
+      </View>
     </TouchableOpacity>
   );
 }

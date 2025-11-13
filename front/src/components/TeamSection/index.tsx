@@ -14,6 +14,9 @@ interface TeamSectionProps {
   variant: 'grid' | 'horizontal';
   showAddButton?: boolean;
   onAddCoffeemon?: () => void;
+  isCollapsible?: boolean;
+  isExpanded?: boolean;
+  onToggleExpand?: () => void;
 }
 
 export default function TeamSection({
@@ -26,8 +29,17 @@ export default function TeamSection({
   variant,
   showAddButton = false,
   onAddCoffeemon,
+  isCollapsible = false,
+  isExpanded = false,
+  onToggleExpand,
 }: TeamSectionProps) {
   const hasAction = showAddButton && !!onAddCoffeemon;
+  const HeaderComponent = isCollapsible ? TouchableOpacity : View;
+  const headerProps = isCollapsible
+    ? { onPress: onToggleExpand, activeOpacity: 0.8 }
+    : {};
+  const contentVisible = !isCollapsible || isExpanded;
+
   const renderContent = () => {
     if (loading) {
       return (
@@ -84,20 +96,28 @@ export default function TeamSection({
 
   return (
     <View style={styles.teamSection}>
-      <View
+      <HeaderComponent
         style={[
           styles.sectionHeader,
-          hasAction ? styles.sectionHeaderWithAction : styles.sectionHeaderCentered,
+          hasAction || isCollapsible
+            ? styles.sectionHeaderWithAction
+            : styles.sectionHeaderCentered,
         ]}
+        {...headerProps}
       >
-        <Text style={styles.sectionTitle}>{title}</Text>
+        <View style={styles.titleRow}>
+          <Text style={styles.sectionTitle}>{title}</Text>
+          {isCollapsible && (
+            <Text style={styles.expandIcon}>{isExpanded ? '▲' : '▼'}</Text>
+          )}
+        </View>
         {hasAction && (
           <TouchableOpacity style={styles.addButton} onPress={onAddCoffeemon}>
             <Text style={styles.addButtonText}>+ Adicionar</Text>
           </TouchableOpacity>
         )}
-      </View>
-      {renderContent()}
+      </HeaderComponent>
+      {contentVisible && renderContent()}
     </View>
   );
 }

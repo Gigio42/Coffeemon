@@ -72,6 +72,36 @@ export const styles = StyleSheet.create({
     height: '100%',
   },
 
+  dynamicBackground: {
+    ...StyleSheet.absoluteFillObject,
+    width: '100%',
+    height: '100%',
+    overflow: 'hidden',
+  },
+
+  gradientLayer: {
+    ...StyleSheet.absoluteFillObject,
+  },
+
+  gradientLayerAccent: {
+    opacity: 0.7,
+  },
+
+  gradientLayerHighlight: {
+    opacity: 0.4,
+  },
+
+  gradientFill: {
+    flex: 1,
+  },
+
+  grainOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    width: '110%',
+    height: '110%',
+    opacity: 0.15,
+  },
+
   gradientContainer: {
     flex: 1,
     width: '100%',
@@ -153,6 +183,12 @@ export const styles = StyleSheet.create({
     marginBottom: pixelArt.spacing.lg,
     alignItems: 'flex-start',
     width: '100%',
+  },
+
+  availableSectionWrapper: {
+    alignItems: 'center',
+    width: '100%',
+    marginTop: pixelArt.spacing.xl,
   },
 
   sectionTitle: {
@@ -291,7 +327,7 @@ export const styles = StyleSheet.create({
     fontFamily: 'monospace',
     opacity: 0.9,
   },
-  
+
   pvpButton: {
     backgroundColor: '#3498db',
     borderTopColor: '#5dade2',
@@ -343,6 +379,35 @@ export const styles = StyleSheet.create({
   // ========================================
   // BOTTOM BAR EMOJI BUTTONS
   // ========================================
+  startActionsContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: pixelArt.spacing.md,
+    marginBottom: pixelArt.spacing.lg,
+    paddingHorizontal: pixelArt.spacing.lg,
+  },
+
+  qrCodeButton: {
+    width: 120,
+    height: 120,
+    borderRadius: 20,
+    backgroundColor: 'transparent',
+    borderWidth: 0,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+
+  qrCodeIcon: {
+    width: 56,
+    height: 56,
+    resizeMode: 'contain',
+  },
+
+  startButton: {
+    flex: 1,
+  },
+
   bottomBar: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -451,9 +516,8 @@ export const styles = StyleSheet.create({
     marginTop: pixelArt.spacing.xl,
     marginBottom: pixelArt.spacing.md,
     width: '100%',
-    maxWidth: Math.min(screenWidth * 0.85, 340),
-    alignSelf: Platform.OS === 'ios' ? 'flex-start' : 'center',
-    marginLeft: Platform.OS === 'ios' ? -pixelArt.spacing.md : 0,
+    maxWidth: Math.min(screenWidth * 0.9, 360),
+    alignSelf: 'center',
   },
 
   carouselTrack: {
@@ -591,8 +655,7 @@ export const styles = StyleSheet.create({
     marginTop: pixelArt.spacing.lg,
     alignItems: 'center',
     justifyContent: 'center',
-    alignSelf: Platform.OS === 'ios' ? 'flex-start' : 'center',
-    marginLeft: Platform.OS === 'ios' ? -pixelArt.spacing.md : 0,
+    alignSelf: 'center',
     width: '100%',
     maxWidth: Math.min(screenWidth * 0.9, 380),
     // borderWidth: pixelArt.borders.widthThick,

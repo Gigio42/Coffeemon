@@ -1,5 +1,11 @@
 import { BattleState } from '../types';
 import { getServerUrl } from './config';
+import {
+  backgroundKeys,
+  backgroundSources,
+  DEFAULT_BACKGROUND_KEY,
+  getBackgroundSource,
+} from '../../assets/backgrounds';
 
 /**
  * Remove o sufixo de nível do nome do Coffeemon
@@ -35,33 +41,19 @@ export function getPlayerStates(battleState: BattleState, playerId: number) {
  * Obtém a imagem do cenário
  */
 export function getScenarioImage(scenarioName?: string) {
-  const scenarioImages = {
-    default: require('../../assets/backgrounds/field.png'),
-    field: require('../../assets/backgrounds/field.png'),
-    forest: require('../../assets/backgrounds/forest.png'),
-    city: require('../../assets/backgrounds/city.png'),
-    duskfield: require('../../assets/backgrounds/duskfield.jpeg'),
-    latefield: require('../../assets/backgrounds/latefield.jpeg'),
-    nightpath: require('../../assets/backgrounds/nightpath.jpeg'),
-    village: require('../../assets/backgrounds/village.jpeg'),
-    waterfall: require('../../assets/backgrounds/waterfall.jpeg'),
-    wheatfield: require('../../assets/backgrounds/wheatfield.jpeg'),
-  };
-
-  if (scenarioName && scenarioImages[scenarioName as keyof typeof scenarioImages]) {
-    return scenarioImages[scenarioName as keyof typeof scenarioImages];
-  }
-  return scenarioImages.default;
+  return getBackgroundSource(scenarioName ?? DEFAULT_BACKGROUND_KEY);
 }
 
 /**
  * Seleciona um cenário aleatório baseado no battleId (consistente para ambos os jogadores)
  */
 export function getBattleScenario(battleId?: string) {
-  const scenarioNames = ['field', 'forest', 'city', 'duskfield', 'latefield', 'nightpath', 'village', 'waterfall', 'wheatfield'];
+  const scenarioNames = backgroundKeys.length
+    ? backgroundKeys
+    : [DEFAULT_BACKGROUND_KEY];
 
   if (!battleId) {
-    return getScenarioImage('default');
+    return getBackgroundSource(DEFAULT_BACKGROUND_KEY);
   }
 
   // Usar o battleId como seed para seleção consistente
@@ -73,25 +65,17 @@ export function getBattleScenario(battleId?: string) {
   }
 
   const scenarioIndex = Math.abs(hash) % scenarioNames.length;
-  return getScenarioImage(scenarioNames[scenarioIndex]);
+  return getBackgroundSource(scenarioNames[scenarioIndex]);
 }
 
 /**
  * Seleciona um cenário aleatório para matchmaking (muda sempre)
  */
 export function getRandomScenario() {
-  const scenarios = [
-    require('../../assets/backgrounds/field.png'),
-    require('../../assets/backgrounds/forest.png'),
-    require('../../assets/backgrounds/city.png'),
-    require('../../assets/backgrounds/duskfield.jpeg'),
-    require('../../assets/backgrounds/latefield.jpeg'),
-    require('../../assets/backgrounds/nightpath.jpeg'),
-    require('../../assets/backgrounds/village.jpeg'),
-    require('../../assets/backgrounds/waterfall.jpeg'),
-    require('../../assets/backgrounds/wheatfield.jpeg'),
-  ];
-  
-  const randomIndex = Math.floor(Math.random() * scenarios.length);
-  return scenarios[randomIndex];
+  if (!backgroundSources.length) {
+    return getBackgroundSource(DEFAULT_BACKGROUND_KEY);
+  }
+
+  const randomIndex = Math.floor(Math.random() * backgroundSources.length);
+  return backgroundSources[randomIndex];
 }

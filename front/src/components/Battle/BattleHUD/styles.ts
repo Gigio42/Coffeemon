@@ -1,32 +1,121 @@
 import { StyleSheet } from 'react-native';
-import { pixelArt } from '../../../theme/pixelArt';
 
-export const styles = StyleSheet.create({
-  hudInfoBox: {
-    position: 'absolute',
-    width: '45%',
-    padding: pixelArt.spacing.sm,
-    backgroundColor: pixelArt.colors.cardInnerBg,
-    borderRadius: pixelArt.borders.radiusMedium,
-    borderWidth: pixelArt.borders.widthThick,
-    borderTopColor: pixelArt.colors.borderLight,
-    borderLeftColor: pixelArt.colors.borderLight,
-    borderBottomColor: pixelArt.colors.borderDark,
-    borderRightColor: pixelArt.colors.borderDark,
-    ...pixelArt.shadows.card,
+const pixelFont = {
+  fontFamily: 'monospace',
+  fontWeight: '700' as const,
+  letterSpacing: 1,
+};
+
+export const hudStyles = StyleSheet.create({
+  card: {
+    minWidth: 180,
+    maxWidth: 200,
+    backgroundColor: '#f0e6c6',
+    borderWidth: 3,
+    borderColor: '#000',
+    borderRadius: 0,
+    padding: 6,
+    shadowColor: '#000',
+    shadowOffset: { width: 4, height: 4 },
+    shadowOpacity: 1,
+    shadowRadius: 0,
+    elevation: 6,
   },
-  playerHudContainer: {
-    top: '5%',
-    right: '5%',
+  topSection: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 6,
+    paddingHorizontal: 2,
   },
-  opponentHudContainer: {
-    bottom: '5%',
-    left: '5%',
+  nameGroup: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
-  hudName: {
-    ...pixelArt.typography.pixelSubtitle,
+  typeIcon: {
     fontSize: 14,
-    color: pixelArt.colors.textDark,
-    marginBottom: pixelArt.spacing.xs,
+    marginRight: 4,
+  },
+  name: {
+    ...pixelFont,
+    fontSize: 12,
+    color: '#000',
+    textTransform: 'uppercase',
+  },
+  levelGroup: {
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    gap: 2,
+  },
+  levelLabel: {
+    ...pixelFont,
+    fontSize: 10,
+    marginRight: 3,
+  },
+  levelValue: {
+    ...pixelFont,
+    fontSize: 12,
+  },
+  barSection: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginBottom: 6,
+  },
+  hpLabel: {
+    ...pixelFont,
+    fontSize: 12,
+    color: '#fff',
+    backgroundColor: '#f0a040',
+    borderWidth: 2,
+    borderColor: '#000',
+    paddingVertical: 4,
+    paddingHorizontal: 8,
+    textShadowColor: '#a85800',
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 0,
+  },
+  barTrough: {
+    flex: 1,
+    height: 18,
+    backgroundColor: '#505050',
+    borderWidth: 2,
+    borderColor: '#000',
+    padding: 2,
+    justifyContent: 'center',
+    shadowColor: 'rgba(0,0,0,0.5)',
+    shadowOffset: { width: 1, height: 1 },
+    shadowOpacity: 1,
+    shadowRadius: 0,
+  },
+  barFill: {
+    height: '100%',
+    backgroundColor: '#68b030',
+  },
+  bottomSection: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'flex-end',
+    backgroundColor: '#786850',
+    borderTopWidth: 2,
+    borderTopColor: '#000',
+    marginTop: 6,
+    marginHorizontal: -6,
+    marginBottom: -6,
+    height: 36,
+    paddingRight: 10,
+  },
+  hpNumbers: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  hpNumber: {
+    ...pixelFont,
+    fontSize: 12,
+    color: '#fff',
+    textShadowColor: '#000',
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 0,
+    marginLeft: 16,
   },
 });

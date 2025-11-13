@@ -1,23 +1,24 @@
-import React, { useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Text,
   View,
   TouchableOpacity,
-  ScrollView,
   Alert,
-  ImageBackground,
   Animated,
   PanResponder,
   Easing,
+  Image,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Socket } from 'socket.io-client';
 import { BattleState } from '../../types';
-import { getRandomScenario } from '../../utils/battleUtils';
 import { useMatchmaking } from '../../hooks/useMatchmaking';
 import { useCoffeemons } from '../../hooks/useCoffeemons';
 import { PlayerCoffeemon } from '../../api/coffeemonService';
+import { useDynamicPalette, type Palette } from '../../utils/colorPalette';
+import { getCoffeemonImage } from '../../../assets/coffeemons';
+import { getVariantForStatusEffects } from '../../utils/statusEffects';
 
 import TeamSection from '../../components/TeamSection';
 import CoffeemonSelectionModal from '../../components/CoffeemonSelectionModal';
@@ -25,6 +26,8 @@ import CoffeemonCard from '../../components/CoffeemonCard';
 
 import { styles } from './styles';
 import { pixelArt } from '../../theme/pixelArt';
+import PixelStartButton from '../../components/PixelStartButton';
+import { getTypeColor } from '../../components/CoffeemonCard/styles';
 
 const CARD_WIDTH = 110;
 const CARD_HORIZONTAL_MARGIN = pixelArt.spacing.xs;
@@ -32,6 +35,109 @@ const CARD_TOTAL_WIDTH = CARD_WIDTH + CARD_HORIZONTAL_MARGIN * 2;
 const SWIPE_THRESHOLD = CARD_TOTAL_WIDTH * 0.4;
 const SWIPE_VELOCITY_THRESHOLD = 0.4;
 const CARD_ANIMATION_DURATION = 680;
+const CAROUSEL_BASE_OFFSET = CARD_TOTAL_WIDTH * 0.25;
+const CENTER_CARD_EXTRA_OFFSET = CARD_TOTAL_WIDTH * 0.15;
+const LEFT_CARD_EXTRA_OFFSET = CARD_TOTAL_WIDTH * 0.2;
+
+const NOISE_SOURCE = {
+  uri: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAQAAAAECAYAAACp8Z5+AAAAIUlEQVR42mP8z8AARMAw///MIMcAIeyMBIgiIYlQAgB0Sw4DsxMyYAAAAASUVORK5CYII=',
+} as const;
+
+const qrCodeIcon = require('../../../assets/icons/qrcode.png');
+
+const DEFAULT_BACKGROUND_PALETTE: Palette = {
+  light: '#F5F5F5',
+  dark: '#2C1810',
+  accent: '#8B4513',
+};
+
+type RGB = { r: number; g: number; b: number };
+
+function clamp01(value: number): number {
+  return Math.max(0, Math.min(1, value));
+}
+
+function hexToRgb(hex: string): RGB | null {
+  const cleaned = hex.replace('#', '');
+  const normalized = cleaned.length === 3
+    ? cleaned.split('').map((char) => char + char).join('')
+    : cleaned;
+
+  if (normalized.length !== 6) {
+    return null;
+  }
+
+  const value = parseInt(normalized, 16);
+  if (Number.isNaN(value)) {
+    return null;
+  }
+
+  return {
+    r: (value >> 16) & 255,
+    g: (value >> 8) & 255,
+    b: value & 255,
+  };
+}
+
+function rgbToHex({ r, g, b }: RGB): string {
+  const toChannel = (channel: number) => channel.toString(16).padStart(2, '0');
+  return `#${toChannel(Math.round(r))}${toChannel(Math.round(g))}${toChannel(Math.round(b))}`;
+}
+
+function mixColors(colorA: string, colorB: string, ratio: number): string {
+  const mix = clamp01(ratio);
+  const rgbA = hexToRgb(colorA);
+  const rgbB = hexToRgb(colorB);
+
+  if (!rgbA || !rgbB) {
+    return colorA;
+  }
+
+  const blended: RGB = {
+    r: rgbA.r + (rgbB.r - rgbA.r) * mix,
+    g: rgbA.g + (rgbB.g - rgbA.g) * mix,
+    b: rgbA.b + (rgbB.b - rgbA.b) * mix,
+  };
+
+  return rgbToHex(blended);
+}
+
+function lightenColor(color: string, amount: number): string {
+  return mixColors(color, '#ffffff', amount);
+}
+
+function darkenColor(color: string, amount: number): string {
+  return mixColors(color, '#000000', amount);
+}
+
+type GradientPalette = {
+  base: string;
+  primary: [string, string, string, string];
+  accent: [string, string, string];
+  highlight: [string, string];
+};
+
+function buildGradientPalette(palette: Palette): GradientPalette {
+  const base = darkenColor(palette.dark, 0.6);
+  return {
+    base,
+    primary: [
+      darkenColor(palette.dark, 0.45),
+      palette.dark,
+      mixColors(palette.dark, palette.accent, 0.4),
+      lightenColor(palette.light, 0.25),
+    ],
+    accent: [
+      darkenColor(palette.accent, 0.35),
+      palette.accent,
+      lightenColor(palette.light, 0.4),
+    ],
+    highlight: [
+      lightenColor(palette.light, 0.3),
+      lightenColor(palette.light, 0.6),
+    ],
+  };
+}
 
 // Componente inline para o carrossel do time
 function TeamCarouselInline({
@@ -39,11 +145,13 @@ function TeamCarouselInline({
   onToggleParty: onTogglePartyProp,
   partyLoading,
   onScrollInterruption,
+  onActiveCoffeemonChange,
 }: {
   coffeemons: PlayerCoffeemon[];
   onToggleParty: (coffeemon: PlayerCoffeemon) => void;
   partyLoading: number | null;
   onScrollInterruption?: (interrupting: boolean) => void;
+  onActiveCoffeemonChange?: (coffeemon: PlayerCoffeemon | null) => void;
 }) {
   // Ordem visual dos cards (posição 0 = esquerda, 1 = centro, 2 = direita)
   const [displayOrder, setDisplayOrder] = useState<number[]>(() => coffeemons.map((_, index) => index));
@@ -69,6 +177,21 @@ function TeamCarouselInline({
     setDisplayOrder(coffeemons.map((_, index) => index));
   }, [coffeemons.length, initializeAnimationArrays]);
 
+  React.useEffect(() => {
+    if (coffeemons.length === 0) {
+      onActiveCoffeemonChange?.(null);
+      return;
+    }
+
+    const centerIndex = Math.floor(displayOrder.length / 2);
+    const activeIndex = displayOrder[centerIndex];
+    const active = typeof activeIndex === 'number' ? coffeemons[activeIndex] : undefined;
+
+    if (active) {
+      onActiveCoffeemonChange?.(active);
+    }
+  }, [coffeemons, displayOrder, onActiveCoffeemonChange]);
+
   const animateCards = React.useCallback(
     (order: number[]) => {
       const centerPosition = Math.floor(order.length / 2);
@@ -85,7 +208,11 @@ function TeamCarouselInline({
         const scale = distance === 0 ? 0.92 : distance === 1 ? 0.8 : 0.7;
         const opacity = distance === 0 ? 1 : distance === 1 ? 0.6 : 0.4;
         const translateY = distance === 0 ? 0 : distance === 1 ? 16 : 26;
-        const translateXTarget = (position - centerPosition) * (CARD_TOTAL_WIDTH * 0.62);
+        const translateXTarget =
+          (position - centerPosition) * (CARD_TOTAL_WIDTH * 0.62) -
+          CAROUSEL_BASE_OFFSET -
+          (position === centerPosition ? CENTER_CARD_EXTRA_OFFSET : 0) -
+          (position < centerPosition ? LEFT_CARD_EXTRA_OFFSET : 0);
 
         scaleValuesRef.current[originalIndex]?.stopAnimation?.();
         opacityValuesRef.current[originalIndex]?.stopAnimation?.();
@@ -326,9 +453,12 @@ export default function MatchmakingScreen({
   const [qrScannerVisible, setQrScannerVisible] = useState<boolean>(false);
   const [selectionModalVisible, setSelectionModalVisible] = useState<boolean>(false);
   const [isCarouselInteracting, setCarouselInteracting] = useState(false);
+  const [availableExpanded, setAvailableExpanded] = useState(false);
+  const [activeCoffeemon, setActiveCoffeemon] = useState<PlayerCoffeemon | null>(null);
+  const scrollY = useRef(new Animated.Value(0)).current;
 
   // Hook de Matchmaking (Socket, status, logs)
-  const { matchStatus, log, findMatch, findBotMatch, handleLogout } =
+  const { matchStatus, log, findMatch, findBotMatch } =
     useMatchmaking({
       token,
       playerId,
@@ -398,21 +528,121 @@ export default function MatchmakingScreen({
     setSelectionModalVisible(false);
   }
 
+  useEffect(() => {
+    if (partyMembers.length === 0) {
+      setActiveCoffeemon(null);
+      return;
+    }
+
+    const exists = activeCoffeemon && partyMembers.some((member) => member.id === activeCoffeemon.id);
+    if (!exists) {
+      setActiveCoffeemon(partyMembers[0] ?? null);
+    }
+  }, [partyMembers, activeCoffeemon]);
+
+  const handleActiveCoffeemonChange = useCallback((coffeemon: PlayerCoffeemon | null) => {
+    setActiveCoffeemon(coffeemon);
+  }, []);
+
+  const fallbackPalette = useMemo(() => {
+    if (!activeCoffeemon) {
+      return DEFAULT_BACKGROUND_PALETTE;
+    }
+    return getTypeColor(activeCoffeemon.coffeemon.type, activeCoffeemon.coffeemon.name);
+  }, [activeCoffeemon]);
+
+  const activeVariant = useMemo(
+    () => (activeCoffeemon ? getVariantForStatusEffects(activeCoffeemon.statusEffects, 'default') : 'default'),
+    [activeCoffeemon?.statusEffects],
+  );
+
+  const activeAsset = useMemo(
+    () => (activeCoffeemon ? getCoffeemonImage(activeCoffeemon.coffeemon.name, activeVariant) : null),
+    [activeCoffeemon?.coffeemon.name, activeVariant],
+  );
+
+  const palette = useDynamicPalette(activeAsset, fallbackPalette);
+  const gradientPalette = useMemo(() => buildGradientPalette(palette), [palette]);
+
+  const primaryParallax = useMemo(
+    () => scrollY.interpolate({
+      inputRange: [0, 600],
+      outputRange: [0, -120],
+      extrapolate: 'clamp',
+    }),
+    [scrollY],
+  );
+
+  const accentParallax = useMemo(
+    () => scrollY.interpolate({
+      inputRange: [0, 600],
+      outputRange: [0, -80],
+      extrapolate: 'clamp',
+    }),
+    [scrollY],
+  );
+
+  const highlightParallax = useMemo(
+    () => scrollY.interpolate({
+      inputRange: [0, 600],
+      outputRange: [0, -40],
+      extrapolate: 'clamp',
+    }),
+    [scrollY],
+  );
+
+  const grainParallax = useMemo(
+    () => scrollY.interpolate({
+      inputRange: [0, 600],
+      outputRange: [0, -20],
+      extrapolate: 'clamp',
+    }),
+    [scrollY],
+  );
+
   // Selecionar cenário aleatório sempre que carregar a página
-  const currentScenario = React.useMemo(() => getRandomScenario(), []);
 
   return (
     <View style={styles.fullScreenContainer}>
-      <ImageBackground
-        source={currentScenario}
-        style={styles.backgroundContainer}
-        resizeMode="cover"
+      <View
+        pointerEvents="none"
+        style={[styles.dynamicBackground, { backgroundColor: gradientPalette.base }]}
       >
-        <LinearGradient
-          colors={['rgba(0,0,0,0.7)', 'rgba(0,0,0,0.3)', 'transparent']}
-          style={styles.gradientContainer}
+        <Animated.View style={[styles.gradientLayer, { transform: [{ translateY: primaryParallax }] }] }>
+          <LinearGradient
+            colors={gradientPalette.primary}
+            start={{ x: 0.1, y: 0 }}
+            end={{ x: 0.9, y: 1 }}
+            style={styles.gradientFill}
+          />
+        </Animated.View>
+        <Animated.View
+          style={[styles.gradientLayer, styles.gradientLayerAccent, { transform: [{ translateY: accentParallax }] }]}
         >
-          <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
+          <LinearGradient
+            colors={gradientPalette.accent}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.gradientFill}
+          />
+        </Animated.View>
+        <Animated.View
+          style={[styles.gradientLayer, styles.gradientLayerHighlight, { transform: [{ translateY: highlightParallax }] }]}
+        >
+          <LinearGradient
+            colors={gradientPalette.highlight}
+            start={{ x: 0.2, y: 0 }}
+            end={{ x: 0.8, y: 1 }}
+            style={styles.gradientFill}
+          />
+        </Animated.View>
+        <Animated.Image
+          source={NOISE_SOURCE}
+          resizeMode="repeat"
+          style={[styles.grainOverlay, { transform: [{ translateY: grainParallax }] }]}
+        />
+      </View>
+      <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
             {/* Botão de voltar flutuante */}
             {onNavigateToEcommerce && (
               <TouchableOpacity
@@ -433,11 +663,16 @@ export default function MatchmakingScreen({
               </View>
             )}
 
-            <ScrollView
+            <Animated.ScrollView
               style={styles.scrollView}
               showsVerticalScrollIndicator={false}
               contentContainerStyle={styles.scrollContent}
               scrollEnabled={!isCarouselInteracting}
+              onScroll={Animated.event(
+                [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+                { useNativeDriver: true },
+              )}
+              scrollEventThrottle={16}
             >
           {/* Seção de Times */}
           <View style={styles.teamsSection}>
@@ -453,33 +688,49 @@ export default function MatchmakingScreen({
                   onToggleParty={toggleParty}
                   partyLoading={partyLoading}
                   onScrollInterruption={setCarouselInteracting}
+                  onActiveCoffeemonChange={handleActiveCoffeemonChange}
                 />
               )}
             </View>
 
-            <TeamSection
-              title={`Disponíveis (${availableCoffeemons.length})`}
-              coffeemons={availableCoffeemons}
-              loading={loading}
-              emptyMessage="Capture mais Coffeemons"
-              onToggleParty={toggleParty}
-              partyLoading={partyLoading}
-              variant="horizontal"
-            />
+            <View style={styles.availableSectionWrapper}>
+              <TeamSection
+                title={`Disponíveis (${availableCoffeemons.length})`}
+                coffeemons={availableCoffeemons}
+                loading={loading}
+                emptyMessage="Capture mais Coffeemons"
+                onToggleParty={toggleParty}
+                partyLoading={partyLoading}
+                variant="horizontal"
+                isCollapsible
+                isExpanded={availableExpanded}
+                onToggleExpand={() => setAvailableExpanded((prev) => !prev)}
+              />
+            </View>
 
           </View>
 
-        </ScrollView>
+        </Animated.ScrollView>
 
-        <View style={styles.bottomBar}>
+        <View style={styles.startActionsContainer}>
           <TouchableOpacity
-            style={styles.bottomBarButton}
+            style={[styles.qrCodeButton, partyMembers.length === 0 && styles.bottomBarButtonDisabled]}
             onPress={handleOpenQRScanner}
+            disabled={partyMembers.length === 0}
             accessibilityLabel="Escanear QR Code"
           >
-            <Text style={styles.bottomBarEmoji}>📷</Text>
+            <Image source={qrCodeIcon} style={styles.qrCodeIcon} />
           </TouchableOpacity>
 
+          <PixelStartButton
+            disabled={partyMembers.length === 0}
+            onPress={handleFindMatch}
+            accessibilityLabel="Iniciar batalha online"
+            style={styles.startButton}
+          />
+        </View>
+
+        <View style={styles.bottomBar}>
           <TouchableOpacity
             style={[styles.bottomBarButton, loading && styles.bottomBarButtonDisabled]}
             onPress={giveAllCoffeemons}
@@ -515,18 +766,8 @@ export default function MatchmakingScreen({
           >
             <Text style={styles.bottomBarEmoji}>🤖</Text>
           </TouchableOpacity>
-
-          <TouchableOpacity
-            style={styles.bottomBarButton}
-            onPress={handleLogout}
-            accessibilityLabel="Sair da conta"
-          >
-            <Text style={styles.bottomBarEmoji}>🚪</Text>
-          </TouchableOpacity>
         </View>
       </SafeAreaView>
-    </LinearGradient>
-    </ImageBackground>
 
       <CoffeemonSelectionModal
         visible={selectionModalVisible}
