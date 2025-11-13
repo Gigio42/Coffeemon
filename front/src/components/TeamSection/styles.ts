@@ -1,5 +1,6 @@
 import { StyleSheet } from 'react-native';
 import { metrics } from '../../theme';
+import { pixelArt } from '../../theme/pixelArt';
 
 export const styles = StyleSheet.create({
   teamSection: {
@@ -14,6 +15,36 @@ export const styles = StyleSheet.create({
     marginBottom: 12,
     alignSelf: 'center',
     maxWidth: 360,
+  },
+
+  sectionHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 0,
+    marginTop: pixelArt.spacing.xl,
+    marginBottom: pixelArt.spacing.lg,
+    alignSelf: 'stretch',
+    width: '100%',
+  },
+
+  sectionHeaderButton: {
+    flex: 4,
+    height: 64,
+    paddingHorizontal: pixelArt.spacing.md,
+    justifyContent: 'center',
+    borderRadius: 0,
+    borderWidth: pixelArt.borders.widthBold,
+    borderTopColor: pixelArt.colors.borderLight,
+    borderLeftColor: pixelArt.colors.borderLight,
+    borderRightColor: pixelArt.colors.borderDark,
+    borderBottomColor: pixelArt.colors.borderDark,
+    backgroundColor: pixelArt.colors.cardInnerBg,
+    ...pixelArt.shadows.innerBorder,
+  },
+
+  sectionHeaderButtonStatic: {
+    pointerEvents: 'none',
   },
 
   sectionHeaderWithAction: {
@@ -59,6 +90,31 @@ export const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 14,
     fontWeight: 'bold',
+  },
+
+  qrButton: {
+    flex: 1,
+    height: 64,
+    borderRadius: 0,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: pixelArt.colors.cardInnerBg,
+    borderWidth: pixelArt.borders.widthBold,
+    borderTopColor: pixelArt.colors.borderLight,
+    borderLeftColor: pixelArt.colors.borderLight,
+    borderRightColor: pixelArt.colors.borderDark,
+    borderBottomColor: pixelArt.colors.borderDark,
+    ...pixelArt.shadows.innerBorder,
+  },
+
+  qrButtonDisabled: {
+    opacity: 0.4,
+  },
+
+  qrIcon: {
+    width: 26,
+    height: 26,
+    resizeMode: 'contain',
   },
   
   loadingContainer: {

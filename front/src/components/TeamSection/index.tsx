@@ -1,8 +1,10 @@
 import React from 'react';
-import { View, Text, ActivityIndicator, ScrollView, TouchableOpacity } from 'react-native';
+import { View, Text, ActivityIndicator, ScrollView, TouchableOpacity, Image } from 'react-native';
 import CoffeemonCard from '../CoffeemonCard';
 import { PlayerCoffeemon } from '../../api/coffeemonService';
 import { styles } from './styles';
+
+const qrCodeIcon = require('../../../assets/icons/qrcode.png');
 
 interface TeamSectionProps {
   title: string;
@@ -17,6 +19,9 @@ interface TeamSectionProps {
   isCollapsible?: boolean;
   isExpanded?: boolean;
   onToggleExpand?: () => void;
+  showQrButton?: boolean;
+  onPressQrButton?: () => void;
+  qrButtonDisabled?: boolean;
 }
 
 export default function TeamSection({
@@ -32,13 +37,17 @@ export default function TeamSection({
   isCollapsible = false,
   isExpanded = false,
   onToggleExpand,
+  showQrButton = false,
+  onPressQrButton,
+  qrButtonDisabled = false,
 }: TeamSectionProps) {
   const hasAction = showAddButton && !!onAddCoffeemon;
   const HeaderComponent = isCollapsible ? TouchableOpacity : View;
   const headerProps = isCollapsible
-    ? { onPress: onToggleExpand, activeOpacity: 0.8 }
+    ? { onPress: onToggleExpand, activeOpacity: 0.85 }
     : {};
   const contentVisible = !isCollapsible || isExpanded;
+  const showQrAction = showQrButton && typeof onPressQrButton === 'function';
 
   const renderContent = () => {
     if (loading) {
@@ -96,27 +105,43 @@ export default function TeamSection({
 
   return (
     <View style={styles.teamSection}>
-      <HeaderComponent
-        style={[
-          styles.sectionHeader,
-          hasAction || isCollapsible
-            ? styles.sectionHeaderWithAction
-            : styles.sectionHeaderCentered,
-        ]}
-        {...headerProps}
-      >
-        <View style={styles.titleRow}>
-          <Text style={styles.sectionTitle}>{title}</Text>
-          {isCollapsible && (
-            <Text style={styles.expandIcon}>{isExpanded ? '▲' : '▼'}</Text>
-          )}
-        </View>
+      <View style={styles.sectionHeaderRow}>
+        <HeaderComponent
+          style={[
+            styles.sectionHeaderButton,
+            !isCollapsible && styles.sectionHeaderButtonStatic,
+          ]}
+          {...headerProps}
+        >
+          <View style={styles.titleRow}>
+            <Text style={styles.sectionTitle}>{title}</Text>
+            {isCollapsible && (
+              <Text style={styles.expandIcon}>{isExpanded ? '▲' : '▼'}</Text>
+            )}
+          </View>
+        </HeaderComponent>
+
+        {showQrAction && (
+          <TouchableOpacity
+            style={[styles.qrButton, qrButtonDisabled && styles.qrButtonDisabled]}
+            onPress={onPressQrButton}
+            activeOpacity={0.85}
+            disabled={qrButtonDisabled}
+          >
+            <Image source={qrCodeIcon} style={styles.qrIcon} />
+          </TouchableOpacity>
+        )}
+
         {hasAction && (
-          <TouchableOpacity style={styles.addButton} onPress={onAddCoffeemon}>
+          <TouchableOpacity
+            style={styles.addButton}
+            onPress={onAddCoffeemon}
+            activeOpacity={0.85}
+          >
             <Text style={styles.addButtonText}>+ Adicionar</Text>
           </TouchableOpacity>
         )}
-      </HeaderComponent>
+      </View>
       {contentVisible && renderContent()}
     </View>
   );

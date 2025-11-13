@@ -130,6 +130,24 @@ export async function giveAllCoffeemons(token: string): Promise<{ message: strin
   return await response.json();
 }
 
+export async function captureCoffeemonViaQr(token: string, coffeemonId: number): Promise<PlayerCoffeemon> {
+  const url = await getServerUrl();
+  const response = await fetch(`${url}/game/players/me/coffeemons/${coffeemonId}`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+  });
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({}));
+    throw new Error(error.message || 'Erro ao capturar Coffeemon');
+  }
+
+  return await response.json();
+}
+
 import { CoffeemonVariant, getCoffeemonImage as getImageFromAssets } from '../../assets/coffeemons';
 
 /**
