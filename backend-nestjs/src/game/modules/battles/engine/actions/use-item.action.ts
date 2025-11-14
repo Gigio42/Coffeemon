@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { Item } from 'src/game/modules/items/item.entity';
 import { ItemsService } from 'src/game/modules/items/items.service';
+import { PlayerService } from 'src/game/modules/player/player.service';
 import { CoffeemonState } from '../../types/battle-state.types';
 import { BattleActionType } from '../../types/enums';
 import { StatusEffectsService } from '../effects/status-effects.service';
@@ -72,7 +73,8 @@ export class UseItemAction implements IBattleAction<BattleActionType.USE_ITEM> {
 
   constructor(
     private readonly itemsService: ItemsService,
-    private readonly statusEffectsService: StatusEffectsService // 7. Injetar
+    private readonly statusEffectsService: StatusEffectsService,
+    private readonly playerService: PlayerService
   ) {}
 
   async execute(
@@ -100,6 +102,22 @@ export class UseItemAction implements IBattleAction<BattleActionType.USE_ITEM> {
       throw new NotFoundException(`Definição do item ${itemId} não encontrada.`);
     }
 
+    // Consumir o item do inventário persistente do jogador no banco de dados
+    try {
+      await this.playerService.consumeItem(playerId, itemId);
+    } catch (error) {
+      return {
+        advanceTurn: false,
+        notifications: [
+          {
+            eventKey: 'ACTION_ERROR',
+            payload: { playerId, error: `Erro ao consumir item: ${error.message}` },
+          },
+        ],
+      };
+    }
+
+    // Decrementar também no estado da batalha (memória)
     player.inventory[itemId]--;
 
     const targetIndex = targetCoffeemonIndex ?? player.activeCoffeemonIndex;
@@ -114,6 +132,16 @@ export class UseItemAction implements IBattleAction<BattleActionType.USE_ITEM> {
     const targetMon = player.coffeemons[targetIndex];
 
     const { notifications } = applyItemEffect(itemDefinition, targetMon, this.statusEffectsService);
+
+    // Adicionar notificação para atualizar o inventário no frontend
+    notifications.push({
+      eventKey: 'ITEM_CONSUMED',
+      payload: { 
+        playerId, 
+        itemId, 
+        remainingQuantity: player.inventory[itemId] 
+      },
+    });
 
     return {
       advanceTurn: true,

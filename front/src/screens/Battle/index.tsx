@@ -32,11 +32,15 @@ import BattleHUD from '../../components/Battle/BattleHUD';
 import { pixelArt } from '../../theme/pixelArt';
 import { styles } from './styles';
 import { CoffeemonVariant, getCoffeemonImage } from '../../../assets/coffeemons';
+import ItemSelectionModal from '../../components/ItemSelectionModal';
+import ItemTargetModal from '../../components/ItemTargetModal';
+import { Item, getPlayerItems, getItemIcon, getItemColor } from '../../api/itemsService';
 
 interface BattleScreenProps {
   battleId: string;
   battleState: any;
   playerId: number;
+  token: string;
   socket: Socket;
   onNavigateToMatchmaking: () => void;
 }
@@ -52,6 +56,7 @@ export default function BattleScreen({
   battleId,
   battleState: initialBattleData,
   playerId,
+  token,
   socket,
   onNavigateToMatchmaking,
 }: BattleScreenProps) {
@@ -133,6 +138,26 @@ export default function BattleScreen({
   // 🎯 OTIMISTIC UPDATE: Estado local para mostrar novo Coffeemon imediatamente
   const [optimisticActiveIndex, setOptimisticActiveIndex] = React.useState<number | null>(null);
   const [optimisticTimeout, setOptimisticTimeout] = React.useState<NodeJS.Timeout | null>(null);
+
+  // 💼 SISTEMA DE ITENS
+  const [items, setItems] = React.useState<Item[]>([]);
+  const [isItemModalVisible, setItemModalVisible] = React.useState<boolean>(false);
+  const [isItemTargetModalVisible, setItemTargetModalVisible] = React.useState<boolean>(false);
+  const [selectedItem, setSelectedItem] = React.useState<Item | null>(null);
+
+  // Debug: Log quando o modal muda
+  React.useEffect(() => {
+    console.log('[BattleScreen] isItemModalVisible changed to:', isItemModalVisible);
+  }, [isItemModalVisible]);
+
+  React.useEffect(() => {
+    console.log('[BattleScreen] isItemTargetModalVisible changed to:', isItemTargetModalVisible);
+  }, [isItemTargetModalVisible]);
+
+  React.useEffect(() => {
+    console.log('[BattleScreen] items state changed, count:', items.length);
+    console.log('[BattleScreen] items:', items);
+  }, [items]);
 
   // 🎯 Memoizar fonte da imagem do jogador para otimistic updates
   const playerSprite = useMemo(() => {
@@ -487,6 +512,67 @@ export default function BattleScreen({
     }
   }, [myPlayerState?.activeCoffeemonIndex, optimisticActiveIndex, optimisticTimeout, battleState?.turnPhase]);
 
+  // 💼 Carregar itens disponíveis ao iniciar a batalha
+  React.useEffect(() => {
+    console.log('[BattleScreen] useEffect for loading items triggered');
+    
+    const loadItems = async () => {
+      console.log('[BattleScreen] loadItems function started');
+      try {
+        console.log('[BattleScreen] Token from props:', token ? 'Token exists' : 'No token');
+        
+        if (token) {
+          console.log('[BattleScreen] Calling getPlayerItems...');
+          const playerItems = await getPlayerItems(token);
+          console.log('[BattleScreen] Player items received:', playerItems);
+          setItems(playerItems);
+          console.log('[BattleScreen] Player items loaded:', playerItems.length, 'items');
+          playerItems.forEach(item => {
+            console.log(`[BattleScreen]   - ${item.name}: ${item.quantity}x`);
+          });
+        } else {
+          console.warn('[BattleScreen] No token provided in props!');
+        }
+      } catch (error) {
+        console.error('[BattleScreen] Error loading items:', error);
+        console.error('[BattleScreen] Error details:', JSON.stringify(error, null, 2));
+      }
+    };
+
+    loadItems();
+  }, [token]);
+
+  // 💼 Funções de manipulação de itens
+  const handleSelectItem = (item: Item) => {
+    console.log('[BattleScreen] Item selected:', item.id);
+    setSelectedItem(item);
+    setItemModalVisible(false);
+    setItemTargetModalVisible(true);
+  };
+
+  const handleSelectItemTarget = (targetIndex: number) => {
+    if (!selectedItem) return;
+
+    console.log('[BattleScreen] Using item:', selectedItem.id, 'on Coffeemon at index:', targetIndex);
+    
+    // Enviar ação ao backend
+    sendAction('use_item', {
+      itemId: selectedItem.id,
+      targetCoffeemonIndex: targetIndex,
+    });
+
+    // Fechar modais e voltar ao menu principal
+    setItemTargetModalVisible(false);
+    setSelectedItem(null);
+    setActionMode('main');
+  };
+
+  const handleCloseItemModals = () => {
+    setItemModalVisible(false);
+    setItemTargetModalVisible(false);
+    setSelectedItem(null);
+  };
+
   // Selecionar cenário baseado no battleId (consistente para ambos os jogadores)
   const battleScenario = getBattleScenario(battleId);
 
@@ -774,10 +860,22 @@ export default function BattleScreen({
             </View>
           </TouchableOpacity>
 
-          {/* Botão Item (Desabilitado) */}
+          {/* Botão Item - HABILITADO se tiver itens e puder agir */}
           <TouchableOpacity
-            style={[styles.mainActionButton, styles.itemActionButton, styles.actionButtonDisabled]}
-            disabled
+            style={[
+              styles.mainActionButton,
+              styles.itemActionButton,
+              (!canAct || myPendingAction || items.length === 0) && styles.actionButtonDisabled
+            ]}
+            onPress={() => {
+              console.log('[BattleScreen] Item button pressed!');
+              console.log('[BattleScreen] canAct:', canAct);
+              console.log('[BattleScreen] myPendingAction:', myPendingAction);
+              console.log('[BattleScreen] items.length:', items.length);
+              console.log('[BattleScreen] items:', items);
+              setItemModalVisible(true);
+            }}
+            disabled={!canAct || myPendingAction || items.length === 0}
           >
             <View style={styles.actionButtonContent}>
               <Text style={styles.actionButtonIcon}>🧪</Text>
@@ -874,6 +972,72 @@ export default function BattleScreen({
             );
           })}
         </View>
+      </>
+    );
+  };
+
+  const renderItemButtons = () => {
+    const playerInventory = myPlayerState?.inventory || {};
+
+    return (
+      <>
+        <View style={styles.actionPromptContainer}>
+          <TouchableOpacity
+            style={styles.backButtonSmall}
+            onPress={() => setActionMode('main')}
+          >
+            <Text style={styles.backButtonIcon}>◀️</Text>
+          </TouchableOpacity>
+          <Text style={styles.actionPromptText}>Escolha um item:</Text>
+        </View>
+
+        <ScrollView 
+          style={styles.itemsScrollView}
+          contentContainerStyle={styles.itemsScrollContent}
+          showsVerticalScrollIndicator={false}
+        >
+          {items.map((item) => {
+            const quantity = playerInventory[item.id] || 0;
+            const hasItem = quantity > 0;
+            const icon = getItemIcon(item.id);
+            const effectType = item.effects[0]?.type || 'heal';
+            const color = getItemColor(effectType);
+
+            return (
+              <TouchableOpacity
+                key={item.id}
+                style={[
+                  styles.itemButton,
+                  { borderColor: color },
+                  !hasItem && styles.itemButtonDisabled
+                ]}
+                onPress={() => hasItem && handleSelectItem(item)}
+                disabled={!hasItem}
+              >
+                <View style={styles.itemButtonContent}>
+                  <Text style={styles.itemIcon}>{icon}</Text>
+                  <View style={styles.itemTextContainer}>
+                    <Text style={[styles.itemName, !hasItem && styles.itemNameDisabled]}>
+                      {item.name}
+                    </Text>
+                    <Text style={[styles.itemDescription, !hasItem && styles.itemDescriptionDisabled]}>
+                      {item.description}
+                    </Text>
+                  </View>
+                  {hasItem ? (
+                    <View style={[styles.itemQuantityBadge, { backgroundColor: color }]}>
+                      <Text style={styles.itemQuantityText}>x{quantity}</Text>
+                    </View>
+                  ) : (
+                    <View style={styles.itemOutOfStockBadge}>
+                      <Text style={styles.itemOutOfStockText}>0</Text>
+                    </View>
+                  )}
+                </View>
+              </TouchableOpacity>
+            );
+          })}
+        </ScrollView>
       </>
     );
   };
@@ -979,6 +1143,7 @@ export default function BattleScreen({
         {/* Renderiza conteúdo baseado no modo de ação */}
         {actionMode === 'main' && renderMainActionButtons()}
         {actionMode === 'attack' && renderAttackButtons()}
+        {actionMode === 'item' && renderItemButtons()}
       </View>
 
       <CoffeemonSelectionModal
@@ -1016,6 +1181,22 @@ export default function BattleScreen({
         keyExtractor={(candidate) => `${candidate.coffeemon.name}-${candidate.index}`}
         title="Trocar Coffeemon"
         emptyMessage="Nenhum Coffeemon disponível para troca"
+      />
+
+      {/* Modais de Itens */}
+      <ItemSelectionModal
+        visible={isItemModalVisible}
+        items={items}
+        onSelectItem={handleSelectItem}
+        onClose={handleCloseItemModals}
+      />
+
+      <ItemTargetModal
+        visible={isItemTargetModalVisible}
+        selectedItem={selectedItem}
+        coffeemons={myPlayerState?.coffeemons || []}
+        onSelectTarget={handleSelectItemTarget}
+        onClose={handleCloseItemModals}
       />
     </SafeAreaView>
   );

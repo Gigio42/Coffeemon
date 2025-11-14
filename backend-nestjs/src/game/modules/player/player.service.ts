@@ -47,7 +47,11 @@ export class PlayerService {
       level: 1,
       experience: 0,
       coins: createPlayerDto.initialCoins || 100,
-      inventory: {},
+      inventory: {
+        small_potion: 5,
+        revive_bean: 2,
+        antidote_espresso: 3,
+      },
     });
 
     const savedPlayer = await this.playerRepository.save(player);
@@ -284,4 +288,49 @@ export class PlayerService {
     }
     return addedCount;
   }
+
+  //STUB APENAS PARA TESTES!!! - ADICIONAR ITENS
+  async addItemsToPlayer(playerId: number, items: Record<string, number>): Promise<Player> {
+    const player = await this.playerRepository.findOneBy({ id: playerId });
+    if (!player) {
+      throw new NotFoundException(`Player com ID ${playerId} não encontrado.`);
+    }
+
+    if (!player.inventory) {
+      player.inventory = {};
+    }
+
+    // Adicionar cada item ao inventário
+    Object.entries(items).forEach(([itemId, quantity]) => {
+      const currentQuantity = player.inventory[itemId] || 0;
+      player.inventory[itemId] = currentQuantity + quantity;
+    });
+
+    return this.playerRepository.save(player);
+  }
+
+  /**
+   * Consome uma unidade de um item do inventário do jogador
+   */
+  async consumeItem(playerId: number, itemId: string): Promise<Player> {
+    const player = await this.playerRepository.findOneBy({ id: playerId });
+    if (!player) {
+      throw new NotFoundException(`Player com ID ${playerId} não encontrado.`);
+    }
+
+    if (!player.inventory || !player.inventory[itemId] || player.inventory[itemId] <= 0) {
+      throw new NotFoundException(`Player não possui o item ${itemId}.`);
+    }
+
+    // Decrementar a quantidade do item
+    player.inventory[itemId]--;
+
+    // Remover item do inventário se a quantidade for 0
+    if (player.inventory[itemId] === 0) {
+      delete player.inventory[itemId];
+    }
+
+    return this.playerRepository.save(player);
+  }
 }
+

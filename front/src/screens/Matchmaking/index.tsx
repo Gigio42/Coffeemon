@@ -19,6 +19,7 @@ import { BattleState } from '../../types';
 import { useMatchmaking } from '../../hooks/useMatchmaking';
 import { useCoffeemons } from '../../hooks/useCoffeemons';
 import { PlayerCoffeemon } from '../../api/coffeemonService';
+import { giveInitialItems, getPlayerItems, getItemIcon, getItemColor, Item } from '../../api/itemsService';
 import { prefetchPalette, useDynamicPalette, type Palette } from '../../utils/colorPalette';
 import { getCoffeemonImage } from '../../../assets/coffeemons';
 import { getVariantForStatusEffects } from '../../utils/statusEffects';
@@ -479,6 +480,8 @@ export default function MatchmakingScreen({
   const [activeCoffeemon, setActiveCoffeemon] = useState<PlayerCoffeemon | null>(null);
   const scrollY = useRef(new Animated.Value(0)).current;
   const [palettesReady, setPalettesReady] = useState(false);
+  const [debugMenuVisible, setDebugMenuVisible] = useState(false);
+  const [items, setItems] = useState<Item[]>([]);
   const ensuredPalettesRef = useRef<Set<number>>(new Set());
   const initialPalettesEnsuredRef = useRef(false);
 
@@ -486,6 +489,23 @@ export default function MatchmakingScreen({
     const timer = setTimeout(() => setIntroLoading(false), 5000);
     return () => clearTimeout(timer);
   }, []);
+
+  // Carregar itens do jogador
+  useEffect(() => {
+    const loadItems = async () => {
+      try {
+        if (token) {
+          const playerItems = await getPlayerItems(token);
+          setItems(playerItems);
+          console.log('[Matchmaking] Player items loaded:', playerItems.length);
+        }
+      } catch (error) {
+        console.error('[Matchmaking] Error loading items:', error);
+      }
+    };
+
+    loadItems();
+  }, [token]);
 
   // Hook de Matchmaking (Socket, status, logs)
   const { matchStatus, log, findMatch, findBotMatch } =
@@ -581,6 +601,31 @@ export default function MatchmakingScreen({
     const backdropStart = y + height * 0.82;
     setAvailableBackdropTop(backdropStart);
   }, []);
+
+  const handleGiveAllCoffeemonsDebug = useCallback(async () => {
+    try {
+      await giveAllCoffeemons();
+      Alert.alert('Success', 'All Coffeemons added to your collection!');
+      setDebugMenuVisible(false);
+    } catch (error) {
+      console.error('Failed to give all coffeemons:', error);
+      Alert.alert('Error', 'Failed to give coffeemons. Please try again.');
+    }
+  }, [giveAllCoffeemons]);
+
+  const handleGiveItems = useCallback(async () => {
+    try {
+      await giveInitialItems(token);
+      // Recarregar itens após adicionar
+      const updatedItems = await getPlayerItems(token);
+      setItems(updatedItems);
+      Alert.alert('Success', 'Items added to your inventory!');
+      setDebugMenuVisible(false);
+    } catch (error) {
+      console.error('Failed to give items:', error);
+      Alert.alert('Error', 'Failed to give items. Please try again.');
+    }
+  }, [token]);
 
   const fallbackPalette = useMemo(() => {
     if (!activeCoffeemon) {
@@ -783,6 +828,31 @@ export default function MatchmakingScreen({
               </TouchableOpacity>
             )}
 
+            {/* Debug Menu */}
+            <TouchableOpacity
+              style={styles.debugMenuButton}
+              onPress={() => setDebugMenuVisible(!debugMenuVisible)}
+            >
+              <Text style={styles.debugMenuIcon}>⋮</Text>
+            </TouchableOpacity>
+
+            {debugMenuVisible && (
+              <View style={styles.debugMenuPopup}>
+                <TouchableOpacity
+                  style={styles.debugMenuItem}
+                  onPress={handleGiveAllCoffeemonsDebug}
+                >
+                  <Text style={styles.debugMenuItemText}>Give All Coffeemons</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.debugMenuItem, styles.debugMenuItemLast]}
+                  onPress={handleGiveItems}
+                >
+                  <Text style={styles.debugMenuItemText}>Give Items</Text>
+                </TouchableOpacity>
+              </View>
+            )}
+
             {matchStatus && (
               <View style={styles.statusCardWrapper}>
                 <View style={styles.statusCardShadow} />
@@ -829,7 +899,37 @@ export default function MatchmakingScreen({
                     onToggleExpand={() => setAvailableExpanded((prev) => !prev)}
                     showQrButton
                     onPressQrButton={handleOpenQRScanner}
-                  />
+                  >
+                    {/* Seção de Itens - Dentro do ScrollView do TeamSection */}
+                    <View style={styles.itemsSection}>
+                      <Text style={styles.itemsSectionTitle}>💼 Itens ({items.reduce((sum, item) => sum + (item.quantity || 0), 0)})</Text>
+                      <View style={styles.itemsList}>
+                        {items.length === 0 ? (
+                          <Text style={styles.itemsEmptyText}>Nenhum item disponível</Text>
+                        ) : (
+                          items.map((item) => {
+                            const icon = getItemIcon(item.id);
+                            const effectType = item.effects[0]?.type || 'heal';
+                            const color = getItemColor(effectType);
+                            
+                            return (
+                              <View key={item.id} style={styles.itemCard}>
+                                <View style={styles.itemIconContainer}>
+                                  <Text style={styles.itemIcon}>{icon}</Text>
+                                  <View style={[styles.itemQuantityBadge, { backgroundColor: color }]}>
+                                    <Text style={styles.itemQuantityText}>{item.quantity}</Text>
+                                  </View>
+                                </View>
+                                <View style={styles.itemInfo}>
+                                  <Text style={styles.itemName} numberOfLines={2}>{item.name}</Text>
+                                </View>
+                              </View>
+                            );
+                          })
+                        )}
+                      </View>
+                    </View>
+                  </TeamSection>
                 </View>
               </View>
 

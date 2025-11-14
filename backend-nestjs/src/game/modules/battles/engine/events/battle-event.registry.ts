@@ -14,6 +14,7 @@ type StatusAppliedPayload = { targetName: string; effectType: string };
 type StatusDamagePayload = { coffeemonName: string; damage: number; effectType: string };
 type StatusRemovedPayload = { coffeemonName: string; effectType: string };
 type StatusHealPayload = { coffeemonName: string; amount: number; effectType: string };
+type ItemConsumedPayload = { playerId: number; itemId: string; remainingQuantity: number };
 
 export const BattleEventRegistry = {
   // --- Eventos de Turno ---
@@ -95,6 +96,12 @@ export const BattleEventRegistry = {
   }),
   STATUS_HEAL: (payload: StatusHealPayload): BattleEvent => ({
     type: 'STATUS_HEAL',
+    payload,
+  }),
+
+  // --- Eventos de Itens ---
+  ITEM_CONSUMED: (payload: ItemConsumedPayload): BattleEvent => ({
+    type: 'ITEM_CONSUMED',
     payload,
   }),
 };

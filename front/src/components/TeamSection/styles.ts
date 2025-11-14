@@ -183,30 +183,36 @@ export const styles = StyleSheet.create({
   
   availableGridContent: {
     paddingVertical: 0,
-    paddingHorizontal: pixelArt.spacing.sm,
+    paddingHorizontal: 0,
+    paddingBottom: 300,
     alignItems: 'flex-start',
+    flexGrow: 1,
+    flexDirection: 'column',
   },
 
   availableGrid: {
+    width: '100%',
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'flex-start',
     alignContent: 'flex-start',
-    rowGap: 0,
+    rowGap: 4,
+    columnGap: 2,
+    marginBottom: 0,
   },
 
   availableCardWrapper: {
-    width: '50%',
-    maxWidth: 132,
-    maxHeight: 150,
-    paddingHorizontal: 0,
+    width: '33.33%', // 3 colunas ao invés de 2
+    maxWidth: 88,
+    height: 200,
+    paddingHorizontal: 1,
     paddingBottom: 0,
     alignItems: 'center',
     justifyContent: 'flex-start',
   },
 
   availableCardScaler: {
-    transform: [{ scaleX: 0.6 }, { scaleY: 0.5 }],
+    transform: [{ scaleX: 0.5 }, { scaleY: 0.5 }],
     width: '100%',
     alignItems: 'center',
   },
