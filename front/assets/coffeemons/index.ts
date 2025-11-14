@@ -3,85 +3,91 @@
  * Este arquivo gerencia todas as imagens (default e back) de cada Coffeemon
  */
 
+import type { ImageSourcePropType } from 'react-native';
+
+export type CoffeemonVariant = 'default' | 'back' | 'hurt' | 'sleeping';
+
 export interface CoffeemonImages {
-  default: any;
-  back: any;
+  default: ImageSourcePropType;
+  back: ImageSourcePropType;
+  hurt?: ImageSourcePropType;
+  sleeping?: ImageSourcePropType;
 }
 
 export interface CoffeemonImageMap {
   [key: string]: CoffeemonImages;
 }
 
-/**
- * Mapa de todas as imagens dos Coffeemons
- * Uso: coffeemonImages['jasminelle'].default ou coffeemonImages['jasminelle'].back
- */
-export const coffeemonImages: CoffeemonImageMap = {
+const coffeemonImages: CoffeemonImageMap = {
   jasminelle: {
     default: require('./jasminelle/default.png'),
     back: require('./jasminelle/back.png'),
+    hurt: require('./jasminelle/hurt.png'),
+    sleeping: require('./jasminelle/sleeping.png'),
   },
   limonetto: {
     default: require('./limonetto/default.png'),
     back: require('./limonetto/back.png'),
+    hurt: require('./limonetto/hurt.png'),
+    sleeping: require('./limonetto/sleeping.png'),
   },
   maprion: {
     default: require('./maprion/default.png'),
     back: require('./maprion/back.png'),
+    hurt: require('./maprion/hurt.png'),
+    sleeping: require('./maprion/sleeping.png'),
   },
   emberly: {
     default: require('./emberly/default.png'),
     back: require('./emberly/back.png'),
+    hurt: require('./emberly/hurt.png'),
+    sleeping: require('./emberly/sleeping.png'),
   },
   almondino: {
     default: require('./almondino/default.png'),
     back: require('./almondino/back.png'),
+    hurt: require('./almondino/hurt.png'),
+    sleeping: require('./almondino/sleeping.png'),
   },
   gingerlynn: {
     default: require('./gingerlynn/default.png'),
     back: require('./gingerlynn/back.png'),
+    hurt: require('./gingerlynn/hurt.png'),
+    sleeping: require('./gingerlynn/sleeping.png'),
   },
 };
 
-/**
- * Obtém a imagem de um Coffeemon pelo nome
- * @param name - Nome do Coffeemon (ex: "Jasminelle (Lvl 5)" ou "jasminelle")
- * @param variant - Variante da imagem ('default' ou 'back')
- * @returns Imagem do Coffeemon ou fallback para Jasminelle
- */
+const FALLBACK_KEY = 'jasminelle';
+
 export const getCoffeemonImage = (
   name: string,
-  variant: 'default' | 'back' = 'default'
-): any => {
-  // Normalizar o nome (remover nível e converter para lowercase)
+  variant: CoffeemonVariant = 'default',
+): ImageSourcePropType => {
   const baseName = name.split(' (Lvl')[0].toLowerCase().trim();
-  
-  // Buscar imagem no mapa
-  const images = coffeemonImages[baseName];
-  
-  if (images && images[variant]) {
-    return images[variant];
+  const images = coffeemonImages[baseName] ?? coffeemonImages[FALLBACK_KEY];
+
+  if (!coffeemonImages[baseName]) {
+    console.warn(
+      `[CoffeemonImages] Image not found for "${name}" (${variant}), using ${FALLBACK_KEY} fallback`,
+    );
   }
-  
-  // Fallback para Jasminelle se não encontrar
-  console.warn(`[CoffeemonImages] Image not found for "${name}" (${variant}), using Jasminelle fallback`);
-  return coffeemonImages.jasminelle?.[variant] || coffeemonImages.jasminelle?.default;
+
+  if (images?.[variant]) {
+    return images[variant] as ImageSourcePropType;
+  }
+
+  if (variant !== 'default' && images?.default) {
+    return images.default;
+  }
+
+  return coffeemonImages[FALLBACK_KEY].default;
 };
 
-/**
- * Verifica se existe imagem para um Coffeemon
- * @param name - Nome do Coffeemon
- * @returns true se existir imagem, false caso contrário
- */
 export const hasCoffeemonImage = (name: string): boolean => {
   const baseName = name.split(' (Lvl')[0].toLowerCase().trim();
-  return baseName in coffeemonImages;
+  return Boolean(coffeemonImages[baseName]);
 };
 
-/**
- * Lista todos os Coffeemons disponíveis
- * @returns Array com os nomes de todos os Coffeemons
- */
 export const getAvailableCoffeemons = (): string[] => {
   return Object.keys(coffeemonImages);
 };

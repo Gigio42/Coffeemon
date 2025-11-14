@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Botão Pixelado de Café</title>
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap");
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background-color: #1a0d05;
+        background-image:
+          repeating-linear-gradient(
+            0deg,
+            rgba(255, 221, 181, 0.12) 0,
+            rgba(255, 221, 181, 0.12) 4px,
+            transparent 4px,
+            transparent 8px
+          ),
+          repeating-linear-gradient(
+            90deg,
+            rgba(64, 35, 18, 0.2) 0,
+            rgba(64, 35, 18, 0.2) 4px,
+            transparent 4px,
+            transparent 8px
+          );
+        background-size: cover;
+        color: #faddb4;
+        font-family: "Press Start 2P", system-ui, sans-serif;
+        text-rendering: optimizeLegibility;
+        image-rendering: pixelated;
+      }
+
+      .stage {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 24px;
+        padding: 40px 56px;
+        border: 4px solid #faddb4;
+        border-radius: 0;
+        background-color: #2e180a;
+        background-image: repeating-linear-gradient(135deg, #703c1b 0 10px, #3a1d0c 10px 20px);
+        box-shadow: 0 0 0 4px #2a1409, 8px 8px 0 #000;
+        image-rendering: pixelated;
+      }
+
+      .stage h1 {
+        margin: 0;
+        font-size: 18px;
+        letter-spacing: 3px;
+        text-transform: uppercase;
+        text-shadow: 3px 3px 0 #000;
+      }
+
+      .coffee-button {
+        position: relative;
+        padding: 24px 96px 20px 120px;
+        font-size: 16px;
+        color: #ffe9d2;
+        background: #5b2d11;
+        border: 4px solid #faddb4;
+        border-radius: 0;
+        cursor: pointer;
+        text-transform: uppercase;
+        letter-spacing: 4px;
+        transition: transform 120ms steps(3, end), box-shadow 120ms steps(3, end);
+        box-shadow:
+          0 0 0 4px #2a1409,
+          0 0 0 8px #000,
+          8px 8px 0 #000,
+          12px 12px 0 rgba(0, 0, 0, 0.6);
+        image-rendering: pixelated;
+        overflow: hidden;
+      }
+
+      .coffee-button::before,
+      .coffee-button::after {
+        content: "";
+        position: absolute;
+        top: 50%;
+        width: 8px;
+        height: 8px;
+        background: #3a1a0c;
+        transform: translateY(-50%) scale(1);
+        image-rendering: pixelated;
+      }
+
+      .coffee-button::before {
+        left: 28px;
+        box-shadow:
+          8px -8px 0 0 #5b2d11,
+          16px -8px 0 0 #5b2d11,
+          0 0 0 0 #83471f,
+          8px 0 0 0 #a56838,
+          16px 0 0 0 #5b2d11,
+          24px 0 0 0 #2c1407,
+          8px 8px 0 0 #a56838,
+          16px 8px 0 0 #83471f,
+          24px 8px 0 0 #2c1407,
+          8px 16px 0 0 #6d3a1a,
+          16px 16px 0 0 #6d3a1a;
+        animation: beanFloat 2.4s steps(6, end) infinite;
+      }
+
+      .coffee-button::after {
+        right: 28px;
+        box-shadow:
+          8px -8px 0 0 #a56838,
+          16px -8px 0 0 #6d3a1a,
+          0 0 0 0 #6d3a1a,
+          8px 0 0 0 #2c1407,
+          16px 0 0 0 #a56838,
+          24px 0 0 0 #2c1407,
+          8px 8px 0 0 #a56838,
+          16px 8px 0 0 #2c1407,
+          24px 8px 0 0 #2c1407,
+          8px 16px 0 0 #6d3a1a,
+          16px 16px 0 0 #6d3a1a;
+        animation: beanFloat 2.4s steps(6, end) infinite reverse;
+      }
+
+      .coffee-button span {
+        position: relative;
+        z-index: 1;
+        text-shadow: 4px 4px 0 #000;
+        animation: textPulse 1.6s steps(2, end) infinite;
+      }
+
+      .coffee-button:hover {
+        transform: translate(-4px, -8px);
+        box-shadow:
+          0 0 0 4px #2a1409,
+          0 0 0 8px #000,
+          12px 12px 0 #000,
+          16px 16px 0 rgba(0, 0, 0, 0.5);
+      }
+
+      .coffee-button:active {
+        transform: translate(4px, 4px);
+        box-shadow:
+          0 0 0 4px #2a1409,
+          0 0 0 8px #000,
+          4px 4px 0 #000,
+          8px 8px 0 rgba(0, 0, 0, 0.6);
+      }
+
+      .hud-tip {
+        padding: 8px 12px;
+        border: 3px solid #faddb4;
+        border-radius: 10px;
+        background: rgba(0, 0, 0, 0.45);
+        font-size: 12px;
+        letter-spacing: 2px;
+        text-align: center;
+        animation: hudGlow 1.8s steps(4, end) infinite;
+      }
+
+      @keyframes hudGlow {
+        0%,
+        100% {
+          box-shadow: 0 0 0 rgba(255, 221, 181, 0.6);
+        }
+        50% {
+          box-shadow: 0 0 16px rgba(255, 221, 181, 0.6);
+        }
+      }
+
+      @keyframes textPulse {
+        0%,
+        100% {
+          color: #ffe9d2;
+        }
+        50% {
+          color: #fff8ed;
+        }
+      }
+
+      @keyframes beanFloat {
+        0%,
+        100% {
+          transform: translate(-2px, calc(-50%)) scale(1);
+          filter: drop-shadow(0 0 0 rgba(0, 0, 0, 0.4));
+        }
+        50% {
+          transform: translate(-4px, calc(-50% - 6px)) scale(1.1);
+          filter: drop-shadow(0 6px 0 rgba(0, 0, 0, 0.6));
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="stage">
+      <h1>Modo Barista</h1>
+      <button class="coffee-button">
+        <span>Start Brewing</span>
+      </button>
+      <p class="hud-tip">Pressione para um boost de energia +10</p>
+    </div>
+  </body>
+</html>

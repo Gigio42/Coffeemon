@@ -1,4 +1,5 @@
 import { getServerUrl } from '../utils/config';
+import { StatusEffect } from '../types';
 
 export interface PlayerCoffeemon {
   id: number;
@@ -8,6 +9,7 @@ export interface PlayerCoffeemon {
   level: number;
   experience: number;
   isInParty: boolean;
+  statusEffects?: StatusEffect[];
   coffeemon: {
     id: number;
     name: string;
@@ -128,12 +130,30 @@ export async function giveAllCoffeemons(token: string): Promise<{ message: strin
   return await response.json();
 }
 
-import { getCoffeemonImage as getImageFromAssets } from '../../assets/coffeemons';
+export async function captureCoffeemonViaQr(token: string, coffeemonId: number): Promise<PlayerCoffeemon> {
+  const url = await getServerUrl();
+  const response = await fetch(`${url}/game/players/me/coffeemons/${coffeemonId}`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+  });
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({}));
+    throw new Error(error.message || 'Erro ao capturar Coffeemon');
+  }
+
+  return await response.json();
+}
+
+import { CoffeemonVariant, getCoffeemonImage as getImageFromAssets } from '../../assets/coffeemons';
 
 /**
  * Obtém a imagem de um Coffeemon
  */
-export function getCoffeemonImageSource(name: string, variant: 'default' | 'back' = 'default') {
+export function getCoffeemonImageSource(name: string, variant: CoffeemonVariant = 'default') {
   return getImageFromAssets(name, variant);
 }
 

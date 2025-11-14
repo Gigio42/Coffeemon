@@ -1,8 +1,10 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Socket } from 'socket.io-client';
 import { BattleState, BattleStatus, PlayerState } from '../types';
+import { CoffeemonVariant } from '../../assets/coffeemons';
 import { getBaseName } from '../utils/battleUtils';
 import { getEventMessage } from '../utils/battleMessages';
+import { deriveSpriteState, SpriteStateResult } from '../utils/spriteStateMachine';
 
 interface BattleEvent {
   type: string;
@@ -16,7 +18,7 @@ interface UseBattleProps {
   playerId: number;
   socket: Socket;
   onNavigateToMatchmaking: () => void;
-  imageSourceGetter: (name: string, variant: 'default' | 'back') => any;
+  imageSourceGetter: (name: string, variant: CoffeemonVariant) => any;
   animationHandlers: {
     playLunge: (isPlayer: boolean) => Promise<unknown>;
     playShake: (isPlayer: boolean) => Promise<unknown>;
@@ -26,6 +28,8 @@ interface UseBattleProps {
     reset: () => void;
   };
 }
+
+const RECENT_DAMAGE_DURATION_MS = 1200;
 
 export function useBattle({
   battleId,
@@ -94,10 +98,11 @@ export function useBattle({
   const [winnerId, setWinnerId] = useState<number | null>(null);
   const [showSelectionModal, setShowSelectionModal] = useState<boolean>(false);
   const [isProcessing, setIsProcessing] = useState<boolean>(false);
-  const [popupMessage, setPopupMessage] = useState<string | null>(null);
   const [isBattleReady, setIsBattleReady] = useState<boolean>(false);
+  const [recentDamageMap, setRecentDamageMap] = useState<Record<string, boolean>>({});
 
   const battleStateRef = useRef<BattleState>(battleState);
+  const recentDamageTimeoutsRef = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
 
   useEffect(() => {
     battleStateRef.current = battleState;
@@ -107,22 +112,6 @@ export function useBattle({
     if (msg) {
       setLog((prev) => [...prev, msg]);
     }
-  };
-
-  const showPopup = (message: string) => {
-    return new Promise((resolve) => {
-      if (!message) {
-        resolve(true);
-        return;
-      }
-      setPopupMessage(message);
-      
-      // Mostrar por 800ms e depois esconder
-      setTimeout(() => {
-        setPopupMessage(null);
-        resolve(true);
-      }, 800);
-    });
   };
 
   const playAnimationForEvent = async (event: BattleEvent, fullState: BattleState) => {
@@ -205,10 +194,12 @@ export function useBattle({
         if ((event.type === 'ATTACK_HIT' || event.type === 'ATTACK_CRIT' || event.type === 'STATUS_DAMAGE') && payload.damage > 0) {
           // Para ataques, usar playerId se disponível, senão determinar pelo target
           let isPlayerTakingDamage = false;
+          let damagedMonName: string | null = null;
           
           if (payload.playerId !== undefined) {
             // Se temos playerId, é o atacante
             isPlayerTakingDamage = payload.playerId !== playerId;
+            damagedMonName = payload.targetName ?? null;
           } else if (payload.targetName) {
             // Fallback: verificar se o target é o Coffeemon ativo do jogador
             const myPlayerState =
@@ -219,6 +210,9 @@ export function useBattle({
                 : '';
             const targetIsPlayer = payload.targetName === activeMonName;
             isPlayerTakingDamage = targetIsPlayer;
+            damagedMonName = payload.targetName;
+          } else if (payload.coffeemonName) {
+            damagedMonName = payload.coffeemonName;
           }
           
           console.log('Damage event detected:', {
@@ -234,17 +228,34 @@ export function useBattle({
           } else {
             setOpponentDamage(payload.damage);
           }
+
+          if (damagedMonName) {
+            const baseKey = getBaseName(damagedMonName).toLowerCase();
+            setRecentDamageMap((prev) => {
+              if (prev[baseKey]) {
+                return prev;
+              }
+              return { ...prev, [baseKey]: true };
+            });
+
+            if (recentDamageTimeoutsRef.current[baseKey]) {
+              clearTimeout(recentDamageTimeoutsRef.current[baseKey]);
+            }
+
+            recentDamageTimeoutsRef.current[baseKey] = setTimeout(() => {
+              setRecentDamageMap((prev) => {
+                if (!prev[baseKey]) {
+                  return prev;
+                }
+                const { [baseKey]: _, ...rest } = prev;
+                return rest;
+              });
+              delete recentDamageTimeoutsRef.current[baseKey];
+            }, RECENT_DAMAGE_DURATION_MS);
+          }
         }
         
         // Sem delay entre eventos - modo performance
-        
-        // Apenas popup, SEM animações (modo performance para APK)
-        const popupPromise = Promise.race([
-          showPopup(message),
-          new Promise(resolve => setTimeout(resolve, 400))
-        ]);
-
-        await popupPromise;
       } catch (error) {
         console.error('Error processing event:', event, error);
         // Continuar processando próximos eventos mesmo se um falhar
@@ -411,6 +422,10 @@ export function useBattle({
       socket.off('opponentDisconnected');
       socket.off('playerReconnected');
       socket.off('battleCancelled');
+      Object.values(recentDamageTimeoutsRef.current).forEach((timeout) => {
+        clearTimeout(timeout);
+      });
+      recentDamageTimeoutsRef.current = {};
     };
   }, []);
 
@@ -440,6 +455,18 @@ export function useBattle({
       battleState?.currentPlayerId === playerId ||
       (bothPlayersSelected && hasActiveCoffeemon));
 
+  const resolveSpriteVariant = useCallback(
+    (coffeemonName: string, baseVariant: CoffeemonVariant, statusEffects?: any[]): SpriteStateResult => {
+      const baseName = getBaseName(coffeemonName).toLowerCase();
+      const context = {
+        statusEffects,
+        recentlyDamaged: recentDamageMap[baseName] ?? false,
+      };
+      return deriveSpriteState(context, baseVariant);
+    },
+    [recentDamageMap],
+  );
+
   return {
     battleState,
     log,
@@ -449,7 +476,6 @@ export function useBattle({
     winnerId,
     showSelectionModal,
     isProcessing,
-    popupMessage,
     myPlayerState,
     opponentPlayerState,
     myPendingAction,
@@ -457,5 +483,7 @@ export function useBattle({
     isBattleReady,
     sendAction,
     selectInitialCoffeemon,
+    recentDamageMap,
+    resolveSpriteVariant,
   };
 }

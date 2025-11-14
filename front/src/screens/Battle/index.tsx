@@ -31,7 +31,7 @@ import { Coffeemon } from '../../types';
 import BattleHUD from '../../components/Battle/BattleHUD';
 import { pixelArt } from '../../theme/pixelArt';
 import { styles } from './styles';
-import { getCoffeemonImage } from '../../../assets/coffeemons';
+import { CoffeemonVariant, getCoffeemonImage } from '../../../assets/coffeemons';
 
 interface BattleScreenProps {
   battleId: string;
@@ -84,7 +84,7 @@ export default function BattleScreen({
       reset: resetAnimations,
     } = animations;
 
-    const getCoffeemonImageSource = (name: string, variant: 'default' | 'back' = 'default') => {
+    const getCoffeemonImageSource = (name: string, variant: CoffeemonVariant = 'default') => {
       return getCoffeemonImage(name, variant);
     };
 
@@ -114,7 +114,6 @@ export default function BattleScreen({
     winnerId,
     showSelectionModal,
     isProcessing,
-    popupMessage,
     myPlayerState,
     opponentPlayerState,
     myPendingAction,
@@ -122,6 +121,7 @@ export default function BattleScreen({
     isBattleReady,
     sendAction,
     selectInitialCoffeemon,
+    resolveSpriteVariant,
   } = battle;
 
   // Estado local para controle de tooltip de moves e modo de ação
@@ -135,7 +135,7 @@ export default function BattleScreen({
   const [optimisticTimeout, setOptimisticTimeout] = React.useState<NodeJS.Timeout | null>(null);
 
   // 🎯 Memoizar fonte da imagem do jogador para otimistic updates
-  const playerImageSource = useMemo(() => {
+  const playerSprite = useMemo(() => {
     if (!myPlayerState || (optimisticActiveIndex ?? myPlayerState.activeCoffeemonIndex) === null) {
       return null;
     }
@@ -148,14 +148,72 @@ export default function BattleScreen({
       return null;
     }
 
-    console.log('[BattleScreen] Player image source updated:', {
+    const spriteState = resolveSpriteVariant(activeCoffeemon.name, 'back', activeCoffeemon.statusEffects);
+    const imageSource = getCoffeemonImageSource(activeCoffeemon.name, spriteState.variant);
+
+    console.log('[BattleScreen] Player sprite updated:', {
       name: activeCoffeemon.name,
       index: activeIndex,
-      optimistic: optimisticActiveIndex !== null
+      optimistic: optimisticActiveIndex !== null,
+      variant: spriteState.variant,
+      state: spriteState.state,
     });
 
-    return getCoffeemonImageSource(activeCoffeemon.name, 'back');
-  }, [myPlayerState, optimisticActiveIndex]);
+    return {
+      imageSource,
+      state: spriteState.state,
+      variant: spriteState.variant,
+      name: activeCoffeemon.name,
+      index: activeIndex,
+    };
+  }, [myPlayerState, optimisticActiveIndex, resolveSpriteVariant]);
+
+  const opponentSprite = useMemo(() => {
+    if (!opponentPlayerState || opponentPlayerState.activeCoffeemonIndex === null) {
+      return null;
+    }
+
+    const activeCoffeemon = opponentPlayerState.coffeemons[opponentPlayerState.activeCoffeemonIndex];
+    if (!activeCoffeemon) {
+      return null;
+    }
+
+    const spriteState = resolveSpriteVariant(activeCoffeemon.name, 'default', activeCoffeemon.statusEffects);
+    const imageSource = getCoffeemonImageSource(activeCoffeemon.name, spriteState.variant);
+
+    return {
+      imageSource,
+      state: spriteState.state,
+      variant: spriteState.variant,
+      name: activeCoffeemon.name,
+    };
+  }, [opponentPlayerState, resolveSpriteVariant]);
+
+  const playerHudVariant = useMemo<CoffeemonVariant | null>(() => {
+    if (!myPlayerState || myPlayerState.activeCoffeemonIndex === null) {
+      return null;
+    }
+
+    const activeMon = myPlayerState.coffeemons[myPlayerState.activeCoffeemonIndex];
+    if (!activeMon) {
+      return null;
+    }
+
+    return resolveSpriteVariant(activeMon.name, 'default', activeMon.statusEffects).variant;
+  }, [myPlayerState, resolveSpriteVariant]);
+
+  const opponentHudVariant = useMemo<CoffeemonVariant | null>(() => {
+    if (!opponentPlayerState || opponentPlayerState.activeCoffeemonIndex === null) {
+      return null;
+    }
+
+    const activeMon = opponentPlayerState.coffeemons[opponentPlayerState.activeCoffeemonIndex];
+    if (!activeMon) {
+      return null;
+    }
+
+    return resolveSpriteVariant(activeMon.name, 'default', activeMon.statusEffects).variant;
+  }, [opponentPlayerState, resolveSpriteVariant]);
 
   const switchCandidates = useMemo<SwitchCandidate[]>(() => {
     if (!myPlayerState || !Array.isArray(myPlayerState.coffeemons)) {
@@ -820,16 +878,6 @@ export default function BattleScreen({
     );
   };
 
-  const renderPopupMessage = () => {
-    if (!popupMessage) return null;
-    
-    return (
-      <View style={styles.popupContainer}>
-        <Text style={styles.popupText}>{popupMessage}</Text>
-      </View>
-    );
-  };
-
   if (!battleState || !playerId || !isBattleReady) {
     return (
       <SafeAreaView style={styles.battleContainer} edges={['left', 'right', 'bottom']}>
@@ -863,16 +911,16 @@ export default function BattleScreen({
         style={styles.battleArena}
         resizeMode="cover"
       >
-        {playerImageSource && renderCoffeemonSprite(
-          playerImageSource, 
+        {playerSprite && renderCoffeemonSprite(
+          playerSprite.imageSource,
           true,
-          `player-sprite-${optimisticActiveIndex ?? myPlayerState?.activeCoffeemonIndex}-${optimisticActiveIndex !== null ? 'optimistic' : 'real'}`
+          `player-sprite-${playerSprite.index}-${playerSprite.state}-${playerSprite.variant}-${playerSprite.name}`
         )}
-        {opponentPlayerState && opponentPlayerState.activeCoffeemonIndex !== null && 
-          renderCoffeemonSprite(
-            getCoffeemonImageSource(opponentPlayerState.coffeemons[opponentPlayerState.activeCoffeemonIndex].name, 'default'), 
-            false
-          )}
+        {opponentSprite && renderCoffeemonSprite(
+          opponentSprite.imageSource,
+          false,
+          `opponent-sprite-${opponentSprite.state}-${opponentSprite.variant}-${opponentSprite.name}`
+        )}
 
         {myPlayerState && <BattleHUD 
           playerState={optimisticActiveIndex !== null ? {
@@ -881,8 +929,16 @@ export default function BattleScreen({
           } : myPlayerState} 
           isMe={true} 
           damage={playerDamage} 
+          spriteVariant={playerHudVariant ?? 'default'}
+          imageSourceGetter={getCoffeemonImageSource}
         />}
-        {opponentPlayerState && <BattleHUD playerState={opponentPlayerState} isMe={false} damage={opponentDamage} />}
+        {opponentPlayerState && <BattleHUD 
+          playerState={opponentPlayerState} 
+          isMe={false} 
+          damage={opponentDamage}
+          spriteVariant={opponentHudVariant ?? 'default'}
+          imageSourceGetter={getCoffeemonImageSource}
+        />}
 
         {/* Painel de Logs - Lado Direito com gradiente completo */}
         <View style={styles.battleLogContainer}>
@@ -917,8 +973,6 @@ export default function BattleScreen({
             </ScrollView>
           </LinearGradient>
         </View>
-
-        {renderPopupMessage()}
       </ImageBackground>
 
       <View style={styles.battleActionsContainer}>

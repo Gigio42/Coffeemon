@@ -17,6 +17,7 @@ interface UseCoffeemonsResult {
   fetchCoffeemons: () => Promise<void>;
   toggleParty: (coffeemon: PlayerCoffeemon) => Promise<void>;
   giveAllCoffeemons: () => Promise<void>;
+  initialized: boolean;
 }
 
 export function useCoffeemons({
@@ -27,6 +28,7 @@ export function useCoffeemons({
   const [loading, setLoading] = useState<boolean>(false);
   const [partyLoading, setPartyLoading] = useState<number | null>(null);
   const [playerId, setPlayerId] = useState<number | null>(null);
+  const [initialized, setInitialized] = useState<boolean>(false);
 
   useEffect(() => {
     initializePlayer();
@@ -34,9 +36,8 @@ export function useCoffeemons({
 
   async function initializePlayer() {
     try {
-      console.log('Initializing player...');
       const playerData = await coffeemonService.fetchPlayerData(token);
-      console.log('Player data:', playerData);
+      console.log('Player initialized with ID:', playerData?.id);
       setPlayerId(playerData.id);
       await fetchCoffeemons(playerData.id);
     } catch (error: any) {
@@ -44,6 +45,7 @@ export function useCoffeemons({
       if (onLog) {
         onLog('Erro ao inicializar jogador');
       }
+      setInitialized(true);
     }
   }
 
@@ -58,7 +60,7 @@ export function useCoffeemons({
     try {
       console.log('Fetching coffeemons for player:', idToUse);
       const data = await coffeemonService.fetchPlayerCoffeemons(token, idToUse);
-      console.log('Coffeemons received:', data);
+      console.log(`Loaded ${data.length} coffeemons for player ${idToUse}`);
       setCoffeemons(data);
 
       if (onLog) {
@@ -67,7 +69,7 @@ export function useCoffeemons({
       
       // Se não tem coffeemons, sugerir dar todos
       if (data.length === 0) {
-        console.log('No coffeemons found. Call giveAllCoffeemons() to add them.');
+        console.log('No coffeemons found.');
         if (onLog) {
           onLog('Nenhum Coffeemon encontrado. Use o botão para capturar todos.');
         }
@@ -79,6 +81,7 @@ export function useCoffeemons({
       }
     } finally {
       setLoading(false);
+      setInitialized(true);
     }
   }
 
@@ -128,7 +131,7 @@ export function useCoffeemons({
     try {
       console.log('Giving all coffeemons to player...');
       const result = await coffeemonService.giveAllCoffeemons(token);
-      console.log('Coffeemons given:', result);
+      console.log(`Coffeemons grant result: ${result.count ?? 0}`);
       
       if (onLog) {
         onLog(result.message || `${result.count} Coffeemons capturados!`);
@@ -166,5 +169,6 @@ export function useCoffeemons({
     fetchCoffeemons: () => fetchCoffeemons(),
     toggleParty,
     giveAllCoffeemons,
+    initialized,
   };
 }

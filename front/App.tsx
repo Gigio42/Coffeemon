@@ -1,4 +1,4 @@
-﻿/**
+/**
  * ========================================
  * APP.TSX - GERENCIADOR DE NAVEGAÇÃO
  * ========================================
@@ -18,9 +18,10 @@
 
 import React, { useState } from 'react';
 import { StatusBar } from 'expo-status-bar';
-import { View } from 'react-native';
+import { ActivityIndicator, View } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { Socket } from 'socket.io-client';
+import { useFonts, PressStart2P_400Regular } from '@expo-google-fonts/press-start-2p';
 import LoginScreen from './src/screens/Login';
 import EcommerceScreen from './src/screens/Ecommerce';
 import MatchmakingScreen from './src/screens/Matchmaking';
@@ -32,7 +33,11 @@ export default function App() {
   // ========================================
   // ESTADOS GLOBAIS (compartilhados entre telas)
   // ========================================
-  
+
+  const [fontsLoaded, fontError] = useFonts({
+    PressStart2P_400Regular,
+  });
+
   // Controla qual tela está sendo exibida
   const [currentScreen, setCurrentScreen] = useState<Screen>(Screen.LOGIN);
   
@@ -216,6 +221,20 @@ export default function App() {
       );
     }
   };
+
+  if (fontError) {
+    console.error('Failed to load Press Start 2P font', fontError);
+  }
+
+  if (!fontsLoaded) {
+    return (
+      <SafeAreaProvider>
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#0d0d0d' }}>
+          <ActivityIndicator size="large" color="#ffffff" />
+        </View>
+      </SafeAreaProvider>
+    );
+  }
 
   return (
     <SafeAreaProvider>

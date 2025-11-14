@@ -1,16 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, Image, Animated } from 'react-native';
+import type { ImageSourcePropType } from 'react-native';
 import { PlayerState } from '../../../types';
+import { CoffeemonVariant, getCoffeemonImage } from '../../../../assets/coffeemons';
 import { styles } from '../../../screens/Battle/styles';
-import { getCoffeemonImage } from '../../../../assets/coffeemons';
+import { hudStyles } from './styles';
 
 interface BattleHUDProps {
   playerState: PlayerState | null;
   isMe: boolean;
   damage?: number | null;
+  spriteVariant?: CoffeemonVariant;
+  imageSourceGetter?: (name: string, variant?: CoffeemonVariant) => ImageSourcePropType;
 }
 
-// Ícones baseados no tipo do Coffeemon
 const getTypeIcon = (type: string) => {
   const icons: { [key: string]: string } = {
     floral: '🍇',
@@ -24,7 +27,13 @@ const getTypeIcon = (type: string) => {
   return icons[type?.toLowerCase()] || '☕';
 };
 
-export default function BattleHUD({ playerState, isMe, damage }: BattleHUDProps) {
+export default function BattleHUD({
+  playerState,
+  isMe,
+  damage,
+  spriteVariant = 'default',
+  imageSourceGetter,
+}: BattleHUDProps) {
   const [damageAnim] = useState(new Animated.Value(0));
   const [currentDamage, setCurrentDamage] = useState<number | null>(null);
 
@@ -66,53 +75,41 @@ export default function BattleHUD({ playerState, isMe, damage }: BattleHUDProps)
   }
 
   const hpPercent = Math.max(0, Math.min(100, (activeMon.currentHp / activeMon.maxHp) * 100));
-  const totalSegments = 20; // Total de quadradinhos na barra
-  const filledSegments = Math.ceil((hpPercent / 100) * totalSegments);
-  
   const containerStyle = isMe ? styles.playerHudPosition : styles.opponentHudPosition;
-  const imageSource = getCoffeemonImage(activeMon.name, 'default');
+  const resolveImage = imageSourceGetter ?? getCoffeemonImage;
+  const imageSource = resolveImage(activeMon.name, spriteVariant);
+  const typeIcon = getTypeIcon((activeMon as any)?.type);
+  const level = (activeMon as any)?.level ?? (playerState as any)?.level ?? '';
 
   return (
     <View style={[styles.hudContainer, containerStyle]}>
-      {/* Container Principal com display: flex e align-items: center */}
-      <View style={styles.hudMainContent}>
-        {/* Seção do Ícone - Pixel Art com image-rendering: pixelated */}
-        <Image
-          source={imageSource}
-          style={styles.hudPixelIcon}
-          resizeMode="contain"
-        />
-        
-        {/* Bloco de Informações - flex: 1 para ocupar espaço restante */}
-        <View style={styles.hudInfoBlock}>
-          {/* Rótulo de Texto - text-transform: uppercase */}
-          <Text style={styles.hudNameLabel}>{activeMon.name}</Text>
-          
-          {/* Container da Barra de Status */}
-          <View style={styles.hudStatusBarContainer}>
-            {/* Segmentos da Barra - flex: 1 para largura igual */}
-            {Array.from({ length: totalSegments }).map((_, index) => {
-              const isFilled = index < filledSegments;
-              // Classes distintas para verde (#8bc34a) e vermelho (#f44336)
-              const segmentColor = isFilled 
-                ? (hpPercent <= 20 ? '#f44336' : hpPercent <= 50 ? '#FFD700' : '#8bc34a')
-                : 'transparent'; // Vazios transparentes para mostrar fundo
-              
-              return (
-                <View
-                  key={index}
-                  style={[
-                    styles.hudStatusSegment,
-                    { backgroundColor: segmentColor },
-                  ]}
-                />
-              );
-            })}
+      <View style={hudStyles.card}>
+        <View style={hudStyles.topSection}>
+          <View style={hudStyles.nameGroup}>
+            {typeIcon ? <Text style={hudStyles.typeIcon}>{typeIcon}</Text> : null}
+            <Text style={hudStyles.name}>{activeMon.name}</Text>
+          </View>
+          <View style={hudStyles.levelGroup}>
+            <Text style={hudStyles.levelLabel}>Lv.</Text>
+            <Text style={hudStyles.levelValue}>{level}</Text>
+          </View>
+        </View>
+
+        <View style={hudStyles.barSection}>
+          <Text style={hudStyles.hpLabel}>HP</Text>
+          <View style={hudStyles.barTrough}>
+            <View style={[hudStyles.barFill, { width: `${hpPercent}%` }]} />
+          </View>
+        </View>
+
+        <View style={hudStyles.bottomSection}>
+          <View style={hudStyles.hpNumbers}>
+            <Text style={hudStyles.hpNumber}>{Math.floor(activeMon.currentHp)}</Text>
+            <Text style={hudStyles.hpNumber}>{activeMon.maxHp}</Text>
           </View>
         </View>
       </View>
-      
-      {/* Damage Display */}
+
       {currentDamage && (
         <Animated.Text
           style={[

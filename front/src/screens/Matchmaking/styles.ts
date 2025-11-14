@@ -1,6 +1,7 @@
 import { StyleSheet, Platform, StatusBar, Dimensions } from 'react-native';
 import { colors, metrics } from '../../theme';
 import { pixelArt } from '../../theme';
+import { PIXEL_FONT } from '../../components/CoffeemonCard/styles';
 
 const statusBarHeight = Platform.OS === 'android' ? StatusBar.currentHeight || 0 : 0;
 const screenWidth = Dimensions.get('window').width;
@@ -14,6 +15,19 @@ export const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: 'transparent',
+  },
+  
+  loadingContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+
+  loadingText: {
+    ...pixelArt.typography.pixelBody,
+    marginTop: pixelArt.spacing.lg,
+    color: '#fff9f0',
+    fontFamily: PIXEL_FONT,
   },
   
   // ========================================
@@ -38,6 +52,7 @@ export const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
     color: '#8B4513',
+    fontFamily: PIXEL_FONT,
   },
 
   backButton: {
@@ -48,6 +63,7 @@ export const styles = StyleSheet.create({
     fontSize: 24,
     color: '#8B7355',
     fontWeight: '700',
+    fontFamily: PIXEL_FONT,
   },
   
   floatingBackButton: {
@@ -62,6 +78,7 @@ export const styles = StyleSheet.create({
     fontSize: 24,
     color: '#8B7355',
     fontWeight: '700',
+    fontFamily: PIXEL_FONT,
   },
   // ========================================
   // GRADIENTE E SCROLL
@@ -70,6 +87,46 @@ export const styles = StyleSheet.create({
     ...StyleSheet.absoluteFillObject,
     width: '100%',
     height: '100%',
+  },
+
+  dynamicBackground: {
+    ...StyleSheet.absoluteFillObject,
+    width: '100%',
+    height: '100%',
+    overflow: 'hidden',
+  },
+
+  gradientLayer: {
+    ...StyleSheet.absoluteFillObject,
+  },
+
+  gradientLayerAccent: {
+    opacity: 0.7,
+  },
+
+  gradientLayerHighlight: {
+    opacity: 0.4,
+  },
+
+  gradientFill: {
+    flex: 1,
+  },
+
+  limonetoOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    width: '100%',
+    height: '60%',
+    opacity: 0.9,
+  },
+
+  grainOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    width: '110%',
+    height: '110%',
+    opacity: 0.15,
   },
 
   gradientContainer: {
@@ -82,9 +139,26 @@ export const styles = StyleSheet.create({
   },
 
   scrollContent: {
-    padding: pixelArt.spacing.lg,
-    paddingTop: pixelArt.spacing.lg + 56,
+    paddingHorizontal: pixelArt.spacing.lg,
     paddingBottom: pixelArt.spacing.xxl * 2,
+  },
+
+  teamCarouselSticky: {
+    paddingTop: pixelArt.spacing.lg + 56,
+    paddingHorizontal: pixelArt.spacing.lg,
+    paddingBottom: pixelArt.spacing.md,
+  
+  },
+
+  availableSticky: {
+    paddingHorizontal: 0,
+    paddingBottom: pixelArt.spacing.md,
+    minHeight: 380,
+    width: '100%',
+  },
+
+  scrollBody: {
+    paddingTop: pixelArt.spacing.xl,
   },
   
   // ========================================
@@ -92,7 +166,7 @@ export const styles = StyleSheet.create({
   // ========================================
   statusCardWrapper: {
     position: 'absolute',
-    top: statusBarHeight + pixelArt.spacing.xxl + pixelArt.spacing.md,
+    top: statusBarHeight + pixelArt.spacing.xxl * 2,
     alignSelf: 'center',
     width: '45%',
     maxWidth: 120,
@@ -100,6 +174,21 @@ export const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     zIndex: 500,
+  },
+
+  statusCardShadow: {
+    position: 'absolute',
+    top: 6,
+    width: '100%',
+    height: 0,
+    borderTopWidth: 26,
+    borderTopColor: 'rgba(0, 0, 0, 0.25)',
+    borderLeftWidth: 14,
+    borderLeftColor: 'transparent',
+    borderRightWidth: 14,
+    borderRightColor: 'transparent',
+    transform: [{ translateY: 3 }],
+    opacity: 0.6,
   },
 
   statusCardOutline: {
@@ -144,6 +233,7 @@ export const styles = StyleSheet.create({
     color: '#8B4513',
     textAlign: 'center',
     fontWeight: 'bold',
+    fontFamily: PIXEL_FONT,
   },
 
   // ========================================
@@ -155,6 +245,33 @@ export const styles = StyleSheet.create({
     width: '100%',
   },
 
+  availableSectionWrapper: {
+    alignItems: 'center',
+    width: '100%',
+    marginTop: pixelArt.spacing.xxl * 1.5,
+    position: 'relative',
+    overflow: 'visible',
+    paddingHorizontal: pixelArt.spacing.xxl,
+    paddingBottom: pixelArt.spacing.xxl * 1.25,
+    minHeight: 440,
+  },
+
+  availableBackdrop: {
+    position: 'absolute',
+    top: pixelArt.spacing.xxl,
+    left: -pixelArt.spacing.lg,
+    right: -pixelArt.spacing.lg,
+    bottom: -pixelArt.spacing.xxl,
+    backgroundColor: '#FFF9F0',
+    borderWidth: pixelArt.borders.widthBold,
+    borderTopColor: pixelArt.colors.borderLight,
+    borderLeftColor: pixelArt.colors.borderLight,
+    borderBottomColor: pixelArt.colors.borderDark,
+    borderRightColor: pixelArt.colors.borderDark,
+    ...pixelArt.shadows.innerBorder,
+    borderRadius: pixelArt.borders.radiusMedium,
+  },
+
   sectionTitle: {
     ...pixelArt.typography.pixelSubtitle,
     fontSize: 16,
@@ -162,6 +279,7 @@ export const styles = StyleSheet.create({
     color: '#8B4513',
     marginBottom: pixelArt.spacing.md,
     textAlign: 'center',
+    fontFamily: PIXEL_FONT,
   },
 
   divider: {
@@ -182,6 +300,7 @@ export const styles = StyleSheet.create({
     color: '#8B4513',
     textAlign: 'center',
     fontStyle: 'italic',
+    fontFamily: PIXEL_FONT,
   },
 
   // ========================================
@@ -211,6 +330,7 @@ export const styles = StyleSheet.create({
     color: '#8B4513',
     marginBottom: pixelArt.spacing.md,
     textAlign: 'center',
+    fontFamily: PIXEL_FONT,
   },
   
   captureButton: {
@@ -231,7 +351,7 @@ export const styles = StyleSheet.create({
     color: '#ffffff',
     fontSize: 14,
     fontWeight: 'bold',
-    fontFamily: 'monospace',
+    fontFamily: PIXEL_FONT,
   },
 
   // ========================================
@@ -281,17 +401,17 @@ export const styles = StyleSheet.create({
     color: '#ffffff',
     fontSize: 16,
     fontWeight: 'bold',
-    fontFamily: 'monospace',
+    fontFamily: PIXEL_FONT,
     marginBottom: 2,
   },
 
   battleButtonSubtitle: {
     color: '#ffffff',
     fontSize: 11,
-    fontFamily: 'monospace',
+    fontFamily: PIXEL_FONT,
     opacity: 0.9,
   },
-  
+
   pvpButton: {
     backgroundColor: '#3498db',
     borderTopColor: '#5dade2',
@@ -337,7 +457,7 @@ export const styles = StyleSheet.create({
     color: '#ffffff',
     fontSize: 13,
     fontWeight: 'bold',
-    fontFamily: 'monospace',
+    fontFamily: PIXEL_FONT,
   },
 
   // ========================================
@@ -345,35 +465,58 @@ export const styles = StyleSheet.create({
   // ========================================
   bottomBar: {
     flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-evenly',
-    paddingVertical: pixelArt.spacing.md,
-    paddingHorizontal: pixelArt.spacing.lg,
-    backgroundColor: 'rgba(0, 0, 0, 0.35)',
-    borderTopWidth: 2,
-    borderTopColor: 'rgba(255, 255, 255, 0.25)',
+    alignItems: 'stretch',
+    justifyContent: 'flex-start',
+    paddingVertical: 0,
+    paddingHorizontal: 0,
+    gap: 0,
+    width: '100%',
   },
 
   bottomBarButton: {
-    width: 54,
-    height: 54,
-    borderRadius: 12,
-    backgroundColor: 'rgba(0, 0, 0, 0.25)',
-    borderWidth: 2,
-    borderTopColor: 'rgba(255, 255, 255, 0.3)',
-    borderLeftColor: 'rgba(255, 255, 255, 0.3)',
-    borderBottomColor: 'rgba(0, 0, 0, 0.6)',
-    borderRightColor: 'rgba(0, 0, 0, 0.6)',
-    alignItems: 'center',
+    flex: 1,
+    height: 64,
+    borderRadius: 0,
+    backgroundColor: pixelArt.colors.cardInnerBg,
+    borderWidth: pixelArt.borders.widthBold,
+    borderTopColor: pixelArt.colors.borderLight,
+    borderLeftColor: pixelArt.colors.borderLight,
+    borderBottomColor: pixelArt.colors.borderDark,
+    borderRightColor: pixelArt.colors.borderDark,
+    alignItems: 'stretch',
     justifyContent: 'center',
+    ...pixelArt.shadows.innerBorder,
+  },
+
+  bottomBarButtonImage: {
+    width: '100%',
+    height: '100%',
+    resizeMode: 'cover',
+  },
+
+  bottomBarButtonLeft: {
+    backgroundColor: pixelArt.colors.cardInnerBg,
+  },
+
+  bottomBarButtonCenter: {
+    backgroundColor: pixelArt.colors.cardInnerBg,
+  },
+
+  bottomBarButtonRight: {
+    backgroundColor: pixelArt.colors.cardInnerBg,
   },
 
   bottomBarButtonDisabled: {
     opacity: 0.45,
   },
 
-  bottomBarEmoji: {
-    fontSize: 26,
+  bottomBarText: {
+    ...pixelArt.typography.pixelButton,
+    fontSize: 12,
+    lineHeight: 16,
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+    fontFamily: PIXEL_FONT,
   },
 
   // ========================================
@@ -451,16 +594,16 @@ export const styles = StyleSheet.create({
     marginTop: pixelArt.spacing.xl,
     marginBottom: pixelArt.spacing.md,
     width: '100%',
-    maxWidth: Math.min(screenWidth * 0.85, 340),
-    alignSelf: 'flex-start',
-    marginLeft: -pixelArt.spacing.md,
+    maxWidth: Math.min(screenWidth * 0.9, 360),
+    alignSelf: 'center',
   },
 
   carouselTrack: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'flex-start',
+    justifyContent: 'center',
     width: '100%',
+    overflow: 'visible',
   },
 
   carouselCardWrapper: {
@@ -470,6 +613,7 @@ export const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     position: 'relative',
+    ...pixelArt.shadows.card,
   },
 
   carouselCard: {
@@ -477,6 +621,7 @@ export const styles = StyleSheet.create({
     height: '100%',
     alignItems: 'center',
     justifyContent: 'center',
+    overflow: 'visible',
   },
 
   carouselCardContent: {
@@ -518,12 +663,14 @@ export const styles = StyleSheet.create({
     color: pixelArt.colors.textDark,
     textAlign: 'center',
     marginBottom: 2,
+    fontFamily: PIXEL_FONT,
   },
 
   carouselCardLevel: {
     ...pixelArt.typography.pixelBody,
     fontSize: 9,
     color: pixelArt.colors.textLight,
+    fontFamily: PIXEL_FONT,
   },
 
   activeIndicator: {
@@ -545,6 +692,7 @@ export const styles = StyleSheet.create({
     fontSize: 12, // Reduzido de 14 para 12
     color: '#8B4513',
     fontWeight: 'bold',
+    fontFamily: PIXEL_FONT,
   },
 
   carouselIndicators: {
@@ -585,11 +733,10 @@ export const styles = StyleSheet.create({
   // ========================================
   teamColumn: {
     marginBottom: pixelArt.spacing.sm,
-    marginTop: pixelArt.spacing.xl,
+    marginTop: pixelArt.spacing.lg,
     alignItems: 'center',
     justifyContent: 'center',
-    alignSelf: 'flex-start',
-    marginLeft: 0,
+    alignSelf: 'center',
     width: '100%',
     maxWidth: Math.min(screenWidth * 0.9, 380),
     // borderWidth: pixelArt.borders.widthThick,
@@ -606,9 +753,10 @@ export const styles = StyleSheet.create({
   teamColumnTitle: {
     ...pixelArt.typography.pixelSubtitle,
     fontSize: 14,
-    color: pixelArt.colors.textLight,
+    color: pixelArt.colors.textDark,
     textAlign: 'center',
     marginBottom: pixelArt.spacing.md,
+    fontFamily: PIXEL_FONT,
   },
 
   teamEmptyMessage: {
@@ -616,6 +764,7 @@ export const styles = StyleSheet.create({
     fontSize: 12,
     color: pixelArt.colors.textLight,
     textAlign: 'center',
+    fontFamily: PIXEL_FONT,
   },
 
   addButton: {
@@ -637,14 +786,14 @@ export const styles = StyleSheet.create({
     color: '#ffffff',
     fontSize: 12,
     fontWeight: 'bold',
-    fontFamily: 'monospace',
+    fontFamily: PIXEL_FONT,
   },
 
   findMatchButtonText: {
     color: '#ffffff',
     fontSize: 13,
     fontWeight: 'bold',
-    fontFamily: 'monospace',
+    fontFamily: PIXEL_FONT,
     textAlign: 'center',
   },
 });
