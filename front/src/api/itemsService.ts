@@ -98,10 +98,11 @@ export const getPlayerItems = async (token: string): Promise<Item[]> => {
           ...item,
           quantity,
         };
-      })
-      .filter(item => item.quantity > 0); // Apenas itens que o jogador possui
+      });
+      // NÃO filtrar aqui - mostrar todos os itens, mas desabilitados se quantity = 0
+      // .filter(item => item.quantity > 0);
 
-    console.log('[itemsService] Player items (filtered):', playerItems);
+    console.log('[itemsService] Player items (all items with quantities):', playerItems);
     return playerItems;
   } catch (error) {
     console.error('[itemsService] Error fetching player items:', error);
