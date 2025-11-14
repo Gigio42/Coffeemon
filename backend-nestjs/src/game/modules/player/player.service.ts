@@ -1,6 +1,8 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { PlayerCreatedEvent } from 'src/game/shared/events/game.events';
+import { EntityManager, Repository } from 'typeorm';
 import { UsersService } from '../../../ecommerce/users/users.service';
 import { CoffeemonService } from '../coffeemon/coffeemon.service';
 import {
@@ -11,7 +13,6 @@ import { CreatePlayerDto } from './dto/create-player.dto';
 import { Player } from './entities/player.entity';
 import { PlayerCoffeemonMove } from './entities/playerCoffeemonMove.entity';
 import { PlayerCoffeemons } from './entities/playerCoffeemons.entity';
-
 @Injectable()
 export class PlayerService {
   constructor(
@@ -24,7 +25,8 @@ export class PlayerService {
     @InjectRepository(CoffeemonLearnsetMove)
     private learnsetRepository: Repository<CoffeemonLearnsetMove>,
     private usersService: UsersService,
-    private coffeemonService: CoffeemonService
+    private coffeemonService: CoffeemonService,
+    private eventEmitter: EventEmitter2
   ) {}
 
   async create(userId: number, createPlayerDto: CreatePlayerDto): Promise<Player> {
@@ -45,39 +47,14 @@ export class PlayerService {
       level: 1,
       experience: 0,
       coins: createPlayerDto.initialCoins || 100,
+      inventory: {},
     });
 
     const savedPlayer = await this.playerRepository.save(player);
-    await this.giveAllCoffeemonsToPlayer(savedPlayer.id);
+
+    this.eventEmitter.emit('player.created', new PlayerCreatedEvent(savedPlayer.id, userId));
 
     return savedPlayer;
-  }
-
-  async giveAllCoffeemonsToPlayer(playerId: number): Promise<number> {
-    const allCoffeemons = await this.coffeemonService.findAll();
-
-    const existingCoffeemons = await this.playerCoffeemonRepository.find({
-      where: { player: { id: playerId } },
-      select: ['id'],
-      relations: ['coffeemon'],
-    });
-
-    const existingCoffeemonIds = new Set(existingCoffeemons.map((pc) => pc.coffeemon.id));
-
-    let addedCount = 0;
-
-    for (const coffeemon of allCoffeemons) {
-      if (!coffeemon || !coffeemon.id || isNaN(coffeemon.id)) {
-        continue;
-      }
-
-      if (!existingCoffeemonIds.has(coffeemon.id)) {
-        await this.addCoffeemonToPlayer(playerId, coffeemon.id);
-        addedCount++;
-      }
-    }
-
-    return addedCount;
   }
 
   async findOne(id: number): Promise<Player> {
@@ -115,7 +92,6 @@ export class PlayerService {
     });
   }
 
-  //eslint-disable-next-line @typescript-eslint/require-await
   async getPlayerParty(playerId: number): Promise<PlayerCoffeemons[]> {
     return this.playerCoffeemonRepository.find({
       where: {
@@ -126,7 +102,11 @@ export class PlayerService {
     });
   }
 
-  async addCoffeemonToPlayer(playerId: number, coffeemonId: number): Promise<PlayerCoffeemons> {
+  async addCoffeemonToPlayer(
+    playerId: number,
+    coffeemonId: number,
+    transactionalEM?: EntityManager
+  ): Promise<PlayerCoffeemons> {
     if (!playerId || isNaN(playerId)) {
       throw new BadRequestException(`Invalid playerId: ${playerId}`);
     }
@@ -134,10 +114,18 @@ export class PlayerService {
       throw new BadRequestException(`Invalid coffeemonId: ${coffeemonId}`);
     }
 
+    const playerCoffeemonRepo = transactionalEM
+      ? transactionalEM.getRepository(PlayerCoffeemons)
+      : this.playerCoffeemonRepository;
+
+    const playerCoffeemonMoveRepo = transactionalEM
+      ? transactionalEM.getRepository(PlayerCoffeemonMove)
+      : this.playerCoffeemonMoveRepository;
+
     const player = await this.findOne(playerId);
     const coffeemonBase = await this.coffeemonService.findOne(coffeemonId);
 
-    const playerCoffeemonInstance = this.playerCoffeemonRepository.create({
+    const playerCoffeemonInstance = playerCoffeemonRepo.create({
       player: player,
       coffeemon: coffeemonBase,
       level: 1,
@@ -147,7 +135,7 @@ export class PlayerService {
       learnedMoves: [],
     });
 
-    const savedPlayerCoffeemon = await this.playerCoffeemonRepository.save(playerCoffeemonInstance);
+    const savedPlayerCoffeemon = await playerCoffeemonRepo.save(playerCoffeemonInstance);
 
     const startingMovesLearnset = await this.learnsetRepository.find({
       where: {
@@ -160,7 +148,7 @@ export class PlayerService {
     });
 
     const initialMovesToAdd = startingMovesLearnset.map((learnsetEntry, index) =>
-      this.playerCoffeemonMoveRepository.create({
+      playerCoffeemonMoveRepo.create({
         playerCoffeemon: savedPlayerCoffeemon,
         move: learnsetEntry.move,
         slot: index + 1,
@@ -168,8 +156,9 @@ export class PlayerService {
     );
 
     if (initialMovesToAdd.length > 0) {
-      await this.playerCoffeemonMoveRepository.save(initialMovesToAdd);
-      return await this.playerCoffeemonRepository.findOneOrFail({
+      await playerCoffeemonMoveRepo.save(initialMovesToAdd);
+
+      return await playerCoffeemonRepo.findOneOrFail({
         where: { id: savedPlayerCoffeemon.id },
         relations: ['coffeemon', 'learnedMoves', 'learnedMoves.move'],
       });
@@ -239,5 +228,60 @@ export class PlayerService {
 
     playerCoffeemon.isInParty = false;
     return this.playerCoffeemonRepository.save(playerCoffeemon);
+  }
+
+  async updateInventory(
+    playerId: number,
+    itemId: string,
+    quantity: number,
+    transactionalEM?: EntityManager
+  ): Promise<Player> {
+    const repo = transactionalEM ? transactionalEM.getRepository(Player) : this.playerRepository;
+
+    const player = await repo.findOneBy({ id: playerId });
+    if (!player) {
+      throw new NotFoundException(`Jogador com ID ${playerId} não encontrado.`);
+    }
+
+    if (!player.inventory) {
+      player.inventory = {};
+    }
+
+    const currentQuantity = player.inventory[itemId] || 0;
+    const newQuantity = currentQuantity + quantity;
+
+    if (newQuantity < 0) {
+      throw new BadRequestException(`Quantidade insuficiente de ${itemId} para remover.`);
+    }
+
+    if (newQuantity === 0) {
+      delete player.inventory[itemId];
+    } else {
+      player.inventory[itemId] = newQuantity;
+    }
+
+    return repo.save(player);
+  }
+
+  //STUB APENAS PARA TESTES!!! - REMOVER DEPOIS (Gigio)
+  async giveAllCoffeemonsToPlayer(playerId: number): Promise<number> {
+    const allCoffeemons = await this.coffeemonService.findAll();
+    const existingCoffeemons = await this.playerCoffeemonRepository.find({
+      where: { player: { id: playerId } },
+      select: ['id'],
+      relations: ['coffeemon'],
+    });
+    const existingCoffeemonIds = new Set(existingCoffeemons.map((pc) => pc.coffeemon.id));
+    let addedCount = 0;
+    for (const coffeemon of allCoffeemons) {
+      if (!coffeemon || !coffeemon.id || isNaN(coffeemon.id)) {
+        continue;
+      }
+      if (!existingCoffeemonIds.has(coffeemon.id)) {
+        await this.addCoffeemonToPlayer(playerId, coffeemon.id);
+        addedCount++;
+      }
+    }
+    return addedCount;
   }
 }

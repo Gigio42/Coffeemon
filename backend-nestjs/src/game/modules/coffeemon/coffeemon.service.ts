@@ -3,7 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { CreateCoffeemonDto } from './dto/create-coffeemon.dto';
 import { UpdateCoffeemonDto } from './dto/update-coffeemon.dto';
-import { Coffeemon } from './entities/coffeemon.entity';
+import { Coffeemon, CoffeemonType } from './entities/coffeemon.entity';
 
 @Injectable()
 export class CoffeemonService {
@@ -25,6 +25,12 @@ export class CoffeemonService {
       throw new NotFoundException(`Coffeemon #${id} not found`);
     }
     return coffeemon;
+  }
+
+  async findByType(type: CoffeemonType): Promise<Coffeemon[]> {
+    return this.coffeemonRepository.find({
+      where: { type },
+    });
   }
 
   async create(createCoffeemonDto: CreateCoffeemonDto): Promise<Coffeemon> {

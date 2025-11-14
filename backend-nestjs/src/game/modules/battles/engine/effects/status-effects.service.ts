@@ -40,6 +40,38 @@ export class StatusEffectsService {
     return notifications;
   }
 
+  removeEffect(
+    target: CoffeemonState,
+    effectType: string
+  ): { removed: boolean; notifications: ActionEventNotification[] } {
+    if (!target.statusEffects || target.statusEffects.length === 0) {
+      return { removed: false, notifications: [] };
+    }
+
+    const effectLogic = statusEffectRegistry[effectType];
+    const activeEffect = target.statusEffects.find((e) => e.type === effectType);
+
+    if (!activeEffect || !effectLogic) {
+      return { removed: false, notifications: [] };
+    }
+
+    target.statusEffects = target.statusEffects.filter((e) => e.type !== effectType);
+
+    const notifications: ActionEventNotification[] = [];
+
+    if (effectLogic.onRemove) {
+      const result = effectLogic.onRemove(target, activeEffect);
+      notifications.push(...result.notifications);
+    }
+
+    notifications.push({
+      eventKey: 'STATUS_REMOVED',
+      payload: { coffeemonName: target.name, effectType: effectLogic.name },
+    });
+
+    return { removed: true, notifications };
+  }
+
   processTurnEffects(coffeemon: CoffeemonState): ActionEventNotification[] {
     if (!coffeemon.statusEffects || coffeemon.statusEffects.length === 0) {
       return [];

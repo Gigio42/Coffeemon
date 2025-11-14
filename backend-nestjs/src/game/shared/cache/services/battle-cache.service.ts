@@ -41,8 +41,8 @@ export class BattleCacheService {
 
       const battleIdsData = await this.redisService.get(this.BATTLES_LIST_KEY);
       if (battleIdsData) {
-        const battleIds = JSON.parse(battleIdsData);
-        const updatedIds = battleIds.filter((id) => id !== battleId);
+        const battleIds: string[] = JSON.parse(battleIdsData);
+        const updatedIds = battleIds.filter((id: string) => id !== battleId);
         await this.redisService.set(this.BATTLES_LIST_KEY, JSON.stringify(updatedIds));
       }
     } catch (error) {

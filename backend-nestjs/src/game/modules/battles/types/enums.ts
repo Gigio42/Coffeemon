@@ -2,6 +2,7 @@ export enum BattleActionType {
   ATTACK = 'attack',
   SWITCH = 'switch',
   SELECT_COFFEEMON = 'select_coffeemon',
+  USE_ITEM = 'use_item',
 }
 
 export enum BattleStatus {

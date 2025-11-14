@@ -5,11 +5,13 @@ import { AttackAction } from './attack.action';
 import { IBattleAction } from './battle-action-interface';
 import { SelectCoffeemonAction } from './select-coffeemon.action';
 import { SwitchAction } from './switch.action';
+import { UseItemAction } from './use-item.action';
 
 const actionMap: Record<BattleActionType, Type<IBattleAction<any>>> = {
   [BattleActionType.ATTACK]: AttackAction,
   [BattleActionType.SWITCH]: SwitchAction,
   [BattleActionType.SELECT_COFFEEMON]: SelectCoffeemonAction,
+  [BattleActionType.USE_ITEM]: UseItemAction,
 };
 
 @Injectable()

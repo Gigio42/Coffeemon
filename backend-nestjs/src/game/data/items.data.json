@@ -1,0 +1,23 @@
+[
+    {
+      "id": "small_potion",
+      "name": "Poção Pequena",
+      "description": "Restaura 25 HP de um Coffeemon.",
+      "cost": 50,
+      "effects": [{ "type": "heal", "value": 25, "target": "coffeemon" }]
+    },
+    {
+      "id": "revive_bean",
+      "name": "Grão de Reviver",
+      "description": "Revive um Coffeemon derrotado com 50% do HP.",
+      "cost": 200,
+      "effects": [{ "type": "revive", "value": 0.5, "target": "coffeemon" }]
+    },
+    {
+      "id": "antidote_espresso",
+      "name": "Espresso Antídoto",
+      "description": "Cura o status de 'poison'.",
+      "cost": 30,
+      "effects": [{ "type": "cure_status", "value": "poison", "target": "coffeemon" }]
+    }
+  ]

@@ -1,21 +1,43 @@
 import { UseGuards } from '@nestjs/common';
-import { ConnectedSocket, SubscribeMessage, WebSocketGateway } from '@nestjs/websockets';
-import { Socket } from 'socket.io';
-import { GetUserWs } from '../auth/decorators/get-user-ws.decorator';
-import { User } from '../ecommerce/users/entities/user.entity';
+import {
+  ConnectedSocket,
+  OnGatewayConnection,
+  OnGatewayDisconnect,
+  SubscribeMessage,
+  WebSocketGateway,
+} from '@nestjs/websockets';
+import { SocketWithUser } from '../auth/types/auth.types';
+import { WsPlayerGuard } from './modules/player/auth/ws-player.guard';
 import { WsGameAuthGuard } from './shared/auth/guards/ws-game-auth-guard';
+import { SocketManagerService } from './shared/socket-manager/socket-manager.service'; // 1. IMPORTAR
 
-@UseGuards(WsGameAuthGuard)
 @WebSocketGateway({
   cors: {
     origin: '*',
     credentials: true,
   },
 })
-export class GameGateway {
-  @SubscribeMessage('ping')
-  ping(@ConnectedSocket() c: Socket, @GetUserWs() user: User) {
-    c.emit('pong', { message: 'The Game server module is up and running ' });
-    console.log('User connected:', user);
+export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
+  constructor(private readonly socketManager: SocketManagerService) {}
+
+  @UseGuards(WsGameAuthGuard, WsPlayerGuard)
+  @SubscribeMessage('registerSession')
+  handleRegisterSession(@ConnectedSocket() socket: SocketWithUser) {
+    const playerId = socket.data.playerId;
+
+    if (playerId) {
+      this.socketManager.register(playerId, socket);
+      socket.emit('sessionRegistered', { status: 'ok', playerId });
+    } else {
+      socket.emit('sessionRegistered', { status: 'error', message: 'Player not found.' });
+    }
+  }
+
+  handleConnection(socket: SocketWithUser) {
+    console.log(`[GameGateway] Socket ${socket.id} conectou.`);
+  }
+
+  handleDisconnect(socket: SocketWithUser) {
+    this.socketManager.unregister(socket);
   }
 }

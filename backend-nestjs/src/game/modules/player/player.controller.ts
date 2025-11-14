@@ -50,22 +50,6 @@ export class PlayerController {
   }
 
   @UseGuards(AuthGuard)
-  @Post('me/coffeemons/give-all')
-  async giveAllCoffeemonsToMe(
-    @GetUser('id') userId: number
-  ): Promise<{ message: string; count: number }> {
-    const player = await this.playerService.findByUserId(userId);
-    const count = await this.playerService.giveAllCoffeemonsToPlayer(player.id);
-    return {
-      message:
-        count > 0
-          ? `${count} Coffeemons adicionados com sucesso!`
-          : 'Você já possui todos os Coffeemons!',
-      count,
-    };
-  }
-
-  @UseGuards(AuthGuard)
   @Post('me/coffeemons/:coffeemonId')
   async addCoffeemon(
     @GetUser('id') userId: number,
@@ -93,5 +77,22 @@ export class PlayerController {
   ): Promise<PlayerCoffeemons> {
     const player = await this.playerService.findByUserId(userId);
     return this.playerService.removeCoffeemonFromParty(player.id, +playerCoffeemonId);
+  }
+
+  //STUB SOMENTE PARA TESTES!!! - REMOVER DEPOIS
+  @UseGuards(AuthGuard)
+  @Post('me/coffeemons/give-all')
+  async giveAllCoffeemonsToMe(
+    @GetUser('id') userId: number
+  ): Promise<{ message: string; count: number }> {
+    const player = await this.playerService.findByUserId(userId);
+    const count = await this.playerService.giveAllCoffeemonsToPlayer(player.id);
+    return {
+      message:
+        count > 0
+          ? `${count} Coffeemons adicionados com sucesso!`
+          : 'Você já possui todos os Coffeemons!',
+      count,
+    };
   }
 }

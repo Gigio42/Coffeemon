@@ -4,6 +4,7 @@ import { GameAuthModule } from '../../shared/auth/game-auth.module';
 import { CacheModule } from '../../shared/cache/cache.module';
 import { BotModule } from '../bot/bot.module';
 import { CoffeemonModule } from '../coffeemon/coffeemon.module';
+import { ItemsModule } from '../items/items.module';
 import { PlayerModule } from '../player/player.module';
 import { BattleGateway } from './battle.gateway';
 import { ActionExecutorService } from './engine/actions/action-executor.service';
@@ -11,6 +12,7 @@ import { AttackAction } from './engine/actions/attack.action';
 import { BattleActionFactory } from './engine/actions/battle-action-factory';
 import { SelectCoffeemonAction } from './engine/actions/select-coffeemon.action';
 import { SwitchAction } from './engine/actions/switch.action';
+import { UseItemAction } from './engine/actions/use-item.action';
 import { BattlePhaseManager } from './engine/battle-phase-manager.service';
 import { BattleViewService } from './engine/battle-view.service';
 import { StatusEffectsService } from './engine/effects/status-effects.service';
@@ -31,6 +33,7 @@ import { BattleService } from './services/battles.service';
     CacheModule,
     BotModule,
     CoffeemonModule,
+    ItemsModule,
   ],
   providers: [
     BattleService,
@@ -49,6 +52,7 @@ import { BattleService } from './services/battles.service';
     PvpGameMode,
     PveGameMode,
     StatusEffectsService,
+    UseItemAction,
   ],
   exports: [BattleService, BattleViewService],
 })

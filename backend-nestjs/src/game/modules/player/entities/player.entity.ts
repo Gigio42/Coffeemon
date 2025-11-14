@@ -2,6 +2,9 @@ import { Column, Entity, JoinColumn, OneToOne, OneToMany, PrimaryGeneratedColumn
 import { User } from '../../../../ecommerce/users/entities/user.entity';
 import { PlayerCoffeemons } from './playerCoffeemons.entity';
 
+export interface PlayerInventory {
+  [itemId: string]: number;
+}
 @Entity()
 export class Player {
   @PrimaryGeneratedColumn()
@@ -22,4 +25,7 @@ export class Player {
 
   @OneToMany(() => PlayerCoffeemons, (playerCoffeemon) => playerCoffeemon.player)
   coffeemons: PlayerCoffeemons[];
+
+  @Column({ type: 'simple-json', default: '{}' })
+  inventory: PlayerInventory;
 }
