@@ -9,15 +9,20 @@
  * 3. Dados de autenticação
  */
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, TouchableOpacity, Text, Image } from 'react-native';
 import ProductListScreen from './ProductList';
 import ProductDetailScreen from './ProductDetail';
 import CartScreen from './Cart';
 import OrderHistoryScreen from './Orders';
 import ProfileScreen from './Profile';
-import { Product } from '../../../types';
+import { Product } from '../../types';
 import { styles } from './styles';
+import { fetchPlayerCoffeemons, fetchPlayerData } from '../../api/coffeemonService';
+import { getCoffeemonImage } from '../../../assets/coffeemons';
+import { getVariantForStatusEffects } from '../../utils/statusEffects';
+import { getTypeColor } from '../../components/CoffeemonCard/styles';
+import { prefetchPalette } from '../../utils/colorPalette';
 
 // Sub-telas do e-commerce
 enum EcommerceTab {
@@ -49,6 +54,46 @@ export default function EcommerceScreen({
   
   // Produto selecionado para visualização detalhada
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+
+  useEffect(() => {
+    if (!token) {
+      return;
+    }
+
+    let cancelled = false;
+
+    const preloadCoffeemonPalettes = async () => {
+      try {
+        const playerData = await fetchPlayerData(token);
+        const playerId = playerData?.id;
+        if (!playerId) {
+          return;
+        }
+
+        const coffeemons = await fetchPlayerCoffeemons(token, playerId);
+        await Promise.allSettled(
+          coffeemons.map(async (coffeemon) => {
+            if (cancelled) {
+              return;
+            }
+
+            const variant = getVariantForStatusEffects(coffeemon.statusEffects, 'default');
+            const assetModule = getCoffeemonImage(coffeemon.coffeemon.name, variant);
+            const fallbackPalette = getTypeColor(coffeemon.coffeemon.type, coffeemon.coffeemon.name);
+            await prefetchPalette(assetModule, fallbackPalette);
+          })
+        );
+      } catch (error) {
+        console.warn('[Ecommerce] Failed to prefetch Coffeemon palettes', error);
+      }
+    };
+
+    preloadCoffeemonPalettes();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [token]);
 
   // Atualiza o contador do carrinho
   const handleCartUpdate = (count: number) => {

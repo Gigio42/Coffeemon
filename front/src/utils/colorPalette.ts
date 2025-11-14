@@ -3,7 +3,7 @@ import { Image, Platform } from 'react-native';
 import { Asset } from 'expo-asset';
 import UPNG from 'upng-js';
 import { decode as decodeBase64 } from 'base-64';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import type { ImageResolvedAssetSource, ImageSourcePropType } from 'react-native';
 
 export type Palette = {
@@ -15,7 +15,7 @@ export type Palette = {
 const paletteCache = new Map<string, Palette>();
 const pixelCache = new Map<string, Uint8Array>();
 
-const DEFAULT_PALETTE: Palette = {
+export const DEFAULT_PALETTE: Palette = {
   light: '#F5F5F5',
   dark: '#795548',
   accent: '#8D6E63',
@@ -452,13 +452,54 @@ export async function getPaletteFromModule(
   return computePaletteFromAsset(imageModule, fallback);
 }
 
+export async function prefetchPalette(
+  imageModule: ImageSourcePropType | null | undefined,
+  fallback: Palette = DEFAULT_PALETTE,
+): Promise<void> {
+  if (!imageModule) {
+    return;
+  }
+
+  await getPaletteFromModule(imageModule, fallback);
+}
+
+export function getCachedPalette(
+  imageModule: ImageSourcePropType | null | undefined,
+): Palette | null {
+  if (!imageModule) {
+    return null;
+  }
+
+  try {
+    const resolved = ensureResolvedSource(imageModule);
+    return paletteCache.get(resolved.uri) ?? null;
+  } catch (error) {
+    console.warn('[colorPalette] Failed to resolve cached palette', error);
+    return null;
+  }
+}
+
+function palettesAreEqual(a: Palette, b: Palette): boolean {
+  return a.light === b.light && a.dark === b.dark && a.accent === b.accent;
+}
+
 export function useDynamicPalette(imageModule: ImageSourcePropType | null | undefined, fallback: Palette): Palette {
-  const [palette, setPalette] = useState<Palette>(fallback);
+  const initialPalette = useMemo(() => {
+    const cached = getCachedPalette(imageModule);
+    if (cached) {
+      return cached;
+    }
+    return fallback;
+  }, [imageModule, fallback.light, fallback.dark, fallback.accent]);
+
+  const [palette, setPalette] = useState<Palette>(initialPalette);
+
+  useEffect(() => {
+    setPalette((current) => (palettesAreEqual(current, initialPalette) ? current : initialPalette));
+  }, [initialPalette]);
 
   useEffect(() => {
     let isMounted = true;
-    setPalette(fallback);
-
     if (!imageModule) {
       return () => {
         isMounted = false;
@@ -468,7 +509,7 @@ export function useDynamicPalette(imageModule: ImageSourcePropType | null | unde
     getPaletteFromModule(imageModule, fallback)
       .then((result) => {
         if (isMounted) {
-          setPalette(result);
+          setPalette((current) => (palettesAreEqual(current, result) ? current : result));
         }
       })
       .catch(() => {

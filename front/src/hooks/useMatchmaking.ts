@@ -3,7 +3,7 @@ import { InteractionManager, Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Socket } from 'socket.io-client';
 import * as socketService from '../api/socketService';
-import { BattleState } from '../../types';
+import { BattleState } from '../types';
 
 interface UseMatchmakingProps {
   token: string;
@@ -84,7 +84,7 @@ export function useMatchmaking({
         return;
       }
 
-      console.log('Setting up socket with token:', token, 'playerId:', playerId);
+      console.log('Setting up socket connection for player:', playerId);
 
       const s = await socketService.createSocket(token, {
       onConnect: (socketId) => {

@@ -17,6 +17,19 @@ export const styles = StyleSheet.create({
     backgroundColor: 'transparent',
   },
   
+  loadingContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+
+  loadingText: {
+    ...pixelArt.typography.pixelBody,
+    marginTop: pixelArt.spacing.lg,
+    color: '#fff9f0',
+    fontFamily: PIXEL_FONT,
+  },
+  
   // ========================================
   // HEADER FIXO
   // ========================================
@@ -126,9 +139,26 @@ export const styles = StyleSheet.create({
   },
 
   scrollContent: {
-    padding: pixelArt.spacing.lg,
-    paddingTop: pixelArt.spacing.lg + 56,
+    paddingHorizontal: pixelArt.spacing.lg,
     paddingBottom: pixelArt.spacing.xxl * 2,
+  },
+
+  teamCarouselSticky: {
+    paddingTop: pixelArt.spacing.lg + 56,
+    paddingHorizontal: pixelArt.spacing.lg,
+    paddingBottom: pixelArt.spacing.md,
+  
+  },
+
+  availableSticky: {
+    paddingHorizontal: 0,
+    paddingBottom: pixelArt.spacing.md,
+    minHeight: 380,
+    width: '100%',
+  },
+
+  scrollBody: {
+    paddingTop: pixelArt.spacing.xl,
   },
   
   // ========================================
@@ -144,6 +174,21 @@ export const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     zIndex: 500,
+  },
+
+  statusCardShadow: {
+    position: 'absolute',
+    top: 6,
+    width: '100%',
+    height: 0,
+    borderTopWidth: 26,
+    borderTopColor: 'rgba(0, 0, 0, 0.25)',
+    borderLeftWidth: 14,
+    borderLeftColor: 'transparent',
+    borderRightWidth: 14,
+    borderRightColor: 'transparent',
+    transform: [{ translateY: 3 }],
+    opacity: 0.6,
   },
 
   statusCardOutline: {
@@ -203,18 +248,21 @@ export const styles = StyleSheet.create({
   availableSectionWrapper: {
     alignItems: 'center',
     width: '100%',
-    marginTop: pixelArt.spacing.xl,
+    marginTop: pixelArt.spacing.xxl * 1.5,
     position: 'relative',
     overflow: 'visible',
+    paddingHorizontal: pixelArt.spacing.xxl,
+    paddingBottom: pixelArt.spacing.xxl * 1.25,
+    minHeight: 440,
   },
 
   availableBackdrop: {
     position: 'absolute',
-    top: 0,
+    top: pixelArt.spacing.xxl,
     left: -pixelArt.spacing.lg,
     right: -pixelArt.spacing.lg,
-    bottom: 0,
-    backgroundColor: 'rgba(255, 249, 240, 0.65)',
+    bottom: -pixelArt.spacing.xxl,
+    backgroundColor: '#FFF9F0',
     borderWidth: pixelArt.borders.widthBold,
     borderTopColor: pixelArt.colors.borderLight,
     borderLeftColor: pixelArt.colors.borderLight,
@@ -435,9 +483,15 @@ export const styles = StyleSheet.create({
     borderLeftColor: pixelArt.colors.borderLight,
     borderBottomColor: pixelArt.colors.borderDark,
     borderRightColor: pixelArt.colors.borderDark,
-    alignItems: 'center',
+    alignItems: 'stretch',
     justifyContent: 'center',
     ...pixelArt.shadows.innerBorder,
+  },
+
+  bottomBarButtonImage: {
+    width: '100%',
+    height: '100%',
+    resizeMode: 'cover',
   },
 
   bottomBarButtonLeft: {

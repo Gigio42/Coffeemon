@@ -9,6 +9,7 @@ import {
   Easing,
   Image,
   LayoutChangeEvent,
+  ActivityIndicator,
 } from 'react-native';
 import type { ImageSourcePropType } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -18,7 +19,7 @@ import { BattleState } from '../../types';
 import { useMatchmaking } from '../../hooks/useMatchmaking';
 import { useCoffeemons } from '../../hooks/useCoffeemons';
 import { PlayerCoffeemon } from '../../api/coffeemonService';
-import { useDynamicPalette, type Palette } from '../../utils/colorPalette';
+import { prefetchPalette, useDynamicPalette, type Palette } from '../../utils/colorPalette';
 import { getCoffeemonImage } from '../../../assets/coffeemons';
 import { getVariantForStatusEffects } from '../../utils/statusEffects';
 
@@ -51,6 +52,8 @@ const MAPRION_BACKGROUND = require('../../../assets/backgrounds/maprionback.png'
 const EMBERLY_BACKGROUND = require('../../../assets/backgrounds/emberlyback.png');
 const GINGERLYNN_BACKGROUND = require('../../../assets/backgrounds/gingerlynnback.png');
 const ALMONDINO_BACKGROUND = require('../../../assets/backgrounds/almondinoback.png');
+const BOT_MIA_ICON = require('../../../assets/bots/mia.png');
+const BOT_JOHN_ICON = require('../../../assets/bots/john.png');
 
 const COFFEEMON_BACKGROUNDS: Record<string, ImageSourcePropType> = {
   jasminelle: JASMINELLE_BACKGROUND,
@@ -467,6 +470,7 @@ export default function MatchmakingScreen({
   onNavigateToEcommerce,
   onNavigateToBattle,
 }: MatchmakingScreenProps) {
+  const [introLoading, setIntroLoading] = useState(true);
   const [qrScannerVisible, setQrScannerVisible] = useState<boolean>(false);
   const [selectionModalVisible, setSelectionModalVisible] = useState<boolean>(false);
   const [isCarouselInteracting, setCarouselInteracting] = useState(false);
@@ -474,6 +478,14 @@ export default function MatchmakingScreen({
   const [availableBackdropTop, setAvailableBackdropTop] = useState<number | null>(null);
   const [activeCoffeemon, setActiveCoffeemon] = useState<PlayerCoffeemon | null>(null);
   const scrollY = useRef(new Animated.Value(0)).current;
+  const [palettesReady, setPalettesReady] = useState(false);
+  const ensuredPalettesRef = useRef<Set<number>>(new Set());
+  const initialPalettesEnsuredRef = useRef(false);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setIntroLoading(false), 5000);
+    return () => clearTimeout(timer);
+  }, []);
 
   // Hook de Matchmaking (Socket, status, logs)
   const { matchStatus, log, findMatch, findBotMatch } =
@@ -493,6 +505,7 @@ export default function MatchmakingScreen({
     fetchCoffeemons,
     toggleParty,
     giveAllCoffeemons,
+    initialized: coffeemonsInitialized,
   } = useCoffeemons({
     token,
     onLog: (msg) => console.log('Coffeemons:', msg),
@@ -565,7 +578,7 @@ export default function MatchmakingScreen({
 
   const handleAvailableSectionLayout = useCallback((event: LayoutChangeEvent) => {
     const { y, height } = event.nativeEvent.layout;
-    const backdropStart = y + height * 0.5;
+    const backdropStart = y + height * 0.82;
     setAvailableBackdropTop(backdropStart);
   }, []);
 
@@ -588,6 +601,67 @@ export default function MatchmakingScreen({
 
   const palette = useDynamicPalette(activeAsset, fallbackPalette);
   const gradientPalette = useMemo(() => buildGradientPalette(palette), [palette]);
+
+  useEffect(() => {
+    if (!coffeemonsInitialized) {
+      setPalettesReady(false);
+      ensuredPalettesRef.current.clear();
+      initialPalettesEnsuredRef.current = false;
+      return;
+    }
+
+    const coffeemonList = [...partyMembers, ...availableCoffeemons].filter(
+      (coffeemon) => !ensuredPalettesRef.current.has(coffeemon.id),
+    );
+
+    if (coffeemonList.length === 0) {
+      if (!initialPalettesEnsuredRef.current) {
+        initialPalettesEnsuredRef.current = true;
+        setPalettesReady(true);
+      }
+      return;
+    }
+
+    let cancelled = false;
+
+    const settlePalettes = async () => {
+      try {
+        await Promise.allSettled(
+          coffeemonList.map(async (coffeemon) => {
+            const variant = getVariantForStatusEffects(coffeemon.statusEffects, 'default');
+            const assetModule = getCoffeemonImage(coffeemon.coffeemon.name, variant);
+            const fallback = getTypeColor(coffeemon.coffeemon.type, coffeemon.coffeemon.name);
+            await prefetchPalette(assetModule, fallback);
+          }),
+        );
+        if (!cancelled) {
+          coffeemonList.forEach((coffeemon) => ensuredPalettesRef.current.add(coffeemon.id));
+          if (!initialPalettesEnsuredRef.current) {
+            initialPalettesEnsuredRef.current = true;
+            setPalettesReady(true);
+          }
+        }
+      } catch (error) {
+        if (!cancelled) {
+          console.warn('[Matchmaking] Failed to prefetch palettes', error);
+          if (!initialPalettesEnsuredRef.current) {
+            initialPalettesEnsuredRef.current = true;
+            setPalettesReady(true);
+          }
+        }
+      }
+    };
+
+    if (!initialPalettesEnsuredRef.current) {
+      setPalettesReady(false);
+    }
+
+    settlePalettes();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [coffeemonsInitialized, partyMembers, availableCoffeemons]);
 
   const activeBackground = useMemo(() => {
     const normalizedName = activeCoffeemon?.coffeemon?.name?.trim().toLowerCase();
@@ -633,13 +707,15 @@ export default function MatchmakingScreen({
 
   // Selecionar cenário aleatório sempre que carregar a página
 
+  const showContent = !introLoading && coffeemonsInitialized && palettesReady;
+
   return (
     <View style={styles.fullScreenContainer}>
       <View
         pointerEvents="none"
         style={[styles.dynamicBackground, { backgroundColor: gradientPalette.base }]}
       >
-        <Animated.View style={[styles.gradientLayer, { transform: [{ translateY: primaryParallax }] }] }>
+        <Animated.View style={[styles.gradientLayer, { transform: [{ translateY: primaryParallax }] }]}>
           <LinearGradient
             colors={gradientPalette.primary}
             start={{ x: 0.1, y: 0 }}
@@ -681,15 +757,22 @@ export default function MatchmakingScreen({
         />
       </View>
       <SafeAreaView style={styles.container} edges={['top']}>
-        {availableBackdropTop !== null && (
-          <View
-            pointerEvents="none"
-            style={[
-              styles.availableBackdrop,
-              { top: Math.max(availableBackdropTop, pixelArt.spacing.lg * 3) },
-            ]}
-          />
-        )}
+        {!showContent ? (
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color="#fff9f0" />
+            <Text style={styles.loadingText}>Preparando matchmaking...</Text>
+          </View>
+        ) : (
+          <>
+            {availableBackdropTop !== null && (
+              <View
+                pointerEvents="none"
+                style={[
+                  styles.availableBackdrop,
+                  { top: Math.max(availableBackdropTop + pixelArt.spacing.xxl * 1.5, pixelArt.spacing.lg * 6) },
+                ]}
+              />
+            )}
             {/* Botão de voltar flutuante */}
             {onNavigateToEcommerce && (
               <TouchableOpacity
@@ -702,6 +785,7 @@ export default function MatchmakingScreen({
 
             {matchStatus && (
               <View style={styles.statusCardWrapper}>
+                <View style={styles.statusCardShadow} />
                 <View style={styles.statusCardOutline} />
                 <View style={styles.statusCardShape} />
                 <View style={styles.statusCardContent}>
@@ -710,104 +794,98 @@ export default function MatchmakingScreen({
               </View>
             )}
 
-            <Animated.ScrollView
-              style={styles.scrollView}
-              showsVerticalScrollIndicator={false}
-              contentContainerStyle={styles.scrollContent}
-              scrollEnabled={!isCarouselInteracting}
-              onScroll={Animated.event(
-                [{ nativeEvent: { contentOffset: { y: scrollY } } }],
-                { useNativeDriver: true },
-              )}
-              scrollEventThrottle={16}
-            >
-          {/* Seção de Times */}
-          <View style={styles.teamsSection}>
-            {/* Carrossel do Time - 3 cards centralizados com animação */}
-            <View style={styles.teamColumn}>
-              <Text style={styles.teamColumnTitle}>{`Meu Time (${partyMembers.length}/3)`}</Text>
+            <View style={[styles.scrollView, styles.scrollContent]}>
+              <View style={styles.teamCarouselSticky}>
+                <View style={styles.teamColumn}>
+                  <Text style={styles.teamColumnTitle}>{`Meu Time (${partyMembers.length}/3)`}</Text>
 
-              {partyMembers.length === 0 ? (
-                <Text style={styles.teamEmptyMessage}>Adicione Coffeemons ao seu time</Text>
-              ) : (
-                <TeamCarouselInline
-                  coffeemons={partyMembers}
-                  onToggleParty={toggleParty}
-                  partyLoading={partyLoading}
-                  onScrollInterruption={setCarouselInteracting}
-                  onActiveCoffeemonChange={handleActiveCoffeemonChange}
-                />
-              )}
+                  {partyMembers.length === 0 ? (
+                    <Text style={styles.teamEmptyMessage}>Adicione Coffeemons ao seu time</Text>
+                  ) : (
+                    <TeamCarouselInline
+                      coffeemons={partyMembers}
+                      onToggleParty={toggleParty}
+                      partyLoading={partyLoading}
+                      onScrollInterruption={setCarouselInteracting}
+                      onActiveCoffeemonChange={handleActiveCoffeemonChange}
+                    />
+                  )}
+                </View>
+              </View>
+
+              <View style={styles.availableSticky}>
+                <View style={styles.availableSectionWrapper}>
+                  <View pointerEvents="none" style={styles.availableBackdrop} />
+                  <TeamSection
+                    title={`Mochila (${availableCoffeemons.length})`}
+                    coffeemons={availableCoffeemons}
+                    loading={loading}
+                    emptyMessage="Capture mais Coffeemons"
+                    onToggleParty={toggleParty}
+                    partyLoading={partyLoading}
+                    variant="horizontal"
+                    isCollapsible
+                    isExpanded={availableExpanded}
+                    onToggleExpand={() => setAvailableExpanded((prev) => !prev)}
+                    showQrButton
+                    onPressQrButton={handleOpenQRScanner}
+                  />
+                </View>
+              </View>
+
+              <View style={styles.scrollBody} />
             </View>
 
-            <View
-              style={styles.availableSectionWrapper}
-              onLayout={handleAvailableSectionLayout}
-            >
-              <TeamSection
-                title={`Disponíveis (${availableCoffeemons.length})`}
-                coffeemons={availableCoffeemons}
-                loading={loading}
-                emptyMessage="Capture mais Coffeemons"
-                onToggleParty={toggleParty}
-                partyLoading={partyLoading}
-                variant="horizontal"
-                isCollapsible
-                isExpanded={availableExpanded}
-                onToggleExpand={() => setAvailableExpanded((prev) => !prev)}
-                showQrButton
-                onPressQrButton={handleOpenQRScanner}
-              />
+            <View style={styles.bottomBar}>
+              <TouchableOpacity
+                style={[styles.bottomBarButton, styles.bottomBarButtonLeft, partyMembers.length === 0 && styles.bottomBarButtonDisabled]}
+                onPress={() => handleFindBotMatch('jessie')}
+                disabled={partyMembers.length === 0}
+                accessibilityLabel="Desafio Mia"
+              >
+                <Image source={BOT_MIA_ICON} style={styles.bottomBarButtonImage} />
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[styles.bottomBarButton, styles.bottomBarButtonCenter, partyMembers.length === 0 && styles.bottomBarButtonDisabled]}
+                onPress={handleFindMatch}
+                disabled={partyMembers.length === 0}
+                accessibilityLabel="Iniciar batalha online"
+              >
+                <Text style={styles.bottomBarText}>Start</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[styles.bottomBarButton, styles.bottomBarButtonRight, partyMembers.length === 0 && styles.bottomBarButtonDisabled]}
+                onPress={() => handleFindBotMatch('pro-james')}
+                disabled={partyMembers.length === 0}
+                accessibilityLabel="Desafio John"
+              >
+                <Image source={BOT_JOHN_ICON} style={styles.bottomBarButtonImage} />
+              </TouchableOpacity>
             </View>
-
-          </View>
-
-        </Animated.ScrollView>
-
-        <View style={styles.bottomBar}>
-          <TouchableOpacity
-            style={[styles.bottomBarButton, styles.bottomBarButtonLeft, partyMembers.length === 0 && styles.bottomBarButtonDisabled]}
-            onPress={() => handleFindBotMatch('jessie')}
-            disabled={partyMembers.length === 0}
-            accessibilityLabel="Desafio Jessie"
-          >
-            <Text style={styles.bottomBarText}>Jessie</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={[styles.bottomBarButton, styles.bottomBarButtonCenter, partyMembers.length === 0 && styles.bottomBarButtonDisabled]}
-            onPress={handleFindMatch}
-            disabled={partyMembers.length === 0}
-            accessibilityLabel="Iniciar batalha online"
-          >
-            <Text style={styles.bottomBarText}>Start</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={[styles.bottomBarButton, styles.bottomBarButtonRight, partyMembers.length === 0 && styles.bottomBarButtonDisabled]}
-            onPress={() => handleFindBotMatch('pro-james')}
-            disabled={partyMembers.length === 0}
-            accessibilityLabel="Desafio James"
-          >
-            <Text style={styles.bottomBarText}>James</Text>
-          </TouchableOpacity>
-        </View>
+          </>
+        )}
       </SafeAreaView>
 
-      <QRScanner
-        visible={qrScannerVisible}
-        token={token}
-        onClose={handleCloseQRScanner}
-        onSuccess={handleCoffeemonAdded}
-      />
+      {showContent && (
+        <>
+          <QRScanner
+            visible={qrScannerVisible}
+            token={token}
+            onClose={handleCloseQRScanner}
+            onSuccess={handleCoffeemonAdded}
+          />
 
-      <CoffeemonSelectionModal
-        visible={selectionModalVisible}
-        availableCoffeemons={availableCoffeemons}
-        onSelectCoffeemon={handleSelectCoffeemon}
-        onClose={handleCloseSelectionModal}
-        partyLoading={partyLoading}
-      />
+          <CoffeemonSelectionModal
+            visible={selectionModalVisible}
+            availableCoffeemons={availableCoffeemons}
+            onSelectCoffeemon={handleSelectCoffeemon}
+            onClose={handleCloseSelectionModal}
+            partyLoading={partyLoading}
+          />
+        </>
+      )}
     </View>
   );
 }

@@ -1,6 +1,6 @@
 import { StyleSheet } from 'react-native';
-import { metrics } from '../../theme';
 import { pixelArt } from '../../theme/pixelArt';
+import { PIXEL_FONT } from '../CoffeemonCard/styles';
 
 export const styles = StyleSheet.create({
   teamSection: {
@@ -22,25 +22,30 @@ export const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 0,
-    marginTop: pixelArt.spacing.xl,
-    marginBottom: pixelArt.spacing.lg,
+    marginTop: -pixelArt.spacing.sm,
+    marginBottom: -10,
     alignSelf: 'stretch',
     width: '100%',
   },
 
+  sectionHeaderRowCompact: {
+    marginBottom: pixelArt.spacing.sm,
+  },
+
   sectionHeaderButton: {
     flex: 4,
-    height: 64,
-    paddingHorizontal: pixelArt.spacing.md,
+    height: 60,
+    paddingHorizontal: pixelArt.spacing.lg,
     justifyContent: 'center',
     borderRadius: 0,
     borderWidth: pixelArt.borders.widthBold,
-    borderTopColor: pixelArt.colors.borderLight,
-    borderLeftColor: pixelArt.colors.borderLight,
-    borderRightColor: pixelArt.colors.borderDark,
-    borderBottomColor: pixelArt.colors.borderDark,
-    backgroundColor: pixelArt.colors.cardInnerBg,
+    borderTopColor: '#f7e6c8',
+    borderLeftColor: '#f7e6c8',
+    borderRightColor: '#bfa97b',
+    borderBottomColor: '#bfa97b',
+    backgroundColor: '#fff9f0',
     ...pixelArt.shadows.innerBorder,
+    position: 'relative',
   },
 
   sectionHeaderButtonStatic: {
@@ -57,12 +62,15 @@ export const styles = StyleSheet.create({
   },
 
   sectionTitle: {
-    fontWeight: 'bold',
-    fontSize: 16,
-    color: '#f8e7c0',
-    fontFamily: 'monospace',
-    letterSpacing: 0.5,
+    fontWeight: '900',
+    fontSize: 11,
+    color: '#8B4513',
+    fontFamily: PIXEL_FONT,
+    letterSpacing: 1.5,
     textAlign: 'center',
+    textShadowColor: '#f7e6c8',
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 0,
   },
 
   titleRow: {
@@ -74,37 +82,49 @@ export const styles = StyleSheet.create({
   expandIcon: {
     marginLeft: 8,
     fontSize: 14,
-    color: '#f8e7c0',
-    fontFamily: 'monospace',
+    color: '#8B4513',
+    fontFamily: PIXEL_FONT,
     opacity: 0.9,
   },
   
   addButton: {
-    backgroundColor: '#27ae60',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 8,
+    backgroundColor: '#fff9f0',
+    paddingHorizontal: pixelArt.spacing.md,
+    paddingVertical: pixelArt.spacing.sm,
+    borderRadius: pixelArt.borders.radiusSmall,
+    borderTopWidth: 2,
+    borderLeftWidth: 2,
+    borderBottomWidth: 2,
+    borderRightWidth: 2,
+    borderTopColor: '#f7e6c8',
+    borderLeftColor: '#f7e6c8',
+    borderBottomColor: '#bfa97b',
+    borderRightColor: '#bfa97b',
+    alignItems: 'center',
   },
 
   addButtonText: {
-    color: '#fff',
-    fontSize: 14,
-    fontWeight: 'bold',
+    color: '#8B4513',
+    fontFamily: PIXEL_FONT,
+    fontSize: 12,
+    fontWeight: '900',
+    textTransform: 'uppercase',
   },
 
   qrButton: {
     flex: 1,
-    height: 64,
+    height: 60,
     borderRadius: 0,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: pixelArt.colors.cardInnerBg,
+    backgroundColor: '#fff9f0',
     borderWidth: pixelArt.borders.widthBold,
-    borderTopColor: pixelArt.colors.borderLight,
-    borderLeftColor: pixelArt.colors.borderLight,
-    borderRightColor: pixelArt.colors.borderDark,
-    borderBottomColor: pixelArt.colors.borderDark,
+    borderTopColor: '#f7e6c8',
+    borderLeftColor: '#f7e6c8',
+    borderRightColor: '#bfa97b',
+    borderBottomColor: '#bfa97b',
     ...pixelArt.shadows.innerBorder,
+    position: 'relative',
   },
 
   qrButtonDisabled: {
@@ -112,9 +132,19 @@ export const styles = StyleSheet.create({
   },
 
   qrIcon: {
-    width: 26,
-    height: 26,
+    width: '100%',
+    height: '100%',
     resizeMode: 'contain',
+  },
+
+  qrLabel: {
+    marginTop: pixelArt.spacing.xs,
+    color: '#8B4513',
+    fontFamily: PIXEL_FONT,
+    fontSize: 12,
+    fontWeight: '900',
+    letterSpacing: 1.5,
+    textTransform: 'uppercase',
   },
   
   loadingContainer: {
@@ -151,11 +181,36 @@ export const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   
-  availableCardWrapper: {
-    transform: [{ scale: 0.68 }],
-    marginHorizontal: -16, // Aproxima ainda mais os cards
+  availableGridContent: {
+    paddingVertical: 0,
+    paddingHorizontal: pixelArt.spacing.sm,
+    alignItems: 'flex-start',
   },
-  
+
+  availableGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'flex-start',
+    alignContent: 'flex-start',
+    rowGap: 0,
+  },
+
+  availableCardWrapper: {
+    width: '50%',
+    maxWidth: 132,
+    maxHeight: 150,
+    paddingHorizontal: 0,
+    paddingBottom: 0,
+    alignItems: 'center',
+    justifyContent: 'flex-start',
+  },
+
+  availableCardScaler: {
+    transform: [{ scaleX: 0.6 }, { scaleY: 0.5 }],
+    width: '100%',
+    alignItems: 'center',
+  },
+
   grid: {
     width: '100%',
     maxHeight: 300, // Limit height for scroll

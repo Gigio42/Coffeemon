@@ -64,22 +64,24 @@ export default function TeamSection({
 
     return (
       variant === 'horizontal' ? (
-        <ScrollView 
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.carouselContent}
-          style={styles.carousel}
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={styles.availableGridContent}
         >
-          {coffeemons.map((pc) => (
-            <View key={pc.id} style={styles.availableCardWrapper}>
-              <CoffeemonCard
-                coffeemon={pc}
-                onToggleParty={onToggleParty}
-                isLoading={partyLoading === pc.id}
-                variant="large"
-              />
-            </View>
-          ))}
+          <View style={styles.availableGrid}>
+            {coffeemons.map((pc) => (
+              <View key={pc.id} style={styles.availableCardWrapper}>
+                <View style={styles.availableCardScaler}>
+                  <CoffeemonCard
+                    coffeemon={pc}
+                    onToggleParty={onToggleParty}
+                    isLoading={partyLoading === pc.id}
+                    variant="small"
+                  />
+                </View>
+              </View>
+            ))}
+          </View>
         </ScrollView>
       ) : (
         <ScrollView 
@@ -105,7 +107,7 @@ export default function TeamSection({
 
   return (
     <View style={styles.teamSection}>
-      <View style={styles.sectionHeaderRow}>
+      <View style={[styles.sectionHeaderRow, variant === 'grid' && styles.sectionHeaderRowCompact]}>
         <HeaderComponent
           style={[
             styles.sectionHeaderButton,
