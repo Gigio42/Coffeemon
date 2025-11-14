@@ -19,6 +19,6 @@ import { PlayerService } from './player.service';
   ],
   controllers: [PlayerController],
   providers: [PlayerService, WsPlayerGuard],
-  exports: [PlayerService, WsPlayerGuard],
+  exports: [PlayerService, WsPlayerGuard, TypeOrmModule],
 })
 export class PlayerModule {}

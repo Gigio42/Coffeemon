@@ -115,6 +115,7 @@ export class PlayerService {
     });
   }
 
+  //eslint-disable-next-line @typescript-eslint/require-await
   async getPlayerParty(playerId: number): Promise<PlayerCoffeemons[]> {
     return this.playerCoffeemonRepository.find({
       where: {
@@ -126,7 +127,6 @@ export class PlayerService {
   }
 
   async addCoffeemonToPlayer(playerId: number, coffeemonId: number): Promise<PlayerCoffeemons> {
-    // Validate inputs
     if (!playerId || isNaN(playerId)) {
       throw new BadRequestException(`Invalid playerId: ${playerId}`);
     }
@@ -140,18 +140,15 @@ export class PlayerService {
     const playerCoffeemonInstance = this.playerCoffeemonRepository.create({
       player: player,
       coffeemon: coffeemonBase,
-      hp: coffeemonBase.baseHp,
-      attack: coffeemonBase.baseAttack,
-      defense: coffeemonBase.baseDefense,
       level: 1,
       experience: 0,
       isInParty: false,
+      evs: { hp: 0, attack: 0, defense: 0, speed: 0 },
       learnedMoves: [],
     });
 
     const savedPlayerCoffeemon = await this.playerCoffeemonRepository.save(playerCoffeemonInstance);
 
-    // Query using the coffeemon relation properly
     const startingMovesLearnset = await this.learnsetRepository.find({
       where: {
         coffeemon: { id: coffeemonId },

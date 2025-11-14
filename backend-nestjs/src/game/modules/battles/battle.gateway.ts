@@ -16,8 +16,8 @@ import {
   PlayerWantsToRejoinBattleCommand,
 } from '../../shared/events/game.events';
 import { WsPlayerGuard } from '../player/auth/ws-player.guard';
-import { BattleActionType } from './types/enums';
 import { BattleActionUnion } from './types/battle-actions.types';
+import { BattleActionType } from './types/enums';
 
 @WebSocketGateway({ cors: { origin: '*' } })
 @UseGuards(WsGameAuthGuard, WsPlayerGuard)
@@ -45,28 +45,28 @@ export class BattleGateway implements OnGatewayDisconnect {
     const playerId = socket.data.playerId;
     if (!playerId) return;
 
+    const action: BattleActionUnion = {
+      battleId: data.battleId,
+      actionType: BattleActionType.SELECT_COFFEEMON,
+      payload: { coffeemonIndex: data.coffeemonIndex },
+    };
+
     this.eventEmitter.emit(
       'battle.action.command',
-      new BattleActionCommand(
-        data.battleId,
-        playerId,
-        socket.id,
-        BattleActionType.SELECT_COFFEEMON,
-        { coffeemonIndex: data.coffeemonIndex }
-      )
+      new BattleActionCommand(data.battleId, playerId, socket.id, action)
     );
   }
 
   @SubscribeMessage('battleAction')
   handleBattleAction(
     @ConnectedSocket() socket: SocketWithUser,
-    @MessageBody() { battleId, actionType, payload }: BattleActionUnion
+    @MessageBody() action: BattleActionUnion
   ): void {
     const playerId = socket.data.playerId;
     if (!playerId) return;
     this.eventEmitter.emit(
       'battle.action.command',
-      new BattleActionCommand(battleId, playerId, socket.id, actionType, payload)
+      new BattleActionCommand(action.battleId, playerId, socket.id, action)
     );
   }
 

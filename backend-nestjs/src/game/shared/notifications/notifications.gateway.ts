@@ -7,10 +7,13 @@ import {
   BattleCreatedEvent,
   BattleEndedEvent,
   BattleStateUpdatedEvent,
+  CoffeemonLearnedMoveEvent,
+  CoffeemonLeveledUpEvent,
   OpponentDisconnectedEvent,
   PlayerJoinedQueueEvent,
   PlayerLeftBattleEvent,
   PlayerLeftQueueEvent,
+  PlayerLeveledUpEvent,
   PlayerReconnectedEvent,
 } from '../events/game.events';
 
@@ -162,5 +165,29 @@ export class NotificationsGateway {
     setTimeout(() => {
       this.server.in(battleRoom).disconnectSockets(true);
     }, 5000);
+  }
+
+  @OnEvent('player.leveled.up')
+  handlePlayerLeveledUp(event: PlayerLeveledUpEvent): void {
+    this.server.to(`player:${event.playerId}`).emit('playerLevelUp', {
+      newLevel: event.newLevel,
+    });
+  }
+
+  @OnEvent('coffeemon.leveled.up')
+  handleCoffeemonLeveledUp(event: CoffeemonLeveledUpEvent): void {
+    this.server.to(`player:${event.playerId}`).emit('coffeemonLevelUp', {
+      playerCoffeemonId: event.playerCoffeemonId,
+      newLevel: event.newLevel,
+      expGained: event.expGained,
+    });
+  }
+
+  @OnEvent('coffeemon.learned.move')
+  handleCoffeemonLearnedMove(event: CoffeemonLearnedMoveEvent): void {
+    this.server.to(`player:${event.playerId}`).emit('coffeemonLearnedMove', {
+      playerCoffeemonId: event.playerCoffeemonId,
+      moveName: event.moveName,
+    });
   }
 }

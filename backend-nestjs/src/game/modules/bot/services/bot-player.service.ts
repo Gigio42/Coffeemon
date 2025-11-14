@@ -3,12 +3,16 @@ import { CoffeemonState, PlayerBattleState } from '../../battles/types/battle-st
 import { CoffeemonService } from '../../coffeemon/coffeemon.service';
 import { MoveLearnMethod } from '../../coffeemon/entities/coffeemon-learnset-move.entity';
 import { Coffeemon } from '../../coffeemon/entities/coffeemon.entity';
+import { StatsCalculatorService } from '../../coffeemon/services/stats-calculator.service';
 import { Move } from '../../moves/entities/move.entity';
 import { BotProfile, BotProfiles } from '../config/bot-profiles';
 
 @Injectable()
 export class BotPlayerService {
-  constructor(private readonly coffeemonService: CoffeemonService) {}
+  constructor(
+    private readonly coffeemonService: CoffeemonService,
+    private readonly statsCalculator: StatsCalculatorService
+  ) {}
 
   async createBotPlayerStateFromProfile(
     profileId: string
@@ -37,8 +41,8 @@ export class BotPlayerService {
 
   //TODO refatorar a forma de calcular stats baseado no level pro bot
   private mapToCoffeemonState(baseCoffeemon: Coffeemon, level: number): CoffeemonState {
-    const statMultiplier = 1 + (level - 1) * 0.1;
-    const maxHp = Math.floor(baseCoffeemon.baseHp * statMultiplier);
+    const calculatedStats = this.statsCalculator.calculateAllStats(baseCoffeemon, level);
+    const maxHp = calculatedStats.hp;
 
     const learnableMovesForLevel = (baseCoffeemon.learnset || [])
       .filter(
@@ -61,9 +65,9 @@ export class BotPlayerService {
       isFainted: false,
       canAct: true,
       maxHp: maxHp,
-      attack: Math.floor(baseCoffeemon.baseAttack * statMultiplier),
-      defense: Math.floor(baseCoffeemon.baseDefense * statMultiplier),
-      speed: Math.floor(baseCoffeemon.baseSpeed * statMultiplier),
+      attack: calculatedStats.attack,
+      defense: calculatedStats.defense,
+      speed: calculatedStats.speed,
       modifiers: {
         attackModifier: 1.0,
         defenseModifier: 1.0,
