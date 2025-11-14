@@ -2,21 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, Image, Animated } from 'react-native';
 import { PlayerState } from '../../../types';
 import { styles } from '../../../screens/Battle/styles';
-
-// Mapping de imagens locais dos Coffeemons para HUD
-const hudImageMap: { [key: string]: any } = {
-  jasminelle: require('../../../../assets/coffeemons/jasminelle/default.png'),
-  limonetto: require('../../../../assets/coffeemons/limonetto/default.png'),
-  maprion: require('../../../../assets/coffeemons/maprion/default.png'),
-  emberly: require('../../../../assets/coffeemons/emberly/default.png'),
-  almondino: require('../../../../assets/coffeemons/almondino/default.png'),
-  gingerlynn: require('../../../../assets/coffeemons/gingerlynn/default.png'),
-  // Adicionar outros quando disponíveis
-  cocoly: require('../../../../assets/coffeemons/jasminelle/default.png'), // Temporário - usar Jasminelle
-  cinnara: require('../../../../assets/coffeemons/jasminelle/default.png'), // Temporário
-  herban: require('../../../../assets/coffeemons/jasminelle/default.png'), // Temporário
-  chocobrawl: require('../../../../assets/coffeemons/jasminelle/default.png'), // Temporário
-};
+import { getCoffeemonImage } from '../../../../assets/coffeemons';
 
 interface BattleHUDProps {
   playerState: PlayerState | null;
@@ -46,12 +32,6 @@ export default function BattleHUD({ playerState, isMe, damage }: BattleHUDProps)
     playerState && playerState.activeCoffeemonIndex !== null
       ? playerState.coffeemons[playerState.activeCoffeemonIndex]
       : null;
-
-  // Get local image for the active Coffeemon
-  const getCoffeemonImage = (name: string) => {
-    const baseName = name.split(' (Lvl')[0].toLowerCase();
-    return hudImageMap[baseName] || hudImageMap.jasminelle; // Fallback para Jasminelle
-  };
 
   // Handle damage animation
   useEffect(() => {
@@ -90,7 +70,7 @@ export default function BattleHUD({ playerState, isMe, damage }: BattleHUDProps)
   const filledSegments = Math.ceil((hpPercent / 100) * totalSegments);
   
   const containerStyle = isMe ? styles.playerHudPosition : styles.opponentHudPosition;
-  const imageSource = getCoffeemonImage(activeMon.name);
+  const imageSource = getCoffeemonImage(activeMon.name, 'default');
 
   return (
     <View style={[styles.hudContainer, containerStyle]}>

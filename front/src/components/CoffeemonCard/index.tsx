@@ -1,20 +1,11 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { View, Text, Image, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { getServerUrl } from '../../utils/config';
 import { PlayerCoffeemon } from '../../api/coffeemonService';
 import { styles, getTypeColor } from './styles';
 import { useDynamicPalette } from '../../utils/colorPalette';
-
-// Mapping de imagens locais dos Coffeemons
-const imageMap: { [key: string]: any } = {
-  jasminelle: require('../../../assets/coffeemons/jasminelle/default.png'),
-  limonetto: require('../../../assets/coffeemons/limonetto/default.png'),
-  maprion: require('../../../assets/coffeemons/maprion/default.png'),
-  emberly: require('../../../assets/coffeemons/emberly/default.png'),
-  almondino: require('../../../assets/coffeemons/almondino/default.png'),
-  gingerlynn: require('../../../assets/coffeemons/gingerlynn/default.png'),
-};
+import { getCoffeemonImage } from '../../../assets/coffeemons';
 
 interface CoffeemonCardProps {
   coffeemon: PlayerCoffeemon;
@@ -47,16 +38,16 @@ export default function CoffeemonCard({
   maxHp,
   disabled = false,
 }: CoffeemonCardProps) {
-  const isSmall = variant === 'small';
   const isInParty = coffeemon.isInParty;
   const fallbackPalette = useMemo(
     () => getTypeColor(coffeemon.coffeemon.type, coffeemon.coffeemon.name),
     [coffeemon.coffeemon.type, coffeemon.coffeemon.name],
   );
-  const assetModule = imageMap[coffeemon.coffeemon.name.toLowerCase()] ?? null;
+  const assetModule = getCoffeemonImage(coffeemon.coffeemon.name, 'default');
   const palette = useDynamicPalette(assetModule, fallbackPalette);
 
   const [imageUri, setImageUri] = useState<string | null>(null);
+  const [showRemoveOverlay, setShowRemoveOverlay] = useState(false);
 
   useEffect(() => {
     const loadImageUri = async () => {
@@ -68,107 +59,146 @@ export default function CoffeemonCard({
     loadImageUri();
   }, [coffeemon.coffeemon.defaultImage, coffeemon.coffeemon.name]);
 
+  useEffect(() => {
+    if (!isInParty) {
+      setShowRemoveOverlay(false);
+    }
+  }, [isInParty]);
+
+  useEffect(() => {
+    if (disabled) {
+      setShowRemoveOverlay(false);
+    }
+  }, [disabled]);
+
+  const handleCardPress = useCallback(async () => {
+    if (disabled || isLoading) {
+      return;
+    }
+
+    if (!isInParty) {
+      await onToggleParty(coffeemon);
+      return;
+    }
+
+    setShowRemoveOverlay((current) => !current);
+  }, [coffeemon, disabled, isInParty, isLoading, onToggleParty]);
+
+  const handleRemovePress = useCallback(async () => {
+    if (disabled || isLoading) {
+      return;
+    }
+
+    setShowRemoveOverlay(false);
+    await onToggleParty(coffeemon);
+  }, [coffeemon, disabled, isLoading, onToggleParty]);
+
   // Calcula porcentagens das barras
   const hpPercent = Math.min((coffeemon.hp / (maxHp || 120)) * 100, 100);
-  const expPercent = 60; // Valor fixo para o design, já que não temos o prop
+  const isSmallVariant = variant === 'small';
 
   return (
-    <LinearGradient
-      colors={[palette.dark, palette.light]}
-      start={{ x: 0, y: 0 }}
-      end={{ x: 0, y: 1 }}
+    <TouchableOpacity
+      activeOpacity={0.9}
+      onPress={handleCardPress}
+      disabled={disabled || isLoading}
       style={[
-        styles.coffeemonCard,
-        {
-          borderColor: palette.dark,
-        },
+        styles.touchableWrapper,
+        isSmallVariant && styles.touchableWrapperSmall,
       ]}
     >
-      {/* Header com nome e ícone */}
-      <View
+      <LinearGradient
+        colors={[palette.dark, palette.light]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 0, y: 1 }}
         style={[
-          styles.cardHeader,
+          styles.coffeemonCard,
+          isSmallVariant && styles.coffeemonCardSmall,
+          isInParty && styles.coffeemonCardSelected,
           {
-            backgroundColor: palette.dark,
-            borderBottomColor: palette.dark,
+            borderColor: palette.dark,
           },
         ]}
       >
-        <View style={styles.headerIconContainer}>
-          <Text style={styles.headerIcon}>{getTypeIcon(coffeemon.coffeemon.type)}</Text>
-        </View>
-        <View style={styles.headerNameAndHp}>
-          <Text style={styles.coffeemonName}>
-            {coffeemon.coffeemon.name.toUpperCase()}
-          </Text>
-          {/* Barra de HP abaixo do nome */}
-          <View style={[styles.headerStatBarOuter, { backgroundColor: palette.accent }]}>
-            <View style={styles.headerStatBarInner}>
-              <View
-                style={[
-                  styles.headerStatBarFill,
-                  { width: `${hpPercent}%`, backgroundColor: '#8BC34A' },
-                ]}
-              />
-            </View>
-          </View>
-        </View>
-      </View>
-
-      {/* Imagem do Coffeemon (sem borda interna) */}
-      <View style={styles.imageContainer}>
-        <Image
-          source={
-            imageMap[coffeemon.coffeemon.name.toLowerCase()] ||
-            (imageUri
-              ? { uri: imageUri }
-              : require('../../../assets/icon.png'))
-          }
-          style={styles.coffeemonImage}
-          resizeMode="contain"
-          defaultSource={require('../../../assets/icon.png')}
-        />
-      </View>
-
-      {/* Nível e botão */}
-      <View style={styles.cardFooter}>
-        {/* Linha de info do rodapé (Stats e Nível) */}
-        <View style={styles.footerInfoRow}>
-          {/* Stats - Ataque e Defesa */}
-          <View style={styles.statsContainer}>
-            <View style={styles.statItem}>
-              <Text style={styles.statLabel}>ATK</Text>
-              <Text style={styles.statValue}>{coffeemon.attack}</Text>
-            </View>
-            <View style={styles.statItem}>
-              <Text style={styles.statLabel}>DEF</Text>
-              <Text style={styles.statValue}>{coffeemon.defense}</Text>
-            </View>
-          </View>
-        </View>
-
-        <TouchableOpacity
+        {/* Header com nome e ícone */}
+        <View
           style={[
-            styles.selectButton,
+            styles.cardHeader,
             {
-              backgroundColor: isInParty ? palette.light : palette.dark,
-              borderTopColor: palette.accent,
+              backgroundColor: palette.dark,
+              borderBottomColor: palette.dark,
             },
-            isInParty && styles.selectedButton,
           ]}
-          onPress={() => onToggleParty(coffeemon)}
-          disabled={isLoading || disabled}
-          activeOpacity={0.8}
         >
-          {isLoading ? (
-            <ActivityIndicator size="small" color="#fff" />
-          ) : (
-            <Text style={styles.selectButtonText}>
-              {isInParty ? 'SELECIONADO' : 'SELECIONAR'}
+          <View style={styles.headerIconContainer}>
+            <Text style={styles.headerIcon}>{getTypeIcon(coffeemon.coffeemon.type)}</Text>
+          </View>
+          <View style={styles.headerNameAndHp}>
+            <Text style={styles.coffeemonName}>
+              {coffeemon.coffeemon.name.toUpperCase()}
             </Text>
-          )}
-        </TouchableOpacity>
-      </View>
-    </LinearGradient>
+            {/* Barra de HP abaixo do nome */}
+            <View style={[styles.headerStatBarOuter, { backgroundColor: palette.accent }]}>
+              <View style={styles.headerStatBarInner}>
+                <View
+                  style={[
+                    styles.headerStatBarFill,
+                    { width: `${hpPercent}%`, backgroundColor: '#8BC34A' },
+                  ]}
+                />
+              </View>
+            </View>
+          </View>
+        </View>
+
+        {/* Imagem do Coffeemon (sem borda interna) */}
+        <View style={styles.imageContainer}>
+          <Image
+            source={
+              imageUri
+                ? { uri: imageUri }
+                : assetModule || require('../../../assets/icon.png')
+            }
+            style={styles.coffeemonImage}
+            resizeMode="contain"
+            defaultSource={assetModule || require('../../../assets/icon.png')}
+          />
+        </View>
+
+        {/* Stats */}
+        <View style={styles.cardFooter}>
+          <View style={styles.footerInfoRow}>
+            <View style={styles.statsContainer}>
+              <View style={styles.statItem}>
+                <Text style={styles.statLabel}>ATK</Text>
+                <Text style={styles.statValue}>{coffeemon.attack}</Text>
+              </View>
+              <View style={styles.statItem}>
+                <Text style={styles.statLabel}>DEF</Text>
+                <Text style={styles.statValue}>{coffeemon.defense}</Text>
+              </View>
+            </View>
+          </View>
+        </View>
+
+        {showRemoveOverlay && (
+          <View style={styles.selectionOverlay} pointerEvents="box-none">
+            <TouchableOpacity
+              onPress={handleRemovePress}
+              activeOpacity={0.7}
+              style={styles.removeButton}
+            >
+              <Text style={styles.removeButtonText}>×</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+
+        {isLoading && (
+          <View style={styles.loadingOverlay}>
+            <ActivityIndicator size="large" color="#FFFFFF" />
+          </View>
+        )}
+      </LinearGradient>
+    </TouchableOpacity>
   );
 }
