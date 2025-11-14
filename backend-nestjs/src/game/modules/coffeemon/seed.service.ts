@@ -4,7 +4,7 @@ import { Repository } from 'typeorm';
 import * as coffeemonData from '../../data/coffeemon.data.json';
 import * as learnsetData from '../../data/learnset.data.json';
 import * as moveData from '../../data/moves.data.json';
-import { Move, moveType } from '../moves/entities/move.entity';
+import { Move, MoveCategory } from '../moves/entities/move.entity';
 import { CoffeemonLearnsetMove, MoveLearnMethod } from './entities/coffeemon-learnset-move.entity';
 import { Coffeemon, CoffeemonType } from './entities/coffeemon.entity';
 
@@ -12,7 +12,8 @@ interface IMoveData {
   id: number;
   name: string;
   power: number;
-  type: moveType;
+  category: MoveCategory;
+  elementalType?: CoffeemonType | null;
   description: string;
   effects?: {
     type: string;
@@ -26,7 +27,7 @@ interface IMoveData {
 interface ICoffeemonData {
   id: number;
   name: string;
-  type: string;
+  types: string[];
   baseHp: number;
   baseAttack: number;
   baseDefense: number;
@@ -74,28 +75,33 @@ export class SeedService implements OnModuleInit {
   }
 
   private async seedMoves() {
-    const typedMoveData = moveData as IMoveData[];
+    const typedMoveData = moveData as unknown as IMoveData[];
     const movesToCreate: Move[] = typedMoveData.map((moveDto) => {
-      return this.moveRepository.create(moveDto);
+      return this.moveRepository.create({
+        id: moveDto.id,
+        name: moveDto.name,
+        power: moveDto.power,
+        category: moveDto.category,
+        elementalType: moveDto.elementalType,
+        description: moveDto.description,
+        effects: moveDto.effects,
+      });
     });
     await this.moveRepository.save(movesToCreate);
     console.log('[SeedService] Move seeding complete!');
   }
 
   private async seedCoffeemons() {
-    const typedCoffeemonData = coffeemonData as ICoffeemonData[];
+    const typedCoffeemonData = coffeemonData as unknown as ICoffeemonData[];
     for (const data of typedCoffeemonData) {
       const coffeemonToCreate = {
         id: data.id,
         name: data.name,
-        type: data.type as CoffeemonType,
+        types: data.types as CoffeemonType[],
         baseHp: data.baseHp,
         baseAttack: data.baseAttack,
         baseDefense: data.baseDefense,
         baseSpeed: data.baseSpeed,
-        defaultImage: data.defaultImage,
-        backImage: data.backImage,
-        hurtImage: data.hurtImage,
       };
       const newCoffeemon = this.coffeemonRepository.create(coffeemonToCreate);
       await this.coffeemonRepository.save(newCoffeemon);

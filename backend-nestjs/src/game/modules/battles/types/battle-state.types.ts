@@ -1,3 +1,4 @@
+import { CoffeemonType } from '../../coffeemon/entities/coffeemon.entity';
 import { Move } from '../../moves/entities/move.entity';
 import { PlayerInventory } from '../../player/entities/player.entity';
 import { BattleActionUnion } from './battle-actions.types';
@@ -19,6 +20,7 @@ export interface CoffeemonState {
   maxHp: number;
   isFainted: boolean;
   canAct: boolean;
+  types: CoffeemonType[];
   attack: number;
   defense: number;
   speed: number;
