@@ -127,6 +127,12 @@ export function useCoffeemons({
   }
 
   async function giveAllCoffeemons() {
+    if (!playerId) {
+      console.error('No player ID available for giving coffeemons');
+      Alert.alert('Erro', 'ID do jogador não disponível. Tente novamente.');
+      return;
+    }
+
     setLoading(true);
     try {
       console.log('Giving all coffeemons to player...');
@@ -143,8 +149,8 @@ export function useCoffeemons({
         Alert.alert('Informação', 'Você já possui todos os Coffeemons!');
       }
       
-      // Recarregar coffeemons
-      await fetchCoffeemons();
+      // Recarregar coffeemons com o playerId
+      await fetchCoffeemons(playerId);
     } catch (error: any) {
       console.error('Error giving all coffeemons:', error);
       const errorMessage = error.message || 'Erro ao capturar Coffeemons';

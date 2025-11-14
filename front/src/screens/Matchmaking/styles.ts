@@ -80,6 +80,62 @@ export const styles = StyleSheet.create({
     fontWeight: '700',
     fontFamily: PIXEL_FONT,
   },
+
+  // Debug Menu
+  debugMenuButton: {
+    position: 'absolute',
+    top: statusBarHeight + pixelArt.spacing.xxl + pixelArt.spacing.lg,
+    right: pixelArt.spacing.lg,
+    zIndex: 1000,
+    padding: 8,
+    backgroundColor: 'rgba(139, 115, 85, 0.3)',
+    borderRadius: 8,
+    borderWidth: 2,
+    borderColor: '#8B7355',
+  },
+
+  debugMenuIcon: {
+    fontSize: 20,
+    color: '#8B7355',
+    fontWeight: '700',
+    fontFamily: PIXEL_FONT,
+  },
+
+  debugMenuPopup: {
+    position: 'absolute',
+    top: statusBarHeight + pixelArt.spacing.xxl + pixelArt.spacing.lg + 44,
+    right: pixelArt.spacing.lg,
+    zIndex: 1001,
+    backgroundColor: '#fff9f0',
+    borderRadius: 8,
+    borderWidth: 2,
+    borderColor: '#8B7355',
+    minWidth: 180,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 8,
+  },
+
+  debugMenuItem: {
+    paddingVertical: pixelArt.spacing.md,
+    paddingHorizontal: pixelArt.spacing.lg,
+    borderBottomWidth: 1,
+    borderBottomColor: '#d4c5a0',
+  },
+
+  debugMenuItemLast: {
+    borderBottomWidth: 0,
+  },
+
+  debugMenuItemText: {
+    fontSize: 14,
+    color: '#8B7355',
+    fontWeight: '600',
+    fontFamily: PIXEL_FONT,
+  },
+  
   // ========================================
   // GRADIENTE E SCROLL
   // ========================================
@@ -159,6 +215,7 @@ export const styles = StyleSheet.create({
 
   scrollBody: {
     paddingTop: pixelArt.spacing.xl,
+    paddingBottom: 100, // Espaço para não ficar escondido atrás do bottomBar
   },
   
   // ========================================
@@ -796,4 +853,114 @@ export const styles = StyleSheet.create({
     fontFamily: PIXEL_FONT,
     textAlign: 'center',
   },
+
+  // ========================================
+  // SEÇÃO DE ITENS
+  // ========================================
+  itemsSection: {
+    marginTop: 100,
+    marginHorizontal: pixelArt.spacing.lg,
+    marginBottom: pixelArt.spacing.lg,
+    backgroundColor: 'rgba(255, 249, 240, 0.98)',
+    borderRadius: pixelArt.borders.radiusMedium,
+    borderWidth: 2,
+    borderColor: '#8B7355',
+    padding: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+
+  itemsSectionTitle: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: '#8B7355',
+    marginBottom: 4,
+    fontFamily: PIXEL_FONT,
+    textAlign: 'center',
+  },
+
+  itemsList: {
+    flexDirection: 'row',
+    flexWrap: 'nowrap', // Não quebrar linha
+    gap: 4,
+    justifyContent: 'center',
+  },
+
+  itemsEmptyText: {
+    fontSize: 10,
+    color: '#999',
+    textAlign: 'center',
+    fontFamily: PIXEL_FONT,
+    paddingVertical: 8,
+  },
+
+  itemCard: {
+    flexDirection: 'column',
+    alignItems: 'center',
+    backgroundColor: '#fff',
+    borderRadius: 6,
+    borderWidth: 1.5,
+    borderColor: '#d4c5a0',
+    padding: 3,
+    minWidth: 50,
+    maxWidth: 55,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+
+  itemIconContainer: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: '#f5f2e8',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 2,
+    position: 'relative',
+  },
+
+  itemIcon: {
+    fontSize: 16,
+  },
+
+  itemInfo: {
+    width: '100%',
+    flexDirection: 'column',
+    alignItems: 'center',
+  },
+
+  itemName: {
+    fontSize: 6,
+    fontWeight: '600',
+    color: '#5d4e37',
+    fontFamily: PIXEL_FONT,
+    textAlign: 'center',
+    lineHeight: 8,
+  },
+
+  itemQuantityBadge: {
+    position: 'absolute',
+    top: -3,
+    right: -3,
+    paddingHorizontal: 3,
+    paddingVertical: 1,
+    borderRadius: 6,
+    minWidth: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+
+  itemQuantityText: {
+    fontSize: 7,
+    fontWeight: '700',
+    color: '#fff',
+    fontFamily: PIXEL_FONT,
+  },
 });
+

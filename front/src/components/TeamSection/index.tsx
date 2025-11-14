@@ -22,6 +22,7 @@ interface TeamSectionProps {
   showQrButton?: boolean;
   onPressQrButton?: () => void;
   qrButtonDisabled?: boolean;
+  children?: React.ReactNode;
 }
 
 export default function TeamSection({
@@ -40,6 +41,7 @@ export default function TeamSection({
   showQrButton = false,
   onPressQrButton,
   qrButtonDisabled = false,
+  children,
 }: TeamSectionProps) {
   const hasAction = showAddButton && !!onAddCoffeemon;
   const HeaderComponent = isCollapsible ? TouchableOpacity : View;
@@ -65,8 +67,10 @@ export default function TeamSection({
     return (
       variant === 'horizontal' ? (
         <ScrollView
-          showsVerticalScrollIndicator={false}
+          showsVerticalScrollIndicator={true}
           contentContainerStyle={styles.availableGridContent}
+          nestedScrollEnabled={true}
+          style={{ height: 550 }}
         >
           <View style={styles.availableGrid}>
             {coffeemons.map((pc) => (
@@ -81,6 +85,9 @@ export default function TeamSection({
                 </View>
               </View>
             ))}
+          </View>
+          <View style={{ width: '100%', marginTop: 0 }}>
+            {children}
           </View>
         </ScrollView>
       ) : (

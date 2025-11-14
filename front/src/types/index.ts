@@ -54,6 +54,7 @@ export interface PlayerState {
   coffeemons: Coffeemon[];
   activeCoffeemonIndex: number;
   hasSelectedCoffeemon?: boolean;
+  inventory?: Record<string, number>;
 }
 
 export interface BattleState {

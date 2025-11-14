@@ -190,6 +190,7 @@ export default function App() {
             battleId={battleData.battleId}
             battleState={battleData.battleState}
             playerId={authData.playerId}
+            token={authData.token}
             socket={battleData.socket}
             
             // Callback chamado quando a BATALHA TERMINA ou usuário FOGE

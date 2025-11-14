@@ -731,6 +731,84 @@ export const styles = StyleSheet.create({
     textAlign: 'center',
     marginTop: 4,
   },
+
+  // ========================================
+  // ITEM MODE - Lista de Itens
+  // ========================================
+  itemsScrollView: {
+    flex: 1,
+  },
+  itemsScrollContent: {
+    padding: 12,
+    gap: 8,
+  },
+  itemButton: {
+    backgroundColor: 'rgba(44, 44, 46, 0.95)',
+    borderRadius: 12,
+    borderWidth: 3,
+    padding: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  itemButtonDisabled: {
+    opacity: 0.5,
+    borderColor: '#4A4A4C',
+  },
+  itemButtonContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    flex: 1,
+  },
+  itemIcon: {
+    fontSize: 32,
+    width: 40,
+    textAlign: 'center',
+  },
+  itemTextContainer: {
+    flex: 1,
+  },
+  itemName: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#FFFFFF',
+    marginBottom: 2,
+  },
+  itemNameDisabled: {
+    color: '#8E8E93',
+  },
+  itemDescription: {
+    fontSize: 12,
+    color: '#AEAEB2',
+  },
+  itemDescriptionDisabled: {
+    color: '#636366',
+  },
+  itemQuantityBadge: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 12,
+    minWidth: 40,
+    alignItems: 'center',
+  },
+  itemQuantityText: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: '#FFFFFF',
+  },
+  itemOutOfStockBadge: {
+    backgroundColor: '#FF3B30',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 12,
+    minWidth: 40,
+    alignItems: 'center',
+  },
+  itemOutOfStockText: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: '#FFFFFF',
+  },
 });
 
 

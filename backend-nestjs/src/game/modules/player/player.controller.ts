@@ -49,6 +49,23 @@ export class PlayerController {
     return this.playerService.getPlayerParty(player.id);
   }
 
+  //STUB SOMENTE PARA TESTES!!! - REMOVER DEPOIS
+  @UseGuards(AuthGuard)
+  @Post('me/coffeemons/give-all')
+  async giveAllCoffeemonsToMe(
+    @GetUser('id') userId: number
+  ): Promise<{ message: string; count: number }> {
+    const player = await this.playerService.findByUserId(userId);
+    const count = await this.playerService.giveAllCoffeemonsToPlayer(player.id);
+    return {
+      message:
+        count > 0
+          ? `${count} Coffeemons adicionados com sucesso!`
+          : 'Você já possui todos os Coffeemons!',
+      count,
+    };
+  }
+
   @UseGuards(AuthGuard)
   @Post('me/coffeemons/:coffeemonId')
   async addCoffeemon(
@@ -79,19 +96,44 @@ export class PlayerController {
     return this.playerService.removeCoffeemonFromParty(player.id, +playerCoffeemonId);
   }
 
-  //STUB SOMENTE PARA TESTES!!! - REMOVER DEPOIS
+  //STUB SOMENTE PARA TESTES!!! - ADICIONAR ITENS INICIAIS
   @UseGuards(AuthGuard)
-  @Post('me/coffeemons/give-all')
-  async giveAllCoffeemonsToMe(
-    @GetUser('id') userId: number
-  ): Promise<{ message: string; count: number }> {
+  @Post('me/items/give-initial')
+  async giveInitialItems(@GetUser('id') userId: number): Promise<{ message: string; inventory: any }> {
     const player = await this.playerService.findByUserId(userId);
-    const count = await this.playerService.giveAllCoffeemonsToPlayer(player.id);
+    const initialItems = {
+      small_potion: 5,
+      revive_bean: 2,
+      antidote_espresso: 3,
+    };
+    
+    await this.playerService.addItemsToPlayer(player.id, initialItems);
+    const updatedPlayer = await this.playerService.findOne(player.id);
+    
     return {
-      message:
-        count > 0
-          ? `${count} Coffeemons adicionados com sucesso!`
-          : 'Você já possui todos os Coffeemons!',
+      message: 'Itens iniciais adicionados com sucesso!',
+      inventory: updatedPlayer.inventory,
+    };
+  }
+
+  //STUB PÚBLICO PARA ADICIONAR ITENS A TODOS OS PLAYERS - REMOVER DEPOIS!!!
+  @Post('give-items-to-all')
+  async giveItemsToAll(): Promise<{ message: string; count: number }> {
+    const players = await this.playerService['playerRepository'].find();
+    const initialItems = {
+      small_potion: 5,
+      revive_bean: 2,
+      antidote_espresso: 3,
+    };
+    
+    let count = 0;
+    for (const player of players) {
+      await this.playerService.addItemsToPlayer(player.id, initialItems);
+      count++;
+    }
+    
+    return {
+      message: `Itens adicionados a ${count} players!`,
       count,
     };
   }
