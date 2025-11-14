@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { ArrayContains, Repository } from 'typeorm';
 import { CreateCoffeemonDto } from './dto/create-coffeemon.dto';
 import { UpdateCoffeemonDto } from './dto/update-coffeemon.dto';
 import { Coffeemon, CoffeemonType } from './entities/coffeemon.entity';
@@ -29,7 +29,7 @@ export class CoffeemonService {
 
   async findByType(type: CoffeemonType): Promise<Coffeemon[]> {
     return this.coffeemonRepository.find({
-      where: { type },
+      where: { types: ArrayContains([type]) },
     });
   }
 

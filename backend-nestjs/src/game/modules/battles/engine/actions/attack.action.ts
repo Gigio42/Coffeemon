@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
-import { Move, moveType } from '../../../moves/entities/move.entity';
+import { TypeChartService } from '../../../coffeemon/services/type-chart.service';
+import { Move, MoveCategory } from '../../../moves/entities/move.entity';
 import { CoffeemonState, PlayerBattleState } from '../../types/battle-state.types';
 import { BattleActionType } from '../../types/enums';
 import { StatusEffectsService } from '../effects/status-effects.service';
@@ -14,7 +15,10 @@ import {
 export class AttackAction implements IBattleAction<BattleActionType.ATTACK> {
   readonly priority = 5;
 
-  constructor(private readonly statusEffectsService: StatusEffectsService) {}
+  constructor(
+    private readonly statusEffectsService: StatusEffectsService,
+    private readonly typeChartService: TypeChartService
+  ) {}
 
   // eslint-disable-next-line @typescript-eslint/require-await
   async execute(
@@ -51,7 +55,7 @@ export class AttackAction implements IBattleAction<BattleActionType.ATTACK> {
     }
 
     // se for suporte, não faz cálculo de dano
-    if (move.type === moveType.SUPPORT) {
+    if (move.category === MoveCategory.SUPPORT) {
       if (move.effects) {
         const effectNotifications = this.processMoveEffects(
           move,
@@ -93,7 +97,11 @@ export class AttackAction implements IBattleAction<BattleActionType.ATTACK> {
 
     // --- Multiplicadores ---
 
-    // TODO: Adicionar multiplicador de tipo aqui no futuro (Sistema elemental)
+    const typeMultiplier = this.typeChartService.getMultiplier(
+      move.elementalType,
+      defendingMon.types
+    );
+    damage *= typeMultiplier;
 
     // Critical Hit
     let isCriticalHit = false;
@@ -201,7 +209,7 @@ export class AttackAction implements IBattleAction<BattleActionType.ATTACK> {
             break;
         }
 
-        if (move.type === moveType.ATTACK && effect.type === 'lifesteal') {
+        if (move.category === MoveCategory.ATTACK && effect.type === 'lifesteal') {
           const lifestealPercentage = effect.value ?? 0.5;
           const lifestealHeal = Math.floor(finalDamage * lifestealPercentage);
 

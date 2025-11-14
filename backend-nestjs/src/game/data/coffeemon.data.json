@@ -2,73 +2,55 @@
   {
     "id": 1,
     "name": "Jasminelle",
-    "type": "floral",
+    "types": ["floral"],
     "baseHp": 95,
     "baseAttack": 50,
     "baseDefense": 55,
-    "baseSpeed": 60,
-    "defaultImage": "/imgs/Jasminelle/default.png",
-    "backImage": "/imgs/Jasminelle/back.png",
-    "hurtImage": "/imgs/Jasminelle/hurt.png"
+    "baseSpeed": 60
   },
   {
     "id": 2,
     "name": "Limonetto",
-    "type": "fruity",
+    "types": ["fruity", "sour"],
     "baseHp": 80,
     "baseAttack": 65,
     "baseDefense": 35,
-    "baseSpeed": 85,
-    "defaultImage": "/imgs/Limonetto/default.png",
-    "backImage": "/imgs/Limonetto/back.png",
-    "hurtImage": "/imgs/Limonetto/hurt.png"
+    "baseSpeed": 85
   },
   {
     "id": 3,
     "name": "Maprion",
-    "type": "sweet",
+    "types": ["sweet"],
     "baseHp": 110,
     "baseAttack": 50,
     "baseDefense": 50,
-    "baseSpeed": 50,
-    "defaultImage": "/imgs/Maprion/default.png",
-    "backImage": "/imgs/Maprion/back.png",
-    "hurtImage": "/imgs/Maprion/hurt.png"
+    "baseSpeed": 50
   },
   {
     "id": 4,
     "name": "Emberly",
-    "type": "roasted",
+    "types": ["roasted"],
     "baseHp": 90,
     "baseAttack": 70,
     "baseDefense": 45,
-    "baseSpeed": 70,
-    "defaultImage": "/imgs/Emberly/default.png",
-    "backImage": "/imgs/Emberly/back.png",
-    "hurtImage": "/imgs/Emberly/hurt.png"
+    "baseSpeed": 70
   },
   {
     "id": 5,
     "name": "Almondino",
-    "type": "nutty",
+    "types": ["nutty"],
     "baseHp": 95,
     "baseAttack": 55,
     "baseDefense": 75,
-    "baseSpeed": 45,
-    "defaultImage": "/imgs/Almondino/default.png",
-    "backImage": "/imgs/Almondino/back.png",
-    "hurtImage": "/imgs/Almondino/hurt.png"
+    "baseSpeed": 45
   },
   {
     "id": 6,
     "name": "Gingerlynn",
-    "type": "spicy",
+    "types": ["spicy"],
     "baseHp": 85,
     "baseAttack": 75,
     "baseDefense": 50,
-    "baseSpeed": 80,
-    "defaultImage": "/imgs/Gingerlynn/default.png",
-    "backImage": "/imgs/Gingerlynn/back.png",
-    "hurtImage": "/imgs/Gingerlynn/hurt.png"
+    "baseSpeed": 80
   }
 ]

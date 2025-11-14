@@ -1,0 +1,23 @@
+{
+    "fruity": {
+      "fruity": 1.0,   "roasted": 0.5,  "spicy": 1.0,    "sour": 1.0,    "nutty": 1.0,    "floral": 1.5,   "sweet": 1.0
+    },
+    "roasted": {
+      "fruity": 1.5,   "roasted": 1.0,  "spicy": 1.0,    "sour": 1.0,    "nutty": 1.0,    "floral": 0.5,   "sweet": 1.5
+    },
+    "spicy": {
+      "fruity": 1.0,   "roasted": 1.0,  "spicy": 1.0,    "sour": 1.0,    "nutty": 1.5,    "floral": 0.5,   "sweet": 1.0
+    },
+    "sour": {
+      "fruity": 1.0,   "roasted": 1.0,  "spicy": 1.0,    "sour": 1.0,    "nutty": 1.0,    "floral": 1.0,   "sweet": 1.5
+    },
+    "nutty": {
+      "fruity": 1.0,   "roasted": 1.0,  "spicy": 0.5,    "sour": 1.0,    "nutty": 1.0,    "floral": 1.5,   "sweet": 1.0
+    },
+    "floral": {
+      "fruity": 0.5,   "roasted": 1.0,  "spicy": 1.5,    "sour": 1.0,    "nutty": 1.0,    "floral": 1.0,   "sweet": 1.0
+    },
+    "sweet": {
+      "fruity": 1.0,   "roasted": 0.5,  "spicy": 1.0,    "sour": 1.0,    "nutty": 1.5,    "floral": 1.0,   "sweet": 1.0
+    }
+  }
