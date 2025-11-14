@@ -1,16 +1,18 @@
 import { Injectable } from '@nestjs/common';
-import { BattleState, PlayerBattleState } from '../../types/battle-state.types';
+import { ItemsService } from 'src/game/modules/items/items.service';
 import {
   AttackPayload,
   BattleActionUnion,
   SelectCoffeemonPayload,
   SwitchPayload,
+  UseItemPayload,
 } from '../../types/battle-actions.types';
+import { BattleState, PlayerBattleState } from '../../types/battle-state.types';
 import { BattleActionType, TurnPhase } from '../../types/enums';
-import { BattleEventKey } from '../events/battle-event.registry';
 import { StatusEffectCategory } from '../effects/status-effect.interface';
-import { StatusEffectsService } from '../effects/status-effects.service';
 import { statusEffectRegistry } from '../effects/status-effect.registry';
+import { StatusEffectsService } from '../effects/status-effects.service';
+import { BattleEventKey } from '../events/battle-event.registry';
 
 export interface ValidationResult {
   isValid: boolean;
@@ -20,13 +22,16 @@ export interface ValidationResult {
 
 @Injectable()
 export class BattleValidatorService {
-  constructor(private readonly statusEffectsService: StatusEffectsService) {}
+  constructor(
+    private readonly statusEffectsService: StatusEffectsService,
+    private readonly itemsService: ItemsService
+  ) {}
 
-  public validate(
+  public async validate(
     state: BattleState,
     playerId: number,
     action: BattleActionUnion
-  ): ValidationResult {
+  ): Promise<ValidationResult> {
     const player = state.player1Id === playerId ? state.player1 : state.player2;
 
     const phaseResult = this.validatePhase(state, player, playerId, action);
@@ -37,7 +42,7 @@ export class BattleValidatorService {
       if (actorResult) return actorResult;
     }
 
-    const payloadResult = this.validatePayload(player, playerId, action);
+    const payloadResult = await this.validatePayload(player, playerId, action);
     if (payloadResult) return payloadResult;
 
     return { isValid: true };
@@ -131,11 +136,11 @@ export class BattleValidatorService {
     return null;
   }
 
-  private validatePayload(
+  private async validatePayload(
     player: PlayerBattleState,
     playerId: number,
     action: BattleActionUnion
-  ): ValidationResult | null {
+  ): Promise<ValidationResult | null> {
     switch (action.actionType) {
       case BattleActionType.SELECT_COFFEEMON:
         return this.validateSelectCoffeemonPayload(player, action.payload, playerId);
@@ -143,8 +148,14 @@ export class BattleValidatorService {
         return this.validateSwitchPayload(player, action.payload, playerId);
       case BattleActionType.ATTACK:
         return this.validateAttackPayload(player, action.payload, playerId);
+      case BattleActionType.USE_ITEM:
+        return await this.validateUseItemPayload(player, action.payload, playerId);
+      default:
+        return this.fail('ACTION_ERROR', {
+          playerId,
+          error: 'Invalid action type.',
+        });
     }
-    return null;
   }
 
   private validateSelectCoffeemonPayload(
@@ -210,19 +221,67 @@ export class BattleValidatorService {
           error: 'Move requires a specific ally target index.',
         });
       }
-      
-      if (
-        targetCoffeemonIndex < 0 ||
-        targetCoffeemonIndex >= player.coffeemons.length
-      ) {
-        return this.fail('SWITCH_FAILED_INVALID_INDEX', { playerId }); 
+
+      if (targetCoffeemonIndex < 0 || targetCoffeemonIndex >= player.coffeemons.length) {
+        return this.fail('SWITCH_FAILED_INVALID_INDEX', { playerId });
       }
 
       const targetMon = player.coffeemons[targetCoffeemonIndex];
       if (targetMon.isFainted) {
         return this.fail('ACTION_ERROR', {
-            playerId,
-            error: 'Cannot target a fainted Coffeemon.',
+          playerId,
+          error: 'Cannot target a fainted Coffeemon.',
+        });
+      }
+    }
+
+    return null;
+  }
+
+  private async validateUseItemPayload(
+    player: PlayerBattleState,
+    payload: UseItemPayload,
+    playerId: number
+  ): Promise<ValidationResult | null> {
+    const { itemId, targetCoffeemonIndex } = payload;
+
+    if (!player.inventory[itemId] || player.inventory[itemId] <= 0) {
+      return this.fail('ACTION_ERROR', {
+        playerId,
+        error: `Você não possui o item ${itemId}.`,
+      });
+    }
+
+    const itemDefinition = await this.itemsService.findOne(itemId);
+    if (!itemDefinition) {
+      return this.fail('ACTION_ERROR', {
+        playerId,
+        error: `Item ${itemId} não é um item válido.`,
+      });
+    }
+
+    const effect = itemDefinition.effects[0];
+    if (effect.target === 'coffeemon') {
+      const targetIndex = targetCoffeemonIndex ?? player.activeCoffeemonIndex;
+      if (targetIndex === null) {
+        return this.fail('ACTION_ERROR', { playerId, error: 'Nenhum alvo selecionado.' });
+      }
+
+      const targetMon = player.coffeemons[targetIndex];
+      if (!targetMon) {
+        return this.fail('ACTION_ERROR', { playerId, error: 'Alvo inválido.' });
+      }
+
+      if (effect.type === 'heal' && targetMon.currentHp === targetMon.maxHp) {
+        return this.fail('ACTION_ERROR', { playerId, error: 'O HP já está cheio.' });
+      }
+      if (effect.type === 'revive' && !targetMon.isFainted) {
+        return this.fail('ACTION_ERROR', { playerId, error: 'O Coffeemon não está desmaiado.' });
+      }
+      if (effect.type !== 'revive' && targetMon.isFainted) {
+        return this.fail('ACTION_ERROR', {
+          playerId,
+          error: 'Não pode usar este item em um Coffeemon desmaiado.',
         });
       }
     }

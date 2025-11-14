@@ -6,12 +6,16 @@ import tseslint from 'typescript-eslint';
 
 export default tseslint.config(
   {
-    ignores: ['eslint.config.mjs'],
+    // Ignora a pasta de build e o próprio arquivo de config
+    ignores: ['dist', 'eslint.config.mjs'],
   },
+  // Configurações globais
   eslint.configs.recommended,
-  ...tseslint.configs.recommendedTypeChecked,
+  ...tseslint.configs.recommendedTypeChecked, // <-- Suas regras de tipo
   eslintPluginPrettierRecommended,
   {
+    // Aplica regras específicas APENAS para arquivos TypeScript
+    files: ['src/**/*.ts'],
     languageOptions: {
       globals: {
         ...globals.node,
@@ -19,12 +23,10 @@ export default tseslint.config(
       },
       sourceType: 'commonjs',
       parserOptions: {
-        projectService: true,
+        project: true,
         tsconfigRootDir: import.meta.dirname,
       },
     },
-  },
-  {
     rules: {
       '@typescript-eslint/no-explicit-any': 'off',
       '@typescript-eslint/no-floating-promises': 'warn',

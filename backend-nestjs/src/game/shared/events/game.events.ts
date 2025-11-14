@@ -1,5 +1,6 @@
 import { BattleActionUnion } from 'src/game/modules/battles/types/battle-actions.types';
 import { BattleState } from 'src/game/modules/battles/types/battle-state.types';
+import { Player } from 'src/game/modules/player/entities/player.entity';
 
 // --- Comandos (Intenções do Usuário ou do Sistema) ---
 export class PlayerWantsToJoinQueueCommand {
@@ -44,6 +45,19 @@ export class BattleActionCommand {
 }
 
 // --- Eventos (Fatos que Ocorreram no Sistema) ---
+export class PlayerCreatedEvent {
+  constructor(
+    public readonly playerId: number,
+    public readonly userId: number
+  ) {}
+}
+
+export class PlayerInventoryUpdateEvent {
+  constructor(
+    public readonly playerId: number,
+    public readonly updatedPlayer: Player
+  ) {}
+}
 export class PlayerJoinedQueueEvent {
   constructor(
     public readonly playerId: number,

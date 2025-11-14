@@ -1,0 +1,23 @@
+[
+    {
+      "id": "sweet-fruity",
+      "name": "Pacote Doce e Frutado",
+      "description": "Um pacote com notas doces e frutadas.",
+      "cost": 100,
+      "notes": ["sweet", "fruity"]
+    },
+    {
+      "id": "roast-blend",
+      "name": "Blend Tostado",
+      "description": "Uma mistura complexa de grãos tostados, picantes e com nozes.",
+      "cost": 150,
+      "notes": ["roasted", "spicy", "nutty"]
+    },
+    {
+      "id": "floral-pure",
+      "name": "Pacote Floral Puro",
+      "description": "Garantia de um Coffeemon floral.",
+      "cost": 120,
+      "notes": ["floral"]
+    }
+  ]

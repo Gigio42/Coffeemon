@@ -34,6 +34,7 @@ export class BotPlayerService {
         activeCoffeemonIndex: null,
         coffeemons: botParty,
         hasSelectedCoffeemon: false,
+        inventory: {},
       },
       profile,
     };

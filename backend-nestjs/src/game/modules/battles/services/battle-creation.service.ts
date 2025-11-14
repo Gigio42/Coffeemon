@@ -10,6 +10,7 @@ import {
 } from '../../../shared/events/game.events';
 import { BotPlayerService } from '../../bot/services/bot-player.service';
 import { StatsCalculatorService } from '../../coffeemon/services/stats-calculator.service';
+import { Player } from '../../player/entities/player.entity';
 import { PlayerCoffeemons } from '../../player/entities/playerCoffeemons.entity';
 import { PlayerService } from '../../player/player.service';
 import { Battle } from '../entities/battle.entity';
@@ -38,6 +39,11 @@ export class BattleCreationService {
     });
     const savedBattle = await this.repo.save(battle);
 
+    const [player1, player2] = await Promise.all([
+      this.playerService.findOne(event.player1Id),
+      this.playerService.findOne(event.player2Id),
+    ]);
+
     const [team1, team2] = await Promise.all([
       this.playerService.getPlayerParty(event.player1Id),
       this.playerService.getPlayerParty(event.player2Id),
@@ -48,8 +54,8 @@ export class BattleCreationService {
       player2Id: event.player2Id,
       player1SocketId: event.player1SocketId,
       player2SocketId: event.player2SocketId,
-      player1: this.mapTeamToState(team1),
-      player2: this.mapTeamToState(team2),
+      player1: this.mapTeamToState(team1, player1),
+      player2: this.mapTeamToState(team2, player2),
       turn: 1,
       battleStatus: BattleStatus.ACTIVE,
       events: [],
@@ -76,6 +82,7 @@ export class BattleCreationService {
     });
     const savedBattle = await this.repo.save(battle);
 
+    const player1 = await this.playerService.findOne(command.playerId);
     const player1Team = await this.playerService.getPlayerParty(command.playerId);
 
     const initialState: BattleState = {
@@ -83,7 +90,7 @@ export class BattleCreationService {
       player2Id: botId,
       player1SocketId: command.socketId,
       player2SocketId: 'bot',
-      player1: this.mapTeamToState(player1Team),
+      player1: this.mapTeamToState(player1Team, player1),
       player2: botPlayerState,
       turn: 1,
       battleStatus: BattleStatus.ACTIVE,
@@ -98,10 +105,11 @@ export class BattleCreationService {
     this.eventEmitter.emit('battle.created', new BattleCreatedEvent(savedBattle.id, initialState));
   }
 
-  private mapTeamToState(team: PlayerCoffeemons[]): PlayerBattleState {
+  private mapTeamToState(team: PlayerCoffeemons[], player: Player): PlayerBattleState {
     return {
       activeCoffeemonIndex: null,
       hasSelectedCoffeemon: false,
+      inventory: player.inventory || {},
       coffeemons: team.map((c): CoffeemonState => {
         const calculatedStats = this.statsCalculator.calculateAllStats(c.coffeemon, c.level, c.evs);
         const maxHp = calculatedStats.hp;

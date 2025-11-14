@@ -5,6 +5,7 @@ import {
   BattleEndedEvent,
   CoffeemonLearnedMoveEvent,
   CoffeemonLeveledUpEvent,
+  PlayerInventoryUpdateEvent,
   PlayerLeveledUpEvent,
 } from 'src/game/shared/events/game.events';
 import { Repository } from 'typeorm';
@@ -13,7 +14,7 @@ import {
   MoveLearnMethod,
 } from '../coffeemon/entities/coffeemon-learnset-move.entity';
 import { StatsCalculatorService } from '../coffeemon/services/stats-calculator.service';
-import { Player } from '../player/entities/player.entity';
+import { Player, PlayerInventory } from '../player/entities/player.entity';
 import { PlayerCoffeemonMove } from '../player/entities/playerCoffeemonMove.entity';
 import { PlayerCoffeemons } from '../player/entities/playerCoffeemons.entity';
 
@@ -43,6 +44,9 @@ export class ProgressionService {
     const PLAYER_XP_WIN = isBotBattle ? 80 : 120;
     const PLAYER_XP_LOSS = isBotBattle ? 30 : 50;
 
+    const PLAYER_COIN_WIN = isBotBattle ? 100 : 150;
+    const PLAYER_COIN_LOSS = isBotBattle ? 25 : 50;
+
     const winnerIdFinal = winnerId;
     const loserIdFinal = winnerId === player1Id ? player2Id : player1Id;
 
@@ -52,6 +56,7 @@ export class ProgressionService {
         await this.awardCoffeemonExpAndProcessLevelUp(pc, COFFEEMON_XP_WIN, winnerIdFinal);
       }
       await this.awardPlayerExpAndProcessLevelUp(winnerIdFinal, PLAYER_XP_WIN);
+      await this.awardPlayerCoins(winnerIdFinal, PLAYER_COIN_WIN);
     }
     if (loserIdFinal > 0) {
       const loserParty = await this.getPlayerParty(loserIdFinal);
@@ -59,6 +64,36 @@ export class ProgressionService {
         await this.awardCoffeemonExpAndProcessLevelUp(pc, COFFEEMON_XP_LOSS, loserIdFinal);
       }
       await this.awardPlayerExpAndProcessLevelUp(loserIdFinal, PLAYER_XP_LOSS);
+      await this.awardPlayerCoins(loserIdFinal, PLAYER_COIN_LOSS);
+    }
+
+    if (battleState.player1Id > 0) {
+      await this.syncInventory(battleState.player1Id, battleState.player1.inventory);
+    }
+    if (battleState.player2Id > 0) {
+      await this.syncInventory(battleState.player2Id, battleState.player2.inventory);
+    }
+  }
+
+  private async awardPlayerCoins(playerId: number, amount: number): Promise<void> {
+    if (amount <= 0) return;
+
+    try {
+      const player = await this.playerRepository.findOneBy({ id: playerId });
+      if (!player) {
+        console.warn(`[ProgressionService] Player ${playerId} not found, cannot award coins.`);
+        return;
+      }
+
+      player.coins += amount;
+      const updatedPlayer = await this.playerRepository.save(player);
+
+      this.eventEmitter.emit(
+        'player.inventory.update',
+        new PlayerInventoryUpdateEvent(player.id, updatedPlayer)
+      );
+    } catch (error) {
+      console.error(`[ProgressionService] Falha ao dar moedas para player ${playerId}:`, error);
     }
   }
 
@@ -70,6 +105,21 @@ export class ProgressionService {
       },
       relations: ['coffeemon', 'learnedMoves', 'learnedMoves.move'],
     });
+  }
+
+  private async syncInventory(playerId: number, battleInventory: PlayerInventory) {
+    try {
+      const player = await this.playerRepository.findOneBy({ id: playerId });
+      if (player) {
+        player.inventory = battleInventory;
+        await this.playerRepository.save(player);
+      }
+    } catch (error) {
+      console.error(
+        `[ProgressionService] Falha ao sincronizar inventário para player ${playerId}:`,
+        error
+      );
+    }
   }
 
   public async awardPlayerExpAndProcessLevelUp(

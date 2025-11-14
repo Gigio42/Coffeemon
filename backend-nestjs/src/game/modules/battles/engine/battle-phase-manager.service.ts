@@ -31,7 +31,8 @@ export class BattlePhaseManager {
     action: BattleActionUnion
   ): Promise<BattleState> {
     battleState.events = [];
-    const validationResult = this.actionValidator.validate(battleState, playerId, action);
+
+    const validationResult = await this.actionValidator.validate(battleState, playerId, action);
 
     if (!validationResult.isValid) {
       const payload = validationResult.errorPayload || {};

@@ -10,19 +10,24 @@ import {
   CoffeemonLearnedMoveEvent,
   CoffeemonLeveledUpEvent,
   OpponentDisconnectedEvent,
+  PlayerInventoryUpdateEvent,
   PlayerJoinedQueueEvent,
   PlayerLeftBattleEvent,
   PlayerLeftQueueEvent,
   PlayerLeveledUpEvent,
   PlayerReconnectedEvent,
 } from '../events/game.events';
+import { SocketManagerService } from '../socket-manager/socket-manager.service';
 
 @WebSocketGateway({ cors: { origin: '*' } })
 export class NotificationsGateway {
   @WebSocketServer()
   server: Server;
 
-  constructor(private readonly battleViewService: BattleViewService) {}
+  constructor(
+    private readonly battleViewService: BattleViewService,
+    private readonly socketManager: SocketManagerService
+  ) {}
 
   @OnEvent('queue.player.joined')
   async handlePlayerJoinedQueue(event: PlayerJoinedQueueEvent): Promise<void> {
@@ -89,6 +94,18 @@ export class NotificationsGateway {
     // n envia o state pro bot (ele n precisa saber de nada)
     if (player2SocketId !== 'bot') {
       this.server.to(player2SocketId).emit('battleUpdate', { battleState: p2View });
+    }
+  }
+
+  @OnEvent('player.inventory.update')
+  handleInventoryUpdate(event: PlayerInventoryUpdateEvent): void {
+    const socketId = this.socketManager.getSocketId(event.playerId);
+
+    if (socketId) {
+      this.server.to(socketId).emit('inventoryUpdate', {
+        inventory: event.updatedPlayer.inventory,
+        coins: event.updatedPlayer.coins,
+      });
     }
   }
 
@@ -169,25 +186,34 @@ export class NotificationsGateway {
 
   @OnEvent('player.leveled.up')
   handlePlayerLeveledUp(event: PlayerLeveledUpEvent): void {
-    this.server.to(`player:${event.playerId}`).emit('playerLevelUp', {
-      newLevel: event.newLevel,
-    });
+    const socketId = this.socketManager.getSocketId(event.playerId);
+    if (socketId) {
+      this.server.to(socketId).emit('playerLevelUp', {
+        newLevel: event.newLevel,
+      });
+    }
   }
 
   @OnEvent('coffeemon.leveled.up')
   handleCoffeemonLeveledUp(event: CoffeemonLeveledUpEvent): void {
-    this.server.to(`player:${event.playerId}`).emit('coffeemonLevelUp', {
-      playerCoffeemonId: event.playerCoffeemonId,
-      newLevel: event.newLevel,
-      expGained: event.expGained,
-    });
+    const socketId = this.socketManager.getSocketId(event.playerId);
+    if (socketId) {
+      this.server.to(socketId).emit('coffeemonLevelUp', {
+        playerCoffeemonId: event.playerCoffeemonId,
+        newLevel: event.newLevel,
+        expGained: event.expGained,
+      });
+    }
   }
 
   @OnEvent('coffeemon.learned.move')
   handleCoffeemonLearnedMove(event: CoffeemonLearnedMoveEvent): void {
-    this.server.to(`player:${event.playerId}`).emit('coffeemonLearnedMove', {
-      playerCoffeemonId: event.playerCoffeemonId,
-      moveName: event.moveName,
-    });
+    const socketId = this.socketManager.getSocketId(event.playerId);
+    if (socketId) {
+      this.server.to(socketId).emit('coffeemonLearnedMove', {
+        playerCoffeemonId: event.playerCoffeemonId,
+        moveName: event.moveName,
+      });
+    }
   }
 }

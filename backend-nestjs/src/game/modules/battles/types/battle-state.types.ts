@@ -1,4 +1,5 @@
 import { Move } from '../../moves/entities/move.entity';
+import { PlayerInventory } from '../../player/entities/player.entity';
 import { BattleActionUnion } from './battle-actions.types';
 import { BattleEvent } from './battle-events.types';
 import { BattleStatus, TurnPhase } from './enums';
@@ -37,6 +38,7 @@ export interface PlayerBattleState {
   activeCoffeemonIndex: number | null;
   coffeemons: CoffeemonState[];
   hasSelectedCoffeemon: boolean;
+  inventory: PlayerInventory;
 }
 
 export interface BattleState {
