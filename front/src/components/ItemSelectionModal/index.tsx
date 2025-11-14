@@ -16,10 +16,6 @@ export default function ItemSelectionModal({
   onSelectItem,
   onClose,
 }: ItemSelectionModalProps) {
-  React.useEffect(() => {
-    console.log('[ItemSelectionModal] Rendered with:', { visible, itemCount: items.length });
-  }, [visible, items]);
-
   return (
     <Modal visible={visible} transparent animationType="fade">
       <View style={styles.modalOverlay}>

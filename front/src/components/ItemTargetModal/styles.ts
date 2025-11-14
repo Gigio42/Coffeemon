@@ -16,6 +16,7 @@ export const styles = StyleSheet.create({
     maxHeight: '80%',
     borderWidth: 3,
     borderColor: '#FFD700',
+    overflow: 'hidden',
   },
   header: {
     flexDirection: 'row',
@@ -57,7 +58,7 @@ export const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   targetsList: {
-    flex: 1,
+    height: 400,
   },
   targetsListContent: {
     padding: 16,

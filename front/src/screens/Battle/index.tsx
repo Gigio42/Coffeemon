@@ -555,6 +555,15 @@ export default function BattleScreen({
 
     console.log('[BattleScreen] Using item:', selectedItem.id, 'on Coffeemon at index:', targetIndex);
     
+    // 📦 Atualizar quantidade do item localmente
+    setItems(prevItems => 
+      prevItems.map(item => 
+        item.id === selectedItem.id 
+          ? { ...item, quantity: Math.max(0, (item.quantity || 0) - 1) }
+          : item
+      )
+    );
+    
     // Enviar ação ao backend
     sendAction('use_item', {
       itemId: selectedItem.id,
@@ -872,7 +881,8 @@ export default function BattleScreen({
               console.log('[BattleScreen] canAct:', canAct);
               console.log('[BattleScreen] myPendingAction:', myPendingAction);
               console.log('[BattleScreen] items.length:', items.length);
-              console.log('[BattleScreen] items:', items);
+              console.log('[BattleScreen] items array:', JSON.stringify(items, null, 2));
+              console.log('[BattleScreen] Opening ItemSelectionModal with items:', items);
               setItemModalVisible(true);
             }}
             disabled={!canAct || myPendingAction || items.length === 0}
