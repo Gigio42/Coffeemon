@@ -19,7 +19,7 @@ interface CoffeemonCardProps {
 }
 
 // Função de ícone atualizada para BATER com a imagem (Uva, Fogo)
-function getTypeIcon(type: string): string {
+function getTypeIcon(type?: string): string {
   const icons: { [key: string]: string } = {
     floral: '🍇', // Amoreon (Roxo)
     sweet: '🔥',  // Maprion (Laranja/Marrom)
@@ -29,6 +29,10 @@ function getTypeIcon(type: string): string {
     spicy: '🌶️',
     sour: '🍃',
   };
+  if (!type) {
+    return '☕';
+  }
+
   return icons[type.toLowerCase()] || '☕';
 }
 

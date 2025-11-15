@@ -137,7 +137,7 @@ export default function TeamSection({
             activeOpacity={0.85}
             disabled={qrButtonDisabled}
           >
-            <Image source={qrCodeIcon} style={styles.qrIcon} />
+            <Image source={qrCodeIcon} style={styles.qrIcon} resizeMode="contain" />
           </TouchableOpacity>
         )}
 

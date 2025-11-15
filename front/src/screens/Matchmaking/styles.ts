@@ -522,58 +522,192 @@ export const styles = StyleSheet.create({
   // ========================================
   bottomBar: {
     flexDirection: 'row',
-    alignItems: 'stretch',
-    justifyContent: 'flex-start',
-    paddingVertical: 0,
-    paddingHorizontal: 0,
-    gap: 0,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: pixelArt.spacing.lg,
+    paddingBottom: pixelArt.spacing.xxl,
+    paddingTop: pixelArt.spacing.md,
+    gap: pixelArt.spacing.md,
     width: '100%',
   },
 
-  bottomBarButton: {
+  bottomBarPill: {
     flex: 1,
-    height: 64,
-    borderRadius: 0,
+    height: 52,
+    borderRadius: pixelArt.borders.radiusMedium,
     backgroundColor: pixelArt.colors.cardInnerBg,
     borderWidth: pixelArt.borders.widthBold,
     borderTopColor: pixelArt.colors.borderLight,
     borderLeftColor: pixelArt.colors.borderLight,
     borderBottomColor: pixelArt.colors.borderDark,
     borderRightColor: pixelArt.colors.borderDark,
-    alignItems: 'stretch',
+    alignItems: 'center',
     justifyContent: 'center',
     ...pixelArt.shadows.innerBorder,
   },
 
-  bottomBarButtonImage: {
-    width: '100%',
-    height: '100%',
-    resizeMode: 'cover',
-  },
-
-  bottomBarButtonLeft: {
+  bottomBarPillLeft: {
     backgroundColor: pixelArt.colors.cardInnerBg,
   },
 
-  bottomBarButtonCenter: {
+  bottomBarPillCenter: {
     backgroundColor: pixelArt.colors.cardInnerBg,
   },
 
-  bottomBarButtonRight: {
+  bottomBarPillRight: {
     backgroundColor: pixelArt.colors.cardInnerBg,
   },
 
-  bottomBarButtonDisabled: {
+  bottomBarPillDisabled: {
     opacity: 0.45,
   },
 
-  bottomBarText: {
+  bottomBarPillLabel: {
     ...pixelArt.typography.pixelButton,
     fontSize: 12,
     lineHeight: 16,
     textTransform: 'uppercase',
     letterSpacing: 1,
     fontFamily: PIXEL_FONT,
+  },
+
+  sheetSectionContent: {
+    paddingHorizontal: pixelArt.spacing.lg,
+    paddingBottom: pixelArt.spacing.lg,
+  },
+
+  sheetEmptyText: {
+    ...pixelArt.typography.pixelBody,
+    fontSize: 12,
+    color: '#8B7355',
+    textAlign: 'center',
+    fontFamily: PIXEL_FONT,
+  },
+
+  sheetCardsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    marginHorizontal: -pixelArt.spacing.xs,
+  },
+
+  sheetCardWrapper: {
+    width: '50%',
+    paddingHorizontal: pixelArt.spacing.xs,
+    marginBottom: pixelArt.spacing.md,
+  },
+
+  sheetCardScaler: {
+    width: '100%',
+    alignItems: 'center',
+    justifyContent: 'center',
+    transform: [{ scale: 0.82 }],
+  },
+
+  sheetItemsList: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+  },
+
+  sheetItemCard: {
+    width: '48%',
+    marginBottom: pixelArt.spacing.md,
+    backgroundColor: pixelArt.colors.cardInnerBg,
+    borderWidth: pixelArt.borders.widthBold,
+    borderTopColor: pixelArt.colors.borderLight,
+    borderLeftColor: pixelArt.colors.borderLight,
+    borderRightColor: pixelArt.colors.borderDark,
+    borderBottomColor: pixelArt.colors.borderDark,
+    borderRadius: pixelArt.borders.radiusMedium,
+    padding: pixelArt.spacing.md,
+    ...pixelArt.shadows.innerBorder,
+  },
+
+  sheetItemHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: pixelArt.spacing.sm,
+  },
+
+  sheetItemEmoji: {
+    fontSize: 18,
+  },
+
+  sheetItemBadge: {
+    minWidth: 24,
+    height: 24,
+    borderRadius: pixelArt.borders.radiusMedium,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: pixelArt.spacing.xs,
+  },
+
+  sheetItemBadgeText: {
+    ...pixelArt.typography.pixelBody,
+    fontSize: 10,
+    color: '#FFFFFF',
+    fontFamily: PIXEL_FONT,
+  },
+
+  sheetItemName: {
+    ...pixelArt.typography.pixelBody,
+    fontSize: 11,
+    color: '#5A3B2C',
+    fontFamily: PIXEL_FONT,
+  },
+
+  sheetBotsList: {
+    flexDirection: 'column',
+    gap: pixelArt.spacing.md,
+  },
+
+  sheetBotButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: pixelArt.colors.cardInnerBg,
+    borderWidth: pixelArt.borders.widthBold,
+    borderTopColor: pixelArt.colors.borderLight,
+    borderLeftColor: pixelArt.colors.borderLight,
+    borderRightColor: pixelArt.colors.borderDark,
+    borderBottomColor: pixelArt.colors.borderDark,
+    borderRadius: pixelArt.borders.radiusMedium,
+    paddingVertical: pixelArt.spacing.md,
+    paddingHorizontal: pixelArt.spacing.md,
+    ...pixelArt.shadows.innerBorder,
+  },
+
+  sheetBotImage: {
+    width: 72,
+    height: 72,
+    borderRadius: pixelArt.borders.radiusMedium,
+    marginRight: pixelArt.spacing.md,
+  },
+
+  sheetBotLabel: {
+    ...pixelArt.typography.pixelButton,
+    fontSize: 12,
+    color: '#5A3B2C',
+    textAlign: 'left',
+    textTransform: 'uppercase',
+    fontFamily: PIXEL_FONT,
+  },
+
+  sheetBotContent: {
+    flex: 1,
+    justifyContent: 'center',
+  },
+
+  sheetBotDescription: {
+    ...pixelArt.typography.pixelBody,
+    fontSize: 10,
+    color: '#7A5A3A',
+    marginTop: pixelArt.spacing.xs,
+    fontFamily: PIXEL_FONT,
+  },
+
+  sheetBotButtonDisabled: {
+    opacity: 0.45,
   },
 
   // ========================================
@@ -648,11 +782,12 @@ export const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     height: 170, // Reduzido de 200 para 170
-    marginTop: pixelArt.spacing.xl,
+    marginTop: pixelArt.spacing.lg,
     marginBottom: pixelArt.spacing.md,
     width: '100%',
     maxWidth: Math.min(screenWidth * 0.9, 360),
     alignSelf: 'center',
+    flexGrow: 1,
   },
 
   carouselTrack: {
