@@ -255,14 +255,21 @@ const typeColors: { [key: string]: PaletteTriplet } = {
 
 export const PIXEL_FONT = 'PressStart2P_400Regular';
 
-export function getTypeColor(type: string, name: string): { light: string; dark: string; accent: string } {
+const defaultPalette: PaletteTriplet = { light: '#F5F5F5', dark: '#795548', accent: '#8D6E63' };
+
+export function getTypeColor(type: string | undefined, name: string): { light: string; dark: string; accent: string } {
   // Primeiro tenta buscar pela cor específica do Coffeemon
   const coffeemonColor = coffeemonColors[name.toLowerCase()];
   if (coffeemonColor) {
     return coffeemonColor;
   }
   // Se não encontrar, usa a cor do tipo
-  return typeColors[type.toLowerCase()] || { light: '#F5F5F5', dark: '#795548', accent: '#8D6E63' };
+  if (!type) {
+    return defaultPalette;
+  }
+
+  const normalizedType = type.toLowerCase();
+  return typeColors[normalizedType] || defaultPalette;
 }
 
 export const styles = StyleSheet.create({

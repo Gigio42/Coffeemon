@@ -8,7 +8,6 @@ import {
   PanResponder,
   Easing,
   Image,
-  LayoutChangeEvent,
   ActivityIndicator,
 } from 'react-native';
 import type { ImageSourcePropType } from 'react-native';
@@ -24,9 +23,9 @@ import { prefetchPalette, useDynamicPalette, type Palette } from '../../utils/co
 import { getCoffeemonImage } from '../../../assets/coffeemons';
 import { getVariantForStatusEffects } from '../../utils/statusEffects';
 
-import TeamSection from '../../components/TeamSection';
 import CoffeemonSelectionModal from '../../components/CoffeemonSelectionModal';
 import CoffeemonCard from '../../components/CoffeemonCard';
+import SlidingBottomSheet, { type SlidingBottomSheetSection } from '../../components/SlidingBottomSheet';
 
 import { styles } from './styles';
 import { pixelArt } from '../../theme/pixelArt';
@@ -475,8 +474,8 @@ export default function MatchmakingScreen({
   const [qrScannerVisible, setQrScannerVisible] = useState<boolean>(false);
   const [selectionModalVisible, setSelectionModalVisible] = useState<boolean>(false);
   const [isCarouselInteracting, setCarouselInteracting] = useState(false);
-  const [availableExpanded, setAvailableExpanded] = useState(false);
-  const [availableBackdropTop, setAvailableBackdropTop] = useState<number | null>(null);
+  const [sheetVisible, setSheetVisible] = useState(false);
+  const [sheetTab, setSheetTab] = useState<'backpack' | 'items' | 'bots'>('backpack');
   const [activeCoffeemon, setActiveCoffeemon] = useState<PlayerCoffeemon | null>(null);
   const scrollY = useRef(new Animated.Value(0)).current;
   const [palettesReady, setPalettesReady] = useState(false);
@@ -594,12 +593,6 @@ export default function MatchmakingScreen({
 
   const handleActiveCoffeemonChange = useCallback((coffeemon: PlayerCoffeemon | null) => {
     setActiveCoffeemon(coffeemon);
-  }, []);
-
-  const handleAvailableSectionLayout = useCallback((event: LayoutChangeEvent) => {
-    const { y, height } = event.nativeEvent.layout;
-    const backdropStart = y + height * 0.82;
-    setAvailableBackdropTop(backdropStart);
   }, []);
 
   const handleGiveAllCoffeemonsDebug = useCallback(async () => {
@@ -753,6 +746,123 @@ export default function MatchmakingScreen({
   // Selecionar cenário aleatório sempre que carregar a página
 
   const showContent = !introLoading && coffeemonsInitialized && palettesReady;
+  const sheetSections: SlidingBottomSheetSection[] = useMemo(() => {
+    const inventoryCount = items.reduce((sum, item) => sum + (item.quantity || 0), 0);
+
+    const backpackContent = (
+      <View style={styles.sheetSectionContent}>
+        {availableCoffeemons.length === 0 ? (
+          <Text style={styles.sheetEmptyText}>Capture mais Coffeemons</Text>
+        ) : (
+          <View style={styles.sheetCardsGrid}>
+            {availableCoffeemons.map((pc) => (
+              <View key={pc.id} style={styles.sheetCardWrapper}>
+                <View style={styles.sheetCardScaler}>
+                  <CoffeemonCard
+                    coffeemon={pc}
+                    onToggleParty={toggleParty}
+                    variant="small"
+                    isLoading={partyLoading === pc.id}
+                  />
+                </View>
+              </View>
+            ))}
+          </View>
+        )}
+      </View>
+    );
+
+    const itemsContent = (
+      <View style={styles.sheetSectionContent}>
+        {items.length === 0 ? (
+          <Text style={styles.sheetEmptyText}>Nenhum item disponível</Text>
+        ) : (
+          <View style={styles.sheetItemsList}>
+            {items.map((item) => {
+              const icon = getItemIcon(item.id);
+              const effectType = item.effects[0]?.type || 'heal';
+              const color = getItemColor(effectType);
+
+              return (
+                <View key={item.id} style={[styles.sheetItemCard, { borderColor: color }]}
+                >
+                  <View style={styles.sheetItemHeader}>
+                    <Text style={styles.sheetItemEmoji}>{icon}</Text>
+                    <View style={[styles.sheetItemBadge, { backgroundColor: color }]}
+                    >
+                      <Text style={styles.sheetItemBadgeText}>{item.quantity}</Text>
+                    </View>
+                  </View>
+                  <Text style={styles.sheetItemName} numberOfLines={2}>{item.name}</Text>
+                </View>
+              );
+            })}
+          </View>
+        )}
+      </View>
+    );
+
+    const botsContent = (
+      <View style={styles.sheetSectionContent}>
+        <View style={styles.sheetBotsList}>
+          <TouchableOpacity
+            style={styles.sheetBotButton}
+            onPress={() => handleFindBotMatch('jessie')}
+            disabled={partyMembers.length === 0}
+          >
+            <Image source={BOT_MIA_ICON} style={styles.sheetBotImage} resizeMode="cover" />
+            <View style={styles.sheetBotContent}>
+              <Text style={styles.sheetBotLabel}>Mia</Text>
+              <Text style={styles.sheetBotDescription}>Treino inicial com Mia</Text>
+            </View>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.sheetBotButton}
+            onPress={() => handleFindBotMatch('pro-james')}
+            disabled={partyMembers.length === 0}
+          >
+            <Image source={BOT_JOHN_ICON} style={styles.sheetBotImage} resizeMode="cover" />
+            <View style={styles.sheetBotContent}>
+              <Text style={styles.sheetBotLabel}>John</Text>
+              <Text style={styles.sheetBotDescription}>Desafio avançado com John</Text>
+            </View>
+          </TouchableOpacity>
+        </View>
+      </View>
+    );
+
+    const sections: Record<typeof sheetTab, SlidingBottomSheetSection> = {
+      backpack: {
+        key: 'backpack',
+        title: `Mochila (${availableCoffeemons.length})`,
+        content: backpackContent,
+      },
+      items: {
+        key: 'items',
+        title: `Itens (${inventoryCount})`,
+        content: itemsContent,
+      },
+      bots: {
+        key: 'bots',
+        title: 'Bots Disponíveis',
+        content: botsContent,
+      },
+    };
+
+    return [sections[sheetTab]];
+  }, [availableCoffeemons, getItemColor, getItemIcon, handleFindBotMatch, items, partyLoading, partyMembers.length, sheetTab, toggleParty]);
+
+  const showBackpackButton = useMemo(() => availableCoffeemons.length > 0 || items.length > 0, [availableCoffeemons.length, items.length]);
+
+  const handleOpenSheet = useCallback((tab: typeof sheetTab) => {
+    setSheetTab(tab);
+    setSheetVisible(true);
+  }, []);
+
+  const handleCloseSheet = useCallback(() => {
+    setSheetVisible(false);
+  }, []);
 
   return (
     <View style={styles.fullScreenContainer}>
@@ -809,15 +919,6 @@ export default function MatchmakingScreen({
           </View>
         ) : (
           <>
-            {availableBackdropTop !== null && (
-              <View
-                pointerEvents="none"
-                style={[
-                  styles.availableBackdrop,
-                  { top: Math.max(availableBackdropTop + pixelArt.spacing.xxl * 1.5, pixelArt.spacing.lg * 6) },
-                ]}
-              />
-            )}
             {/* Botão de voltar flutuante */}
             {onNavigateToEcommerce && (
               <TouchableOpacity
@@ -883,85 +984,32 @@ export default function MatchmakingScreen({
                 </View>
               </View>
 
-              <View style={styles.availableSticky}>
-                <View style={styles.availableSectionWrapper}>
-                  <View pointerEvents="none" style={styles.availableBackdrop} />
-                  <TeamSection
-                    title={`Mochila (${availableCoffeemons.length})`}
-                    coffeemons={availableCoffeemons}
-                    loading={loading}
-                    emptyMessage="Capture mais Coffeemons"
-                    onToggleParty={toggleParty}
-                    partyLoading={partyLoading}
-                    variant="horizontal"
-                    isCollapsible
-                    isExpanded={availableExpanded}
-                    onToggleExpand={() => setAvailableExpanded((prev) => !prev)}
-                    showQrButton
-                    onPressQrButton={handleOpenQRScanner}
-                  >
-                    {/* Seção de Itens - Dentro do ScrollView do TeamSection */}
-                    <View style={styles.itemsSection}>
-                      <Text style={styles.itemsSectionTitle}>💼 Itens ({items.reduce((sum, item) => sum + (item.quantity || 0), 0)})</Text>
-                      <View style={styles.itemsList}>
-                        {items.length === 0 ? (
-                          <Text style={styles.itemsEmptyText}>Nenhum item disponível</Text>
-                        ) : (
-                          items.map((item) => {
-                            const icon = getItemIcon(item.id);
-                            const effectType = item.effects[0]?.type || 'heal';
-                            const color = getItemColor(effectType);
-                            
-                            return (
-                              <View key={item.id} style={styles.itemCard}>
-                                <View style={styles.itemIconContainer}>
-                                  <Text style={styles.itemIcon}>{icon}</Text>
-                                  <View style={[styles.itemQuantityBadge, { backgroundColor: color }]}>
-                                    <Text style={styles.itemQuantityText}>{item.quantity}</Text>
-                                  </View>
-                                </View>
-                                <View style={styles.itemInfo}>
-                                  <Text style={styles.itemName} numberOfLines={2}>{item.name}</Text>
-                                </View>
-                              </View>
-                            );
-                          })
-                        )}
-                      </View>
-                    </View>
-                  </TeamSection>
-                </View>
-              </View>
-
               <View style={styles.scrollBody} />
             </View>
 
             <View style={styles.bottomBar}>
               <TouchableOpacity
-                style={[styles.bottomBarButton, styles.bottomBarButtonLeft, partyMembers.length === 0 && styles.bottomBarButtonDisabled]}
-                onPress={() => handleFindBotMatch('jessie')}
-                disabled={partyMembers.length === 0}
-                accessibilityLabel="Desafio Mia"
+                style={[styles.bottomBarPill, styles.bottomBarPillLeft, !showBackpackButton && styles.bottomBarPillDisabled]}
+                onPress={() => handleOpenSheet('backpack')}
+                disabled={!showBackpackButton}
               >
-                <Image source={BOT_MIA_ICON} style={styles.bottomBarButtonImage} />
+                <Text style={styles.bottomBarPillLabel}>Mochila</Text>
               </TouchableOpacity>
 
               <TouchableOpacity
-                style={[styles.bottomBarButton, styles.bottomBarButtonCenter, partyMembers.length === 0 && styles.bottomBarButtonDisabled]}
+                style={[styles.bottomBarPill, styles.bottomBarPillCenter, partyMembers.length === 0 && styles.bottomBarPillDisabled]}
                 onPress={handleFindMatch}
                 disabled={partyMembers.length === 0}
-                accessibilityLabel="Iniciar batalha online"
               >
-                <Text style={styles.bottomBarText}>Start</Text>
+                <Text style={styles.bottomBarPillLabel}>Start</Text>
               </TouchableOpacity>
 
               <TouchableOpacity
-                style={[styles.bottomBarButton, styles.bottomBarButtonRight, partyMembers.length === 0 && styles.bottomBarButtonDisabled]}
-                onPress={() => handleFindBotMatch('pro-james')}
+                style={[styles.bottomBarPill, styles.bottomBarPillRight, partyMembers.length === 0 && styles.bottomBarPillDisabled]}
+                onPress={() => handleOpenSheet('bots')}
                 disabled={partyMembers.length === 0}
-                accessibilityLabel="Desafio John"
               >
-                <Image source={BOT_JOHN_ICON} style={styles.bottomBarButtonImage} />
+                <Text style={styles.bottomBarPillLabel}>Bots</Text>
               </TouchableOpacity>
             </View>
           </>
@@ -983,6 +1031,12 @@ export default function MatchmakingScreen({
             onSelectCoffeemon={handleSelectCoffeemon}
             onClose={handleCloseSelectionModal}
             partyLoading={partyLoading}
+          />
+
+          <SlidingBottomSheet
+            visible={sheetVisible}
+            sections={sheetSections}
+            onClose={handleCloseSheet}
           />
         </>
       )}
