@@ -1054,10 +1054,29 @@ export default function BattleScreen({
 
   if (!battleState || !playerId || !isBattleReady) {
     return (
-      <SafeAreaView style={styles.battleContainer} edges={['left', 'right', 'bottom']}>
-        <View style={styles.errorContainer}>
+      <SafeAreaView style={[styles.battleContainer, { justifyContent: 'center', alignItems: 'center' }]} edges={['left', 'right', 'bottom']}>
+        <View style={[styles.errorContainer, { maxWidth: '90%', padding: 20 }]}>
           <Text style={styles.loadingText}>⚔️ Preparando Batalha...</Text>
           <Text style={styles.loadingSubtext}>Aguarde enquanto carregamos os Coffeemons</Text>
+          
+          <View style={{ marginTop: 20, alignItems: 'center' }}>
+            <Text style={{ color: '#666', marginBottom: 10 }}>Status do Carregamento:</Text>
+            <Text>• Battle State: {battleState ? '✅ Pronto' : '⏳ Carregando...'}</Text>
+            <Text>• Player ID: {playerId ? `✅ ${playerId}` : '❌ Não definido'}</Text>
+            <Text>• Batalha Pronta: {isBattleReady ? '✅ Sim' : '⏳ Aguardando...'}</Text>
+            
+            {!battleState && (
+              <Text style={{ color: '#e74c3c', marginTop: 15, textAlign: 'center' }}>
+                Verificando estado da batalha...
+              </Text>
+            )}
+            
+            {!isBattleReady && battleState && (
+              <Text style={{ color: '#f39c12', marginTop: 15, textAlign: 'center' }}>
+                Aguardando início da batalha...
+              </Text>
+            )}
+          </View>
         </View>
       </SafeAreaView>
     );

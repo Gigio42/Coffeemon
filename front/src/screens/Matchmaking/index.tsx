@@ -9,18 +9,25 @@ import {
   Easing,
   Image,
   ActivityIndicator,
+  View as RNView,
 } from 'react-native';
+import { Video, ResizeMode } from 'expo-av';
 import type { ImageSourcePropType } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Socket } from 'socket.io-client';
 import { BattleState } from '../../types';
+import { usePlayer } from '../../hooks/usePlayer';
+import PlayerStatus from '../../components/PlayerStatus';
 import { useMatchmaking } from '../../hooks/useMatchmaking';
 import { useCoffeemons } from '../../hooks/useCoffeemons';
 import { PlayerCoffeemon } from '../../api/coffeemonService';
 import { giveInitialItems, getPlayerItems, getItemIcon, getItemColor, Item } from '../../api/itemsService';
 import { prefetchPalette, useDynamicPalette, type Palette } from '../../utils/colorPalette';
 import { getCoffeemonImage } from '../../../assets/coffeemons';
+const MOCHILA_ICON = require('../../../assets/icons/mochila.png');
+const BOT_ICON = require('../../../assets/icons/bot.png');
+const START_ICON = require('../../../assets/icons/start.png');
 import { getVariantForStatusEffects } from '../../utils/statusEffects';
 
 import CoffeemonSelectionModal from '../../components/CoffeemonSelectionModal';
@@ -470,33 +477,109 @@ export default function MatchmakingScreen({
   onNavigateToEcommerce,
   onNavigateToBattle,
 }: MatchmakingScreenProps) {
+  // Estados de UI
   const [introLoading, setIntroLoading] = useState(true);
   const [qrScannerVisible, setQrScannerVisible] = useState<boolean>(false);
   const [selectionModalVisible, setSelectionModalVisible] = useState<boolean>(false);
   const [isCarouselInteracting, setCarouselInteracting] = useState(false);
-  const [sheetVisible, setSheetVisible] = useState(false);
   const [sheetTab, setSheetTab] = useState<'backpack' | 'items' | 'bots'>('backpack');
+  const [backpackView, setBackpackView] = useState<'coffeemons' | 'items'>('coffeemons');
+  const [sheetVisible, setSheetVisible] = useState(false);
   const [activeCoffeemon, setActiveCoffeemon] = useState<PlayerCoffeemon | null>(null);
-  const scrollY = useRef(new Animated.Value(0)).current;
   const [palettesReady, setPalettesReady] = useState(false);
   const [debugMenuVisible, setDebugMenuVisible] = useState(false);
   const [items, setItems] = useState<Item[]>([]);
+  const [showContent, setShowContent] = useState(false);
+  const [progress, setProgress] = useState(0);
+  
+  // Refs
+  const scrollY = useRef(new Animated.Value(0)).current;
   const ensuredPalettesRef = useRef<Set<number>>(new Set());
   const initialPalettesEnsuredRef = useRef(false);
+  const startButtonScale = useRef(new Animated.Value(1)).current;
+  const backpackButtonScale = useRef(new Animated.Value(1)).current;
+  const botButtonScale = useRef(new Animated.Value(1)).current;
 
+  // Hook de Coffeemons (lista, party, loading)
+  const {
+    loading,
+    partyLoading,
+    partyMembers = [], // Fornece um valor padrão para partyMembers
+    availableCoffeemons = [], // Fornece um valor padrão para availableCoffeemons
+    fetchCoffeemons,
+    toggleParty,
+    giveAllCoffeemons,
+    initialized: coffeemonsInitialized,
+  } = useCoffeemons({
+    token,
+    onLog: (msg) => console.log('Coffeemons:', msg),
+  });
+
+  // Efeito para controlar a animação de carregamento
   useEffect(() => {
-    const timer = setTimeout(() => setIntroLoading(false), 5000);
-    return () => clearTimeout(timer);
+    // Só inicia a animação quando tudo estiver carregado
+    if (introLoading || !coffeemonsInitialized || !palettesReady) {
+      return;
+    }
+
+    // Tempo total estimado para o carregamento (em ms)
+    const totalTime = 2500; // 2.5 segundos
+    const startTime = Date.now();
+    const endTime = startTime + totalTime;
+    let animationFrameId: number;
+
+    // Função para suavizar a animação (ease-out)
+    const easeOutQuad = (t: number): number => t * (2 - t);
+
+    // Função para atualizar o progresso
+    const updateProgress = () => {
+      const now = Date.now();
+      const elapsed = now - startTime;
+      const progressRatio = Math.min(elapsed / totalTime, 1);
+      const easedProgress = easeOutQuad(progressRatio);
+      const newProgress = Math.min(easedProgress * 100, 100);
+      
+      setProgress(newProgress);
+
+      if (now < endTime) {
+        // Continua atualizando
+        animationFrameId = requestAnimationFrame(updateProgress);
+      } else {
+        // Finalizou o carregamento
+        setProgress(100);
+        // Pequeno atraso para garantir que a animação termine suavemente
+        setTimeout(() => setShowContent(true), 200);
+      }
+    };
+
+    // Inicia a animação
+    animationFrameId = requestAnimationFrame(updateProgress);
+
+    // Limpeza
+    return () => {
+      if (animationFrameId) {
+        cancelAnimationFrame(animationFrameId);
+      }
+    };
+  }, [introLoading, coffeemonsInitialized, palettesReady]);
+
+  // Set introLoading to false after component mounts
+  useEffect(() => {
+    setIntroLoading(false);
   }, []);
 
   // Carregar itens do jogador
   useEffect(() => {
+    let mounted = true;
+    
     const loadItems = async () => {
       try {
         if (token) {
           const playerItems = await getPlayerItems(token);
-          setItems(playerItems);
-          console.log('[Matchmaking] Player items loaded:', playerItems.length);
+          if (mounted) {
+            setItems(playerItems);
+            console.log('[Matchmaking] Player items loaded:', playerItems.length);
+          }
         }
       } catch (error) {
         console.error('[Matchmaking] Error loading items:', error);
@@ -504,7 +587,14 @@ export default function MatchmakingScreen({
     };
 
     loadItems();
+    
+    return () => {
+      mounted = false;
+    };
   }, [token]);
+
+  // Hook de Player
+  const { player } = usePlayer(token);
 
   // Hook de Matchmaking (Socket, status, logs)
   const { matchStatus, log, findMatch, findBotMatch } =
@@ -515,23 +605,59 @@ export default function MatchmakingScreen({
       onNavigateToBattle,
     });
 
-  // Hook de Coffeemons (lista, party, loading)
-  const {
-    loading,
-    partyLoading,
-    partyMembers,
-    availableCoffeemons,
-    fetchCoffeemons,
-    toggleParty,
-    giveAllCoffeemons,
-    initialized: coffeemonsInitialized,
-  } = useCoffeemons({
-    token,
-    onLog: (msg) => console.log('Coffeemons:', msg),
-  });
+  // Automatic pulsing animation for start button
+  useEffect(() => {
+    const pulseAnimation = Animated.loop(
+      Animated.sequence([
+        Animated.timing(startButtonScale, {
+          toValue: 1.05,
+          duration: 800,
+          easing: Easing.inOut(Easing.ease),
+          useNativeDriver: true,
+        }),
+        Animated.timing(startButtonScale, {
+          toValue: 1,
+          duration: 800,
+          easing: Easing.inOut(Easing.ease),
+          useNativeDriver: true,
+        }),
+      ])
+    );
+    pulseAnimation.start();
+
+    return () => {
+      pulseAnimation.stop();
+    };
+  }, [startButtonScale]);
+
 
   // Handlers
+  const animateStartPress = () => {
+    Animated.sequence([
+      Animated.timing(startButtonScale, { toValue: 0.85, duration: 100, useNativeDriver: true }),
+      Animated.timing(startButtonScale, { toValue: 1.2, duration: 150, useNativeDriver: true }),
+      Animated.timing(startButtonScale, { toValue: 1, duration: 200, useNativeDriver: true }),
+    ]).start();
+  };
+
+  const animateBackpackPress = () => {
+    Animated.sequence([
+      Animated.timing(backpackButtonScale, { toValue: 0.8, duration: 100, useNativeDriver: true }),
+      Animated.timing(backpackButtonScale, { toValue: 1.1, duration: 150, useNativeDriver: true }),
+      Animated.timing(backpackButtonScale, { toValue: 1, duration: 200, useNativeDriver: true }),
+    ]).start();
+  };
+
+  const animateBotPress = () => {
+    Animated.sequence([
+      Animated.timing(botButtonScale, { toValue: 0.8, duration: 100, useNativeDriver: true }),
+      Animated.timing(botButtonScale, { toValue: 1.1, duration: 150, useNativeDriver: true }),
+      Animated.timing(botButtonScale, { toValue: 1, duration: 200, useNativeDriver: true }),
+    ]).start();
+  };
+
   function handleFindMatch() {
+    animateStartPress();
     if (partyMembers.length === 0) {
       Alert.alert(
         'Time Vazio',
@@ -580,12 +706,12 @@ export default function MatchmakingScreen({
   }
 
   useEffect(() => {
-    if (partyMembers.length === 0) {
+    if (!partyMembers || partyMembers.length === 0) {
       setActiveCoffeemon(null);
       return;
     }
 
-    const exists = activeCoffeemon && partyMembers.some((member) => member.id === activeCoffeemon.id);
+    const exists = activeCoffeemon && partyMembers.some((member: PlayerCoffeemon) => member.id === activeCoffeemon.id);
     if (!exists) {
       setActiveCoffeemon(partyMembers[0] ?? null);
     }
@@ -743,31 +869,88 @@ export default function MatchmakingScreen({
     [scrollY],
   );
 
-  // Selecionar cenário aleatório sempre que carregar a página
-
-  const showContent = !introLoading && coffeemonsInitialized && palettesReady;
+  // Removendo declarações duplicadas de showContent e progress
   const sheetSections: SlidingBottomSheetSection[] = useMemo(() => {
     const inventoryCount = items.reduce((sum, item) => sum + (item.quantity || 0), 0);
 
     const backpackContent = (
       <View style={styles.sheetSectionContent}>
-        {availableCoffeemons.length === 0 ? (
-          <Text style={styles.sheetEmptyText}>Capture mais Coffeemons</Text>
-        ) : (
-          <View style={styles.sheetCardsGrid}>
-            {availableCoffeemons.map((pc) => (
-              <View key={pc.id} style={styles.sheetCardWrapper}>
-                <View style={styles.sheetCardScaler}>
-                  <CoffeemonCard
-                    coffeemon={pc}
-                    onToggleParty={toggleParty}
-                    variant="small"
-                    isLoading={partyLoading === pc.id}
-                  />
+        {/* Seletor entre Coffeemons e Itens */}
+        <View style={styles.backpackSelector}>
+          <TouchableOpacity
+            style={[
+              styles.selectorButton,
+              backpackView === 'coffeemons' && styles.selectorButtonActive
+            ]}
+            onPress={() => setBackpackView('coffeemons')}
+          >
+            <Text style={[
+              styles.selectorButtonText,
+              backpackView === 'coffeemons' && styles.selectorButtonTextActive
+            ]}>
+              Coffeemons ({availableCoffeemons.length})
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[
+              styles.selectorButton,
+              backpackView === 'items' && styles.selectorButtonActive
+            ]}
+            onPress={() => setBackpackView('items')}
+          >
+            <Text style={[
+              styles.selectorButtonText,
+              backpackView === 'items' && styles.selectorButtonTextActive
+            ]}>
+              Itens ({inventoryCount})
+            </Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* Conteúdo baseado na seleção */}
+        {backpackView === 'coffeemons' ? (
+          availableCoffeemons.length === 0 ? (
+            <Text style={styles.sheetEmptyText}>Capture mais Coffeemons</Text>
+          ) : (
+            <View style={styles.sheetCardsGrid}>
+              {availableCoffeemons.map((pc: PlayerCoffeemon) => (
+                <View key={pc.id} style={styles.sheetCardWrapper}>
+                  <View style={styles.sheetCardScaler}>
+                    <CoffeemonCard
+                      coffeemon={pc}
+                      onToggleParty={toggleParty}
+                      variant="small"
+                      isLoading={partyLoading === pc.id}
+                    />
+                  </View>
                 </View>
-              </View>
-            ))}
-          </View>
+              ))}
+            </View>
+          )
+        ) : (
+          items.length === 0 ? (
+            <Text style={styles.sheetEmptyText}>Nenhum item disponível</Text>
+          ) : (
+            <View style={styles.sheetItemsList}>
+              {items.map((item) => {
+                const icon = getItemIcon(item.id);
+                const effectType = item.effects[0]?.type || 'heal';
+                const color = getItemColor(effectType);
+
+                return (
+                  <View key={item.id} style={[styles.sheetItemCard, { borderColor: color }]}>
+                    <View style={styles.sheetItemHeader}>
+                      <Text style={styles.sheetItemEmoji}>{icon}</Text>
+                      <View style={[styles.sheetItemBadge, { backgroundColor: color }]}>
+                        <Text style={styles.sheetItemBadgeText}>{item.quantity}</Text>
+                      </View>
+                    </View>
+                    <Text style={styles.sheetItemName} numberOfLines={2}>{item.name}</Text>
+                  </View>
+                );
+              })}
+            </View>
+          )
         )}
       </View>
     );
@@ -806,26 +989,46 @@ export default function MatchmakingScreen({
       <View style={styles.sheetSectionContent}>
         <View style={styles.sheetBotsList}>
           <TouchableOpacity
-            style={styles.sheetBotButton}
+            style={[
+              styles.sheetBotButton, 
+              partyMembers.length === 0 && styles.sheetBotButtonDisabled
+            ]}
             onPress={() => handleFindBotMatch('jessie')}
             disabled={partyMembers.length === 0}
+            activeOpacity={0.8}
           >
-            <Image source={BOT_MIA_ICON} style={styles.sheetBotImage} resizeMode="cover" />
+            <Image 
+              source={BOT_MIA_ICON} 
+              style={styles.sheetBotImage} 
+              resizeMode="contain" 
+            />
             <View style={styles.sheetBotContent}>
-              <Text style={styles.sheetBotLabel}>Mia</Text>
-              <Text style={styles.sheetBotDescription}>Treino inicial com Mia</Text>
+              <View style={styles.sheetBotInfo}>
+                <Text style={[styles.sheetBotLabel, { marginRight: pixelArt.spacing.xs }]}>Mia</Text>
+                <Text style={styles.sheetBotDescription}>Nível 5</Text>
+              </View>
             </View>
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={styles.sheetBotButton}
+            style={[
+              styles.sheetBotButton, 
+              partyMembers.length === 0 && styles.sheetBotButtonDisabled
+            ]}
             onPress={() => handleFindBotMatch('pro-james')}
             disabled={partyMembers.length === 0}
+            activeOpacity={0.8}
           >
-            <Image source={BOT_JOHN_ICON} style={styles.sheetBotImage} resizeMode="cover" />
+            <Image 
+              source={BOT_JOHN_ICON} 
+              style={styles.sheetBotImage} 
+              resizeMode="contain" 
+            />
             <View style={styles.sheetBotContent}>
-              <Text style={styles.sheetBotLabel}>John</Text>
-              <Text style={styles.sheetBotDescription}>Desafio avançado com John</Text>
+              <View style={styles.sheetBotInfo}>
+                <Text style={[styles.sheetBotLabel, { marginRight: pixelArt.spacing.xs }]}>John</Text>
+                <Text style={styles.sheetBotDescription}>Nível 15</Text>
+              </View>
             </View>
           </TouchableOpacity>
         </View>
@@ -835,7 +1038,7 @@ export default function MatchmakingScreen({
     const sections: Record<typeof sheetTab, SlidingBottomSheetSection> = {
       backpack: {
         key: 'backpack',
-        title: `Mochila (${availableCoffeemons.length})`,
+        title: `Mochila`,
         content: backpackContent,
       },
       items: {
@@ -851,7 +1054,7 @@ export default function MatchmakingScreen({
     };
 
     return [sections[sheetTab]];
-  }, [availableCoffeemons, getItemColor, getItemIcon, handleFindBotMatch, items, partyLoading, partyMembers.length, sheetTab, toggleParty]);
+  }, [availableCoffeemons, getItemColor, getItemIcon, handleFindBotMatch, items, partyLoading, partyMembers.length, sheetTab, toggleParty, backpackView]);
 
   const showBackpackButton = useMemo(() => availableCoffeemons.length > 0 || items.length > 0, [availableCoffeemons.length, items.length]);
 
@@ -898,6 +1101,14 @@ export default function MatchmakingScreen({
             style={styles.gradientFill}
           />
         </Animated.View>
+        <Animated.View style={[styles.gradientLayer, styles.gradientLayerDark]}>
+          <LinearGradient
+            colors={['rgba(0,0,0,0.5)', 'transparent']}
+            start={{ x: 0, y: 1 }}
+            end={{ x: 0, y: 0 }}
+            style={styles.gradientFill}
+          />
+        </Animated.View>
         {activeBackground && (
           <Image
             source={activeBackground}
@@ -905,6 +1116,22 @@ export default function MatchmakingScreen({
             resizeMode="cover"
           />
         )}
+        <Animated.View style={[styles.gradientLayer, styles.gradientLayerDark]}>
+          <LinearGradient
+            colors={['rgba(0,0,0,0.7)', 'transparent']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 0, y: 1 }}
+            style={styles.gradientFill}
+          />
+        </Animated.View>
+        <Animated.View style={[styles.gradientLayer, styles.gradientLayerDark]}>
+          <LinearGradient
+            colors={['rgba(0,0,0,0.7)', 'transparent']}
+            start={{ x: 0, y: 1 }}
+            end={{ x: 0, y: 0 }}
+            style={styles.gradientFill}
+          />
+        </Animated.View>
         <Animated.Image
           source={NOISE_SOURCE}
           resizeMode="repeat"
@@ -913,10 +1140,35 @@ export default function MatchmakingScreen({
       </View>
       <SafeAreaView style={styles.container} edges={['top']}>
         {!showContent ? (
-          <View style={styles.loadingContainer}>
-            <ActivityIndicator size="large" color="#fff9f0" />
-            <Text style={styles.loadingText}>Preparando matchmaking...</Text>
-          </View>
+          <RNView style={styles.loadingContainer}>
+            <Video
+              source={require('../../../assets/backgrounds/Vídeo do WhatsApp de 2025-11-15 à(s) 01.12.33_6a86bb16.mp4')}
+              style={styles.backgroundVideo}
+              shouldPlay
+              isLooping
+              isMuted
+              resizeMode={ResizeMode.COVER}
+            />
+            <View style={styles.loadingOverlay}>
+              <ActivityIndicator size="large" color="#fff9f0" />
+              <Text style={styles.loadingText}>Preparando matchmaking...</Text>
+              
+              {/* Barra de carregamento pixelada */}
+              <View style={styles.loadingBarContainer}>
+                <Animated.View 
+                  style={[
+                    styles.loadingBar, 
+                    { 
+                      width: `${progress}%`,
+                      backgroundColor: progress > 50 ? '#F5E6D3' : '#E8D5B5'
+                    }
+                  ]}
+                >
+                  <View style={styles.loadingBarPixelEffect} />
+                </Animated.View>
+              </View>
+            </View>
+          </RNView>
         ) : (
           <>
             {/* Botão de voltar flutuante */}
@@ -965,6 +1217,15 @@ export default function MatchmakingScreen({
               </View>
             )}
 
+            {player && (
+              <View style={styles.playerHeader}>
+                <Image source={{ uri: player.user?.avatar || `https://api.dicebear.com/7.x/thumbs/png?seed=${player.id}&size=40` }} style={styles.playerAvatar} />
+                <Text style={styles.playerName}>{player.user?.username || 'Player'}</Text>
+              </View>
+            )}
+
+            <PlayerStatus token={token} />
+
             <View style={[styles.scrollView, styles.scrollContent]}>
               <View style={styles.teamCarouselSticky}>
                 <View style={styles.teamColumn}>
@@ -988,58 +1249,66 @@ export default function MatchmakingScreen({
             </View>
 
             <View style={styles.bottomBar}>
-              <TouchableOpacity
-                style={[styles.bottomBarPill, styles.bottomBarPillLeft, !showBackpackButton && styles.bottomBarPillDisabled]}
-                onPress={() => handleOpenSheet('backpack')}
-                disabled={!showBackpackButton}
-              >
-                <Text style={styles.bottomBarPillLabel}>Mochila</Text>
-              </TouchableOpacity>
+              <Animated.View style={{ transform: [{ scale: backpackButtonScale }] }}>
+                <TouchableOpacity
+                  style={[styles.bottomBarPill, styles.bottomBarPillLeft, !showBackpackButton && styles.bottomBarPillDisabled]}
+                  onPress={() => {
+                    animateBackpackPress();
+                    handleOpenSheet('backpack');
+                  }}
+                  disabled={!showBackpackButton}
+                >
+                  <Image source={MOCHILA_ICON} style={styles.bottomBarIcon} />
+                </TouchableOpacity>
+              </Animated.View>
 
-              <TouchableOpacity
-                style={[styles.bottomBarPill, styles.bottomBarPillCenter, partyMembers.length === 0 && styles.bottomBarPillDisabled]}
-                onPress={handleFindMatch}
-                disabled={partyMembers.length === 0}
-              >
-                <Text style={styles.bottomBarPillLabel}>Start</Text>
-              </TouchableOpacity>
+              <Animated.View style={{ transform: [{ scale: startButtonScale }] }}>
+                <TouchableOpacity
+                  style={[styles.bottomBarPill, styles.bottomBarPillCenter, partyMembers.length === 0 && styles.bottomBarPillDisabled]}
+                  onPress={handleFindMatch}
+                  disabled={partyMembers.length === 0}
+                >
+                  <Image source={START_ICON} style={styles.bottomBarIconCenter} />
+                </TouchableOpacity>
+              </Animated.View>
 
-              <TouchableOpacity
-                style={[styles.bottomBarPill, styles.bottomBarPillRight, partyMembers.length === 0 && styles.bottomBarPillDisabled]}
-                onPress={() => handleOpenSheet('bots')}
-                disabled={partyMembers.length === 0}
-              >
-                <Text style={styles.bottomBarPillLabel}>Bots</Text>
-              </TouchableOpacity>
+              <Animated.View style={{ transform: [{ scale: botButtonScale }] }}>
+                <TouchableOpacity
+                  style={[styles.bottomBarPill, styles.bottomBarPillRight, partyMembers.length === 0 && styles.bottomBarPillDisabled]}
+                  onPress={() => {
+                    animateBotPress();
+                    handleOpenSheet('bots');
+                  }}
+                  disabled={partyMembers.length === 0}
+                >
+                  <Image source={BOT_ICON} style={styles.bottomBarIcon} />
+                </TouchableOpacity>
+              </Animated.View>
             </View>
           </>
         )}
       </SafeAreaView>
 
-      {showContent && (
-        <>
-          <QRScanner
-            visible={qrScannerVisible}
-            token={token}
-            onClose={handleCloseQRScanner}
-            onSuccess={handleCoffeemonAdded}
-          />
+      <QRScanner
+        visible={qrScannerVisible}
+        token={token}
+        onClose={handleCloseQRScanner}
+        onSuccess={handleCoffeemonAdded}
+      />
 
-          <CoffeemonSelectionModal
-            visible={selectionModalVisible}
-            availableCoffeemons={availableCoffeemons}
-            onSelectCoffeemon={handleSelectCoffeemon}
-            onClose={handleCloseSelectionModal}
-            partyLoading={partyLoading}
-          />
+      <CoffeemonSelectionModal
+        visible={selectionModalVisible}
+        availableCoffeemons={availableCoffeemons}
+        onSelectCoffeemon={handleSelectCoffeemon}
+        onClose={handleCloseSelectionModal}
+        partyLoading={partyLoading}
+      />
 
-          <SlidingBottomSheet
-            visible={sheetVisible}
-            sections={sheetSections}
-            onClose={handleCloseSheet}
-          />
-        </>
-      )}
+      <SlidingBottomSheet
+        visible={sheetVisible}
+        sections={sheetSections}
+        onClose={handleCloseSheet}
+      />
     </View>
   );
 }
