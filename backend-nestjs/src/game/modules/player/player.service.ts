@@ -77,7 +77,7 @@ export class PlayerService {
   async findByUserId(userId: number): Promise<Player> {
     const player = await this.playerRepository.findOne({
       where: { user: { id: userId } },
-      relations: ['coffeemons', 'coffeemons.coffeemon'],
+      relations: ['user', 'coffeemons', 'coffeemons.coffeemon'],
     });
 
     if (!player) {

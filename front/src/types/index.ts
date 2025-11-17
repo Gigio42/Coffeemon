@@ -115,3 +115,15 @@ export interface User {
   email: string;
   role: 'user' | 'admin';
 }
+
+export interface Player {
+  id: number;
+  coins: number;
+  level: number;
+  experience: number;
+  inventory: Record<string, number>;
+  user?: {
+    username: string;
+    avatar?: string;
+  };
+}

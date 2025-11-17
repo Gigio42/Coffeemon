@@ -282,111 +282,112 @@ export function useBattle({
     let lastUpdateTime = 0;
     const MIN_UPDATE_INTERVAL = 200; // ms entre updates
 
-    socket.on('battleUpdate', async (data: any) => {
-      try {
-        const now = Date.now();
-        
-        // Throttle: ignorar updates muito frequentes
-        if (now - lastUpdateTime < MIN_UPDATE_INTERVAL) {
-          return;
-        }
-        
-        if (!data || !data.battleState) {
-          console.error('Invalid battleUpdate data');
-          return;
-        }
+    const handleBattleUpdate = (newBattleState: BattleState) => {
+      console.log('[Battle] Received battle update:', {
+        hasPlayer1: !!newBattleState?.player1,
+        hasPlayer2: !!newBattleState?.player2,
+        state: newBattleState
+      });
+      
+      requestAnimationFrame(() => {
+        try {
+          setIsProcessing(true);
+          
+          // Mark battle as ready when receiving first valid state
+          const isStateValid = newBattleState?.player1 && newBattleState?.player2;
+          if (!isBattleReady && isStateValid) {
+            console.log('[Battle] Setting battle as ready');
+            setIsBattleReady(true);
+          } else if (!isStateValid) {
+            console.warn('[Battle] Received incomplete battle state:', newBattleState);
+          }  
+          
+          // Atualizar estado primeiro (síncrono)
+          setBattleState(newBattleState);
 
-        // Evitar processamento múltiplo simultâneo
-        if (isHandlingUpdate) {
-          return;
-        }
-
-        isHandlingUpdate = true;
-        lastUpdateTime = now;
-        
-        const newBattleState = data.battleState;
-
-        // Usar requestAnimationFrame para sincronizar com o frame
-        requestAnimationFrame(() => {
-          try {
-            setIsProcessing(true);
+          // Processar eventos com animações otimizadas
+          if (newBattleState.events && newBattleState.events.length > 0) {
+            // Limitar eventos para não sobrecarregar
+            const eventsToProcess = newBattleState.events.slice(0, 5);
             
-            // Marcar batalha como pronta quando receber primeiro estado válido
-            if (!isBattleReady && newBattleState.player1 && newBattleState.player2) {
-              setIsBattleReady(true);
-            }
-            
-            // Atualizar estado primeiro (síncrono)
-            setBattleState(newBattleState);
-
-            // Processar eventos com animações otimizadas
-            if (newBattleState.events && newBattleState.events.length > 0) {
-              // Limitar eventos para não sobrecarregar
-              const eventsToProcess = newBattleState.events.slice(0, 5);
-              
-              // Processar de forma não bloqueante
-              processEventSequence(eventsToProcess, newBattleState).catch(err => {
-                console.error('Error processing events:', err);
-              }).finally(() => {
-                setIsProcessing(false);
-                isHandlingUpdate = false;
-              });
-            } else {
+            // Processar de forma não bloqueante
+            processEventSequence(eventsToProcess, newBattleState).catch(err => {
+              console.error('Error processing events:', err);
+            }).finally(() => {
               setIsProcessing(false);
               isHandlingUpdate = false;
-            }
+            });
+          } else {
+            setIsProcessing(false);
+            isHandlingUpdate = false;
+          }
 
-            if (newBattleState.turnPhase === 'SELECTION') {
-              const myState =
-                newBattleState.player1Id === playerId ? newBattleState.player1 : newBattleState.player2;
-              if (myState && !myState.hasSelectedCoffeemon) {
-                setShowSelectionModal(true);
-              } else {
-                setShowSelectionModal(false);
-              }
+          if (newBattleState.turnPhase === 'SELECTION') {
+            const myState =
+              newBattleState.player1Id === playerId ? newBattleState.player1 : newBattleState.player2;
+            if (myState && !myState.hasSelectedCoffeemon) {
+              setShowSelectionModal(true);
             } else {
               setShowSelectionModal(false);
             }
+          } else {
+            setShowSelectionModal(false);
+          }
 
-            if (newBattleState.battleStatus === BattleStatus.FINISHED) {
+          if (newBattleState.battleStatus === BattleStatus.FINISHED) {
+            if (newBattleState.winnerId !== null) {
               handleBattleEnd(newBattleState.winnerId);
             }
-          } catch (err) {
-            console.error('Error processing battle update:', err);
-            isHandlingUpdate = false;
-            setIsProcessing(false);
           }
-        });
-        
-      } catch (error) {
-        console.error('Error in battleUpdate handler:', error);
-        isHandlingUpdate = false;
-        setIsProcessing(false);
+        } catch (err) {
+          console.error('Error processing battle update:', err);
+          isHandlingUpdate = false;
+          setIsProcessing(false);
+        }
+      });
+      
+    };
+
+    const handleError = (error: any) => {
+      console.error('[Battle] Socket error:', error);
+      // Set battle as ready to prevent infinite loading
+      setIsBattleReady(true);
+    };
+
+    socket.on('battleUpdate', async (data: any) => {
+      const now = Date.now();
+      
+      // Throttle: ignorar updates muito frequentes
+      if (now - lastUpdateTime < MIN_UPDATE_INTERVAL) {
+        return;
       }
+      
+      if (!data || !data.battleState) {
+        console.error('Invalid battleUpdate data');
+        return;
+      }
+
+      // Evitar processamento múltiplo simultâneo
+      if (isHandlingUpdate) {
+        return;
+      }
+
+      isHandlingUpdate = true;
+      lastUpdateTime = now;
+
+      handleBattleUpdate(data.battleState);
     });
 
-    socket.on('battleEnd', (data: any) => {
-      console.log('Received battleEnd event:', data);
-      handleBattleEnd(data.winnerId);
-    });
+    // Set up additional event listeners
+    socket.on('error', handleError);
+    socket.on('connect_error', handleError);
 
-    socket.on('battleError', (data: any) => {
-      console.error('Battle error:', data.message);
-      addLog(`Erro: ${data.message}`);
-    });
-
-    socket.on('opponentDisconnected', (data: any) => {
-      addLog('Oponente desconectou da batalha');
-    });
-
-    socket.on('playerReconnected', (data: any) => {
-      addLog('Oponente reconectou à batalha');
-    });
-
-    socket.on('battleCancelled', (data: any) => {
-      addLog('Batalha cancelada pelo servidor');
-      onNavigateToMatchmaking();
-    });
+    // Log initial connection status
+    console.log('[Battle] Socket connected:', socket.connected);
+    if (socket.connected) {
+      console.log('[Battle] Requesting initial battle state...');
+      socket.emit('get_battle_state', { battleId });
+    }
   };
 
   const sendAction = (actionType: string, payload: any) => {
