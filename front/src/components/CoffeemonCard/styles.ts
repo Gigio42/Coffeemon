@@ -299,7 +299,7 @@ export const styles = StyleSheet.create({
   cardPixelWrapperSmall: {
     marginBottom: CARD_SHADOW_OFFSET,
     alignSelf: 'flex-start',
-    width: CARD_WIDTH_SMALL,
+    width: CARD_WIDTH_SMALL * 1.4, // Ajustado para corresponder à largura do card
   },
 
   coffeemonCard: {
@@ -320,7 +320,7 @@ export const styles = StyleSheet.create({
   },
 
   coffeemonCardSmall: {
-    width: CARD_WIDTH_SMALL,
+    width: CARD_WIDTH_SMALL * 1.4, // Aumenta a largura em 40%
     minHeight: CARD_MIN_HEIGHT_SMALL,
   },
 
@@ -408,6 +408,47 @@ export const styles = StyleSheet.create({
     height: '100%',
     borderRadius: 0,
     backgroundColor: '#8BC34A',
+  },
+
+  // Stats no Header (abaixo da barra de HP)
+  headerStatsRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: 4,
+  },
+
+  headerStatItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 4,
+    paddingVertical: 2,
+    backgroundColor: '#ffffff',
+    borderWidth: 1,
+    borderColor: '#000000',
+    marginHorizontal: 2,
+  },
+
+  headerStatLabel: {
+    fontSize: 6,
+    fontWeight: '700',
+    fontFamily: PIXEL_FONT,
+    letterSpacing: 0.4,
+    textTransform: 'uppercase',
+    marginRight: 2,
+    color: '#333333',
+  },
+
+  headerStatValue: {
+    fontSize: 8,
+    fontWeight: '900',
+    fontFamily: PIXEL_FONT,
+    letterSpacing: 0.4,
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 0,
+    color: '#0c2a66',
+    textShadowColor: '#000000',
   },
 
   // ========================================

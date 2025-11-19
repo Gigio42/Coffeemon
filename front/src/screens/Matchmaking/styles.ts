@@ -15,18 +15,83 @@ export const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: 'transparent',
+    marginTop: -statusBarHeight,
+    paddingTop: statusBarHeight,
   },
   
   loadingContainer: {
     flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'transparent',
+    zIndex: -1,
   },
 
+  backgroundVideo: {
+    position: 'absolute',
+    top: -statusBarHeight * 1.5, // Aumentando o valor para subir mais
+    left: 0,
+    right: 0,
+    bottom: 0,
+    width: '100%',
+    height: '100%',
+    zIndex: 0,
+  },
+
+  loadingOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'transparent',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 20,
+  },
+
+  // Barra de carregamento pixelada
+  loadingBarContainer: {
+    position: 'absolute',
+    bottom: pixelArt.spacing.xxl * 2,
+    left: pixelArt.spacing.xxl,
+    right: pixelArt.spacing.xxl,
+    height: 20,
+    backgroundColor: 'rgba(0, 0, 0, 0.3)',
+    borderWidth: 3,
+    borderColor: '#5A3B2C',
+    borderRadius: 2,
+    overflow: 'hidden',
+    ...pixelArt.shadows.small,
+  },
+  
+  loadingBar: {
+    height: '100%',
+    backgroundColor: '#F5E6D3',
+    width: '0%',
+    position: 'relative',
+  },
+  
+  loadingBarPixelEffect: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'transparent',
+    opacity: 0.5,
+  },
+  
   loadingText: {
     ...pixelArt.typography.pixelBody,
-    marginTop: pixelArt.spacing.lg,
-    color: '#fff9f0',
+    position: 'absolute',
+    bottom: pixelArt.spacing.xxl * 2 + 25, // Posiciona acima da barra
+    color: '#F5E6D3',
+    fontSize: 12,
+    marginBottom: pixelArt.spacing.sm,
+    textShadowColor: '#5A3B2C',
+    textShadowOffset: { width: 2, height: 2 },
+    textShadowRadius: 0,
+    letterSpacing: 1,
     fontFamily: PIXEL_FONT,
   },
   
@@ -76,7 +141,7 @@ export const styles = StyleSheet.create({
   
   floatingBackButtonText: {
     fontSize: 24,
-    color: '#8B7355',
+    color: '#fff2c2',
     fontWeight: '700',
     fontFamily: PIXEL_FONT,
   },
@@ -88,7 +153,7 @@ export const styles = StyleSheet.create({
     right: pixelArt.spacing.lg,
     zIndex: 1000,
     padding: 8,
-    backgroundColor: 'rgba(139, 115, 85, 0.3)',
+    backgroundColor: '#fff2c2',
     borderRadius: 8,
     borderWidth: 2,
     borderColor: '#8B7355',
@@ -106,7 +171,7 @@ export const styles = StyleSheet.create({
     top: statusBarHeight + pixelArt.spacing.xxl + pixelArt.spacing.lg + 44,
     right: pixelArt.spacing.lg,
     zIndex: 1001,
-    backgroundColor: '#fff9f0',
+    backgroundColor: '#fff2c2',
     borderRadius: 8,
     borderWidth: 2,
     borderColor: '#8B7355',
@@ -164,6 +229,10 @@ export const styles = StyleSheet.create({
     opacity: 0.4,
   },
 
+  gradientLayerDark: {
+    opacity: 0.6,
+  },
+
   gradientFill: {
     flex: 1,
   },
@@ -174,7 +243,7 @@ export const styles = StyleSheet.create({
     left: 0,
     right: 0,
     width: '100%',
-    height: '60%',
+    height: '100%',
     opacity: 0.9,
   },
 
@@ -196,11 +265,11 @@ export const styles = StyleSheet.create({
 
   scrollContent: {
     paddingHorizontal: pixelArt.spacing.lg,
-    paddingBottom: pixelArt.spacing.xxl * 2,
+    paddingBottom: 0,
   },
 
   teamCarouselSticky: {
-    paddingTop: pixelArt.spacing.lg + 56,
+    paddingTop: pixelArt.spacing.lg * 7, // Reduced to lg
     paddingHorizontal: pixelArt.spacing.lg,
     paddingBottom: pixelArt.spacing.md,
   
@@ -215,7 +284,7 @@ export const styles = StyleSheet.create({
 
   scrollBody: {
     paddingTop: pixelArt.spacing.xl,
-    paddingBottom: 100, // Espaço para não ficar escondido atrás do bottomBar
+    paddingBottom: 0, // Espaço para não ficar escondido atrás do bottomBar
   },
   
   // ========================================
@@ -267,7 +336,7 @@ export const styles = StyleSheet.create({
     width: '100%',
     height: 0,
     borderTopWidth: 26,
-    borderTopColor: '#fff9f0',
+    borderTopColor: '#fff2c2',
     borderLeftWidth: 13,
     borderLeftColor: 'transparent',
     borderRightWidth: 13,
@@ -287,10 +356,39 @@ export const styles = StyleSheet.create({
   statusText: {
     ...pixelArt.typography.pixelBody,
     fontSize: 10,
-    color: '#8B4513',
+    color: '#8B7355',
     textAlign: 'center',
     fontWeight: 'bold',
     fontFamily: PIXEL_FONT,
+  },
+
+  playerHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: pixelArt.spacing.sm,
+    marginLeft: pixelArt.spacing.md,
+    position: 'absolute',
+    top: pixelArt.spacing.xl + pixelArt.spacing.sm + pixelArt.spacing.xxl * 2,
+    left: 0,
+    right: 0,
+    zIndex: 10,
+  },
+  playerAvatar: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    borderWidth: 4,
+    borderColor: '#fff2c2',
+    marginRight: pixelArt.spacing.sm,
+    backgroundColor: '#654321',
+    marginLeft: pixelArt.spacing.sm,
+    marginTop: pixelArt.spacing.sm,
+  },
+  playerName: {
+    fontSize: pixelArt.typography.pixelTitle.fontSize,
+    color: '#fff2c2',
+    fontFamily: PIXEL_FONT,
+    fontWeight: 'bold',
   },
 
   // ========================================
@@ -529,33 +627,51 @@ export const styles = StyleSheet.create({
     paddingTop: pixelArt.spacing.xs,
     gap: pixelArt.spacing.md,
     width: '100%',
+    position: 'absolute',
+    bottom: 20,
+    left: 0,
+    right: 0,
   },
 
   bottomBarPill: {
     flex: 1,
-    height: 52,
+    height: 200, // Increased size
     borderRadius: pixelArt.borders.radiusMedium,
     backgroundColor: pixelArt.colors.cardInnerBg,
     borderWidth: pixelArt.borders.widthBold,
-    borderTopColor: pixelArt.colors.borderLight,
-    borderLeftColor: pixelArt.colors.borderLight,
-    borderBottomColor: pixelArt.colors.borderDark,
-    borderRightColor: pixelArt.colors.borderDark,
+    borderTopColor: '#D4AF37',
+    borderLeftColor: '#D4AF37',
+    borderBottomColor: '#B8860B',
+    borderRightColor: '#B8860B',
     alignItems: 'center',
     justifyContent: 'center',
     ...pixelArt.shadows.innerBorder,
   },
 
   bottomBarPillLeft: {
-    backgroundColor: pixelArt.colors.cardInnerBg,
+    flex: 0.2, // Make side buttons very narrow
+    backgroundColor: 'transparent', // Remove background for icon only
+    borderWidth: 0, // Remove border
+    marginRight: 0,
   },
 
   bottomBarPillCenter: {
-    backgroundColor: pixelArt.colors.cardInnerBg,
+    flex: 8, // Make it even wider
+    backgroundColor: 'transparent',
+    borderWidth: 0,
+    paddingHorizontal: 0,
+    shadowColor: '#fff2c2',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 1.0,
+    shadowRadius: 20,
+    elevation: 15,
   },
 
   bottomBarPillRight: {
-    backgroundColor: pixelArt.colors.cardInnerBg,
+    flex: 0.2, // Make side buttons very narrow
+    backgroundColor: 'transparent', // Remove background for icon only
+    borderWidth: 0, // Remove border
+    marginLeft: 0,
   },
 
   bottomBarPillDisabled: {
@@ -571,9 +687,30 @@ export const styles = StyleSheet.create({
     fontFamily: PIXEL_FONT,
   },
 
+  bottomBarPillLabelCenter: {
+    color: '#8B7355', // Light yellow/orange for contrast
+  },
+
+  bottomBarIcon: {
+    width: 80,
+    height: 80,
+    resizeMode: 'contain',
+  },
+
+  bottomBarIconCenter: {
+    width: 200,
+    height: 200,
+    resizeMode: 'contain',
+  },
+
   sheetSectionContent: {
-    paddingHorizontal: pixelArt.spacing.lg,
-    paddingBottom: pixelArt.spacing.lg,
+    flex: 1,
+    width: '100%',
+    padding: pixelArt.spacing.md,
+    paddingTop: pixelArt.spacing.lg,
+    alignItems: 'center',
+    justifyContent: 'flex-start',
+    backgroundColor: '#fff9f0',
   },
 
   sheetEmptyText: {
@@ -582,25 +719,37 @@ export const styles = StyleSheet.create({
     color: '#8B7355',
     textAlign: 'center',
     fontFamily: PIXEL_FONT,
+    marginTop: pixelArt.spacing.lg,
   },
 
   sheetCardsGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    marginHorizontal: -pixelArt.spacing.xs,
+    justifyContent: 'space-between',
+    width: '100%',
+    padding: 0,
+    margin: 0,
+    gap: 6, // Adiciona um espaçamento consistente entre os itens
   },
 
   sheetCardWrapper: {
-    width: '50%',
-    paddingHorizontal: pixelArt.spacing.xs,
-    marginBottom: pixelArt.spacing.md,
+    width: '30%',
+    aspectRatio: 0.7,
+    alignItems: 'flex-start',
+    justifyContent: 'flex-start',
+    padding: 0,
+    left: -27,
+    top: -10,
+    position: 'relative',
+    transform: [{ scale: 0.9 }], // Reduzindo um pouco o tamanho dos cards
   },
 
   sheetCardScaler: {
     width: '100%',
+    height: '100%',
     alignItems: 'center',
     justifyContent: 'center',
-    transform: [{ scale: 0.82 }],
+    transform: [{ scale: 0.4 }],
   },
 
   sheetItemsList: {
@@ -658,56 +807,92 @@ export const styles = StyleSheet.create({
   },
 
   sheetBotsList: {
-    flexDirection: 'column',
-    gap: pixelArt.spacing.md,
+    width: '100%',
+    padding: pixelArt.spacing.sm,
   },
 
   sheetBotButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    width: '100%',
+    height: 120,
+    marginBottom: pixelArt.spacing.sm,
     backgroundColor: pixelArt.colors.cardInnerBg,
-    borderWidth: pixelArt.borders.widthBold,
-    borderTopColor: pixelArt.colors.borderLight,
-    borderLeftColor: pixelArt.colors.borderLight,
-    borderRightColor: pixelArt.colors.borderDark,
-    borderBottomColor: pixelArt.colors.borderDark,
+    borderTopWidth: 4,
+    borderLeftWidth: 4,
+    borderBottomWidth: 4,
+    borderRightWidth: 4,
+    borderTopColor: '#ffffff',
+    borderLeftColor: '#ffffff',
+    borderBottomColor: '#8B7355',
+    borderRightColor: '#8B7355',
     borderRadius: pixelArt.borders.radiusMedium,
-    paddingVertical: pixelArt.spacing.md,
-    paddingHorizontal: pixelArt.spacing.md,
-    ...pixelArt.shadows.innerBorder,
+    overflow: 'hidden',
+    padding: 0, // Garantindo que não há padding interno
+    ...pixelArt.shadows.small,
   },
 
   sheetBotImage: {
-    width: 72,
-    height: 72,
-    borderRadius: pixelArt.borders.radiusMedium,
-    marginRight: pixelArt.spacing.md,
+    width: '100%',
+    height: '100%',
+    backgroundColor: '#F5F2E8',
+    resizeMode: 'cover',
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    margin: 0,
+    padding: 0,
+    transform: [{ scale: 1.3 }] as any, // Usando type assertion para evitar erros de tipagem
+  },
+
+  sheetBotContent: {
+    width: '100%',
+    padding: pixelArt.spacing.sm,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#FFF9F0', // Fundo branco sem transparência
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: 40, // Altura fixa maior
+    borderTopWidth: 1,
+    borderTopColor: '#E0D8C0',
+    zIndex: 2,
+  },
+
+  sheetBotInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    // Substitui gap por marginRight no último elemento
   },
 
   sheetBotLabel: {
     ...pixelArt.typography.pixelButton,
-    fontSize: 12,
+    fontSize: 14,
     color: '#5A3B2C',
-    textAlign: 'left',
-    textTransform: 'uppercase',
     fontFamily: PIXEL_FONT,
-  },
-
-  sheetBotContent: {
-    flex: 1,
-    justifyContent: 'center',
+    letterSpacing: 0.5,
   },
 
   sheetBotDescription: {
     ...pixelArt.typography.pixelBody,
-    fontSize: 10,
-    color: '#7A5A3A',
-    marginTop: pixelArt.spacing.xs,
+    fontSize: 11,
+    color: '#8B7355',
     fontFamily: PIXEL_FONT,
+    backgroundColor: '#F0E6D2',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 2,
   },
 
   sheetBotButtonDisabled: {
-    opacity: 0.45,
+    opacity: 0.6, // Opacidade para botões desabilitados
+  },
+
+  sheetBotButtonActive: {
+    borderColor: '#8B7355',
+    backgroundColor: '#F5F2E8',
   },
 
   // ========================================
@@ -1096,6 +1281,60 @@ export const styles = StyleSheet.create({
     fontWeight: '700',
     color: '#fff',
     fontFamily: PIXEL_FONT,
+  },
+
+  // ========================================
+  // BACKPACK SELECTOR
+  // ========================================
+  backpackSelector: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: pixelArt.spacing.lg,
+    paddingHorizontal: pixelArt.spacing.md,
+    paddingVertical: pixelArt.spacing.sm,
+    backgroundColor: pixelArt.colors.cardInnerBg,
+    borderWidth: pixelArt.borders.widthBold,
+    borderTopColor: pixelArt.colors.borderLight,
+    borderLeftColor: pixelArt.colors.borderLight,
+    borderBottomColor: pixelArt.colors.borderDark,
+    borderRightColor: pixelArt.colors.borderDark,
+    borderRadius: pixelArt.borders.radiusMedium,
+    ...pixelArt.shadows.innerBorder,
+  },
+
+  selectorButton: {
+    flex: 1,
+    paddingVertical: pixelArt.spacing.sm,
+    paddingHorizontal: pixelArt.spacing.md,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: pixelArt.borders.radiusSmall,
+    marginHorizontal: pixelArt.spacing.xs,
+    backgroundColor: 'transparent',
+  },
+
+  selectorButtonActive: {
+    backgroundColor: pixelArt.colors.cardInnerBg,
+    borderWidth: pixelArt.borders.widthBold,
+    borderTopColor: '#D4AF37',
+    borderLeftColor: '#D4AF37',
+    borderBottomColor: '#B8860B',
+    borderRightColor: '#B8860B',
+    ...pixelArt.shadows.innerBorder,
+  },
+
+  selectorButtonText: {
+    ...pixelArt.typography.pixelButton,
+    fontSize: 10,
+    color: pixelArt.colors.textLight,
+    textAlign: 'center',
+    fontFamily: PIXEL_FONT,
+  },
+
+  selectorButtonTextActive: {
+    color: pixelArt.colors.textDark,
+    fontWeight: 'bold',
   },
 });
 

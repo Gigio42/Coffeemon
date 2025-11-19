@@ -11,8 +11,10 @@ import {
   View,
   ViewStyle,
 } from 'react-native';
+import { BlurView } from 'expo-blur';
 
 import { pixelArt } from '../../theme';
+import { PIXEL_FONT } from '../CoffeemonCard/styles';
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
@@ -102,10 +104,12 @@ export default function SlidingBottomSheet({
 
   return (
     <View style={StyleSheet.absoluteFill} pointerEvents="box-none">
-      <AnimatedPressable
-        onPress={onClose}
-        style={[styles.backdrop, { opacity: backdropOpacity }]}
-      />
+      <BlurView intensity={50} style={StyleSheet.absoluteFill}>
+        <AnimatedPressable
+          onPress={onClose}
+          style={[styles.backdrop, { opacity: backdropOpacity }]}
+        />
+      </BlurView>
 
       <Animated.View style={[styles.sheetWrapper, { transform: [{ translateY }] }]}
         pointerEvents="box-none"
@@ -127,7 +131,6 @@ export default function SlidingBottomSheet({
                   <View style={styles.sectionHeader}>
                     <View style={styles.sectionHeaderAccent} />
                     <View style={styles.sectionHeaderContent}>
-                      <View style={styles.sectionHeaderBullet} />
                       <View style={styles.sectionHeaderLabelWrapper}>
                         <Text style={styles.sectionTitle}>{section.title}</Text>
                       </View>
@@ -161,22 +164,31 @@ const styles = StyleSheet.create({
   },
   container: {
     width: '100%',
-    backgroundColor: pixelArt.colors.cardOuterBg,
+    backgroundColor: '#fff9f0',
     borderRadius: pixelArt.borders.radiusMedium,
-    borderWidth: pixelArt.borders.widthBold,
-    borderTopColor: pixelArt.colors.borderLight,
-    borderLeftColor: pixelArt.colors.borderLight,
-    borderRightColor: pixelArt.colors.borderDark,
-    borderBottomColor: pixelArt.colors.borderDark,
+    borderTopWidth: 4,
+    borderLeftWidth: 4,
+    borderBottomWidth: 4,
+    borderRightWidth: 4,
+    borderTopColor: '#ffffff',
+    borderLeftColor: '#ffffff',
+    borderBottomColor: '#8B7355',
+    borderRightColor: '#8B7355',
     overflow: 'hidden',
+    ...pixelArt.shadows.card,
   },
   handle: {
     alignSelf: 'center',
     width: 64,
     height: 6,
-    borderRadius: 4,
-    backgroundColor: 'rgba(0,0,0,0.2)',
+    borderRadius: pixelArt.borders.radiusSmall,
+    backgroundColor: '#8B7355',
     marginBottom: pixelArt.spacing.md,
+    borderWidth: pixelArt.borders.widthThin,
+    borderTopColor: pixelArt.colors.borderLight,
+    borderLeftColor: pixelArt.colors.borderLight,
+    borderBottomColor: pixelArt.colors.borderDark,
+    borderRightColor: pixelArt.colors.borderDark,
   },
   sectionsScroll: {
     maxHeight: '100%',
@@ -197,11 +209,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: pixelArt.spacing.sm,
+    paddingTop: pixelArt.spacing.sm,
   },
   sectionHeaderAccent: {
     width: 4,
     height: '100%',
-    backgroundColor: pixelArt.colors.coffeePrimary,
+    backgroundColor: '#D4C5A0',
     marginRight: pixelArt.spacing.md,
   },
   sectionHeaderContent: {
@@ -221,8 +234,8 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     ...pixelArt.typography.pixelSubtitle,
-    fontFamily: pixelArt.typography.pixelSubtitle.fontFamily,
-    color: pixelArt.colors.textDark,
+    fontFamily: PIXEL_FONT,
+    color: '#8B7355',
     textTransform: 'uppercase',
   },
   sectionContent: {

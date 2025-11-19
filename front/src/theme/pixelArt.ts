@@ -36,6 +36,15 @@ export const pixelArt = {
   // SOMBRAS PIXELADAS (Box Shadow Style)
   // ========================================
   shadows: {
+    // Sombra pequena para cards e botões
+    small: {
+      shadowColor: '#000',
+      shadowOffset: { width: 2, height: 2 },
+      shadowOpacity: 0.1,
+      shadowRadius: 2,
+      elevation: 2,
+    },
+    
     // Sombra externa pronunciada (borda 3D)
     outerBorder: {
       shadowColor: '#000',
