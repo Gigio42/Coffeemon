@@ -1,6 +1,15 @@
 import { getServerUrl } from '../utils/config';
 import { StatusEffect } from '../types';
 
+export interface Move {
+  id: number;
+  name: string;
+  description: string;
+  power: number;
+  category: string;
+  elementalType: string | null;
+}
+
 export interface PlayerCoffeemon {
   id: number;
   hp: number;
@@ -10,11 +19,20 @@ export interface PlayerCoffeemon {
   experience: number;
   isInParty: boolean;
   statusEffects?: StatusEffect[];
+  learnedMoves?: Array<{
+    id: number;
+    slot: number;
+    move: Move;
+  }>;
   coffeemon: {
     id: number;
     name: string;
-    type: string;
+    types: string[];
     defaultImage?: string;
+    baseHp?: number;
+    baseAttack?: number;
+    baseDefense?: number;
+    baseSpeed?: number;
   };
 }
 
@@ -125,6 +143,24 @@ export async function giveAllCoffeemons(token: string): Promise<{ message: strin
   if (!response.ok) {
     const error = await response.json();
     throw new Error(error.message || 'Erro ao dar Coffeemons');
+  }
+
+  return await response.json();
+}
+
+export async function addMissingMoves(token: string): Promise<{ message: string; fixed: number }> {
+  const url = await getServerUrl();
+  const response = await fetch(`${url}/game/players/me/coffeemons/add-missing-moves`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+  });
+
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.message || 'Erro ao adicionar moves');
   }
 
   return await response.json();

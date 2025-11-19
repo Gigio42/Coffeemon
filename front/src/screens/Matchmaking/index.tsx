@@ -422,10 +422,15 @@ function TeamCarouselInline({
                       level: coffeemon.level,
                       experience: coffeemon.experience,
                       isInParty: true,
+                      learnedMoves: coffeemon.learnedMoves,
                       coffeemon: {
                         id: coffeemon.coffeemon.id,
                         name: coffeemon.coffeemon.name,
-                        type: 'floral',
+                        types: coffeemon.coffeemon.types,
+                        baseHp: coffeemon.coffeemon.baseHp,
+                        baseAttack: coffeemon.coffeemon.baseAttack,
+                        baseDefense: coffeemon.coffeemon.baseDefense,
+                        baseSpeed: coffeemon.coffeemon.baseSpeed,
                       },
                     }}
                     onToggleParty={async () => {
@@ -496,7 +501,6 @@ export default function MatchmakingScreen({
         if (token) {
           const playerItems = await getPlayerItems(token);
           setItems(playerItems);
-          console.log('[Matchmaking] Player items loaded:', playerItems.length);
         }
       } catch (error) {
         console.error('[Matchmaking] Error loading items:', error);
@@ -524,10 +528,10 @@ export default function MatchmakingScreen({
     fetchCoffeemons,
     toggleParty,
     giveAllCoffeemons,
+    addMissingMoves,
     initialized: coffeemonsInitialized,
   } = useCoffeemons({
     token,
-    onLog: (msg) => console.log('Coffeemons:', msg),
   });
 
   // Handlers
@@ -606,6 +610,16 @@ export default function MatchmakingScreen({
     }
   }, [giveAllCoffeemons]);
 
+  const handleAddMissingMovesDebug = useCallback(async () => {
+    try {
+      await addMissingMoves();
+      setDebugMenuVisible(false);
+    } catch (error) {
+      console.error('Failed to add missing moves:', error);
+      Alert.alert('Error', 'Failed to add moves. Please try again.');
+    }
+  }, [addMissingMoves]);
+
   const handleGiveItems = useCallback(async () => {
     try {
       await giveInitialItems(token);
@@ -620,11 +634,12 @@ export default function MatchmakingScreen({
     }
   }, [token]);
 
+  // Fallback palette based on Coffeemon's primary type
   const fallbackPalette = useMemo(() => {
     if (!activeCoffeemon) {
       return DEFAULT_BACKGROUND_PALETTE;
     }
-    return getTypeColor(activeCoffeemon.coffeemon.type, activeCoffeemon.coffeemon.name);
+    return getTypeColor(activeCoffeemon.coffeemon.types?.[0], activeCoffeemon.coffeemon.name);
   }, [activeCoffeemon]);
 
   const activeVariant = useMemo(
@@ -668,7 +683,7 @@ export default function MatchmakingScreen({
           coffeemonList.map(async (coffeemon) => {
             const variant = getVariantForStatusEffects(coffeemon.statusEffects, 'default');
             const assetModule = getCoffeemonImage(coffeemon.coffeemon.name, variant);
-            const fallback = getTypeColor(coffeemon.coffeemon.type, coffeemon.coffeemon.name);
+            const fallback = getTypeColor(coffeemon.coffeemon.types?.[0], coffeemon.coffeemon.name);
             await prefetchPalette(assetModule, fallback);
           }),
         );
@@ -868,47 +883,12 @@ export default function MatchmakingScreen({
     <View style={styles.fullScreenContainer}>
       <View
         pointerEvents="none"
-        style={[styles.dynamicBackground, { backgroundColor: gradientPalette.base }]}
+        style={[styles.dynamicBackground, { backgroundColor: '#FFFFFF' }]}
       >
-        <Animated.View style={[styles.gradientLayer, { transform: [{ translateY: primaryParallax }] }]}>
-          <LinearGradient
-            colors={gradientPalette.primary}
-            start={{ x: 0.1, y: 0 }}
-            end={{ x: 0.9, y: 1 }}
-            style={styles.gradientFill}
-          />
-        </Animated.View>
-        <Animated.View
-          style={[styles.gradientLayer, styles.gradientLayerAccent, { transform: [{ translateY: accentParallax }] }]}
-        >
-          <LinearGradient
-            colors={gradientPalette.accent}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={styles.gradientFill}
-          />
-        </Animated.View>
-        <Animated.View
-          style={[styles.gradientLayer, styles.gradientLayerHighlight, { transform: [{ translateY: highlightParallax }] }]}
-        >
-          <LinearGradient
-            colors={gradientPalette.highlight}
-            start={{ x: 0.2, y: 0 }}
-            end={{ x: 0.8, y: 1 }}
-            style={styles.gradientFill}
-          />
-        </Animated.View>
-        {activeBackground && (
-          <Image
-            source={activeBackground}
-            style={styles.limonetoOverlay}
-            resizeMode="cover"
-          />
-        )}
         <Animated.Image
           source={NOISE_SOURCE}
           resizeMode="repeat"
-          style={[styles.grainOverlay, { transform: [{ translateY: grainParallax }] }]}
+          style={[styles.grainOverlay, { transform: [{ translateY: grainParallax }], opacity: 0.03 }]}
         />
       </View>
       <SafeAreaView style={styles.container} edges={['top']}>
@@ -946,6 +926,12 @@ export default function MatchmakingScreen({
                   <Text style={styles.debugMenuItemText}>Give All Coffeemons</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
+                  style={styles.debugMenuItem}
+                  onPress={handleAddMissingMovesDebug}
+                >
+                  <Text style={styles.debugMenuItemText}>Add Missing Moves</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
                   style={[styles.debugMenuItem, styles.debugMenuItemLast]}
                   onPress={handleGiveItems}
                 >
@@ -954,16 +940,7 @@ export default function MatchmakingScreen({
               </View>
             )}
 
-            {matchStatus && (
-              <View style={styles.statusCardWrapper}>
-                <View style={styles.statusCardShadow} />
-                <View style={styles.statusCardOutline} />
-                <View style={styles.statusCardShape} />
-                <View style={styles.statusCardContent}>
-                  <Text style={styles.statusText}>{matchStatus}</Text>
-                </View>
-              </View>
-            )}
+            {/* Status removido */}
 
             <View style={[styles.scrollView, styles.scrollContent]}>
               <View style={styles.teamCarouselSticky}>

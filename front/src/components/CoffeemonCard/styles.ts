@@ -285,12 +285,12 @@ export const styles = StyleSheet.create({
 
   cardPixelWrapper: {
     position: 'relative',
-    borderWidth: BORDER_WIDTH,
-    borderRadius: 0,
-    marginBottom: CARD_SHADOW_OFFSET,
+    borderWidth: 0,
+    borderRadius: 20,
+    marginBottom: 0,
     overflow: 'visible',
-    backgroundColor: '#111111',
-    borderColor: '#000000',
+    backgroundColor: 'transparent',
+    borderColor: 'transparent',
     alignSelf: 'flex-start',
     padding: 0,
     width: CARD_WIDTH_LARGE,
@@ -305,18 +305,18 @@ export const styles = StyleSheet.create({
   coffeemonCard: {
     width: CARD_WIDTH_LARGE,
     minHeight: CARD_MIN_HEIGHT_LARGE,
-    borderRadius: 0,
-    borderWidth: BORDER_WIDTH,
-    borderColor: '#000000',
-    padding: 10,
-    position: 'relative',
-    overflow: 'hidden',
-    backgroundColor: '#e0e0e0',
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0,
-    shadowRadius: 0,
-    shadowColor: 'transparent',
-    elevation: 0,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
+    padding: 0,
+    backgroundColor: '#FFFFFF',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    shadowColor: '#000000',
+    elevation: 3,
+    overflow: 'visible',
+    alignSelf: 'flex-start',
   },
 
   coffeemonCardSmall: {
@@ -332,20 +332,21 @@ export const styles = StyleSheet.create({
   // HEADER
   // ========================================
   cardHeader: {
-    paddingVertical: 6,
+    paddingVertical: 8,
     paddingHorizontal: 10,
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    justifyContent: 'center',
     alignItems: 'center',
-    borderWidth: 2,
-    borderColor: '#000000',
-    shadowOffset: { width: -2, height: -2 },
-    shadowOpacity: 0.4,
+    borderWidth: 0,
+    borderColor: 'transparent',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0,
     shadowRadius: 0,
-    shadowColor: '#808080',
-    elevation: 1,
-    marginBottom: 10,
-    backgroundColor: '#c0c0c0',
+    shadowColor: 'transparent',
+    elevation: 0,
+    marginBottom: 0,
+    backgroundColor: 'transparent',
+    width: '100%',
   },
 
   headerNameAndHp: {
@@ -374,16 +375,15 @@ export const styles = StyleSheet.create({
   },
 
   coffeemonName: {
-    fontSize: 12,
+    fontSize: 14,
     fontWeight: '900',
     fontFamily: PIXEL_FONT,
     letterSpacing: 0.8,
-    textAlign: 'right',
+    textAlign: 'center',
     textShadowOffset: { width: 1, height: 1 },
-    textShadowRadius: 0,
-    marginBottom: 3,
-    color: '#ffffff',
-    textShadowColor: '#000000',
+    textShadowRadius: 2,
+    color: '#FFFFFF',
+    textShadowColor: 'rgba(0, 0, 0, 0.5)',
   },
 
   // Barra de HP no Header (abaixo do nome)
@@ -416,23 +416,44 @@ export const styles = StyleSheet.create({
   imageContainer: {
     alignItems: 'center',
     justifyContent: 'center',
-    height: 150,
-    borderWidth: 2,
-    borderColor: '#000000',
-    shadowOffset: { width: -3, height: -3 },
-    shadowOpacity: 0.4,
+    height: 280,
+    borderWidth: 0,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    borderBottomLeftRadius: 0,
+    borderBottomRightRadius: 0,
+    borderColor: 'transparent',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0,
     shadowRadius: 0,
-    shadowColor: '#606060',
-    elevation: 1,
-    marginBottom: 10,
-    backgroundColor: '#a0a0a0',
+    shadowColor: 'transparent',
+    elevation: 0,
+    marginBottom: 0,
+    backgroundColor: 'transparent',
+    overflow: 'hidden',
+  },
+
+  imageBackgroundFill: {
+    width: '100%',
+    height: '100%',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+
+  radialGradientOverlay: {
+    width: '100%',
+    height: '100%',
+    alignItems: 'center',
+    justifyContent: 'flex-start',
+    paddingTop: 10,
   },
 
   coffeemonImage: {
-    width: '100%',
-    height: '100%',
-    borderWidth: 1,
-    borderColor: '#000000',
+    width: 160,
+    height: 160,
+    borderWidth: 0,
+    borderColor: 'transparent',
+    marginTop: 20,
   },
 
   // ========================================
@@ -441,71 +462,233 @@ export const styles = StyleSheet.create({
   cardFooter: {
     borderTopWidth: 0,
     marginTop: 'auto',
-  },
-
-  footerInfoRow: {
-    flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    width: '100%',
-    borderWidth: 2,
-    borderColor: '#000000',
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    shadowOffset: { width: -2, height: -2 },
-    shadowOpacity: 0.4,
-    shadowRadius: 0,
-    shadowColor: '#808080',
-    elevation: 1,
-    backgroundColor: '#c0c0c0',
-  },
-
-  // Stats Container
-  statsContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
     width: '100%',
   },
 
-  statItem: {
-    flexDirection: 'row',
+  typeBadgeOverlay: {
+    position: 'absolute',
+    bottom: 10,
+    left: 0,
+    right: 0,
     alignItems: 'center',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 0,
-    borderWidth: 2,
-    borderColor: '#000000',
-    flex: 1,
     justifyContent: 'center',
-    shadowOffset: { width: -1, height: -1 },
-    shadowOpacity: 0.4,
-    shadowRadius: 0,
-    shadowColor: '#888888',
-    elevation: 1,
-    marginHorizontal: 4,
-    backgroundColor: '#ffffff',
+  },
+
+  typeBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 20,
+    paddingVertical: 6,
+    borderRadius: 16,
+    borderWidth: 2,
+    borderColor: '#000000',
+    backgroundColor: '#FFD700',
+  },
+
+  typeBadgeIcon: {
+    fontSize: 14,
+    marginRight: 6,
+  },
+
+  typeBadgeText: {
+    fontSize: 10,
+    fontWeight: '700',
+    fontFamily: PIXEL_FONT,
+    letterSpacing: 0.8,
+    color: '#ffffff',
+  },
+
+  actionsExpandedContainer: {
+    width: '100%',
+    backgroundColor: '#FFFFFF',
+    paddingHorizontal: 10,
+    paddingBottom: 10,
+    paddingTop: 10,
+    borderTopWidth: 1,
+    borderTopColor: '#E0E0E0',
+  },
+
+  actionButtonsRow: {
+    flexDirection: 'row',
+    width: '100%',
+    gap: 8,
+  },
+
+  actionButton: {
+    flex: 1,
+    height: 32,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
+  },
+
+  actionButtonText: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: '#2C2C2C',
+    textTransform: 'capitalize',
+  },
+
+  removeButtonContainer: {
+    width: '100%',
+    marginTop: 10,
+  },
+
+  removeFromPartyButton: {
+    width: '100%',
+    height: 32,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#FF5252',
+    borderWidth: 0,
+  },
+
+  removeFromPartyButtonText: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: '#FFFFFF',
+  },
+
+  // Estilos para conteúdo das abas
+  tabContent: {
+    width: '100%',
+    marginTop: 12,
+    padding: 12,
+    backgroundColor: '#F5F5F5',
+    borderRadius: 12,
+  },
+
+  // Estilos para Status
+  statRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
   },
 
   statLabel: {
-    fontSize: 8,
-    fontWeight: '700',
+    width: 40,
+    fontSize: 11,
     fontFamily: PIXEL_FONT,
-    letterSpacing: 0.6,
-    textTransform: 'uppercase',
-    marginRight: 6,
-    color: '#333333',
+    color: '#666666',
+    fontWeight: 'bold',
+  },
+
+  statBarContainer: {
+    flex: 1,
+    height: 8,
+    backgroundColor: '#E0E0E0',
+    borderRadius: 4,
+    marginHorizontal: 8,
+    overflow: 'hidden',
+  },
+
+  statBar: {
+    height: '100%',
+    borderRadius: 4,
   },
 
   statValue: {
-    fontSize: 10,
-    fontWeight: '900',
+    minWidth: 40,
+    fontSize: 11,
     fontFamily: PIXEL_FONT,
-    letterSpacing: 0.6,
-    textShadowOffset: { width: 1, height: 1 },
-    textShadowRadius: 0,
-    color: '#0c2a66',
-    textShadowColor: '#000000',
+    color: '#333333',
+    textAlign: 'right',
+  },
+
+  experienceRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 12,
+    paddingTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: '#E0E0E0',
+  },
+
+  experienceLabel: {
+    fontSize: 11,
+    fontFamily: PIXEL_FONT,
+    color: '#666666',
+    fontWeight: 'bold',
+  },
+
+  experienceValue: {
+    fontSize: 11,
+    fontFamily: PIXEL_FONT,
+    color: '#333333',
+  },
+
+  // Estilos para Moves
+  moveItem: {
+    marginBottom: 12,
+    padding: 8,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
+  },
+
+  moveHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 4,
+  },
+
+  moveName: {
+    fontSize: 12,
+    fontFamily: PIXEL_FONT,
+    color: '#333333',
+    fontWeight: 'bold',
+  },
+
+  moveTypeChip: {
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 8,
+  },
+
+  moveTypeText: {
+    fontSize: 9,
+    fontFamily: PIXEL_FONT,
+    color: '#FFFFFF',
+  },
+
+  moveDescription: {
+    fontSize: 10,
+    fontFamily: PIXEL_FONT,
+    color: '#666666',
+    marginBottom: 4,
+  },
+
+  moveMeta: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+
+  moveMetaText: {
+    fontSize: 9,
+    fontFamily: PIXEL_FONT,
+    color: '#999999',
+  },
+
+  noMovesText: {
+    fontSize: 11,
+    fontFamily: PIXEL_FONT,
+    color: '#999999',
+    textAlign: 'center',
+  },
+
+  // Estilos para About
+  aboutText: {
+    fontSize: 11,
+    fontFamily: PIXEL_FONT,
+    color: '#666666',
+    marginBottom: 6,
   },
 
   selectionOverlay: {

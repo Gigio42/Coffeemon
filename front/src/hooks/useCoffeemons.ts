@@ -17,6 +17,7 @@ interface UseCoffeemonsResult {
   fetchCoffeemons: () => Promise<void>;
   toggleParty: (coffeemon: PlayerCoffeemon) => Promise<void>;
   giveAllCoffeemons: () => Promise<void>;
+  addMissingMoves: () => Promise<void>;
   initialized: boolean;
 }
 
@@ -37,7 +38,6 @@ export function useCoffeemons({
   async function initializePlayer() {
     try {
       const playerData = await coffeemonService.fetchPlayerData(token);
-      console.log('Player initialized with ID:', playerData?.id);
       setPlayerId(playerData.id);
       await fetchCoffeemons(playerData.id);
     } catch (error: any) {
@@ -58,9 +58,7 @@ export function useCoffeemons({
 
     setLoading(true);
     try {
-      console.log('Fetching coffeemons for player:', idToUse);
       const data = await coffeemonService.fetchPlayerCoffeemons(token, idToUse);
-      console.log(`Loaded ${data.length} coffeemons for player ${idToUse}`);
       setCoffeemons(data);
 
       if (onLog) {
@@ -69,7 +67,6 @@ export function useCoffeemons({
       
       // Se não tem coffeemons, sugerir dar todos
       if (data.length === 0) {
-        console.log('No coffeemons found.');
         if (onLog) {
           onLog('Nenhum Coffeemon encontrado. Use o botão para capturar todos.');
         }
@@ -135,9 +132,7 @@ export function useCoffeemons({
 
     setLoading(true);
     try {
-      console.log('Giving all coffeemons to player...');
       const result = await coffeemonService.giveAllCoffeemons(token);
-      console.log(`Coffeemons grant result: ${result.count ?? 0}`);
       
       if (onLog) {
         onLog(result.message || `${result.count} Coffeemons capturados!`);
@@ -163,6 +158,37 @@ export function useCoffeemons({
     }
   }
 
+  async function addMissingMoves() {
+    if (!playerId) {
+      console.error('No player ID available');
+      Alert.alert('Erro', 'ID do jogador não disponível. Tente novamente.');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const result = await coffeemonService.addMissingMoves(token);
+      
+      if (onLog) {
+        onLog(result.message || `${result.fixed} Coffeemons corrigidos!`);
+      }
+      
+      Alert.alert('Sucesso!', result.message || `${result.fixed} Coffeemons tiveram moves adicionados!`);
+      
+      // Recarregar coffeemons
+      await fetchCoffeemons(playerId);
+    } catch (error: any) {
+      console.error('Error adding missing moves:', error);
+      const errorMessage = error.message || 'Erro ao adicionar moves';
+      Alert.alert('Erro', errorMessage);
+      if (onLog) {
+        onLog(`Erro: ${errorMessage}`);
+      }
+    } finally {
+      setLoading(false);
+    }
+  }
+
   const partyMembers = coffeemons.filter((c) => c.isInParty);
   const availableCoffeemons = coffeemons.filter((c) => !c.isInParty);
 
@@ -175,6 +201,7 @@ export function useCoffeemons({
     fetchCoffeemons: () => fetchCoffeemons(),
     toggleParty,
     giveAllCoffeemons,
+    addMissingMoves,
     initialized,
   };
 }
