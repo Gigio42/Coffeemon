@@ -48,8 +48,6 @@ export const getPlayerItems = async (token: string): Promise<Item[]> => {
   try {
     const apiUrl = await getServerUrl();
     
-    console.log('[itemsService] Fetching items from:', `${apiUrl}/game/items`);
-    
     // Buscar todos os itens disponíveis
     const itemsResponse = await fetch(`${apiUrl}/game/items`, {
       method: 'GET',
@@ -64,9 +62,6 @@ export const getPlayerItems = async (token: string): Promise<Item[]> => {
     }
 
     const allItems: Item[] = await itemsResponse.json();
-    console.log('[itemsService] All items fetched:', allItems);
-
-    console.log('[itemsService] Fetching player data from:', `${apiUrl}/game/players/me`);
     
     // Buscar dados do jogador (incluindo inventário)
     const playerResponse = await fetch(`${apiUrl}/game/players/me`, {
@@ -82,27 +77,18 @@ export const getPlayerItems = async (token: string): Promise<Item[]> => {
     }
 
     const playerData = await playerResponse.json();
-    console.log('[itemsService] Player data fetched:', playerData);
-    console.log('[itemsService] Player inventory:', playerData.inventory);
-    
     const inventory = playerData.inventory || {};
-    console.log('[itemsService] Inventory object:', inventory);
-    console.log('[itemsService] Inventory type:', typeof inventory);
 
     // Combinar itens com quantidades do inventário
     const playerItems = allItems
       .map(item => {
         const quantity = inventory[item.id] || 0;
-        console.log(`[itemsService] Item ${item.id}: quantity = ${quantity}`);
         return {
           ...item,
           quantity,
         };
       });
-      // NÃO filtrar aqui - mostrar todos os itens, mas desabilitados se quantity = 0
-      // .filter(item => item.quantity > 0);
 
-    console.log('[itemsService] Player items (all items with quantities):', playerItems);
     return playerItems;
   } catch (error) {
     console.error('[itemsService] Error fetching player items:', error);

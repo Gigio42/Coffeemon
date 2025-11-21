@@ -623,9 +623,9 @@ export const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: pixelArt.spacing.lg,
-    paddingBottom: pixelArt.spacing.md, // Moved even higher
-    paddingTop: pixelArt.spacing.md,
-    gap: 0, // No gap to bring icons right next to Start
+    paddingBottom: pixelArt.spacing.md,
+    paddingTop: pixelArt.spacing.xs,
+    gap: pixelArt.spacing.md,
     width: '100%',
     position: 'absolute',
     bottom: 20,
@@ -997,7 +997,7 @@ export const styles = StyleSheet.create({
     width: '100%',
     height: '100%',
     alignItems: 'center',
-    justifyContent: 'center',
+    justifyContent: 'flex-start',
     overflow: 'visible',
   },
 

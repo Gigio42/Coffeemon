@@ -77,7 +77,12 @@ export class PlayerService {
   async findByUserId(userId: number): Promise<Player> {
     const player = await this.playerRepository.findOne({
       where: { user: { id: userId } },
-      relations: ['user', 'coffeemons', 'coffeemons.coffeemon'],
+      relations: [
+        'coffeemons',
+        'coffeemons.coffeemon',
+        'coffeemons.learnedMoves',
+        'coffeemons.learnedMoves.move',
+      ],
     });
 
     if (!player) {
@@ -90,10 +95,15 @@ export class PlayerService {
   async getPlayerCoffeemons(playerId: number): Promise<PlayerCoffeemons[]> {
     await this.findOne(playerId);
 
-    return this.playerCoffeemonRepository.find({
-      where: { player: { id: playerId } },
-      relations: ['coffeemon', 'learnedMoves', 'learnedMoves.move'],
-    });
+    const coffeemons = await this.playerCoffeemonRepository
+      .createQueryBuilder('pc')
+      .leftJoinAndSelect('pc.coffeemon', 'coffeemon')
+      .leftJoinAndSelect('pc.learnedMoves', 'learnedMoves')
+      .leftJoinAndSelect('learnedMoves.move', 'move')
+      .where('pc.player.id = :playerId', { playerId })
+      .getMany();
+
+    return coffeemons;
   }
 
   async getPlayerParty(playerId: number): Promise<PlayerCoffeemons[]> {
