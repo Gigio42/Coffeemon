@@ -505,19 +505,19 @@ export default function MatchmakingScreen({
   const backpackButtonScale = useRef(new Animated.Value(1)).current;
   const botButtonScale = useRef(new Animated.Value(1)).current;
 
-  // Hook de Coffeemons (lista, party, loading)
+  // Hook de Coffeemons (lista, party, loading) - PRECISA VIR ANTES DO useEffect
   const {
     loading,
     partyLoading,
-    partyMembers = [], // Fornece um valor padrão para partyMembers
-    availableCoffeemons = [], // Fornece um valor padrão para availableCoffeemons
+    partyMembers,
+    availableCoffeemons,
     fetchCoffeemons,
     toggleParty,
     giveAllCoffeemons,
+    addMissingMoves,
     initialized: coffeemonsInitialized,
   } = useCoffeemons({
     token,
-    onLog: (msg) => console.log('Coffeemons:', msg),
   });
 
   // Efeito para controlar a animação de carregamento
@@ -606,21 +606,6 @@ export default function MatchmakingScreen({
       onNavigateToLogin,
       onNavigateToBattle,
     });
-
-  // Hook de Coffeemons (lista, party, loading)
-  const {
-    loading,
-    partyLoading,
-    partyMembers,
-    availableCoffeemons,
-    fetchCoffeemons,
-    toggleParty,
-    giveAllCoffeemons,
-    addMissingMoves,
-    initialized: coffeemonsInitialized,
-  } = useCoffeemons({
-    token,
-  });
 
   // Handlers
   const animateStartPress = () => {
