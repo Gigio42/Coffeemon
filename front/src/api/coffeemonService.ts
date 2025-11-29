@@ -36,6 +36,18 @@ export interface PlayerCoffeemon {
   };
 }
 
+export interface Coffeemon {
+  id: number;
+  name: string;
+  description: string;
+  types: string[];
+  baseHp: number;
+  baseAttack: number;
+  baseDefense: number;
+  baseSpeed: number;
+  defaultImage?: string;
+}
+
 /**
  * Busca dados do jogador
  */
@@ -191,5 +203,25 @@ import { CoffeemonVariant, getCoffeemonImage as getImageFromAssets } from '../..
  */
 export function getCoffeemonImageSource(name: string, variant: CoffeemonVariant = 'default') {
   return getImageFromAssets(name, variant);
+}
+
+/**
+ * Busca todos os Coffeemons existentes no jogo (Catálogo)
+ */
+export async function fetchAllCoffeemons(token: string): Promise<Coffeemon[]> {
+  const url = await getServerUrl();
+  const response = await fetch(`${url}/game/coffeemons`, {
+    method: 'GET',
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error('Erro ao carregar catálogo de Coffeemons');
+  }
+
+  return await response.json();
 }
 

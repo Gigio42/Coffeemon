@@ -16,18 +16,21 @@
  * - BattleScreen.tsx: Batalha, ataques, troca de pokémon
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { ActivityIndicator, View } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { Socket } from 'socket.io-client';
 import { useFonts, PressStart2P_400Regular } from '@expo-google-fonts/press-start-2p';
+import * as NavigationBar from 'expo-navigation-bar';
+
 import LoginScreen from './src/screens/Login';
 import EcommerceScreen from './src/screens/Ecommerce';
 import MatchmakingScreen from './src/screens/Matchmaking';
 import BattleScreen from './src/screens/Battle';
 import ErrorBoundary from './src/components/ErrorBoundary';
 import { Screen, BattleState } from './src/types';
+import { MainNavScreen } from './src/screens/MainNav';
 
 export default function App() {
   // ========================================
@@ -37,6 +40,24 @@ export default function App() {
   const [fontsLoaded, fontError] = useFonts({
     PressStart2P_400Regular,
   });
+
+  // Configuração da barra de navegação (Immersive Mode)
+  useEffect(() => {
+    const configureImmersiveMode = async () => {
+      try {
+        // Oculta a barra de navegação (botões virtuais)
+        await NavigationBar.setVisibilityAsync("hidden");
+        // Define o comportamento para aparecer ao deslizar
+        await NavigationBar.setBehaviorAsync("overlay-swipe");
+        // Opcional: Define a cor de fundo da barra como transparente para quando ela aparecer
+        await NavigationBar.setBackgroundColorAsync("rgba(0,0,0,0.5)");
+      } catch (e) {
+        console.log("Erro ao configurar modo imersivo:", e);
+      }
+    };
+
+    configureImmersiveMode();
+  }, []);
 
   // Controla qual tela está sendo exibida
   const [currentScreen, setCurrentScreen] = useState<Screen>(Screen.LOGIN);
@@ -134,7 +155,7 @@ export default function App() {
         return null;
       }
       return (
-        <MatchmakingScreen 
+        <MainNavScreen
           // Passa dados de autenticação para a tela
           token={authData.token}
           playerId={authData.playerId}
@@ -149,11 +170,6 @@ export default function App() {
             setCurrentScreen(Screen.LOGIN);
           }}
           
-          // Callback para voltar ao e-commerce
-          onNavigateToEcommerce={() => {
-            setCurrentScreen(Screen.ECOMMERCE);
-          }}
-          
           // Callback chamado quando uma PARTIDA É ENCONTRADA
           // A MatchmakingScreen faz TODA a lógica de matchmaking:
           // - Conecta ao socket.io
@@ -163,6 +179,9 @@ export default function App() {
             setBattleData({ battleId, battleState, socket });
             setCurrentScreen(Screen.BATTLE);
           }}
+          
+          // Passa o componente MatchmakingScreen como prop
+          MatchmakingScreen={MatchmakingScreen}
         />
       );
       
