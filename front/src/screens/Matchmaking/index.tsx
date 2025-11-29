@@ -33,6 +33,7 @@ import { getVariantForStatusEffects } from '../../utils/statusEffects';
 import CoffeemonSelectionModal from '../../components/CoffeemonSelectionModal';
 import CoffeemonCard from '../../components/CoffeemonCard';
 import SlidingBottomSheet, { type SlidingBottomSheetSection } from '../../components/SlidingBottomSheet';
+import CoffeemonDetailsModal from '../../components/CoffeemonDetailsModal';
 
 import { styles } from './styles';
 import { pixelArt } from '../../theme/pixelArt';
@@ -173,12 +174,14 @@ function TeamCarouselInline({
   partyLoading,
   onScrollInterruption,
   onActiveCoffeemonChange,
+  onCoffeemonPress,
 }: {
   coffeemons: PlayerCoffeemon[];
   onToggleParty: (coffeemon: PlayerCoffeemon) => void;
   partyLoading: number | null;
   onScrollInterruption?: (interrupting: boolean) => void;
   onActiveCoffeemonChange?: (coffeemon: PlayerCoffeemon | null) => void;
+  onCoffeemonPress?: (coffeemon: PlayerCoffeemon) => void;
 }) {
   // Ordem visual dos cards (posição 0 = esquerda, 1 = centro, 2 = direita)
   const [displayOrder, setDisplayOrder] = useState<number[]>(() => coffeemons.map((_, index) => index));
@@ -403,6 +406,8 @@ function TeamCarouselInline({
                     const direction: 'left' | 'right' =
                       position < centerPosition ? 'right' : 'left';
                     animateSwipe(direction);
+                  } else {
+                    onCoffeemonPress?.(coffeemon);
                   }
                 }}
                 activeOpacity={0.9}
@@ -449,6 +454,7 @@ function TeamCarouselInline({
                     variant="large"
                     isLoading={partyLoading === coffeemon.id}
                     disabled={!isActive}
+                    onPress={isActive ? onCoffeemonPress : undefined}
                   />
                   {/* Star indicator removed as per request */}
                 </Animated.View>
@@ -473,6 +479,8 @@ interface MatchmakingScreenProps {
     battleState: BattleState,
     socket: Socket
   ) => void;
+  skipIntro?: boolean;
+  onIntroFinish?: () => void;
 }
 
 export default function MatchmakingScreen({
@@ -481,11 +489,15 @@ export default function MatchmakingScreen({
   onNavigateToLogin,
   onNavigateToEcommerce,
   onNavigateToBattle,
+  skipIntro = false,
+  onIntroFinish,
 }: MatchmakingScreenProps) {
   // Estados de UI
   const [introLoading, setIntroLoading] = useState(true);
   const [qrScannerVisible, setQrScannerVisible] = useState<boolean>(false);
   const [selectionModalVisible, setSelectionModalVisible] = useState<boolean>(false);
+  const [detailsModalVisible, setDetailsModalVisible] = useState<boolean>(false);
+  const [selectedDetailsCoffeemon, setSelectedDetailsCoffeemon] = useState<PlayerCoffeemon | null>(null);
   const [isCarouselInteracting, setCarouselInteracting] = useState(false);
   const [sheetTab, setSheetTab] = useState<'backpack' | 'items' | 'bots'>('backpack');
   const [backpackView, setBackpackView] = useState<'coffeemons' | 'items'>('coffeemons');
@@ -494,8 +506,8 @@ export default function MatchmakingScreen({
   const [palettesReady, setPalettesReady] = useState(false);
   const [debugMenuVisible, setDebugMenuVisible] = useState(false);
   const [items, setItems] = useState<Item[]>([]);
-  const [showContent, setShowContent] = useState(false);
-  const [progress, setProgress] = useState(0);
+  const [showContent, setShowContent] = useState(skipIntro);
+  const [progress, setProgress] = useState(skipIntro ? 100 : 0);
   
   // Refs
   const scrollY = useRef(new Animated.Value(0)).current;
@@ -522,6 +534,11 @@ export default function MatchmakingScreen({
 
   // Efeito para controlar a animação de carregamento
   useEffect(() => {
+    if (skipIntro) {
+      if (!showContent) setShowContent(true);
+      return;
+    }
+
     // Só inicia a animação quando tudo estiver carregado
     if (introLoading || !coffeemonsInitialized || !palettesReady) {
       return;
@@ -553,7 +570,10 @@ export default function MatchmakingScreen({
         // Finalizou o carregamento
         setProgress(100);
         // Pequeno atraso para garantir que a animação termine suavemente
-        setTimeout(() => setShowContent(true), 200);
+        setTimeout(() => {
+          setShowContent(true);
+          onIntroFinish?.();
+        }, 200);
       }
     };
 
@@ -566,7 +586,7 @@ export default function MatchmakingScreen({
         cancelAnimationFrame(animationFrameId);
       }
     };
-  }, [introLoading, coffeemonsInitialized, palettesReady]);
+  }, [introLoading, coffeemonsInitialized, palettesReady, skipIntro]);
 
   // Set introLoading to false after component mounts
   useEffect(() => {
@@ -679,6 +699,16 @@ export default function MatchmakingScreen({
   async function handleSelectCoffeemon(coffeemon: PlayerCoffeemon) {
     await toggleParty(coffeemon);
     setSelectionModalVisible(false);
+  }
+
+  function handleOpenDetailsModal(coffeemon: PlayerCoffeemon) {
+    setSelectedDetailsCoffeemon(coffeemon);
+    setDetailsModalVisible(true);
+  }
+
+  function handleCloseDetailsModal() {
+    setDetailsModalVisible(false);
+    setSelectedDetailsCoffeemon(null);
   }
 
   useEffect(() => {
@@ -1165,6 +1195,7 @@ export default function MatchmakingScreen({
                       partyLoading={partyLoading}
                       onScrollInterruption={setCarouselInteracting}
                       onActiveCoffeemonChange={handleActiveCoffeemonChange}
+                      onCoffeemonPress={handleOpenDetailsModal}
                     />
                   )}
                 </View>
@@ -1227,6 +1258,12 @@ export default function MatchmakingScreen({
         onSelectCoffeemon={handleSelectCoffeemon}
         onClose={handleCloseSelectionModal}
         partyLoading={partyLoading}
+      />
+
+      <CoffeemonDetailsModal
+        visible={detailsModalVisible}
+        coffeemon={selectedDetailsCoffeemon}
+        onClose={handleCloseDetailsModal}
       />
 
       <SlidingBottomSheet

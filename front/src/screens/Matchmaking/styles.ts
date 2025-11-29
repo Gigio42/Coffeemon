@@ -634,8 +634,7 @@ export const styles = StyleSheet.create({
   },
 
   bottomBarPill: {
-    flex: 1,
-    height: 200, // Increased size
+    // Removed flex: 1 and height: 200 to reduce clickable area
     borderRadius: pixelArt.borders.radiusMedium,
     backgroundColor: pixelArt.colors.cardInnerBg,
     borderWidth: pixelArt.borders.widthBold,
@@ -649,14 +648,14 @@ export const styles = StyleSheet.create({
   },
 
   bottomBarPillLeft: {
-    flex: 0.2, // Make side buttons very narrow
+    // Removed flex: 0.2
     backgroundColor: 'transparent', // Remove background for icon only
     borderWidth: 0, // Remove border
     marginRight: 0,
   },
 
   bottomBarPillCenter: {
-    flex: 8, // Make it even wider
+    // Removed flex: 8
     backgroundColor: 'transparent',
     borderWidth: 0,
     paddingHorizontal: 0,
@@ -668,7 +667,7 @@ export const styles = StyleSheet.create({
   },
 
   bottomBarPillRight: {
-    flex: 0.2, // Make side buttons very narrow
+    // Removed flex: 0.2
     backgroundColor: 'transparent', // Remove background for icon only
     borderWidth: 0, // Remove border
     marginLeft: 0,
@@ -699,8 +698,8 @@ export const styles = StyleSheet.create({
 
   bottomBarIconCenter: {
     width: 200,
-    height: 200,
-    resizeMode: 'contain',
+    height: 80,
+    resizeMode: 'cover', // Crop top/bottom transparent areas
   },
 
   sheetSectionContent: {

@@ -5,7 +5,6 @@ import { pixelArt } from '../../theme/pixelArt';
 export const styles = StyleSheet.create({
   wrapper: {
     alignItems: 'center',
-    paddingHorizontal: pixelArt.spacing.lg,
     marginBottom: pixelArt.spacing.lg,
   },
 
@@ -18,9 +17,9 @@ export const styles = StyleSheet.create({
     borderLeftColor: '#fff2d6',
     borderBottomColor: '#b79f6e',
     borderRightColor: '#b79f6e',
-    paddingVertical: pixelArt.spacing.xl,
-    paddingHorizontal: pixelArt.spacing.xxl * 2.5,
-    minWidth: 220,
+    paddingVertical: pixelArt.spacing.md,
+    paddingHorizontal: pixelArt.spacing.xl,
+    minWidth: 200,
     alignItems: 'center',
     justifyContent: 'center',
   },

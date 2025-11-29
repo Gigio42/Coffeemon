@@ -33,6 +33,8 @@ interface CoffeemonCardProps {
   variant?: 'large' | 'small';
   maxHp?: number;
   disabled?: boolean;
+  locked?: boolean;
+  onPress?: (coffeemon: PlayerCoffeemon) => void;
 }
 
 // Função de ícone atualizada para BATER com a imagem (Uva, Fogo)
@@ -60,6 +62,8 @@ export default function CoffeemonCard({
   variant = 'large',
   maxHp,
   disabled = false,
+  locked = false,
+  onPress,
 }: CoffeemonCardProps) {
   const isInParty = coffeemon.isInParty;
   const fallbackPalette = useMemo(
@@ -71,8 +75,22 @@ export default function CoffeemonCard({
   const palette = useDynamicPalette(assetModule, fallbackPalette);
 
   const pixelColors = useMemo(
-    () => buildPixelCardColors(palette),
-    [palette.light, palette.dark, palette.accent],
+    () => {
+      const colors = buildPixelCardColors(palette);
+      if (locked) {
+        return {
+          ...colors,
+          cardBackground: '#D3D3D3',
+          cardBorder: '#A9A9A9',
+          imageBorder: '#808080',
+          titleColor: '#696969',
+          footerBackground: '#C0C0C0',
+          footerBorder: '#A9A9A9',
+        };
+      }
+      return colors;
+    },
+    [palette, locked],
   );
 
   const [imageUri, setImageUri] = useState<string | null>(null);
@@ -141,6 +159,11 @@ export default function CoffeemonCard({
       return;
     }
 
+    if (onPress) {
+      onPress(coffeemon);
+      return;
+    }
+
     // Se não está no party, adiciona
     if (!isInParty) {
       await onToggleParty(coffeemon);
@@ -149,7 +172,7 @@ export default function CoffeemonCard({
 
     // Se está no party, mostra/esconde ações
     setShowActions((current) => !current);
-  }, [coffeemon, disabled, isInParty, isLoading, onToggleParty]);
+  }, [coffeemon, disabled, isInParty, isLoading, onToggleParty, onPress]);
 
   const handleRemoveFromParty = useCallback(async () => {
     if (disabled || isLoading) {
@@ -237,6 +260,7 @@ export default function CoffeemonCard({
             {
               borderColor: '#E0E0E0',
               backgroundColor: '#FFFFFF',
+              minHeight: showActions ? 320 : 280,
             },
           ]}
         >
@@ -307,6 +331,8 @@ export default function CoffeemonCard({
               {
                 borderColor: pixelColors.imageBorder,
                 shadowColor: pixelColors.imageShadow,
+                borderBottomLeftRadius: showActions ? 0 : 20,
+                borderBottomRightRadius: showActions ? 0 : 20,
               },
             ]}
           >
@@ -314,7 +340,7 @@ export default function CoffeemonCard({
               source={COFFEEMON_BACKGROUNDS[coffeemon.coffeemon.name.toLowerCase()] || undefined}
               style={styles.imageBackgroundFill}
               resizeMode="cover"
-              imageStyle={{ opacity: 0.85 }}
+              imageStyle={{ opacity: locked ? 0.3 : 0.85, tintColor: locked ? 'gray' : undefined }}
             >
               <LinearGradient
                 colors={[
@@ -341,8 +367,8 @@ export default function CoffeemonCard({
                     style={[
                       styles.coffeemonName,
                       {
-                        color: '#FFFFFF',
-                        textShadowColor: 'rgba(0, 0, 0, 0.5)',
+                        color: locked ? '#696969' : '#FFFFFF',
+                        textShadowColor: locked ? 'transparent' : 'rgba(0, 0, 0, 0.5)',
                       },
                     ]}
                   >
@@ -354,7 +380,10 @@ export default function CoffeemonCard({
                   source={imageSource}
                   style={[
                     styles.coffeemonImage,
-                    { borderColor: pixelColors.imageBorder },
+                    { 
+                      borderColor: pixelColors.imageBorder,
+                      opacity: locked ? 0.5 : 1,
+                    },
                   ]}
                   resizeMode="contain"
                   defaultSource={fallbackImage}
