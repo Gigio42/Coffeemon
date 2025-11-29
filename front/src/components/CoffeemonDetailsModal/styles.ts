@@ -212,4 +212,65 @@ export const styles = StyleSheet.create({
     fontWeight: 'bold',
     fontFamily: 'Courier New',
   },
+  
+  // Swap Selection Styles
+  swapContainer: {
+    padding: 20,
+    alignItems: 'center',
+    width: '100%',
+  },
+  swapTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#333',
+    fontFamily: 'Courier New',
+    marginBottom: 8,
+  },
+  swapSubtitle: {
+    fontSize: 14,
+    color: '#666',
+    fontFamily: 'Courier New',
+    marginBottom: 20,
+  },
+  swapList: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    width: '100%',
+    marginBottom: 20,
+  },
+  swapItem: {
+    alignItems: 'center',
+    padding: 10,
+    borderWidth: 2,
+    borderRadius: 12,
+    backgroundColor: '#F9F9F9',
+    width: '30%',
+  },
+  swapImage: {
+    width: 60,
+    height: 60,
+    marginBottom: 8,
+  },
+  swapName: {
+    fontSize: 10,
+    fontWeight: 'bold',
+    color: '#333',
+    fontFamily: 'Courier New',
+    textAlign: 'center',
+  },
+  swapLevel: {
+    fontSize: 9,
+    color: '#666',
+    fontFamily: 'Courier New',
+  },
+  cancelSwapButton: {
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+  },
+  cancelSwapText: {
+    color: '#888',
+    fontSize: 14,
+    fontFamily: 'Courier New',
+    textDecorationLine: 'underline',
+  },
 });

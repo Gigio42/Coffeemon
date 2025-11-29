@@ -78,6 +78,7 @@ export class PlayerService {
     const player = await this.playerRepository.findOne({
       where: { user: { id: userId } },
       relations: [
+        'user',
         'coffeemons',
         'coffeemons.coffeemon',
         'coffeemons.learnedMoves',

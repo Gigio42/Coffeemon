@@ -11,7 +11,7 @@ interface BottomNavProps {
 const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#F5E6D3',
     borderTopWidth: 1,
     borderTopColor: '#E0E0E0',
     paddingBottom: 8,

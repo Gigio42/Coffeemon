@@ -309,7 +309,7 @@ export const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#E0E0E0',
     padding: 0,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#F5E6D3',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.1,
     shadowRadius: 8,
@@ -543,7 +543,7 @@ export const styles = StyleSheet.create({
 
   actionsExpandedContainer: {
     width: '100%',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#F5E6D3',
     paddingHorizontal: 10,
     paddingBottom: 10,
     paddingTop: 10,

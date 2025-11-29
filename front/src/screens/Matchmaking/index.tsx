@@ -18,6 +18,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Socket } from 'socket.io-client';
 import { BattleState } from '../../types';
 import { usePlayer } from '../../hooks/usePlayer';
+import { useUser } from '../../hooks/useUser';
 import PlayerStatus from '../../components/PlayerStatus';
 import { useMatchmaking } from '../../hooks/useMatchmaking';
 import { useCoffeemons } from '../../hooks/useCoffeemons';
@@ -525,6 +526,7 @@ export default function MatchmakingScreen({
     availableCoffeemons,
     fetchCoffeemons,
     toggleParty,
+    swapPartyMembers,
     giveAllCoffeemons,
     addMissingMoves,
     initialized: coffeemonsInitialized,
@@ -617,6 +619,7 @@ export default function MatchmakingScreen({
 
   // Hook de Player
   const { player } = usePlayer(token);
+  const { user } = useUser(token);
 
   // Hook de Matchmaking (Socket, status, logs)
   const { matchStatus, log, findMatch, findBotMatch } =
@@ -701,15 +704,15 @@ export default function MatchmakingScreen({
     setSelectionModalVisible(false);
   }
 
-  function handleOpenDetailsModal(coffeemon: PlayerCoffeemon) {
+  const handleOpenDetailsModal = useCallback((coffeemon: PlayerCoffeemon) => {
     setSelectedDetailsCoffeemon(coffeemon);
     setDetailsModalVisible(true);
-  }
+  }, []);
 
-  function handleCloseDetailsModal() {
+  const handleCloseDetailsModal = useCallback(() => {
     setDetailsModalVisible(false);
     setSelectedDetailsCoffeemon(null);
-  }
+  }, []);
 
   useEffect(() => {
     if (!partyMembers || partyMembers.length === 0) {
@@ -936,6 +939,7 @@ export default function MatchmakingScreen({
                     <CoffeemonCard
                       coffeemon={pc}
                       onToggleParty={toggleParty}
+                      onPress={() => handleOpenDetailsModal(pc)}
                       variant="small"
                       isLoading={partyLoading === pc.id}
                     />
@@ -1071,7 +1075,7 @@ export default function MatchmakingScreen({
     };
 
     return [sections[sheetTab]];
-  }, [availableCoffeemons, getItemColor, getItemIcon, handleFindBotMatch, items, partyLoading, partyMembers.length, sheetTab, toggleParty, backpackView]);
+  }, [availableCoffeemons, getItemColor, getItemIcon, handleFindBotMatch, items, partyLoading, partyMembers.length, sheetTab, toggleParty, backpackView, handleOpenDetailsModal]);
 
   const showBackpackButton = useMemo(() => availableCoffeemons.length > 0 || items.length > 0, [availableCoffeemons.length, items.length]);
 
@@ -1088,7 +1092,7 @@ export default function MatchmakingScreen({
     <View style={styles.fullScreenContainer}>
       <View
         pointerEvents="none"
-        style={[styles.dynamicBackground, { backgroundColor: '#FFFFFF' }]}
+        style={[styles.dynamicBackground, { backgroundColor: '#F5E6D3' }]}
       >
         <Animated.Image
           source={NOISE_SOURCE}
@@ -1175,7 +1179,7 @@ export default function MatchmakingScreen({
             {player && (
               <View style={styles.playerHeader}>
                 <Image source={{ uri: player.user?.avatar || `https://api.dicebear.com/7.x/thumbs/png?seed=${player.id}&size=40` }} style={styles.playerAvatar} />
-                <Text style={styles.playerName}>{player.user?.username || 'Player'}</Text>
+                <Text style={styles.playerName}>{user?.username || player.user?.username || 'Player'}</Text>
               </View>
             )}
 
@@ -1264,6 +1268,9 @@ export default function MatchmakingScreen({
         visible={detailsModalVisible}
         coffeemon={selectedDetailsCoffeemon}
         onClose={handleCloseDetailsModal}
+        onToggleParty={toggleParty}
+        partyMembers={partyMembers}
+        onSwapParty={swapPartyMembers}
       />
 
       <SlidingBottomSheet

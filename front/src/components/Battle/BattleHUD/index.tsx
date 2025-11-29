@@ -78,7 +78,9 @@ export default function BattleHUD({
   const containerStyle = isMe ? styles.playerHudPosition : styles.opponentHudPosition;
   const resolveImage = imageSourceGetter ?? getCoffeemonImage;
   const imageSource = resolveImage(activeMon.name, spriteVariant);
-  const typeIcon = getTypeIcon((activeMon as any)?.type);
+  // Tenta obter o tipo da propriedade 'types' (array) ou 'type' (string)
+  const monType = (activeMon as any)?.types?.[0] || (activeMon as any)?.type;
+  const typeIcon = getTypeIcon(monType);
   const level = (activeMon as any)?.level ?? (playerState as any)?.level ?? '';
 
   return (

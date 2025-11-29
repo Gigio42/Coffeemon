@@ -28,7 +28,7 @@ const COFFEEMON_BACKGROUNDS: Record<string, ImageSourcePropType> = {
 
 interface CoffeemonCardProps {
   coffeemon: PlayerCoffeemon;
-  onToggleParty: (coffeemon: PlayerCoffeemon) => Promise<void>;
+  onToggleParty: (coffeemon: PlayerCoffeemon) => Promise<boolean | void> | void;
   isLoading?: boolean;
   variant?: 'large' | 'small';
   maxHp?: number;
@@ -250,7 +250,7 @@ export default function CoffeemonCard({
           style={[styles.cardShadowBlock, { display: 'none' }]}
         />
         <LinearGradient
-          colors={['#FFFFFF', '#F5F5F5']}
+          colors={['#F5E6D3', '#F5E6D3']}
           start={{ x: 0, y: 0 }}
           end={{ x: 0, y: 1 }}
           style={[
@@ -259,7 +259,7 @@ export default function CoffeemonCard({
             isInParty && styles.coffeemonCardSelected,
             {
               borderColor: '#E0E0E0',
-              backgroundColor: '#FFFFFF',
+              backgroundColor: '#F5E6D3',
               minHeight: showActions ? 320 : 280,
             },
           ]}
@@ -344,10 +344,10 @@ export default function CoffeemonCard({
             >
               <LinearGradient
                 colors={[
-                  'rgba(255, 255, 255, 0)',
-                  'rgba(255, 255, 255, 0.2)',
-                  'rgba(255, 255, 255, 0.6)',
-                  'rgba(255, 255, 255, 0.95)',
+                  'rgba(245, 230, 211, 0)',
+                  'rgba(245, 230, 211, 0.2)',
+                  'rgba(245, 230, 211, 0.6)',
+                  'rgba(245, 230, 211, 0.95)',
                 ]}
                 style={styles.radialGradientOverlay}
                 start={{ x: 0.5, y: 0 }}
