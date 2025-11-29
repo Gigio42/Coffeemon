@@ -40,15 +40,30 @@ interface CoffeemonDetailsModalProps {
   visible: boolean;
   coffeemon: PlayerCoffeemon | null;
   onClose: () => void;
+  onToggleParty?: (coffeemon: PlayerCoffeemon) => Promise<boolean | void> | void;
+  partyMembers?: PlayerCoffeemon[];
+  onSwapParty?: (newMember: PlayerCoffeemon, oldMember: PlayerCoffeemon) => Promise<boolean>;
 }
 
 export default function CoffeemonDetailsModal({
   visible,
   coffeemon,
   onClose,
+  onToggleParty,
+  partyMembers = [],
+  onSwapParty,
 }: CoffeemonDetailsModalProps) {
   const { width: viewportWidth, height: viewportHeight } = useWindowDimensions();
   const [activeTab, setActiveTab] = useState<'about' | 'status' | 'moves'>('status');
+  const [showSwapSelection, setShowSwapSelection] = useState(false);
+
+  // Reset swap selection when modal opens/closes or coffeemon changes
+  React.useEffect(() => {
+    if (visible) {
+      setShowSwapSelection(false);
+      setActiveTab('about');
+    }
+  }, [visible, coffeemon]);
 
   if (!coffeemon) return null;
 
@@ -139,7 +154,7 @@ export default function CoffeemonDetailsModal({
         );
       case 'about':
         return (
-          <View style={styles.section}>
+          <View style={[styles.section, { flex: 1 }]}>
             <Text style={[styles.sectionTitle, { color: typeColor.dark, borderBottomWidth: 0 }]}>
               {coffeemon.coffeemon.name}
             </Text>
@@ -149,65 +164,148 @@ export default function CoffeemonDetailsModal({
             <Text style={{ fontFamily: 'Courier New', color: '#555', marginBottom: 8 }}>
               Level: {coffeemon.level}
             </Text>
-            {/* Add more description if available */}
+            
+            {onToggleParty && (
+              <View style={{ marginTop: 'auto', alignItems: 'flex-end', paddingTop: 20 }}>
+                <TouchableOpacity
+                  style={{
+                    backgroundColor: typeColor.dark,
+                    paddingVertical: 8,
+                    paddingHorizontal: 16,
+                    borderRadius: 20,
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    shadowColor: "#000",
+                    shadowOffset: { width: 0, height: 2 },
+                    shadowOpacity: 0.25,
+                    shadowRadius: 3.84,
+                    elevation: 5,
+                  }}
+                  onPress={async () => {
+                    if (onToggleParty) {
+                      const result = await onToggleParty(coffeemon);
+                      // If result is false (failed/full) and we are not in party, show swap selection
+                      if (result === false && !coffeemon.isInParty) {
+                        setShowSwapSelection(true);
+                      } else {
+                        onClose();
+                      }
+                    }
+                  }}
+                >
+                  <Text style={{ color: '#FFF', fontWeight: 'bold', fontFamily: 'Courier New', fontSize: 12 }}>
+                    {coffeemon.isInParty ? 'REMOVER DO TIME' : 'ADICIONAR AO TIME'}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            )}
           </View>
         );
     }
   };
 
+  const renderSwapSelection = () => (
+    <View style={styles.swapContainer}>
+      <Text style={styles.swapTitle}>Time Cheio!</Text>
+      <Text style={styles.swapSubtitle}>Escolha quem substituir:</Text>
+      
+      <View style={styles.swapList}>
+        {partyMembers.map((member) => {
+          const memberVariant = getVariantForStatusEffects(member.statusEffects, 'default');
+          const memberImage = getCoffeemonImage(member.coffeemon.name, memberVariant);
+          const memberColor = getTypeColor(member.coffeemon.types?.[0], member.coffeemon.name);
+          
+          return (
+            <TouchableOpacity
+              key={member.id}
+              style={[styles.swapItem, { borderColor: memberColor.dark }]}
+              onPress={async () => {
+                if (onSwapParty && coffeemon) {
+                  const success = await onSwapParty(coffeemon, member);
+                  if (success) onClose();
+                }
+              }}
+            >
+              <Image source={memberImage} style={styles.swapImage} resizeMode="contain" />
+              <Text style={styles.swapName}>{member.coffeemon.name}</Text>
+              <Text style={styles.swapLevel}>Lvl {member.level}</Text>
+            </TouchableOpacity>
+          );
+        })}
+      </View>
+
+      <TouchableOpacity 
+        style={styles.cancelSwapButton}
+        onPress={() => setShowSwapSelection(false)}
+      >
+        <Text style={styles.cancelSwapText}>Cancelar</Text>
+      </TouchableOpacity>
+    </View>
+  );
+
   const modalContent = (
     <TouchableWithoutFeedback onPress={() => {}}>
       <View style={modalContainerStyle}>
-        <View style={[styles.header, { backgroundColor: typeColor.dark }]}>
-          <Text style={styles.title}>{coffeemon.coffeemon.name.toUpperCase()}</Text>
-          <Text style={styles.level}>Lvl {coffeemon.level}</Text>
-        </View>
+        {showSwapSelection ? (
+          renderSwapSelection()
+        ) : (
+          <>
+            <View style={[styles.header, { backgroundColor: typeColor.dark }]}>
+              <Text style={styles.title}>{coffeemon.coffeemon.name.toUpperCase()}</Text>
+              <Text style={styles.level}>Lvl {coffeemon.level}</Text>
+            </View>
 
-        <View style={styles.imageContainer}>
-          <ImageBackground
-            source={backgroundSource}
-            style={styles.imageBackground}
-            resizeMode="cover"
-            imageStyle={{ opacity: 0.8 }}
-          >
-            <Image 
-              source={imageSource} 
-              style={styles.image} 
-              resizeMode="contain" 
-            />
-          </ImageBackground>
-        </View>
+            <View style={styles.imageContainer}>
+              <ImageBackground
+                source={backgroundSource}
+                style={styles.imageBackground}
+                resizeMode="cover"
+                imageStyle={{ opacity: 0.8 }}
+              >
+                <Image 
+                  source={imageSource} 
+                  style={styles.image} 
+                  resizeMode="contain" 
+                />
+              </ImageBackground>
+            </View>
 
-        <View style={styles.tabsContainer}>
-          {(['about', 'status', 'moves'] as const).map((tab) => (
-            <TouchableOpacity
-              key={tab}
-              style={[
-                styles.tabButton,
-                activeTab === tab && [styles.tabButtonActive, { borderBottomColor: typeColor.dark }]
-              ]}
-              onPress={() => setActiveTab(tab)}
+            <View style={styles.tabsContainer}>
+              {(['about', 'status', 'moves'] as const).map((tab) => (
+                <TouchableOpacity
+                  key={tab}
+                  style={[
+                    styles.tabButton,
+                    activeTab === tab && [styles.tabButtonActive, { borderBottomColor: typeColor.dark }]
+                  ]}
+                  onPress={() => setActiveTab(tab)}
+                >
+                  <Text style={[
+                    styles.tabText,
+                    activeTab === tab && [styles.tabTextActive, { color: typeColor.dark }]
+                  ]}>
+                    {tab.toUpperCase()}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+
+            <ScrollView 
+              style={styles.tabContent} 
+              contentContainerStyle={{ flexGrow: 1 }}
+              showsVerticalScrollIndicator={true}
             >
-              <Text style={[
-                styles.tabText,
-                activeTab === tab && [styles.tabTextActive, { color: typeColor.dark }]
-              ]}>
-                {tab.toUpperCase()}
-              </Text>
+              {renderTabContent()}
+            </ScrollView>
+
+            <TouchableOpacity 
+              style={[styles.closeButton, { backgroundColor: typeColor.dark }]} 
+              onPress={onClose}
+            >
+              <Text style={styles.closeButtonText}>Fechar</Text>
             </TouchableOpacity>
-          ))}
-        </View>
-
-        <ScrollView style={styles.tabContent} showsVerticalScrollIndicator={true}>
-          {renderTabContent()}
-        </ScrollView>
-
-        <TouchableOpacity 
-          style={[styles.closeButton, { backgroundColor: typeColor.dark }]} 
-          onPress={onClose}
-        >
-          <Text style={styles.closeButtonText}>Fechar</Text>
-        </TouchableOpacity>
+          </>
+        )}
       </View>
     </TouchableWithoutFeedback>
   );

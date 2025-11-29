@@ -164,7 +164,7 @@ const styles = StyleSheet.create({
   },
   container: {
     width: '100%',
-    backgroundColor: '#fff9f0',
+    backgroundColor: '#F5E6D3',
     borderRadius: pixelArt.borders.radiusMedium,
     borderTopWidth: 4,
     borderLeftWidth: 4,

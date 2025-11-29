@@ -15,7 +15,8 @@ interface UseCoffeemonsResult {
   partyMembers: PlayerCoffeemon[];
   availableCoffeemons: PlayerCoffeemon[];
   fetchCoffeemons: () => Promise<void>;
-  toggleParty: (coffeemon: PlayerCoffeemon) => Promise<void>;
+  toggleParty: (coffeemon: PlayerCoffeemon) => Promise<boolean | void>;
+  swapPartyMembers: (newMember: PlayerCoffeemon, oldMember: PlayerCoffeemon) => Promise<boolean>;
   giveAllCoffeemons: () => Promise<void>;
   addMissingMoves: () => Promise<void>;
   initialized: boolean;
@@ -86,8 +87,9 @@ export function useCoffeemons({
     const partyCount = coffeemons.filter((c) => c.isInParty).length;
 
     if (!coffeemon.isInParty && partyCount >= 3) {
-      Alert.alert('Limite atingido', 'Você só pode ter 3 Coffeemons no time!');
-      return;
+      // Alert.alert('Limite atingido', 'Você só pode ter 3 Coffeemons no time!');
+      // Return false to indicate failure/need for swap
+      return false;
     }
 
     setPartyLoading(coffeemon.id);
@@ -115,9 +117,44 @@ export function useCoffeemons({
           } time`
         );
       }
+      return true;
     } catch (error: any) {
       console.error('Error toggling party:', error);
       Alert.alert('Erro', error.message || 'Erro ao alterar time');
+      return false;
+    } finally {
+      setPartyLoading(null);
+    }
+  }
+
+  async function swapPartyMembers(newMember: PlayerCoffeemon, oldMember: PlayerCoffeemon) {
+    setPartyLoading(newMember.id);
+    try {
+      // 1. Remove old member
+      await coffeemonService.removeFromParty(token, oldMember.id);
+      
+      // 2. Add new member
+      await coffeemonService.addToParty(token, newMember.id);
+
+      // 3. Update local state
+      setCoffeemons((prev) =>
+        prev.map((c) => {
+          if (c.id === oldMember.id) return { ...c, isInParty: false };
+          if (c.id === newMember.id) return { ...c, isInParty: true };
+          return c;
+        })
+      );
+
+      if (onLog) {
+        onLog(`Trocou ${oldMember.coffeemon.name} por ${newMember.coffeemon.name}`);
+      }
+      return true;
+    } catch (error: any) {
+      console.error('Error swapping party members:', error);
+      Alert.alert('Erro', 'Falha ao trocar membros do time.');
+      // Refresh to ensure consistency
+      if (playerId) await fetchCoffeemons(playerId);
+      return false;
     } finally {
       setPartyLoading(null);
     }
@@ -200,6 +237,7 @@ export function useCoffeemons({
     availableCoffeemons,
     fetchCoffeemons: () => fetchCoffeemons(),
     toggleParty,
+    swapPartyMembers,
     giveAllCoffeemons,
     addMissingMoves,
     initialized,

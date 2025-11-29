@@ -19,7 +19,7 @@ interface MainNavProps {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#F5E6D3',
   },
   screenContainer: {
     flex: 1,
@@ -41,7 +41,7 @@ export const MainNavScreen: React.FC<MainNavProps> = ({
       case 'shop':
         return <ShopScreen />;
       case 'team':
-        return <TeamScreen />;
+        return <TeamScreen token={token} />;
       case 'battle':
         return (
           <MatchmakingScreen

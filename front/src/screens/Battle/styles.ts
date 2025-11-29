@@ -151,16 +151,16 @@ export const styles = StyleSheet.create({
   battleLogContainer: {
     position: 'absolute',
     right: 0,
-    top: 0,
-    bottom: 0, // Ocupa toda a altura da arena
-    width: '350%', // Expansão máxima
+    top: '60%', // Ajustado para 60% para garantir que não sobreponha o Coffeemon oponente
+    bottom: 0, // Ocupa até o final da arena (acima dos botões)
+    width: '350%', // Expansão máxima para gradiente
     zIndex: 10,
     alignItems: 'flex-end',
   },
   
   logGradient: {
     flex: 1,
-    paddingTop: 500, // Aumentado significativamente para fazer texto começar muito mais abaixo
+    paddingTop: 20, // Reduzido para evitar que logs fiquem escondidos
     paddingBottom: 12,
     paddingRight: 12, // Reduzido de 120 para 12 para aproximar texto da lateral
     paddingLeft: 0,
@@ -173,6 +173,8 @@ export const styles = StyleSheet.create({
 
   logScrollContent: {
     gap: 6,
+    flexGrow: 1,
+    justifyContent: 'flex-end',
   },
 
   logEmptyState: {
@@ -214,7 +216,7 @@ export const styles = StyleSheet.create({
     backgroundColor: '#F5E6D3',
     paddingHorizontal: 12,
     paddingTop: 13,
-    height: 200, // Altura fixa para garantir layout preciso
+    height: 330, // Aumentado para garantir que todos os ataques caibam sem cortes
     borderTopWidth: 3,
     borderTopColor: '#8B7355',
     zIndex: 20,
@@ -230,7 +232,7 @@ export const styles = StyleSheet.create({
     borderColor: '#333',
     paddingVertical: 12,
     paddingHorizontal: 16,
-    marginBottom: 12,
+    marginBottom: 8,
     alignItems: 'center',
     flexDirection: 'row',
   },
@@ -351,9 +353,9 @@ export const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   attackButton: {
-    marginBottom: pixelArt.spacing.sm,
+    marginBottom: 8,
     borderRadius: pixelArt.borders.radiusMedium,
-    paddingVertical: pixelArt.spacing.lg,
+    paddingVertical: 10,
     paddingHorizontal: pixelArt.spacing.md,
     backgroundColor: '#9C7DBF',
     borderWidth: pixelArt.borders.widthBold,
@@ -376,7 +378,7 @@ export const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   attackTypeIcon: {
-    fontSize: 28,
+    fontSize: 24,
     marginBottom: pixelArt.spacing.xs,
   },
   attackButtonText: {

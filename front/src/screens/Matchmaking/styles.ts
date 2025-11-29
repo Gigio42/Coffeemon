@@ -709,7 +709,7 @@ export const styles = StyleSheet.create({
     paddingTop: pixelArt.spacing.lg,
     alignItems: 'center',
     justifyContent: 'flex-start',
-    backgroundColor: '#fff9f0',
+    backgroundColor: '#F5E6D3',
   },
 
   sheetEmptyText: {
@@ -849,7 +849,7 @@ export const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: '#FFF9F0', // Fundo branco sem transparência
+    backgroundColor: '#F5E6D3', // Fundo bege consistente
     position: 'absolute',
     bottom: 0,
     left: 0,
