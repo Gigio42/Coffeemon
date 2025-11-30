@@ -24,24 +24,39 @@ export async function fetchCart(token: string): Promise<CartItem[]> {
     }
 
     if (Array.isArray(data)) {
-      const items: CartItem[] = [];
+      const itemsMap = new Map<number, CartItem>();
+      
+      const buildImageUrl = (imagePath?: string): string => {
+        if (!imagePath) return '';
+        return /^https?:\/\//i.test(imagePath)
+          ? imagePath
+          : `${serverUrl}/${imagePath.replace(/^\/+/, '')}`;
+      };
+
       data.forEach((order: any) => {
         if (order.orderItem && Array.isArray(order.orderItem)) {
           order.orderItem.forEach((item: any) => {
-            items.push({
-              product: {
-                id: item.product.id,
-                name: item.product.name,
-                description: item.product.description,
-                price: item.product.price,
-                image: item.product.image ? `${serverUrl}/${item.product.image}` : item.product.image,
-              },
-              quantity: item.quantity,
-            });
+            const productId = item.product.id;
+            
+            if (itemsMap.has(productId)) {
+              const existingItem = itemsMap.get(productId)!;
+              existingItem.quantity += item.quantity;
+            } else {
+              itemsMap.set(productId, {
+                product: {
+                  id: item.product.id,
+                  name: item.product.name,
+                  description: item.product.description,
+                  price: item.product.price,
+                  image: buildImageUrl(item.product.image),
+                },
+                quantity: item.quantity,
+              });
+            }
           });
         }
       });
-      return items;
+      return Array.from(itemsMap.values());
     }
 
     return [];

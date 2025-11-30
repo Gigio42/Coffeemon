@@ -146,18 +146,18 @@ export default function BattleScreen({
   const [selectedItem, setSelectedItem] = React.useState<Item | null>(null);
 
   // Debug: Log quando o modal muda
-  React.useEffect(() => {
-    console.log('[BattleScreen] isItemModalVisible changed to:', isItemModalVisible);
-  }, [isItemModalVisible]);
+  // React.useEffect(() => {
+  //   console.log('[BattleScreen] isItemModalVisible changed to:', isItemModalVisible);
+  // }, [isItemModalVisible]);
 
-  React.useEffect(() => {
-    console.log('[BattleScreen] isItemTargetModalVisible changed to:', isItemTargetModalVisible);
-  }, [isItemTargetModalVisible]);
+  // React.useEffect(() => {
+  //   console.log('[BattleScreen] isItemTargetModalVisible changed to:', isItemTargetModalVisible);
+  // }, [isItemTargetModalVisible]);
 
-  React.useEffect(() => {
-    console.log('[BattleScreen] items state changed, count:', items.length);
-    console.log('[BattleScreen] items:', items);
-  }, [items]);
+  // React.useEffect(() => {
+  //   console.log('[BattleScreen] items state changed, count:', items.length);
+  //   console.log('[BattleScreen] items:', items);
+  // }, [items]);
 
   // 🎯 Memoizar fonte da imagem do jogador para otimistic updates
   const playerSprite = useMemo(() => {
@@ -176,13 +176,13 @@ export default function BattleScreen({
     const spriteState = resolveSpriteVariant(activeCoffeemon.name, 'back', activeCoffeemon.statusEffects);
     const imageSource = getCoffeemonImageSource(activeCoffeemon.name, spriteState.variant);
 
-    console.log('[BattleScreen] Player sprite updated:', {
-      name: activeCoffeemon.name,
-      index: activeIndex,
-      optimistic: optimisticActiveIndex !== null,
-      variant: spriteState.variant,
-      state: spriteState.state,
-    });
+    // console.log('[BattleScreen] Player sprite updated:', {
+    //   name: activeCoffeemon.name,
+    //   index: activeIndex,
+    //   optimistic: optimisticActiveIndex !== null,
+    //   variant: spriteState.variant,
+    //   state: spriteState.state,
+    // });
 
     return {
       imageSource,
@@ -383,29 +383,29 @@ export default function BattleScreen({
   );
 
   const handleSelectSwitchCandidate = (index: number) => {
-    console.log('[BattleScreen] 🔄 Switch candidate selected:', index, {
-      isProcessing,
-      myPendingAction,
-      turnPhase: battleState?.turnPhase
-    });
+    // console.log('[BattleScreen] 🔄 Switch candidate selected:', index, {
+    //   isProcessing,
+    //   myPendingAction,
+    //   turnPhase: battleState?.turnPhase
+    // });
 
     // ✅ VALIDAÇÕES SIMPLES: Não permitir durante processamento ou resolução
     if (isProcessing) {
-      console.warn('[BattleScreen] ❌ Cannot switch - battle is processing');
+      // console.warn('[BattleScreen] ❌ Cannot switch - battle is processing');
       return;
     }
 
     if (myPendingAction) {
-      console.warn('[BattleScreen] ❌ Cannot switch - action already pending');
+      // console.warn('[BattleScreen] ❌ Cannot switch - action already pending');
       return;
     }
 
     if (battleState?.turnPhase === 'RESOLUTION') {
-      console.warn('[BattleScreen] ❌ Cannot switch - battle is in resolution phase');
+      // console.warn('[BattleScreen] ❌ Cannot switch - battle is in resolution phase');
       return;
     }
 
-    console.log(`[BattleScreen] ✅ Executing switch to Coffeemon at index ${index}`);
+    // console.log(`[BattleScreen] ✅ Executing switch to Coffeemon at index ${index}`);
 
     // 🎯 OTIMISTIC UPDATE: Atualizar UI imediatamente
     setOptimisticActiveIndex(index);
@@ -417,7 +417,7 @@ export default function BattleScreen({
 
     // 🔄 Timeout de segurança
     const timeout = setTimeout(() => {
-      console.warn('[BattleScreen] Optimistic switch timeout - reverting');
+      // console.warn('[BattleScreen] Optimistic switch timeout - reverting');
       setOptimisticActiveIndex(null);
       setOptimisticTimeout(null);
     }, 5000);
@@ -491,11 +491,11 @@ export default function BattleScreen({
 
       // Se o estado real foi atualizado para o mesmo índice otimista, limpar
       if (optimisticActiveIndex === realIndex) {
-        console.log('[BattleScreen] ✅ Clearing optimistic index - backend confirmed switch in PvP', {
-          optimistic: optimisticActiveIndex,
-          real: realIndex,
-          turnPhase: battleState?.turnPhase
-        });
+        // console.log('[BattleScreen] ✅ Clearing optimistic index - backend confirmed switch in PvP', {
+        //   optimistic: optimisticActiveIndex,
+        //   real: realIndex,
+        //   turnPhase: battleState?.turnPhase
+        // });
         setOptimisticActiveIndex(null);
         if (optimisticTimeout) {
           clearTimeout(optimisticTimeout);
@@ -503,35 +503,35 @@ export default function BattleScreen({
         }
       } else {
         // Se o backend confirmou um índice diferente, isso pode indicar um problema
-        console.warn('[BattleScreen] ⚠️ Optimistic index mismatch in PvP', {
-          optimistic: optimisticActiveIndex,
-          real: realIndex,
-          turnPhase: battleState?.turnPhase
-        });
+        // console.warn('[BattleScreen] ⚠️ Optimistic index mismatch in PvP', {
+        //   optimistic: optimisticActiveIndex,
+        //   real: realIndex,
+        //   turnPhase: battleState?.turnPhase
+        // });
       }
     }
   }, [myPlayerState?.activeCoffeemonIndex, optimisticActiveIndex, optimisticTimeout, battleState?.turnPhase]);
 
   // 💼 Carregar itens disponíveis ao iniciar a batalha
   React.useEffect(() => {
-    console.log('[BattleScreen] useEffect for loading items triggered');
+    // console.log('[BattleScreen] useEffect for loading items triggered');
     
     const loadItems = async () => {
-      console.log('[BattleScreen] loadItems function started');
+      // console.log('[BattleScreen] loadItems function started');
       try {
-        console.log('[BattleScreen] Token from props:', token ? 'Token exists' : 'No token');
+        // console.log('[BattleScreen] Token from props:', token ? 'Token exists' : 'No token');
         
         if (token) {
-          console.log('[BattleScreen] Calling getPlayerItems...');
+          // console.log('[BattleScreen] Calling getPlayerItems...');
           const playerItems = await getPlayerItems(token);
-          console.log('[BattleScreen] Player items received:', playerItems);
+          // console.log('[BattleScreen] Player items received:', playerItems);
           setItems(playerItems);
-          console.log('[BattleScreen] Player items loaded:', playerItems.length, 'items');
-          playerItems.forEach(item => {
-            console.log(`[BattleScreen]   - ${item.name}: ${item.quantity}x`);
-          });
+          // console.log('[BattleScreen] Player items loaded:', playerItems.length, 'items');
+          // playerItems.forEach(item => {
+          //   console.log(`[BattleScreen]   - ${item.name}: ${item.quantity}x`);
+          // });
         } else {
-          console.warn('[BattleScreen] No token provided in props!');
+          // console.warn('[BattleScreen] No token provided in props!');
         }
       } catch (error) {
         console.error('[BattleScreen] Error loading items:', error);
@@ -544,7 +544,7 @@ export default function BattleScreen({
 
   // 💼 Funções de manipulação de itens
   const handleSelectItem = (item: Item) => {
-    console.log('[BattleScreen] Item selected:', item.id);
+    // console.log('[BattleScreen] Item selected:', item.id);
     setSelectedItem(item);
     setItemModalVisible(false);
     setItemTargetModalVisible(true);
@@ -553,7 +553,7 @@ export default function BattleScreen({
   const handleSelectItemTarget = (targetIndex: number) => {
     if (!selectedItem) return;
 
-    console.log('[BattleScreen] Using item:', selectedItem.id, 'on Coffeemon at index:', targetIndex);
+    // console.log('[BattleScreen] Using item:', selectedItem.id, 'on Coffeemon at index:', targetIndex);
     
     // 📦 Atualizar quantidade do item localmente
     setItems(prevItems => 
@@ -604,7 +604,7 @@ export default function BattleScreen({
           defaultSource={{ uri: fallbackUrl }}
           onError={(error) => {
             // Silenciar erro de imagem - não causar crash
-            console.log('Image not found, using placeholder:', imageSource);
+            // console.log('Image not found, using placeholder:', imageSource);
           }}
         />
       </View>
@@ -771,20 +771,20 @@ export default function BattleScreen({
     const needsSwitch = activeMon && (activeMon.isFainted || activeMon.currentHp <= 0);
 
     // 🔍 DEBUG: Verificar condições dos botões
-    console.log('[BattleScreen] Button conditions:', {
-      canAct,
-      myPendingAction,
-      needsSwitch,
-      hasSwitchCandidate,
-      isProcessing,
-      turnPhase: battleState?.turnPhase,
-      activeIndex,
-      activeMon: activeMon ? { name: activeMon.name, hp: activeMon.currentHp, fainted: activeMon.isFainted } : null,
-      hasPendingEvents: battleState?.events && battleState.events.length > 0,
-      eventsCount: battleState?.events?.length || 0,
-      playerHasSelected: myPlayerState?.hasSelectedCoffeemon,
-      opponentHasSelected: opponentPlayerState?.hasSelectedCoffeemon
-    });
+    // console.log('[BattleScreen] Button conditions:', {
+    //   canAct,
+    //   myPendingAction,
+    //   needsSwitch,
+    //   hasSwitchCandidate,
+    //   isProcessing,
+    //   turnPhase: battleState?.turnPhase,
+    //   activeIndex,
+    //   activeMon: activeMon ? { name: activeMon.name, hp: activeMon.currentHp, fainted: activeMon.isFainted } : null,
+    //   hasPendingEvents: battleState?.events && battleState.events.length > 0,
+    //   eventsCount: battleState?.events?.length || 0,
+    //   playerHasSelected: myPlayerState?.hasSelectedCoffeemon,
+    //   opponentHasSelected: opponentPlayerState?.hasSelectedCoffeemon
+    // });
 
     let statusText = '';
 
@@ -877,12 +877,12 @@ export default function BattleScreen({
               (!canAct || myPendingAction || items.length === 0) && styles.actionButtonDisabled
             ]}
             onPress={() => {
-              console.log('[BattleScreen] Item button pressed!');
-              console.log('[BattleScreen] canAct:', canAct);
-              console.log('[BattleScreen] myPendingAction:', myPendingAction);
-              console.log('[BattleScreen] items.length:', items.length);
-              console.log('[BattleScreen] items array:', JSON.stringify(items, null, 2));
-              console.log('[BattleScreen] Opening ItemSelectionModal with items:', items);
+              // console.log('[BattleScreen] Item button pressed!');
+              // console.log('[BattleScreen] canAct:', canAct);
+              // console.log('[BattleScreen] myPendingAction:', myPendingAction);
+              // console.log('[BattleScreen] items.length:', items.length);
+              // console.log('[BattleScreen] items array:', JSON.stringify(items, null, 2));
+              // console.log('[BattleScreen] Opening ItemSelectionModal with items:', items);
               setItemModalVisible(true);
             }}
             disabled={!canAct || myPendingAction || items.length === 0}
@@ -938,6 +938,7 @@ export default function BattleScreen({
           <TouchableOpacity
             style={styles.backButtonSmall}
             onPress={() => setActionMode('main')}
+            hitSlop={{ top: 30, bottom: 30, left: 30, right: 30 }}
           >
             <Text style={styles.backButtonIcon}>◀️</Text>
           </TouchableOpacity>
@@ -995,6 +996,7 @@ export default function BattleScreen({
           <TouchableOpacity
             style={styles.backButtonSmall}
             onPress={() => setActionMode('main')}
+            hitSlop={{ top: 30, bottom: 30, left: 30, right: 30 }}
           >
             <Text style={styles.backButtonIcon}>◀️</Text>
           </TouchableOpacity>

@@ -40,7 +40,7 @@ export const styles = StyleSheet.create({
   
   // HUD do Oponente (direita superior)
   opponentHudPosition: {
-    top: '18%',
+    top: '12%',
     right: '12%',
   },
   
@@ -108,7 +108,7 @@ export const styles = StyleSheet.create({
   
   // Player (esquerda, maior)
   playerSpritePosition: {
-    bottom: '-5%',
+    bottom: '-16%',
     left: '-9%',
     width: width * 0.75,
     height: height * 0.45,
@@ -216,7 +216,7 @@ export const styles = StyleSheet.create({
     backgroundColor: '#F5E6D3',
     paddingHorizontal: 12,
     paddingTop: 13,
-    height: 330, // Aumentado para garantir que todos os ataques caibam sem cortes
+    height: 250, // Reduzido para remover espaço vazio
     borderTopWidth: 3,
     borderTopColor: '#8B7355',
     zIndex: 20,
@@ -230,11 +230,13 @@ export const styles = StyleSheet.create({
     borderRadius: 6,
     borderWidth: 3,
     borderColor: '#333',
-    paddingVertical: 12,
+    paddingVertical: 0, // Removido padding vertical para usar altura fixa
+    height: 50, // Altura fixa para evitar pulos de layout
     paddingHorizontal: 16,
     marginBottom: 8,
     alignItems: 'center',
     flexDirection: 'row',
+    justifyContent: 'center', // Centralizar conteúdo
   },
   actionPromptText: {
     fontSize: 14,
@@ -246,21 +248,24 @@ export const styles = StyleSheet.create({
     flex: 1,
   },
   backButtonSmall: {
-    backgroundColor: '#5A67D8',
+    backgroundColor: '#E6CCB2', // Bege mais escuro para combinar com o tema
     borderRadius: 4,
     borderWidth: 2,
-    borderColor: '#434190',
+    borderColor: '#8B7355', // Marrom do tema
     paddingHorizontal: 8,
     paddingVertical: 6,
     marginRight: 12,
     alignItems: 'center',
     justifyContent: 'center',
     minWidth: 40,
+    position: 'absolute', // Posicionamento absoluto para não afetar o layout do texto
+    left: 12,
+    zIndex: 10, // Garante que o botão fique sobre o texto para receber cliques
   },
   backButtonIcon: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#FFFFFF',
+    color: '#5D4037', // Marrom escuro para o ícone
     textAlign: 'center',
   },
   
