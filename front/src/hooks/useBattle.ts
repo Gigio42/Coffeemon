@@ -43,7 +43,7 @@ export function useBattle({
   // Validação e extração do estado inicial - usar useMemo para evitar recriação
   const extractedBattleState = React.useMemo(() => {
     try {
-      console.log('useBattle - Processing initial battle state:', initialBattleState);
+      // console.log('useBattle - Processing initial battle state:', initialBattleState);
       
       // O initialBattleState pode vir de duas formas:
       // 1. { battleState: {...} } - quando vem do matchFound
@@ -66,12 +66,12 @@ export function useBattle({
         };
       }
       
-      console.log('useBattle - Battle state extracted successfully:', {
-        battleStatus: state.battleStatus,
-        turn: state.turn,
-        player1Id: state.player1Id,
-        player2Id: state.player2Id,
-      });
+      // console.log('useBattle - Battle state extracted successfully:', {
+      //   battleStatus: state.battleStatus,
+      //   turn: state.turn,
+      //   player1Id: state.player1Id,
+      //   player2Id: state.player2Id,
+      // });
       
       return state;
     } catch (err) {
@@ -186,11 +186,11 @@ export function useBattle({
           finalMessage = `${message} (-${damageValue} HP)`;
         }
 
-        console.log('Processing event:', { type: event.type, message: finalMessage, payload: event.payload });
+        // console.log('Processing event:', { type: event.type, message: finalMessage, payload: event.payload });
         addLog(finalMessage);
         
         // Handle damage display
-        console.log('Checking for damage:', event.type, payload.damage);
+        // console.log('Checking for damage:', event.type, payload.damage);
         if ((event.type === 'ATTACK_HIT' || event.type === 'ATTACK_CRIT' || event.type === 'STATUS_DAMAGE') && payload.damage > 0) {
           // Para ataques, usar playerId se disponível, senão determinar pelo target
           let isPlayerTakingDamage = false;
@@ -215,13 +215,13 @@ export function useBattle({
             damagedMonName = payload.coffeemonName;
           }
           
-          console.log('Damage event detected:', {
-            type: event.type,
-            playerId,
-            payload,
-            isPlayerTakingDamage,
-            damage: payload.damage
-          });
+          // console.log('Damage event detected:', {
+          //   type: event.type,
+          //   playerId,
+          //   payload,
+          //   isPlayerTakingDamage,
+          //   damage: payload.damage
+          // });
           
           if (isPlayerTakingDamage) {
             setPlayerDamage(payload.damage);
@@ -283,11 +283,11 @@ export function useBattle({
     const MIN_UPDATE_INTERVAL = 200; // ms entre updates
 
     const handleBattleUpdate = (newBattleState: BattleState) => {
-      console.log('[Battle] Received battle update:', {
-        hasPlayer1: !!newBattleState?.player1,
-        hasPlayer2: !!newBattleState?.player2,
-        state: newBattleState
-      });
+      // console.log('[Battle] Received battle update:', {
+      //   hasPlayer1: !!newBattleState?.player1,
+      //   hasPlayer2: !!newBattleState?.player2,
+      //   state: newBattleState
+      // });
       
       requestAnimationFrame(() => {
         try {
@@ -296,7 +296,7 @@ export function useBattle({
           // Mark battle as ready when receiving first valid state
           const isStateValid = newBattleState?.player1 && newBattleState?.player2;
           if (!isBattleReady && isStateValid) {
-            console.log('[Battle] Setting battle as ready');
+            // console.log('[Battle] Setting battle as ready');
             setIsBattleReady(true);
           } else if (!isStateValid) {
             console.warn('[Battle] Received incomplete battle state:', newBattleState);
@@ -383,9 +383,9 @@ export function useBattle({
     socket.on('connect_error', handleError);
 
     // Log initial connection status
-    console.log('[Battle] Socket connected:', socket.connected);
+    // console.log('[Battle] Socket connected:', socket.connected);
     if (socket.connected) {
-      console.log('[Battle] Requesting initial battle state...');
+      // console.log('[Battle] Requesting initial battle state...');
       socket.emit('get_battle_state', { battleId });
     }
   };

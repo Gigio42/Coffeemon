@@ -94,7 +94,7 @@ export class ShoppingCartService {
     const { productId, quantity } = updateShoppingCartDto;
     const shoppingCart = await this.findShoppingCartByUserId(userId);
 
-    const item = await this.orderItemRepository.findOne({
+    const items = await this.orderItemRepository.find({
       where: {
         order: { id: shoppingCart.id },
         product: { id: productId },
@@ -102,16 +102,24 @@ export class ShoppingCartService {
       relations: ['product'], // Precisamos carregar o produto para pegar o preço
     });
 
-    if (!item)
+    if (!items || items.length === 0)
       throw new NotFoundException(
         `Produto com o ID ${productId} não encontrado no carrinho do usuário`
       );
 
+    // Keep the first item, remove the rest (duplicates)
+    const [itemToUpdate, ...itemsToRemove] = items;
+
+    // Remove duplicates if any
+    if (itemsToRemove.length > 0) {
+      await this.orderItemRepository.remove(itemsToRemove);
+    }
+
     // Recalcular o total baseado no preço unitário e nova quantidade
-    const unitPrice = item.product.price;
+    const unitPrice = itemToUpdate.product.price;
     const newTotal = unitPrice * quantity;
 
-    await this.orderItemRepository.update(item.id, {
+    await this.orderItemRepository.update(itemToUpdate.id, {
       quantity: quantity,
       total: newTotal, // Atualizar o total também
     });
@@ -122,19 +130,19 @@ export class ShoppingCartService {
   async remove(userId: number, productId: number) {
     const shoppingCart = await this.findShoppingCartByUserId(userId);
 
-    const item = await this.orderItemRepository.findOne({
+    const items = await this.orderItemRepository.find({
       where: {
         order: { id: shoppingCart.id },
         product: { id: productId },
       },
     });
 
-    if (!item)
+    if (!items || items.length === 0)
       throw new NotFoundException(
         `Produto com o ID ${productId} não encontrado no carrinho do usuário`
       );
 
-    await this.orderItemRepository.remove(item);
+    await this.orderItemRepository.remove(items);
 
     return { message: 'Produto removido do carrinho' };
   }

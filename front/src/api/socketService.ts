@@ -70,7 +70,7 @@ export async function createSocket(
 
     // Debug: Log de todos os eventos recebidos
     socket.onAny((eventName: string, ...args: any[]) => {
-      console.log('Socket event received:', eventName);
+      // console.log('Socket event received:', eventName);
       if (callbacks.onAnyEvent) {
         try {
           callbacks.onAnyEvent(eventName, ...args);
