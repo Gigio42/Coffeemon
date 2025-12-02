@@ -1,7 +1,8 @@
 import React from 'react';
 import { View, TouchableOpacity, Text, StyleSheet } from 'react-native';
+import { theme } from '../../theme/theme';
 
-export type NavScreen = 'shop' | 'team' | 'battle' | 'catalog' | 'friends';
+export type NavScreen = 'shop' | 'team' | 'battle' | 'catalog' | 'cafe';
 
 interface BottomNavProps {
   activeScreen: NavScreen;
@@ -11,39 +12,37 @@ interface BottomNavProps {
 const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
-    backgroundColor: '#F5E6D3',
+    backgroundColor: theme.colors.surface.base,
     borderTopWidth: 1,
-    borderTopColor: '#E0E0E0',
-    paddingBottom: 8,
-    paddingTop: 8,
-    elevation: 8,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: -2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
+    borderTopColor: theme.colors.border.light,
+    paddingBottom: theme.spacing.md,
+    paddingTop: theme.spacing.sm,
+    paddingHorizontal: theme.spacing.xs,
+    ...theme.shadows.lg,
   },
   navItem: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 8,
+    paddingVertical: theme.spacing.sm,
+    paddingHorizontal: theme.spacing.xs,
+    borderRadius: theme.radius.lg,
   },
   navItemActive: {
-    backgroundColor: 'rgba(0, 0, 0, 0.05)',
-    borderRadius: 12,
+    backgroundColor: theme.colors.accent.primary,
   },
   icon: {
-    fontSize: 24,
+    fontSize: 22,
     marginBottom: 4,
   },
   label: {
-    fontSize: 11,
-    color: '#666',
-    fontWeight: '500',
+    fontSize: theme.typography.size.xs,
+    color: theme.colors.text.secondary,
+    fontWeight: theme.typography.weight.medium,
   },
   labelActive: {
-    color: '#000',
-    fontWeight: '700',
+    color: theme.colors.text.inverse,
+    fontWeight: theme.typography.weight.bold,
   },
 });
 
@@ -53,7 +52,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({ activeScreen, onNavigate }
     { key: 'team', label: 'Time', icon: '👥' },
     { key: 'battle', label: 'Batalha', icon: '⚔️' },
     { key: 'catalog', label: 'Catálogo', icon: '📖' },
-    { key: 'friends', label: 'Amigos', icon: '🤝' },
+    { key: 'cafe', label: 'Café', icon: '☕' },
   ];
 
   return (
@@ -66,7 +65,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({ activeScreen, onNavigate }
             activeScreen === item.key && styles.navItemActive,
           ]}
           onPress={() => onNavigate(item.key)}
-          activeOpacity={0.7}
+          activeOpacity={0.8}
         >
           <Text style={styles.icon}>{item.icon}</Text>
           <Text

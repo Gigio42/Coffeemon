@@ -1,111 +1,164 @@
 import { StyleSheet } from 'react-native';
-import { pixelArt } from '../../theme/pixelArt';
+import { theme } from '../../theme/theme';
 
 export const styles = StyleSheet.create({
   container: {
-    backgroundColor: '#fff2c2',
-    borderRadius: pixelArt.borders.radiusMedium,
-    borderWidth: 4,
-    borderTopWidth: 4,
-    borderLeftWidth: 4,
-    borderTopColor: '#faf8f0',
-    borderLeftColor: '#faf8f0',
-    borderBottomWidth: 4,
-    borderRightWidth: 4,
-    borderBottomColor: '#8B7355',
-    borderRightColor: '#8B7355',
-    padding: pixelArt.spacing.sm,
-    marginHorizontal: pixelArt.spacing.md,
-    marginTop: pixelArt.spacing.sm + pixelArt.spacing.xxl * 2,
-    ...pixelArt.shadows.small,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: pixelArt.spacing.xs,
-  },
-  avatar: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    borderWidth: 2,
-    borderColor: '#8B7355',
-    marginRight: pixelArt.spacing.sm,
-    backgroundColor: '#654321',
-  },
-  playerName: {
-    fontSize: pixelArt.typography.pixelTitle.fontSize,
-    color: '#8B7355',
-    fontFamily: 'PressStart2P_400Regular',
-    fontWeight: 'bold',
-  },
-  statsContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-  },
-  statusRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: pixelArt.spacing.sm,
-  },
-  statusItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'flex-start',
-  },
-  progressBar: {
-    width: 80,
-    height: 20,
-    backgroundColor: '#e8d890',
-    borderRadius: pixelArt.borders.radiusSmall,
-    marginLeft: pixelArt.spacing.sm,
-    overflow: 'hidden',
-    borderWidth: 4,
-    borderColor: '#8B7355',
-    shadowOffset: { width: -2, height: -2 },
-    shadowOpacity: 0.4,
-    shadowRadius: 0,
-    shadowColor: '#808080',
-    elevation: 1,
-  },
-  progressFill: {
-    height: '100%',
-    backgroundColor: '#00FF00',
-    borderRadius: pixelArt.borders.radiusSmall,
+    backgroundColor: theme.colors.surface.base,
+    borderRadius: theme.radius.xxl,
+    padding: theme.spacing.lg,
+    marginHorizontal: theme.spacing.lg,
+    marginTop: theme.spacing.lg,
+    ...theme.shadows.md,
     borderWidth: 1,
-    borderColor: '#32CD32',
+    borderColor: theme.colors.border.default,
   },
-  labelContainer: {
+
+  // Player Info
+  playerInfo: {
     flexDirection: 'row',
     alignItems: 'center',
+    marginBottom: theme.spacing.md,
   },
-  icon: {
-    width: 32,
-    height: 32,
-    marginRight: pixelArt.spacing.sm,
+
+  avatar: {
+    width: 48,
+    height: 48,
+    borderRadius: theme.radius.full,
+    backgroundColor: theme.colors.accent.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: theme.spacing.md,
+    ...theme.shadows.sm,
   },
-  label: {
-    fontSize: pixelArt.typography.pixelSubtitle.fontSize,
-    color: '#8B7355',
-    fontFamily: pixelArt.typography.pixelBody.fontFamily,
+
+  avatarText: {
+    fontSize: theme.typography.size.xl,
+    fontWeight: theme.typography.weight.black,
+    color: theme.colors.text.inverse,
   },
-  value: {
-    fontSize: pixelArt.typography.pixelTitle.fontSize,
-    color: '#8B7355',
-    fontFamily: 'PressStart2P_400Regular',
-    fontWeight: 'bold',
+
+  playerDetails: {
+    flex: 1,
   },
+
+  playerName: {
+    fontSize: theme.typography.size.lg,
+    fontWeight: theme.typography.weight.black,
+    color: theme.colors.text.primary,
+    marginBottom: 2,
+  },
+
+  levelContainer: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
+    gap: 4,
+  },
+
+  levelLabel: {
+    fontSize: theme.typography.size.xs,
+    fontWeight: theme.typography.weight.semibold,
+    color: theme.colors.text.tertiary,
+    textTransform: 'uppercase',
+  },
+
+  levelValue: {
+    fontSize: theme.typography.size.base,
+    fontWeight: theme.typography.weight.black,
+    color: theme.colors.text.primary,
+  },
+
+  // Stats Row
+  statsRow: {
+    flexDirection: 'row',
+    gap: theme.spacing.sm,
+    marginBottom: theme.spacing.md,
+  },
+
+  statCard: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: theme.colors.background.tertiary,
+    padding: theme.spacing.sm,
+    borderRadius: theme.radius.lg,
+    gap: theme.spacing.sm,
+  },
+
+  statIcon: {
+    width: 24,
+    height: 24,
+    tintColor: theme.colors.accent.primary,
+  },
+
+  statIconEmoji: {
+    fontSize: 24,
+  },
+
+  statInfo: {
+    flex: 1,
+  },
+
+  statLabel: {
+    fontSize: 10,
+    fontWeight: theme.typography.weight.semibold,
+    color: theme.colors.text.tertiary,
+    textTransform: 'uppercase',
+    marginBottom: 2,
+  },
+
+  statValue: {
+    fontSize: theme.typography.size.base,
+    fontWeight: theme.typography.weight.black,
+    color: theme.colors.text.primary,
+  },
+
+  // XP Section
+  xpSection: {
+    gap: theme.spacing.xs,
+  },
+
+  xpHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+
+  xpLabel: {
+    fontSize: 11,
+    fontWeight: theme.typography.weight.semibold,
+    color: theme.colors.text.secondary,
+  },
+
+  xpText: {
+    fontSize: 11,
+    fontWeight: theme.typography.weight.bold,
+    color: theme.colors.text.primary,
+  },
+
+  xpBarBackground: {
+    height: 8,
+    backgroundColor: theme.colors.border.light,
+    borderRadius: theme.radius.full,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: theme.colors.border.default,
+  },
+
+  xpBarFill: {
+    height: '100%',
+    borderRadius: theme.radius.full,
+  },
+
+  // Loading & Error
   loadingText: {
-    fontSize: pixelArt.typography.pixelBody.fontSize,
-    color: '#8B7355',
+    fontSize: theme.typography.size.sm,
+    color: theme.colors.text.secondary,
     textAlign: 'center',
-    fontFamily: pixelArt.typography.pixelBody.fontFamily,
   },
+
   errorText: {
-    fontSize: pixelArt.typography.pixelBody.fontSize,
-    color: pixelArt.colors.error,
+    fontSize: theme.typography.size.sm,
+    color: theme.colors.error,
     textAlign: 'center',
-    fontFamily: pixelArt.typography.pixelBody.fontFamily,
   },
 });

@@ -4,13 +4,13 @@ import {
   View,
   ScrollView,
   TouchableOpacity,
-  SafeAreaView,
   ActivityIndicator,
   RefreshControl,
   Image,
   TextInput,
   FlatList,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Product } from '../../../types';
 import { useProducts } from '../../../hooks/useProducts';

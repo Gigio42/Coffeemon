@@ -11,13 +11,16 @@ import {
   Image,
   ImageBackground,
   ImageSourcePropType,
+  StyleSheet
 } from 'react-native';
 import { BlurView } from 'expo-blur';
+import { LinearGradient } from 'expo-linear-gradient';
 import { PlayerCoffeemon } from '../../api/coffeemonService';
 import { styles } from './styles';
 import { getCoffeemonImage } from '../../../assets/coffeemons';
 import { getVariantForStatusEffects } from '../../utils/statusEffects';
-import { getTypeColor } from '../CoffeemonCard/styles';
+import { getTypeColorScheme } from '../../theme/colors';
+import { useTheme } from '../../theme/ThemeContext';
 
 const LIMONETO_BACKGROUND = require('../../../assets/backgrounds/limonetoback.png');
 const JASMINELLE_BACKGROUND = require('../../../assets/backgrounds/jasminiback.png');
@@ -34,6 +37,22 @@ const COFFEEMON_BACKGROUNDS: Record<string, ImageSourcePropType> = {
   emberly: EMBERLY_BACKGROUND,
   gingerlynn: GINGERLYNN_BACKGROUND,
   almondino: ALMONDINO_BACKGROUND,
+};
+
+const getTypeIcon = (type?: string): string => {
+  const icons: Record<string, string> = {
+    roasted: '🔥',
+    sweet: '🍬',
+    bitter: '☕',
+    milky: '🥛',
+    iced: '❄️',
+    nutty: '🌰',
+    fruity: '🍎',
+    spicy: '🌶️',
+    sour: '🍋',
+    floral: '🌸',
+  };
+  return icons[type || 'roasted'] || '☕';
 };
 
 interface CoffeemonDetailsModalProps {
@@ -54,10 +73,10 @@ export default function CoffeemonDetailsModal({
   onSwapParty,
 }: CoffeemonDetailsModalProps) {
   const { width: viewportWidth, height: viewportHeight } = useWindowDimensions();
+  const { colors } = useTheme();
   const [activeTab, setActiveTab] = useState<'about' | 'status' | 'moves'>('status');
   const [showSwapSelection, setShowSwapSelection] = useState(false);
 
-  // Reset swap selection when modal opens/closes or coffeemon changes
   React.useEffect(() => {
     if (visible) {
       setShowSwapSelection(false);
@@ -69,19 +88,17 @@ export default function CoffeemonDetailsModal({
 
   const variant = getVariantForStatusEffects(coffeemon.statusEffects, 'default');
   const imageSource = getCoffeemonImage(coffeemon.coffeemon.name, variant);
-  const typeColor = getTypeColor(coffeemon.coffeemon.types?.[0], coffeemon.coffeemon.name);
+  const typeColors = getTypeColorScheme(coffeemon.coffeemon.types?.[0] || 'roasted');
   const backgroundSource = COFFEEMON_BACKGROUNDS[coffeemon.coffeemon.name.toLowerCase()] || undefined;
 
-  const modalContainerStyle = [
-    styles.modalContainer,
-    {
-      width: Math.min(viewportWidth * 0.9, 400),
-      maxHeight: Math.min(viewportHeight * 0.85, 700),
-      borderColor: typeColor.dark,
-    },
-  ];
+  // Dynamic Styles
+  const textPrimary = { color: colors.text.primary };
+  const textSecondary = { color: colors.text.secondary };
+  const textTertiary = { color: colors.text.tertiary };
 
-  // Use base stats as fallback if current stats are 0/undefined (common in catalog view)
+  const modalWidth = Math.min(viewportWidth * 0.9, 380);
+  const modalHeight = Math.min(viewportHeight * 0.85, 680);
+
   const stats = {
     hp: coffeemon.hp || coffeemon.coffeemon.baseHp || 100,
     attack: coffeemon.attack || coffeemon.coffeemon.baseAttack || 50,
@@ -98,8 +115,8 @@ export default function CoffeemonDetailsModal({
 
   const renderStatBar = (label: string, value: number, color: string) => (
     <View style={styles.statRow}>
-      <Text style={styles.statLabel}>{label}</Text>
-      <View style={styles.statBarContainer}>
+      <Text style={[styles.statLabel, textSecondary]}>{label}</Text>
+      <View style={[styles.statBarContainer, { backgroundColor: 'rgba(0,0,0,0.05)' }]}>
         <View 
           style={[
             styles.statBar, 
@@ -110,7 +127,7 @@ export default function CoffeemonDetailsModal({
           ]} 
         />
       </View>
-      <Text style={styles.statValue}>{value}</Text>
+      <Text style={[styles.statValue, textPrimary]}>{value}</Text>
     </View>
   );
 
@@ -124,9 +141,9 @@ export default function CoffeemonDetailsModal({
             {renderStatBar('DEF', stats.defense, '#FAE078')}
             {renderStatBar('SPD', stats.speed, '#9DB7F5')}
             
-            <View style={styles.xpContainer}>
-              <Text style={styles.xpLabel}>Experience</Text>
-              <Text style={styles.xpValue}>{coffeemon.experience} XP</Text>
+            <View style={[styles.xpContainer, { borderTopColor: 'rgba(0,0,0,0.05)' }]}>
+              <Text style={[styles.xpLabel, textSecondary]}>Experience</Text>
+              <Text style={[styles.xpValue, textPrimary]}>{coffeemon.experience} XP</Text>
             </View>
           </View>
         );
@@ -135,56 +152,51 @@ export default function CoffeemonDetailsModal({
           <View style={styles.section}>
             {coffeemon.learnedMoves && coffeemon.learnedMoves.length > 0 ? (
               coffeemon.learnedMoves.map((lm) => (
-                <View key={lm.id} style={styles.moveCard}>
+                <View key={lm.id} style={[styles.moveCard, { backgroundColor: 'rgba(255,255,255,0.6)', borderColor: 'rgba(255,255,255,0.8)' }]}>
                   <View style={styles.moveHeader}>
-                    <Text style={styles.moveName}>{lm.move.name}</Text>
-                    <Text style={styles.moveType}>{lm.move.elementalType || 'Normal'}</Text>
+                    <Text style={[styles.moveName, textPrimary]}>{lm.move.name}</Text>
+                    <View style={[styles.moveTypeBadge, { backgroundColor: typeColors.primary + '20' }]}>
+                      <Text style={[styles.moveType, { color: typeColors.primary }]}>{lm.move.elementalType || 'Normal'}</Text>
+                    </View>
                   </View>
-                  <Text style={styles.moveDesc}>{lm.move.description}</Text>
-                  <View style={styles.moveStats}>
-                    <Text style={styles.moveStat}>Power: {lm.move.power}</Text>
-                    <Text style={styles.moveStat}>Category: {lm.move.category}</Text>
+                  <Text style={[styles.moveDesc, textSecondary]}>{lm.move.description}</Text>
+                  <View style={[styles.moveStats, { borderTopColor: 'rgba(0,0,0,0.05)' }]}>
+                    <Text style={[styles.moveStat, textTertiary]}>Power: {lm.move.power}</Text>
+                    <Text style={[styles.moveStat, textTertiary]}>Category: {lm.move.category}</Text>
                   </View>
                 </View>
               ))
             ) : (
-              <Text style={styles.noMoves}>Nenhum movimento aprendido</Text>
+              <Text style={[styles.noMoves, textTertiary]}>Nenhum movimento aprendido</Text>
             )}
           </View>
         );
       case 'about':
         return (
           <View style={[styles.section, { flex: 1 }]}>
-            <Text style={[styles.sectionTitle, { color: typeColor.dark, borderBottomWidth: 0 }]}>
-              {coffeemon.coffeemon.name}
-            </Text>
-            <Text style={{ fontFamily: 'Courier New', color: '#555', marginBottom: 8 }}>
-              Type: {coffeemon.coffeemon.types.join(', ')}
-            </Text>
-            <Text style={{ fontFamily: 'Courier New', color: '#555', marginBottom: 8 }}>
-              Level: {coffeemon.level}
-            </Text>
+            <View style={styles.aboutHeader}>
+              <Text style={[styles.sectionTitle, { color: typeColors.primary }]}>
+                {coffeemon.coffeemon.name}
+              </Text>
+              <View style={[styles.typeBadge, { backgroundColor: typeColors.primary }]}>
+                 <Text style={styles.typeBadgeText}>{coffeemon.coffeemon.types.join(' / ')}</Text>
+              </View>
+            </View>
+            
+            <View style={styles.aboutInfoContainer}>
+               <Text style={[styles.aboutText, textSecondary]}>
+                 Level <Text style={{ fontWeight: 'bold', color: colors.text.primary }}>{coffeemon.level}</Text>
+               </Text>
+               {/* Add more flavor text or stats here if available */}
+            </View>
             
             {onToggleParty && (
-              <View style={{ marginTop: 'auto', alignItems: 'flex-end', paddingTop: 20 }}>
+              <View style={{ marginTop: 'auto', paddingTop: 20 }}>
                 <TouchableOpacity
-                  style={{
-                    backgroundColor: typeColor.dark,
-                    paddingVertical: 8,
-                    paddingHorizontal: 16,
-                    borderRadius: 20,
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    shadowColor: "#000",
-                    shadowOffset: { width: 0, height: 2 },
-                    shadowOpacity: 0.25,
-                    shadowRadius: 3.84,
-                    elevation: 5,
-                  }}
+                  style={[styles.actionButton, { backgroundColor: typeColors.primary, shadowColor: typeColors.primary }]}
                   onPress={async () => {
                     if (onToggleParty) {
                       const result = await onToggleParty(coffeemon);
-                      // If result is false (failed/full) and we are not in party, show swap selection
                       if (result === false && !coffeemon.isInParty) {
                         setShowSwapSelection(true);
                       } else {
@@ -193,7 +205,7 @@ export default function CoffeemonDetailsModal({
                     }
                   }}
                 >
-                  <Text style={{ color: '#FFF', fontWeight: 'bold', fontFamily: 'Courier New', fontSize: 12 }}>
+                  <Text style={styles.actionButtonText}>
                     {coffeemon.isInParty ? 'REMOVER DO TIME' : 'ADICIONAR AO TIME'}
                   </Text>
                 </TouchableOpacity>
@@ -206,19 +218,19 @@ export default function CoffeemonDetailsModal({
 
   const renderSwapSelection = () => (
     <View style={styles.swapContainer}>
-      <Text style={styles.swapTitle}>Time Cheio!</Text>
-      <Text style={styles.swapSubtitle}>Escolha quem substituir:</Text>
+      <Text style={[styles.swapTitle, textPrimary]}>Time Cheio!</Text>
+      <Text style={[styles.swapSubtitle, textSecondary]}>Escolha quem substituir:</Text>
       
       <View style={styles.swapList}>
         {partyMembers.map((member) => {
           const memberVariant = getVariantForStatusEffects(member.statusEffects, 'default');
           const memberImage = getCoffeemonImage(member.coffeemon.name, memberVariant);
-          const memberColor = getTypeColor(member.coffeemon.types?.[0], member.coffeemon.name);
+          const memberColors = getTypeColorScheme(member.coffeemon.types?.[0] || 'roasted');
           
           return (
             <TouchableOpacity
               key={member.id}
-              style={[styles.swapItem, { borderColor: memberColor.dark }]}
+              style={[styles.swapItem, { borderColor: memberColors.primary, backgroundColor: 'rgba(255,255,255,0.8)' }]}
               onPress={async () => {
                 if (onSwapParty && coffeemon) {
                   const success = await onSwapParty(coffeemon, member);
@@ -227,8 +239,8 @@ export default function CoffeemonDetailsModal({
               }}
             >
               <Image source={memberImage} style={styles.swapImage} resizeMode="contain" />
-              <Text style={styles.swapName}>{member.coffeemon.name}</Text>
-              <Text style={styles.swapLevel}>Lvl {member.level}</Text>
+              <Text style={[styles.swapName, textPrimary]}>{member.coffeemon.name}</Text>
+              <Text style={[styles.swapLevel, textTertiary]}>Lvl {member.level}</Text>
             </TouchableOpacity>
           );
         })}
@@ -238,76 +250,9 @@ export default function CoffeemonDetailsModal({
         style={styles.cancelSwapButton}
         onPress={() => setShowSwapSelection(false)}
       >
-        <Text style={styles.cancelSwapText}>Cancelar</Text>
+        <Text style={[styles.cancelSwapText, textSecondary]}>Cancelar</Text>
       </TouchableOpacity>
     </View>
-  );
-
-  const modalContent = (
-    <TouchableWithoutFeedback onPress={() => {}}>
-      <View style={modalContainerStyle}>
-        {showSwapSelection ? (
-          renderSwapSelection()
-        ) : (
-          <>
-            <View style={[styles.header, { backgroundColor: typeColor.dark }]}>
-              <Text style={styles.title}>{coffeemon.coffeemon.name.toUpperCase()}</Text>
-              <Text style={styles.level}>Lvl {coffeemon.level}</Text>
-            </View>
-
-            <View style={styles.imageContainer}>
-              <ImageBackground
-                source={backgroundSource}
-                style={styles.imageBackground}
-                resizeMode="cover"
-                imageStyle={{ opacity: 0.8 }}
-              >
-                <Image 
-                  source={imageSource} 
-                  style={styles.image} 
-                  resizeMode="contain" 
-                />
-              </ImageBackground>
-            </View>
-
-            <View style={styles.tabsContainer}>
-              {(['about', 'status', 'moves'] as const).map((tab) => (
-                <TouchableOpacity
-                  key={tab}
-                  style={[
-                    styles.tabButton,
-                    activeTab === tab && [styles.tabButtonActive, { borderBottomColor: typeColor.dark }]
-                  ]}
-                  onPress={() => setActiveTab(tab)}
-                >
-                  <Text style={[
-                    styles.tabText,
-                    activeTab === tab && [styles.tabTextActive, { color: typeColor.dark }]
-                  ]}>
-                    {tab.toUpperCase()}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </View>
-
-            <ScrollView 
-              style={styles.tabContent} 
-              contentContainerStyle={{ flexGrow: 1 }}
-              showsVerticalScrollIndicator={true}
-            >
-              {renderTabContent()}
-            </ScrollView>
-
-            <TouchableOpacity 
-              style={[styles.closeButton, { backgroundColor: typeColor.dark }]} 
-              onPress={onClose}
-            >
-              <Text style={styles.closeButtonText}>Fechar</Text>
-            </TouchableOpacity>
-          </>
-        )}
-      </View>
-    </TouchableWithoutFeedback>
   );
 
   return (
@@ -317,17 +262,141 @@ export default function CoffeemonDetailsModal({
       animationType="fade"
       onRequestClose={onClose}
     >
-      <TouchableWithoutFeedback onPress={onClose}>
-        <View style={styles.fullscreen}>
-          <BlurView
-            intensity={Platform.OS === 'android' ? 50 : 30}
-            tint="dark"
-            style={styles.blurContainer}
-          >
-            {modalContent}
-          </BlurView>
+      <View style={styles.fullscreen}>
+        <BlurView intensity={20} tint="dark" style={StyleSheet.absoluteFill} />
+        
+        <TouchableWithoutFeedback onPress={onClose}>
+           <View style={styles.overlay} />
+        </TouchableWithoutFeedback>
+
+        <View style={[styles.modalWrapper, { width: modalWidth, height: modalHeight }]}>
+            <BlurView intensity={95} tint="light" style={styles.modalGlass}>
+                {showSwapSelection ? (
+                    renderSwapSelection()
+                ) : (
+                    <>
+                        <View style={styles.heroSection}>
+                            <LinearGradient
+                                colors={typeColors.accentGradient as any}
+                                style={StyleSheet.absoluteFillObject}
+                                start={{ x: 0, y: 0 }}
+                                end={{ x: 1, y: 1 }}
+                            />
+                            
+                            <LinearGradient
+                                colors={[typeColors.dark, 'transparent', typeColors.light]}
+                                style={styles.heroGradientOverlay}
+                                start={{ x: 0, y: 0 }}
+                                end={{ x: 1, y: 1 }}
+                            />
+                            
+                            <View style={styles.heroOverlay}>
+                                <View style={styles.typePill}>
+                                    <Text style={styles.typeIcon}>{getTypeIcon(coffeemon.coffeemon.types[0])}</Text>
+                                    <Text style={styles.typeName}>{coffeemon.coffeemon.types[0]}</Text>
+                                </View>
+                                <View style={styles.levelPill}>
+                                    <Text style={styles.levelText}>Lv {coffeemon.level}</Text>
+                                </View>
+                            </View>
+
+                            <View style={styles.imageArea}>
+                                <View style={styles.heroVignette} pointerEvents="none" />
+                                {backgroundSource && (
+                                    <BlurView intensity={10} tint="light" style={StyleSheet.absoluteFillObject}>
+                                        <Image 
+                                            source={backgroundSource} 
+                                            style={styles.backgroundImage} 
+                                            resizeMode="cover"
+                                        />
+                                    </BlurView>
+                                )}
+                                <View style={[styles.imageGlow, { shadowColor: typeColors.primary }]}>
+                                    <Image 
+                                        source={imageSource} 
+                                        style={styles.mainImage} 
+                                        resizeMode="contain" 
+                                    />
+                                </View>
+                                
+                                <View style={styles.nameSection}>
+                                    <View style={styles.nameContainer}>
+                                        <Text style={styles.name}>{coffeemon.coffeemon.name}</Text>
+                                    </View>
+                                </View>
+                            </View>
+                        </View>
+                        
+                        <LinearGradient
+                            colors={[
+                                typeColors.accentGradient[1] + '00',
+                                typeColors.gradient[0] + '80',
+                                typeColors.gradient[1] + 'CC'
+                            ]}
+                            locations={[0, 0.5, 1]}
+                            style={styles.transitionGradient}
+                        />
+
+                        <View style={styles.contentArea}>
+                            <LinearGradient
+                                colors={typeColors.gradient as any}
+                                start={{ x: 0, y: 0 }}
+                                end={{ x: 1, y: 1 }}
+                                style={StyleSheet.absoluteFillObject}
+                                opacity={0.8}
+                            />
+                            
+                            <LinearGradient
+                                colors={[typeColors.gradient[1], 'transparent']}
+                                style={styles.contentGradientTop}
+                                start={{ x: 0, y: 0 }}
+                                end={{ x: 0, y: 1 }}
+                            />
+                            
+                            <LinearGradient
+                                colors={[typeColors.accentGradient[0], 'transparent']}
+                                style={styles.contentGradientCorner}
+                                start={{ x: 1, y: 0 }}
+                                end={{ x: 0, y: 1 }}
+                            />
+                            
+                            <View style={styles.contentInnerGlow} />
+                            
+                            {/* Tabs */}
+                            <View style={styles.tabsContainer}>
+                                {(['about', 'status', 'moves'] as const).map((tab) => (
+                                    <TouchableOpacity
+                                        key={tab}
+                                        style={[
+                                            styles.tabButton,
+                                            activeTab === tab && { backgroundColor: typeColors.primary + '15' }
+                                        ]}
+                                        onPress={() => setActiveTab(tab)}
+                                    >
+                                        <Text style={[
+                                            styles.tabText,
+                                            { color: colors.text.tertiary },
+                                            activeTab === tab && { color: typeColors.primary, fontWeight: '800' }
+                                        ]}>
+                                            {tab.toUpperCase()}
+                                        </Text>
+                                    </TouchableOpacity>
+                                ))}
+                            </View>
+
+                            <ScrollView 
+                                style={styles.scrollContent}
+                                contentContainerStyle={{ paddingBottom: 20 }}
+                                showsVerticalScrollIndicator={false}
+                            >
+                                {renderTabContent()}
+                            </ScrollView>
+                        </View>
+                    </>
+                )}
+            </BlurView>
         </View>
-      </TouchableWithoutFeedback>
+      </View>
     </Modal>
   );
 }

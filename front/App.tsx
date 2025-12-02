@@ -31,6 +31,7 @@ import BattleScreen from './src/screens/Battle';
 import ErrorBoundary from './src/components/ErrorBoundary';
 import { Screen, BattleState } from './src/types';
 import { MainNavScreen } from './src/screens/MainNav';
+import { ThemeProvider } from './src/theme/ThemeContext';
 
 export default function App() {
   // ========================================
@@ -47,10 +48,7 @@ export default function App() {
       try {
         // Oculta a barra de navegação (botões virtuais)
         await NavigationBar.setVisibilityAsync("hidden");
-        // Define o comportamento para aparecer ao deslizar
-        await NavigationBar.setBehaviorAsync("overlay-swipe");
-        // Opcional: Define a cor de fundo da barra como transparente para quando ela aparecer
-        await NavigationBar.setBackgroundColorAsync("rgba(0,0,0,0.5)");
+        // Note: setBehaviorAsync and setBackgroundColorAsync are not supported with edge-to-edge
       } catch (e) {
         console.log("Erro ao configurar modo imersivo:", e);
       }
@@ -80,16 +78,8 @@ export default function App() {
   
   // Configuração do StatusBar baseada na tela atual
   const getStatusBarConfig = () => {
-    switch (currentScreen) {
-      case Screen.ECOMMERCE:
-        return { style: "dark" as const, backgroundColor: "#f5f2e8" };
-      case Screen.MATCHMAKING:
-        return { style: "light" as const, backgroundColor: "#2c3e50" };
-      case Screen.BATTLE:
-        return { style: "light" as const, backgroundColor: "#8B4513" };
-      default:
-        return { style: "light" as const, backgroundColor: "#f5f2e8" };
-    }
+    // All screens now use dark theme
+    return { style: "light" as const, backgroundColor: "#0F1419" };
   };
 
   const statusBarConfig = getStatusBarConfig();
@@ -248,24 +238,30 @@ export default function App() {
 
   if (!fontsLoaded) {
     return (
-      <SafeAreaProvider>
-        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#0d0d0d' }}>
-          <ActivityIndicator size="large" color="#ffffff" />
-        </View>
-      </SafeAreaProvider>
+      <ThemeProvider>
+        <SafeAreaProvider>
+          <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#0d0d0d' }}>
+            <ActivityIndicator size="large" color="#ffffff" />
+          </View>
+        </SafeAreaProvider>
+      </ThemeProvider>
     );
   }
 
   return (
-    <SafeAreaProvider>
-      <View style={{ flex: 1 }}>
-        <StatusBar 
-          style={statusBarConfig.style} 
-          backgroundColor={statusBarConfig.backgroundColor} 
-          translucent={false} 
-        />
-        {renderScreen()}
-      </View>
-    </SafeAreaProvider>
+    <ErrorBoundary>
+      <ThemeProvider>
+        <SafeAreaProvider>
+          <View style={{ flex: 1 }}>
+            <StatusBar 
+              style={statusBarConfig.style} 
+              backgroundColor={statusBarConfig.backgroundColor} 
+              translucent={false} 
+            />
+            {renderScreen()}
+          </View>
+        </SafeAreaProvider>
+      </ThemeProvider>
+    </ErrorBoundary>
   );
 }

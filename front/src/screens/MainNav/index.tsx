@@ -4,9 +4,10 @@ import { BottomNav, NavScreen } from '../../components/BottomNav';
 import { ShopScreen } from '../Shop';
 import { TeamScreen } from '../Team';
 import { CatalogScreen } from '../Catalog';
-import { FriendsScreen } from '../Friends';
+import EcommerceScreen from '../Ecommerce';
 import { BattleState } from '../../types';
 import { Socket } from 'socket.io-client';
+import { colors } from '../../theme/colors';
 
 interface MainNavProps {
   token: string | null;
@@ -19,7 +20,7 @@ interface MainNavProps {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F5E6D3',
+    backgroundColor: colors.background.primary,
   },
   screenContainer: {
     flex: 1,
@@ -39,7 +40,7 @@ export const MainNavScreen: React.FC<MainNavProps> = ({
   const renderScreen = () => {
     switch (activeScreen) {
       case 'shop':
-        return <ShopScreen />;
+        return <ShopScreen token={token} />;
       case 'team':
         return <TeamScreen token={token} />;
       case 'battle':
@@ -55,8 +56,8 @@ export const MainNavScreen: React.FC<MainNavProps> = ({
         );
       case 'catalog':
         return <CatalogScreen token={token} />;
-      case 'friends':
-        return <FriendsScreen />;
+      case 'cafe':
+        return <EcommerceScreen token={token || ''} userId={playerId} onNavigateToMatchmaking={() => setActiveScreen('battle')} onLogout={onNavigateToLogin} />;
       default:
         return <ShopScreen />;
     }

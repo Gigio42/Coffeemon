@@ -1,219 +1,234 @@
 import { StyleSheet, Dimensions } from 'react-native';
+import { theme } from '../../theme/theme';
 
 const { width } = Dimensions.get('window');
-const COLUMN_COUNT = 3;
-const GRID_PADDING = 8;
-const ITEM_MARGIN = 4;
-const AVAILABLE_WIDTH = width - (GRID_PADDING * 2) - (ITEM_MARGIN * 2 * COLUMN_COUNT);
-const ITEM_WIDTH = AVAILABLE_WIDTH / COLUMN_COUNT;
-
-// Card dimensions (Small variant)
-const CARD_ORIGINAL_WIDTH = 224; // 160 * 1.4
-const CARD_ORIGINAL_HEIGHT = 280; // Approx height including margins
-const SCALE_FACTOR = ITEM_WIDTH / CARD_ORIGINAL_WIDTH;
+const COLUMN_COUNT = 2;
+const GRID_PADDING = theme.spacing.lg;
+const ITEM_MARGIN = theme.spacing.md;
+const AVAILABLE_WIDTH = width - (GRID_PADDING * 2) - ITEM_MARGIN;
+const CARD_WIDTH = AVAILABLE_WIDTH / COLUMN_COUNT;
 
 export const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F5E6D3',
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#F5E6D3',
-  },
-  loadingText: {
-    marginTop: 10,
-    fontSize: 16,
-    color: '#8B4513',
-    fontFamily: 'Courier New',
+    backgroundColor: theme.colors.background.primary,
   },
   
-  // Deck Section
-  deckSection: {
-    backgroundColor: '#E6CCB2', // Slightly darker beige for contrast
-    paddingTop: 16,
-    paddingBottom: 24,
-    borderBottomWidth: 1,
-    borderBottomColor: '#CCC',
-    elevation: 4,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    zIndex: 10,
-  },
-  headerRow: {
+  // Header - Clean & Minimal
+  header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 16,
-    marginBottom: 12,
+    paddingHorizontal: theme.spacing.lg,
+    paddingVertical: theme.spacing.lg,
+    backgroundColor: theme.colors.background.primary,
   },
   headerTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#333',
-    fontFamily: 'Courier New',
+    fontSize: 24,
+    fontWeight: '800',
+    color: theme.colors.text.primary,
+    letterSpacing: -0.5,
   },
   elixirBadge: {
-    backgroundColor: '#8B4513',
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 12,
+    backgroundColor: theme.colors.accent.primary,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: theme.radius.full,
+    ...theme.shadows.sm,
   },
   elixirText: {
-    color: '#FFF',
-    fontWeight: 'bold',
+    color: '#FFFFFF',
+    fontWeight: '700',
     fontSize: 12,
-    fontFamily: 'Courier New',
+  },
+  
+  // Deck Section - Premium Look
+  deckSection: {
+    paddingVertical: theme.spacing.lg,
+    backgroundColor: '#FFFFFF', // White background for contrast
+    marginBottom: theme.spacing.md,
+    borderBottomLeftRadius: theme.radius.xxl,
+    borderBottomRightRadius: theme.radius.xxl,
+    ...theme.shadows.sm,
+    zIndex: 10,
   },
   deckContainer: {
     flexDirection: 'row',
-    justifyContent: 'space-around',
-    paddingHorizontal: 8,
+    justifyContent: 'space-between',
+    paddingHorizontal: theme.spacing.lg,
+    gap: 12,
   },
   deckSlotContainer: {
-    width: ITEM_WIDTH,
-    height: CARD_ORIGINAL_HEIGHT * SCALE_FACTOR,
-    justifyContent: 'center',
-    alignItems: 'center',
+    flex: 1,
+    maxWidth: (width - theme.spacing.lg * 2 - 24) / 3,
+    aspectRatio: 0.8,
   },
-  // Wrapper to contain the scaled card without affecting layout flow
-  cardWrapper: {
-    width: CARD_ORIGINAL_WIDTH,
-    height: CARD_ORIGINAL_HEIGHT,
-    transform: [{ scale: SCALE_FACTOR }],
-    // We need to center the scaled element within the slot
-    // Since transform origin is center, and we want it to fit in the slot...
-    // Actually, if we put this in a container of size ITEM_WIDTH, and scale it...
-    // It's easier to just have a container of the target size, and center the scaled content.
-  },
-  // New approach for card scaling
-  cardContainer: {
-    width: ITEM_WIDTH,
-    height: CARD_ORIGINAL_HEIGHT * SCALE_FACTOR,
-    alignItems: 'center',
-    justifyContent: 'center',
-    overflow: 'hidden', // Clip any potential overflow
-  },
-  cardScaler: {
-    transform: [{ scale: SCALE_FACTOR }],
-    width: CARD_ORIGINAL_WIDTH,
-    height: CARD_ORIGINAL_HEIGHT,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  
   emptySlot: {
-    width: '90%',
-    height: '90%',
+    flex: 1,
     borderWidth: 2,
-    borderColor: '#BBB',
+    borderColor: theme.colors.border.medium,
     borderStyle: 'dashed',
-    borderRadius: 12,
+    borderRadius: theme.radius.xl,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'rgba(255,255,255,0.5)',
+    backgroundColor: theme.colors.background.tertiary,
   },
   emptySlotText: {
-    color: '#999',
-    fontSize: 12,
-    fontFamily: 'Courier New',
+    color: theme.colors.text.tertiary,
+    fontSize: 11,
+    fontWeight: '600',
+    marginTop: 4,
   },
-
+  
   // Collection Section
   collectionSection: {
     flex: 1,
-    backgroundColor: '#F5E6D3',
+    backgroundColor: theme.colors.background.primary,
   },
   collectionHeader: {
-    padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#D7CCC8',
-    backgroundColor: '#F5E6D3',
+    paddingHorizontal: theme.spacing.lg,
+    paddingTop: theme.spacing.md,
+    paddingBottom: 0,
   },
   collectionTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#333',
-    fontFamily: 'Courier New',
+    fontSize: 20,
+    fontWeight: '800',
+    color: theme.colors.text.primary,
+    marginBottom: 2,
   },
   collectionSubtitle: {
-    fontSize: 12,
-    color: '#666',
-    marginTop: 2,
-    fontFamily: 'Courier New',
+    fontSize: 13,
+    color: theme.colors.text.secondary,
+    fontWeight: '500',
   },
-  collectionGrid: {
+
+  // Search & Filters - Consistent with Catalog
+  filterSection: {
+    marginBottom: theme.spacing.sm,
+  },
+  searchContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFFFFF',
+    marginHorizontal: theme.spacing.lg,
+    marginTop: theme.spacing.md,
+    paddingHorizontal: theme.spacing.md,
+    borderRadius: theme.radius.xl,
+    height: 48,
+    borderWidth: 1,
+    borderColor: 'rgba(0,0,0,0.03)',
+    ...theme.shadows.sm,
+  },
+  searchIcon: {
+    fontSize: 16,
+    marginRight: theme.spacing.sm,
+    opacity: 0.5,
+  },
+  searchInput: {
+    flex: 1,
+    height: '100%',
+    fontSize: 15,
+    color: theme.colors.text.primary,
+    fontWeight: '500',
+  },
+  clearIcon: {
+    fontSize: 14,
+    color: theme.colors.text.tertiary,
+    padding: theme.spacing.xs,
+  },
+  
+  typeFilterContainer: {
+    marginTop: theme.spacing.md,
+  },
+  typeFilterContent: {
+    paddingHorizontal: theme.spacing.lg,
+    gap: 8,
+  },
+  typeChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: theme.radius.full,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: 'rgba(0,0,0,0.05)',
+    marginRight: 8,
+    ...theme.shadows.sm,
+  },
+  typeChipInactive: {
+    backgroundColor: '#FFFFFF',
+    borderColor: 'rgba(0,0,0,0.05)',
+  },
+  typeDot: {
+    width: 6,
+    height: 6,
+    borderRadius: theme.radius.full,
+    marginRight: 6,
+  },
+  typeChipText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: theme.colors.text.secondary,
+  },
+  
+  // Collection Grid
+  collectionList: {
     padding: GRID_PADDING,
     paddingBottom: 100,
   },
-  gridRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'flex-start',
+  columnWrapper: {
+    justifyContent: 'space-between',
+    gap: ITEM_MARGIN,
   },
   collectionItem: {
-    width: ITEM_WIDTH,
-    height: CARD_ORIGINAL_HEIGHT * SCALE_FACTOR,
-    margin: ITEM_MARGIN,
-    alignItems: 'center',
-    justifyContent: 'center',
+    width: CARD_WIDTH,
+    marginBottom: theme.spacing.md,
   },
-  emptyCollectionText: {
-    textAlign: 'center',
-    marginTop: 40,
-    color: '#999',
-    fontSize: 14,
-    fontFamily: 'Courier New',
-    width: '100%',
+  
+  // Inventory Section
+  inventorySection: {
+    marginTop: theme.spacing.xl,
+    borderTopWidth: 1,
+    borderTopColor: theme.colors.border.subtle,
+    paddingTop: theme.spacing.lg,
   },
-
-  // Items Section
   itemsHeader: {
-    padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#D7CCC8',
-    backgroundColor: '#F5E6D3',
-    marginTop: 16,
+    marginBottom: theme.spacing.md,
   },
   itemsTitle: {
     fontSize: 18,
-    fontWeight: 'bold',
-    color: '#333',
-    fontFamily: 'Courier New',
+    fontWeight: '800',
+    color: theme.colors.text.primary,
   },
   itemsSubtitle: {
-    fontSize: 12,
-    color: '#666',
-    marginTop: 2,
-    fontFamily: 'Courier New',
+    fontSize: 13,
+    color: theme.colors.text.secondary,
+  },
+  itemsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: theme.spacing.md,
   },
   itemCard: {
-    width: ITEM_WIDTH,
-    height: ITEM_WIDTH * 1.2, // Slightly taller than wide
-    margin: ITEM_MARGIN,
-    backgroundColor: '#FFF',
-    borderRadius: 12,
-    borderWidth: 2,
-    padding: 8,
+    width: (width - theme.spacing.lg * 2 - theme.spacing.md * 2) / 3,
+    backgroundColor: '#FFFFFF',
+    borderRadius: theme.radius.lg,
+    padding: theme.spacing.md,
+    borderWidth: 1,
+    borderColor: 'rgba(0,0,0,0.03)',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
+    ...theme.shadows.sm,
   },
   itemIconContainer: {
-    flex: 1,
+    width: 40,
+    height: 40,
     justifyContent: 'center',
     alignItems: 'center',
+    marginBottom: theme.spacing.xs,
   },
   itemEmoji: {
-    fontSize: 32,
+    fontSize: 24,
   },
   itemBadge: {
     position: 'absolute',
@@ -221,23 +236,47 @@ export const styles = StyleSheet.create({
     right: -6,
     minWidth: 20,
     height: 20,
-    borderRadius: 10,
+    borderRadius: theme.radius.full,
     justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: 4,
-    borderWidth: 1,
-    borderColor: '#FFF',
+    borderWidth: 2,
+    borderColor: '#FFFFFF',
+    ...theme.shadows.sm,
   },
   itemBadgeText: {
-    color: '#FFF',
+    color: '#FFFFFF',
     fontSize: 10,
     fontWeight: 'bold',
   },
   itemName: {
-    fontSize: 10,
+    fontSize: 11,
+    fontWeight: '600',
+    color: theme.colors.text.primary,
     textAlign: 'center',
-    color: '#333',
-    fontFamily: 'Courier New',
-    marginTop: 4,
+  },
+  
+  // Loading & Empty States
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: theme.colors.background.primary,
+  },
+  loadingText: {
+    marginTop: theme.spacing.md,
+    fontSize: 14,
+    color: theme.colors.text.secondary,
+    fontWeight: '500',
+  },
+  emptyContainer: {
+    padding: theme.spacing.xl,
+    alignItems: 'center',
+  },
+  emptyCollectionText: {
+    fontSize: 14,
+    color: theme.colors.text.tertiary,
+    textAlign: 'center',
+    fontWeight: '500',
   },
 });

@@ -1,147 +1,280 @@
 import { StyleSheet, Dimensions } from 'react-native';
+import { theme } from '../../theme/theme';
 
 const { width } = Dimensions.get('window');
-const CARD_WIDTH = (width - 48) / 3; // 3 columns with padding
+
+// Coffeemons: 2 por linha (cards maiores e premium)
+const COLUMN_COUNT = 2;
+const GRID_PADDING = theme.spacing.lg;
+const ITEM_MARGIN = theme.spacing.md;
+const AVAILABLE_WIDTH = width - (GRID_PADDING * 2) - ITEM_MARGIN;
+const CARD_WIDTH = AVAILABLE_WIDTH / COLUMN_COUNT;
 
 export const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F5E6D3', // Light beige background
+    backgroundColor: theme.colors.background.primary,
   },
+  
+  // Header - Clean & Minimal
   header: {
-    padding: 20,
-    backgroundColor: '#8B4513', // Saddle brown
-    borderBottomLeftRadius: 20,
-    borderBottomRightRadius: 20,
-    marginBottom: 10,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    elevation: 5,
+    paddingHorizontal: theme.spacing.lg,
+    paddingTop: theme.spacing.lg,
+    paddingBottom: theme.spacing.md,
+    backgroundColor: theme.colors.background.primary,
   },
   title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#FFF',
-    textAlign: 'center',
-    fontFamily: 'Courier New', // Pixel-art friendly font
+    fontSize: 32,
+    fontWeight: '800',
+    color: theme.colors.text.primary,
+    marginBottom: 4,
+    letterSpacing: -1,
   },
   subtitle: {
     fontSize: 14,
-    color: '#E6CCB2',
-    textAlign: 'center',
-    marginTop: 5,
-    fontFamily: 'Courier New',
+    color: theme.colors.text.tertiary,
+    fontWeight: '600',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
   },
+
+  // Tabs - Modern Pill Style
+  tabsContainer: {
+    flexDirection: 'row',
+    backgroundColor: 'rgba(0,0,0,0.04)',
+    marginHorizontal: theme.spacing.lg,
+    marginTop: theme.spacing.md,
+    borderRadius: theme.radius.full,
+    padding: 4,
+  },
+  tab: {
+    flex: 1,
+    paddingVertical: 12,
+    borderRadius: theme.radius.full,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  tabActive: {
+    backgroundColor: '#FFFFFF',
+    shadowColor: 'rgba(0,0,0,0.08)',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 1,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  tabText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: theme.colors.text.tertiary,
+  },
+  tabTextActive: {
+    color: theme.colors.text.primary,
+    fontWeight: '800',
+  },
+
+  // Search - Glassy Input
+  searchContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFFFFF',
+    marginHorizontal: theme.spacing.lg,
+    marginTop: theme.spacing.lg,
+    paddingHorizontal: theme.spacing.md,
+    borderRadius: theme.radius.full,
+    height: 52,
+    borderWidth: 1,
+    borderColor: 'rgba(0,0,0,0.05)',
+    shadowColor: 'rgba(0,0,0,0.03)',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 1,
+    shadowRadius: 12,
+    elevation: 2,
+  },
+  searchIcon: {
+    fontSize: 18,
+    marginRight: theme.spacing.sm,
+    opacity: 0.4,
+  },
+  searchInput: {
+    flex: 1,
+    height: '100%',
+    fontSize: 15,
+    color: theme.colors.text.primary,
+    fontWeight: '600',
+  },
+  clearIcon: {
+    fontSize: 14,
+    color: theme.colors.text.tertiary,
+    padding: theme.spacing.xs,
+  },
+
+  // Filters - Horizontal Scroll
+  filtersContainer: {
+    marginTop: theme.spacing.lg,
+  },
+  filtersContent: {
+    paddingHorizontal: theme.spacing.lg,
+    gap: 8,
+  },
+  filterChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: theme.radius.full,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: 'rgba(0,0,0,0.05)',
+    marginRight: 8,
+  },
+  filterEmoji: {
+    fontSize: 14,
+    marginRight: 6,
+  },
+  filterText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: theme.colors.text.secondary,
+  },
+
+  // Toggle
+  toggleContainer: {
+    paddingHorizontal: theme.spacing.lg,
+    paddingVertical: theme.spacing.lg,
+  },
+  toggleButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  checkbox: {
+    width: 22,
+    height: 22,
+    borderRadius: 8,
+    borderWidth: 2,
+    borderColor: theme.colors.border.medium,
+    marginRight: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  checkmark: {
+    color: '#FFFFFF',
+    fontSize: 12,
+    fontWeight: 'bold',
+  },
+  toggleText: {
+    fontSize: 14,
+    color: theme.colors.text.secondary,
+    fontWeight: '600',
+  },
+
+  // Content
   listContent: {
-    padding: 12,
-    paddingBottom: 100, // Space for bottom nav
+    padding: GRID_PADDING,
+    paddingBottom: 120,
   },
   columnWrapper: {
-    justifyContent: 'flex-start',
-    gap: 8,
+    justifyContent: 'space-between',
+    gap: ITEM_MARGIN,
   },
   cardContainer: {
     width: CARD_WIDTH,
-    marginBottom: 12,
-    alignItems: 'center',
-    height: 200, // Fixed height container for the scaled card
-    overflow: 'hidden', // Clip any overflow from scaling
+    marginBottom: theme.spacing.md,
   },
+
+  // Locked Overlay - Glass Effect
+  lockedOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(255, 255, 255, 0.5)',
+    borderRadius: 24,
+    zIndex: 1,
+  },
+
+  // Loading & Error
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#F5E6D3',
+    backgroundColor: theme.colors.background.primary,
   },
   loadingText: {
-    marginTop: 10,
-    fontSize: 16,
-    color: '#8B4513',
-    fontFamily: 'Courier New',
+    marginTop: theme.spacing.md,
+    fontSize: 14,
+    color: theme.colors.text.secondary,
+    fontWeight: '500',
   },
   errorContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#F5E6D3',
-    padding: 20,
+    padding: theme.spacing.xl,
   },
   errorText: {
-    fontSize: 16,
-    color: '#D32F2F',
+    fontSize: 14,
+    color: theme.colors.feedback.error,
     textAlign: 'center',
-    fontFamily: 'Courier New',
+    fontWeight: '500',
+  },
+
+  // Empty State
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 60,
+  },
+  emptyText: {
+    fontSize: 14,
+    color: theme.colors.text.tertiary,
+    textAlign: 'center',
+    fontWeight: '500',
   },
   
-  // Items Section Styles
-  itemsSection: {
-    marginTop: 24,
-    paddingTop: 24,
-    borderTopWidth: 2,
-    borderTopColor: '#D7CCC8',
-  },
-  sectionTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#5D4037',
-    marginBottom: 16,
-    marginLeft: 4,
-    fontFamily: 'Courier New',
-  },
+  // Items Grid
   itemsGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 12,
+    gap: ITEM_MARGIN,
     justifyContent: 'space-between',
   },
   itemCard: {
-    width: (width - 36) / 2, // 2 columns for items
-    backgroundColor: '#FFF',
-    borderRadius: 12,
-    padding: 12,
-    marginBottom: 12,
-    borderWidth: 2,
-    borderColor: '#D7CCC8',
+    width: CARD_WIDTH,
+    backgroundColor: 'rgba(255, 255, 255, 0.6)', // Glass background
+    borderRadius: 24,
+    padding: theme.spacing.lg,
+    marginBottom: theme.spacing.md,
     alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 2,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.8)',
   },
   itemIconContainer: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
+    width: 64,
+    height: 64,
+    borderRadius: 32,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 8,
+    marginBottom: theme.spacing.md,
+    // Background color set dynamically in index.tsx
   },
   itemIcon: {
-    fontSize: 24,
+    fontSize: 32,
   },
   itemName: {
-    fontSize: 14,
-    fontWeight: 'bold',
-    color: '#3E2723',
+    fontSize: 15,
+    fontWeight: '700',
+    color: theme.colors.text.primary,
     marginBottom: 4,
     textAlign: 'center',
-    fontFamily: 'Courier New',
   },
   itemCost: {
-    fontSize: 12,
-    color: '#8B4513',
-    fontWeight: 'bold',
-    marginBottom: 6,
-    fontFamily: 'Courier New',
+    fontSize: 13,
+    color: theme.colors.coin.goldDark,
+    fontWeight: '800',
+    marginBottom: 8,
   },
   itemDescription: {
-    fontSize: 10,
-    color: '#795548',
+    fontSize: 12,
+    color: theme.colors.text.secondary,
     textAlign: 'center',
-    fontFamily: 'Courier New',
-    lineHeight: 14,
+    lineHeight: 16,
   },
 });
