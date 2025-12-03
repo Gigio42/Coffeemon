@@ -233,8 +233,53 @@
     "name": "Vampiric Shot",
     "power": 75,
     "category": "attack",
-    "elementalType": "roasted",
+    "elementalType": "fruity",
     "description": "A dark shot that heals the user for half the damage dealt.",
     "effects": [{ "type": "lifesteal", "chance": 1, "target": "enemy", "value": 0.5 }]
+  },
+  {
+    "id": 27,
+    "name": "Barrel Impact",
+    "power": 65,
+    "category": "attack",
+    "elementalType": "roasted",
+    "description": "A heavy impact like a rolling barrel.",
+    "effects": [{ "type": "defenseDown", "chance": 0.2, "duration": 3, "target": "enemy", "value": 0.9 }]
+  },
+  {
+    "id": 28,
+    "name": "Aged Spirit",
+    "power": 0,
+    "category": "support",
+    "elementalType": "roasted",
+    "description": "Increases attack power through aging.",
+    "effects": [{ "type": "attackUp", "chance": 1, "duration": 3, "target": "self", "value": 1.4 }]
+  },
+  {
+    "id": 29,
+    "name": "Chamomile Haze",
+    "power": 0,
+    "category": "support",
+    "elementalType": "floral",
+    "description": "A relaxing mist that puts the target to sleep.",
+    "effects": [{ "type": "sleep", "chance": 0.7, "duration": 3, "target": "enemy" }]
+  },
+  {
+    "id": 30,
+    "name": "Crimson Sip",
+    "power": 60,
+    "category": "attack",
+    "elementalType": "fruity",
+    "description": "Drains the target's energy.",
+    "effects": [{ "type": "lifesteal", "chance": 1, "target": "enemy", "value": 0.6 }]
+  },
+  {
+    "id": 31,
+    "name": "Dizzy Aroma",
+    "power": 55,
+    "category": "attack",
+    "elementalType": "roasted",
+    "description": "A strong smell that may confuse enemies (lowers accuracy/hit).",
+    "effects": []
   }
 ]

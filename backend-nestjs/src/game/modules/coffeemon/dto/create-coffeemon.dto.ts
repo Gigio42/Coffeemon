@@ -1,4 +1,4 @@
-import { ArrayNotEmpty, IsArray, IsEnum, IsNumber, IsString } from 'class-validator';
+import { ArrayNotEmpty, IsArray, IsEnum, IsNumber, IsOptional, IsString } from 'class-validator';
 import { CoffeemonType } from '../entities/coffeemon.entity';
 
 export class CreateCoffeemonDto {
@@ -7,6 +7,22 @@ export class CreateCoffeemonDto {
 
   @IsEnum(CoffeemonType)
   type: CoffeemonType;
+
+  @IsString()
+  @IsOptional()
+  description?: string;
+
+  @IsString()
+  @IsOptional()
+  flavorProfile?: string;
+
+  @IsNumber()
+  @IsOptional()
+  weight?: number;
+
+  @IsNumber()
+  @IsOptional()
+  height?: number;
 
   @IsNumber()
   baseHp: number;
