@@ -35,6 +35,7 @@ import { CoffeemonVariant, getCoffeemonImage } from '../../../assets/coffeemons'
 import ItemSelectionModal from '../../components/ItemSelectionModal';
 import ItemTargetModal from '../../components/ItemTargetModal';
 import { Item, getPlayerItems, getItemIcon, getItemColor } from '../../api/itemsService';
+import { getBattleIcon } from '../../../assets/iconsv2';
 
 interface BattleScreenProps {
   battleId: string;
@@ -75,28 +76,27 @@ export default function BattleScreen({
     );
   }
 
-  try {
-    const animations = useBattleAnimations();
-    const {
-      playerAnimStyle,
-      opponentAnimStyle,
-      arenaWobble,
-      playLunge,
-      playShake,
-      playCritShake,
-      playFaint,
-      playSwitchIn,
-      reset: resetAnimations,
-    } = animations;
+  const animations = useBattleAnimations();
+  const {
+    playerAnimStyle,
+    opponentAnimStyle,
+    arenaWobble,
+    playLunge,
+    playShake,
+    playCritShake,
+    playFaint,
+    playSwitchIn,
+    reset: resetAnimations,
+  } = animations;
 
-    const getCoffeemonImageSource = (name: string, variant: CoffeemonVariant = 'default') => {
-      return getCoffeemonImage(name, variant);
-    };
+  const getCoffeemonImageSource = (name: string, variant: CoffeemonVariant = 'default') => {
+    return getCoffeemonImage(name, variant);
+  };
 
-    const battle = useBattle({
-      battleId,
-      initialBattleState: initialBattleData,
-      playerId,
+  const battle = useBattle({
+    battleId,
+    initialBattleState: initialBattleData,
+    playerId,
       socket,
       onNavigateToMatchmaking,
       imageSourceGetter: getCoffeemonImageSource,
@@ -135,6 +135,12 @@ export default function BattleScreen({
   const [isSwitchModalVisible, setSwitchModalVisible] = React.useState<boolean>(false);
   const [stuckRecoveryTimeout, setStuckRecoveryTimeout] = React.useState<NodeJS.Timeout | null>(null);
 
+  // 📝 SISTEMA DE TEXTO INTERATIVO COM TYPEWRITER
+  const [currentMessageIndex, setCurrentMessageIndex] = React.useState<number>(0);
+  const [displayedText, setDisplayedText] = React.useState<string>('');
+  const [isTyping, setIsTyping] = React.useState<boolean>(false);
+  const [autoAdvanceTimeout, setAutoAdvanceTimeout] = React.useState<NodeJS.Timeout | null>(null);
+
   // 🎯 OTIMISTIC UPDATE: Estado local para mostrar novo Coffeemon imediatamente
   const [optimisticActiveIndex, setOptimisticActiveIndex] = React.useState<number | null>(null);
   const [optimisticTimeout, setOptimisticTimeout] = React.useState<NodeJS.Timeout | null>(null);
@@ -158,6 +164,109 @@ export default function BattleScreen({
     console.log('[BattleScreen] items state changed, count:', items.length);
     console.log('[BattleScreen] items:', items);
   }, [items]);
+
+  // 📝 Efeito Typewriter - Anima o texto sendo digitado
+  React.useEffect(() => {
+    if (log.length === 0) {
+      setDisplayedText('');
+      setCurrentMessageIndex(0);
+      return;
+    }
+
+    const currentMessage = log[currentMessageIndex] || '';
+    console.log('[BattleScreen] Current message from log:', currentMessage);
+    
+    // O log já vem com as mensagens processadas do useBattle
+    const fullMessage = currentMessage;
+
+    if (displayedText.length < fullMessage.length) {
+      setIsTyping(true);
+      const timeout = setTimeout(() => {
+        setDisplayedText(fullMessage.slice(0, displayedText.length + 1));
+      }, 30); // Velocidade de digitação: 30ms por caractere
+
+      return () => clearTimeout(timeout);
+    } else {
+      setIsTyping(false);
+      
+      // Quando terminar de digitar, aguardar e avançar automaticamente
+      if (currentMessageIndex < log.length - 1) {
+        const advanceTimeout = setTimeout(() => {
+          setCurrentMessageIndex(currentMessageIndex + 1);
+          setDisplayedText('');
+        }, 2000); // Aguarda 2 segundos após terminar de digitar
+        
+        setAutoAdvanceTimeout(advanceTimeout);
+        return () => clearTimeout(advanceTimeout);
+      }
+    }
+  }, [log, currentMessageIndex, displayedText]);
+
+  // Limpar timeout quando componente desmontar
+  // Função para avançar/voltar mensagens ao clicar
+  const handleTextBoxClick = () => {
+    // Cancela o auto-advance
+    if (autoAdvanceTimeout) {
+      clearTimeout(autoAdvanceTimeout);
+      setAutoAdvanceTimeout(null);
+    }
+    
+    if (isTyping) {
+      // Se ainda está digitando, completa a mensagem imediatamente
+      const currentMessage = log[currentMessageIndex] || '';
+      setDisplayedText(currentMessage);
+      setIsTyping(false);
+    } else {
+      // Se já terminou de digitar, avança manualmente para a próxima
+      if (currentMessageIndex < log.length - 1) {
+        setCurrentMessageIndex(currentMessageIndex + 1);
+        setDisplayedText('');
+      }
+    }
+  };
+
+  React.useEffect(() => {
+    if (log.length > 0 && currentMessageIndex >= log.length) {
+      setCurrentMessageIndex(log.length - 1);
+      setDisplayedText('');
+    } else if (log.length > 0 && currentMessageIndex < log.length - 1) {
+      // Nova mensagem chegou, mostra ela
+      setCurrentMessageIndex(log.length - 1);
+      setDisplayedText('');
+    }
+  }, [log.length]);
+
+  // Função para voltar mensagem anterior
+  const handlePreviousMessage = (e: any) => {
+    e.stopPropagation();
+    
+    // Cancela auto-advance
+    if (autoAdvanceTimeout) {
+      clearTimeout(autoAdvanceTimeout);
+      setAutoAdvanceTimeout(null);
+    }
+    
+    if (currentMessageIndex > 0) {
+      setCurrentMessageIndex(currentMessageIndex - 1);
+      setDisplayedText('');
+    }
+  };
+
+  // Função para próxima mensagem
+  const handleNextMessage = (e: any) => {
+    e.stopPropagation();
+    
+    // Cancela auto-advance
+    if (autoAdvanceTimeout) {
+      clearTimeout(autoAdvanceTimeout);
+      setAutoAdvanceTimeout(null);
+    }
+    
+    if (currentMessageIndex < log.length - 1) {
+      setCurrentMessageIndex(currentMessageIndex + 1);
+      setDisplayedText('');
+    }
+  };
 
   // 🎯 Memoizar fonte da imagem do jogador para otimistic updates
   const playerSprite = useMemo(() => {
@@ -304,7 +413,7 @@ export default function BattleScreen({
         coffeemon: {
           id: candidate.index,
           name: coffeemon.name,
-          type: 'floral',
+          types: coffeemon.types || ['roasted'],
           defaultImage: undefined,
         },
         maxHp: coffeemon.maxHp,
@@ -348,7 +457,7 @@ export default function BattleScreen({
         coffeemon: {
           id: candidate.index,
           name: coffeemon.name,
-          type: 'floral',
+          types: coffeemon.types || ['roasted'],
           defaultImage: undefined,
         },
         maxHp: coffeemon.maxHp,
@@ -844,10 +953,7 @@ export default function BattleScreen({
             onPress={() => setActionMode('attack')}
             disabled={!canAct || myPendingAction || needsSwitch}
           >
-            <View style={styles.actionButtonContent}>
-              <Text style={styles.actionButtonIcon}>⚔️</Text>
-              <Text style={styles.actionButtonText}>Atacar</Text>
-            </View>
+            <Image source={getBattleIcon('attack')} style={styles.actionButtonIconImage} />
           </TouchableOpacity>
 
           {/* Botão Trocar - DISPONÍVEL apenas no turno do jogador */}
@@ -856,17 +962,12 @@ export default function BattleScreen({
               styles.mainActionButton,
               styles.specialActionButton,
               (!hasSwitchCandidate || isProcessing || myPendingAction || battleState?.turnPhase === 'RESOLUTION' || !canAct) && styles.actionButtonDisabled,
-              (needsSwitch && canAct) && { borderWidth: 3, borderColor: '#FFD700' } // Destaque amarelo apenas quando for o turno E precisar trocar
+              (needsSwitch && canAct) && { borderWidth: 6, borderColor: '#FFD700' } // Destaque amarelo apenas quando for o turno E precisar trocar
             ]}
             onPress={() => setSwitchModalVisible(true)}
             disabled={!hasSwitchCandidate || isProcessing || myPendingAction || battleState?.turnPhase === 'RESOLUTION' || !canAct}
           >
-            <View style={styles.actionButtonContent}>
-              <Text style={styles.actionButtonIcon}>🔄</Text>
-              <Text style={styles.actionButtonText}>
-                {(needsSwitch && canAct) ? 'OBRIGATÓRIA' : 'Trocar'}
-              </Text>
-            </View>
+            <Image source={getBattleIcon('switch')} style={styles.actionButtonIconImage} />
           </TouchableOpacity>
 
           {/* Botão Item - HABILITADO se tiver itens e puder agir */}
@@ -887,10 +988,7 @@ export default function BattleScreen({
             }}
             disabled={!canAct || myPendingAction || items.length === 0}
           >
-            <View style={styles.actionButtonContent}>
-              <Text style={styles.actionButtonIcon}>🧪</Text>
-              <Text style={styles.actionButtonText}>Item</Text>
-            </View>
+            <Image source={getBattleIcon('item')} style={styles.actionButtonIconImage} />
           </TouchableOpacity>
 
           {/* Botão Fugir - SEMPRE DISPONÍVEL */}
@@ -899,10 +997,7 @@ export default function BattleScreen({
             onPress={onNavigateToMatchmaking}
             disabled={battleEnded}
           >
-            <View style={styles.actionButtonContent}>
-              <Text style={styles.actionButtonIcon}>🏃</Text>
-              <Text style={styles.actionButtonText}>Fugir</Text>
-            </View>
+            <Image source={getBattleIcon('run')} style={styles.actionButtonIconImage} />
           </TouchableOpacity>
         </View>
       </>
@@ -922,14 +1017,21 @@ export default function BattleScreen({
     const attackValidation = canCoffeemonAttack(myPlayerState);
     const canAttack = canAct && attackValidation.valid;
 
-    const moveIcons: { [key: string]: string } = {
-      floral: '🍇',
-      sweet: '🔥',
-      fruity: '🍋',
-      nutty: '🌰',
-      roasted: '🔥',
-      spicy: '🌶️',
-      sour: '🍃',
+    // Sistema de cores por tipo elemental (inspirado em Pokémon)
+    const typeColors: { [key: string]: { primary: string; secondary: string; icon: string } } = {
+      floral: { primary: '#E91E63', secondary: '#F48FB1', icon: '🌸' },
+      sweet: { primary: '#FF6F91', secondary: '#FFB3C1', icon: '🍬' },
+      fruity: { primary: '#FFC107', secondary: '#FFE082', icon: '🍋' },
+      nutty: { primary: '#8D6E63', secondary: '#BCAAA4', icon: '🌰' },
+      roasted: { primary: '#FF5722', secondary: '#FF8A65', icon: '🔥' },
+      spicy: { primary: '#F44336', secondary: '#E57373', icon: '🌶️' },
+      sour: { primary: '#4CAF50', secondary: '#81C784', icon: '🍃' },
+    };
+
+    const getCategoryEmoji = (category: string) => {
+      if (category === 'attack') return '⚔️';
+      if (category === 'support') return '🛡️';
+      return '✨';
     };
 
     return (
@@ -945,40 +1047,91 @@ export default function BattleScreen({
         </View>
 
         <View style={styles.attacksGrid}>
-          {activeMon.moves.map((move: any) => {
+          {/* Sistema de 4 slots fixos */}
+          {[0, 1, 2, 3].map((slotIndex) => {
+            const move = activeMon.moves[slotIndex];
+            
+            // Se não há move neste slot, renderiza placeholder pontilhado
+            if (!move) {
+              return (
+                <View key={`empty-${slotIndex}`} style={styles.emptySlot}>
+                  <Text style={styles.emptySlotText}>- - -</Text>
+                </View>
+              );
+            }
+
             // ✅ VALIDAÇÃO: Verificar se pode usar este movimento específico
             const moveValidation = canUseMove(myPlayerState, move.id);
             const canUseThisMove = canAttack && !myPendingAction && moveValidation.valid;
-            const icon = moveIcons[move.type] || '⚔️';
+            
+            const moveType = move.elementalType || 'roasted';
+            const typeStyle = typeColors[moveType] || typeColors.roasted;
+            const hasEffects = move.effects && move.effects.length > 0;
             
             return (
-              <View key={move.id} style={{ width: '48%', position: 'relative' }}>
-                <TouchableOpacity
-                  style={[styles.attackButton, !canUseThisMove && styles.attackButtonDisabled]}
-                  onPress={() => {
-                    if (canUseThisMove) {
-                      sendAction('attack', { moveId: move.id });
-                      setActionMode('main');
-                    } else if (myPendingAction) {
-                      console.log('Você já submeteu uma ação neste turno!');
-                    } else if (!attackValidation.valid) {
-                      console.log('Ataque bloqueado:', attackValidation.reason);
-                    }
-                  }}
-                  onPressIn={() => setHoveredMoveId(move.id)}
-                  onPressOut={() => setHoveredMoveId(null)}
-                  disabled={!canUseThisMove}
+              <TouchableOpacity
+                key={move.id}
+                style={[styles.attackButton, !canUseThisMove && styles.attackButtonDisabled]}
+                onPress={() => {
+                  if (canUseThisMove) {
+                    sendAction('attack', { moveId: move.id });
+                    setActionMode('main');
+                  } else if (myPendingAction) {
+                    console.log('Você já submeteu uma ação neste turno!');
+                  } else if (!attackValidation.valid) {
+                    console.log('Ataque bloqueado:', attackValidation.reason);
+                  }
+                }}
+                onPressIn={() => setHoveredMoveId(move.id)}
+                onPressOut={() => setHoveredMoveId(null)}
+                disabled={!canUseThisMove}
+                activeOpacity={0.7}
+              >
+                <LinearGradient
+                  colors={[typeStyle.primary, typeStyle.secondary]}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                  style={styles.attackButtonGradient}
                 >
-                  <View style={styles.attackButtonContent}>
-                    <Text style={styles.attackTypeIcon}>{icon}</Text>
-                    <Text style={styles.attackButtonText}>{move.name}</Text>
-                    <Text style={styles.movePowerBadge}>PWR: {move.power}</Text>
+                  {/* Header: Tipo e Categoria */}
+                  <View style={styles.attackButtonHeader}>
+                    <View style={styles.attackTypeBadge}>
+                      <Text style={styles.attackTypeIcon}>{typeStyle.icon}</Text>
+                      <Text style={styles.attackTypeText}>{moveType}</Text>
+                    </View>
+                    <View style={styles.attackCategoryBadge}>
+                      <Text style={styles.attackCategoryText}>
+                        {getCategoryEmoji(move.category)} {move.category === 'attack' ? 'ATK' : 'SUP'}
+                      </Text>
+                    </View>
                   </View>
-                </TouchableOpacity>
-                
-                {/* Tooltip do move */}
-                <MoveTooltip move={move} visible={hoveredMoveId === move.id} />
-              </View>
+
+                  {/* Nome do Move */}
+                  <Text style={styles.attackButtonName} numberOfLines={1}>
+                    {move.name}
+                  </Text>
+
+                  {/* Descrição do Move (Nova!) */}
+                  {move.description && (
+                    <Text style={styles.attackDescription} numberOfLines={2}>
+                      {move.description}
+                    </Text>
+                  )}
+
+                  {/* Footer: Poder e Efeitos */}
+                  <View style={styles.attackButtonFooter}>
+                    <View style={styles.attackPowerContainer}>
+                      <Text style={styles.attackPowerLabel}>PWR</Text>
+                      <Text style={styles.attackPowerValue}>{move.power || '—'}</Text>
+                    </View>
+                    {hasEffects && (
+                      <View style={styles.attackEffectIndicator}>
+                        <Text style={styles.attackEffectText}>✨</Text>
+                      </View>
+                    )}
+                  </View>
+                </LinearGradient>
+              </TouchableOpacity>
             );
           })}
         </View>
@@ -1133,39 +1286,44 @@ export default function BattleScreen({
           imageSourceGetter={getCoffeemonImageSource}
         />}
 
-        {/* Painel de Logs - Lado Direito com gradiente completo */}
-        <View style={styles.battleLogContainer}>
-          <LinearGradient
-            colors={[
-              'rgba(0, 0, 0, 0.0)',  // Totalmente transparente na esquerda
-              'rgba(0, 0, 0, 0.01)', // Muito suave início
-              'rgba(0, 0, 0, 0.03)', // Suave transição
-              'rgba(0, 0, 0, 0.08)', // Leve
-              'rgba(0, 0, 0, 0.15)', // Médio-leve
-              'rgba(0, 0, 0, 0.25)', // Transição suave
-              'rgba(0, 0, 0, 0.35)', // Médio
-              'rgba(0, 0, 0, 0.5)',  // Médio-alto
-              'rgba(0, 0, 0, 0.65)', // Mais escuro
-              'rgba(0, 0, 0, 0.8)',  // Quase máximo
-              'rgba(0, 0, 0, 0.9)'   // Máximo na borda direita
-            ]}
-            locations={[0, 0.05, 0.1, 0.15, 0.25, 0.35, 0.45, 0.6, 0.75, 0.85, 1]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 0 }}
-            style={styles.logGradient}
+        {/* Text Box Interativo - Topo da Tela */}
+        {log.length > 0 && (
+          <TouchableOpacity 
+            style={styles.battleTextBox}
+            onPress={handleTextBoxClick}
+            activeOpacity={0.8}
           >
-            <ScrollView
-              style={styles.logScrollView}
-              contentContainerStyle={styles.logScrollContent}
-              showsVerticalScrollIndicator={false}
-            >
-              {log.length === 0 && (
-                <Text style={styles.logEmptyState}>Aguardando primeira ação...</Text>
-              )}
-              {log.slice().reverse().map((message, index) => renderLogEntry(message, index, log.length, myPlayerState, opponentPlayerState))}
-            </ScrollView>
-          </LinearGradient>
-        </View>
+            <View style={styles.textBoxContent}>
+              <Text style={styles.textBoxMessage}>
+                {displayedText}
+                {isTyping && <Text style={styles.textBoxIndicator}>▮</Text>}
+              </Text>
+            </View>
+            
+            {/* Contador com setas integradas */}
+            <View style={styles.textBoxCounterContainer}>
+              <TouchableOpacity 
+                onPress={handlePreviousMessage}
+                disabled={currentMessageIndex === 0}
+                style={styles.textBoxNavButton}
+              >
+                <Text style={[styles.textBoxNavArrow, currentMessageIndex === 0 && styles.textBoxNavArrowDisabled]}>◂</Text>
+              </TouchableOpacity>
+              
+              <Text style={styles.textBoxCounter}>
+                {currentMessageIndex + 1}/{log.length}
+              </Text>
+              
+              <TouchableOpacity 
+                onPress={handleNextMessage}
+                disabled={currentMessageIndex === log.length - 1}
+                style={styles.textBoxNavButton}
+              >
+                <Text style={[styles.textBoxNavArrow, currentMessageIndex === log.length - 1 && styles.textBoxNavArrowDisabled]}>▸</Text>
+              </TouchableOpacity>
+            </View>
+          </TouchableOpacity>
+        )}
       </ImageBackground>
 
       <View style={styles.battleActionsContainer}>
@@ -1229,18 +1387,4 @@ export default function BattleScreen({
       />
     </SafeAreaView>
   );
-} catch (error) {
-  console.error('Error rendering Battle screen:', error);
-  return (
-    <SafeAreaView style={styles.container} edges={['left', 'right', 'bottom']}>
-      <View style={styles.errorContainer}>
-        <Text style={styles.errorText}>Erro durante a batalha</Text>
-        <Text style={styles.errorSubtext}>{error instanceof Error ? error.message : 'Erro desconhecido'}</Text>
-        <TouchableOpacity onPress={onNavigateToMatchmaking} style={styles.returnButton}>
-          <Text style={styles.returnButtonText}>Voltar ao Menu</Text>
-        </TouchableOpacity>
-      </View>
-    </SafeAreaView>
-  );
-}
 }

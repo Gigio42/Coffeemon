@@ -59,10 +59,12 @@ export const styles = StyleSheet.create({
     paddingHorizontal: theme.spacing.sm,
     paddingRight: theme.spacing.md,
     flexDirection: 'row',
-    alignItems: 'flex-start',
+    alignItems: 'center',
+    gap: theme.spacing.lg,
   },
   carouselItem: {
     marginRight: theme.spacing.md,
+    width: 280,
   },
   emptyText: {
     textAlign: 'center',

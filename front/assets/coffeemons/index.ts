@@ -55,6 +55,20 @@ const coffeemonImages: CoffeemonImageMap = {
     hurt: require('./gingerlynn/hurt.png'),
     sleeping: require('./gingerlynn/sleeping.png'),
   },
+  chamomilley: {
+    default: require('./chamomilley/default.png'),
+    back: require('./chamomilley/back.png'),
+    hurt: require('./chamomilley/hurt.png'),
+  },
+  crambeline: {
+    default: require('./crambeline/default.png'),
+    back: require('./crambeline/default.png'), // Usando default como back
+  },
+  jack: {
+    default: require('./Jack/default.png'),
+    back: require('./Jack/back.png'),
+    hurt: require('./Jack/hurt.png'),
+  },
 };
 
 const FALLBACK_KEY = 'jasminelle';

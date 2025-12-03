@@ -42,6 +42,7 @@ export interface Coffeemon {
   canAct: boolean;
   moves: Move[];
   statusEffects?: StatusEffect[];
+  types?: string[];
   // Stats base
   attack?: number;
   defense?: number;

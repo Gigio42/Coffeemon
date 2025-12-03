@@ -27,6 +27,19 @@ const getTypeIcon = (type: string) => {
   return icons[type?.toLowerCase()] || '☕';
 };
 
+const getTypeColor = (type: string) => {
+  const colors: { [key: string]: string } = {
+    floral: '#E91E63',
+    sweet: '#FF6F91',
+    fruity: '#FFC107',
+    nutty: '#8D6E63',
+    roasted: '#FF5722',
+    spicy: '#F44336',
+    sour: '#4CAF50',
+  };
+  return colors[type?.toLowerCase()] || '#8D6E63';
+};
+
 export default function BattleHUD({
   playerState,
   isMe,
@@ -81,15 +94,19 @@ export default function BattleHUD({
   // Tenta obter o tipo da propriedade 'types' (array) ou 'type' (string)
   const monType = (activeMon as any)?.types?.[0] || (activeMon as any)?.type;
   const typeIcon = getTypeIcon(monType);
+  const typeColor = getTypeColor(monType);
   const level = (activeMon as any)?.level ?? (playerState as any)?.level ?? '';
 
   return (
     <View style={[styles.hudContainer, containerStyle]}>
       <View style={hudStyles.card}>
         <View style={hudStyles.topSection}>
+          {/* Fundo do tipo com padrão */}
+          <View style={[hudStyles.typeBackground, { backgroundColor: typeColor }]} />
+          <View style={[hudStyles.typePattern, { backgroundColor: typeColor }]} />
+          
           <View style={hudStyles.nameGroup}>
-            {typeIcon ? <Text style={hudStyles.typeIcon}>{typeIcon}</Text> : null}
-            <Text style={hudStyles.name}>{activeMon.name}</Text>
+            <Text style={hudStyles.name}>{activeMon.name.toUpperCase()}</Text>
           </View>
           <View style={hudStyles.levelGroup}>
             <Text style={hudStyles.levelLabel}>Lv.</Text>
@@ -100,13 +117,22 @@ export default function BattleHUD({
         <View style={hudStyles.barSection}>
           <Text style={hudStyles.hpLabel}>HP</Text>
           <View style={hudStyles.barTrough}>
-            <View style={[hudStyles.barFill, { width: `${hpPercent}%` }]} />
+            <View 
+              style={[
+                hudStyles.barFill, 
+                { 
+                  width: `${hpPercent}%`,
+                  backgroundColor: hpPercent > 50 ? '#10b981' : hpPercent > 20 ? '#f59e0b' : '#ef4444'
+                }
+              ]} 
+            />
           </View>
         </View>
 
         <View style={hudStyles.bottomSection}>
           <View style={hudStyles.hpNumbers}>
             <Text style={hudStyles.hpNumber}>{Math.floor(activeMon.currentHp)}</Text>
+            <Text style={[hudStyles.hpNumber, { fontSize: 11, opacity: 0.7 }]}>/</Text>
             <Text style={hudStyles.hpNumber}>{activeMon.maxHp}</Text>
           </View>
         </View>

@@ -1,7 +1,25 @@
-import { StyleSheet, Dimensions } from 'react-native';
-import { pixelArt } from '../../theme/pixelArt';
+import { StyleSheet, Dimensions } from "react-native";
+import { pixelArt } from "../../theme/pixelArt";
 
-const { width, height } = Dimensions.get('window');
+const { width, height } = Dimensions.get("window");
+
+// Tamanhos responsivos baseados na largura da tela - otimizados para ocupar mais espaço
+const buttonSizes = {
+  attack: Math.min(width * 0.3, 140), // 30% da largura, máx 140px (era 28%, 130px)
+  switch: Math.min(width * 0.24, 95), // 24% da largura, máx 95px (era 22%, 85px)
+  item: Math.min(width * 0.19, 75), // 19% da largura, máx 75px (era 18%, 70px)
+  flee: Math.min(width * 0.19, 75), // 19% da largura, máx 75px (era 18%, 70px)
+};
+
+const buttonPositions = {
+  marginBottom: Math.max(height * 0.09, 10), // Min 10px, 2% da altura
+  marginSide: Math.max(width * 0.03, 12), // Min 12px, 3% da largura (era 5%)
+  spacing: Math.max(width * 0.025, 10), // Min 10px, 2.5% da largura (era 3%)
+  
+  // Posição do botão ROXO (fugir) - ajuste esses valores
+  fleeOffsetX: -260, // Ajuste horizontal extra (positivo = mais à esquerda)
+  fleeOffsetY: -60, // Ajuste vertical extra (positivo = sobe)
+};
 
 export const styles = StyleSheet.create({
   // ========================================
@@ -9,155 +27,217 @@ export const styles = StyleSheet.create({
   // ========================================
   battleContainer: {
     flex: 1,
-    backgroundColor: '#87CEEB',
-    flexDirection: 'column', // Layout vertical
+    backgroundColor: "transparent",
+    flexDirection: "column", // Layout vertical
   },
-  
+
   // ========================================
   // ARENA DE BATALHA - Fundo com Sprites
   // ========================================
   battleArena: {
-    position: 'relative',
-    width: '100%',
+    position: "relative",
+    width: "100%",
     flex: 1, // Ocupa todo espaço restante acima dos botões
-    backgroundColor: '#87CEEB',
+    backgroundColor: "transparent",
   },
-  
+
   // ========================================
   // BARRAS DE HP - Topo da Tela (Estilo Pixel Art)
   // Container Principal - background-color semi-transparente, border-radius, padding
   // ========================================
   hudContainer: {
-    position: 'absolute',
+    position: "absolute",
     zIndex: 30,
   },
-  
+
   // HUD do Player (esquerda superior)
   playerHudPosition: {
-    bottom: '38%',
-    left: '10%',
+    top: "40%",
+    left: "-4%",
   },
-  
+
   // HUD do Oponente (direita superior)
   opponentHudPosition: {
-    top: '18%',
-    right: '12%',
+    bottom: "35%",
+    right: "-4%",
   },
-  
+
   // Container Principal com display: flex e align-items: center
   hudMainContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
   },
-  
+
   // Seção do Ícone - Pixel Art com image-rendering: pixelated
   hudPixelIcon: {
     width: 34,
     height: 34,
     marginRight: 8,
   },
-  
+
   // Bloco de Informações - flex-direction: column
   hudInfoBlock: {
     flex: 1,
-    flexDirection: 'column',
+    flexDirection: "column",
   },
-  
+
   // Rótulo de Texto - font-family pixelada, text-transform: uppercase
   hudNameLabel: {
-    fontFamily: 'monospace',
+    fontFamily: "monospace",
     fontSize: 12,
-    fontWeight: 'bold',
-    color: '#333333',
-    textTransform: 'uppercase',
+    fontWeight: "bold",
+    color: "#333333",
+    textTransform: "uppercase",
     letterSpacing: 1,
     marginBottom: 4,
   },
-  
+
   // Container da Barra de Status - display: flex, flex-direction: row
   hudStatusBarContainer: {
-    flexDirection: 'row',
+    flexDirection: "row",
     height: 12,
     borderWidth: 2,
-    borderColor: '#444444',
-    backgroundColor: 'rgba(224, 224, 224, 0.5)',
+    borderColor: "#444444",
+    backgroundColor: "rgba(224, 224, 224, 0.5)",
     borderRadius: 2,
     paddingHorizontal: 2,
   },
-  
+
   // Segmentos da Barra (Filhos) - flex: 1, height fixo
   hudStatusSegment: {
     flex: 1,
-    height: '100%',
+    height: "100%",
     marginHorizontal: 0.6,
     borderRadius: 1,
   },
-  
+
   // Removido hudHeader, hudIcon, hudName, hudHpBarContainer, hudHpBarSegments, hudHpSegment, hudHpFraction
   // pois agora usamos a nova estrutura
-  
+
   // ========================================
   // SPRITES DOS COFFEEMON
   // ========================================
   coffeemonSpriteContainer: {
-    position: 'absolute',
-    alignItems: 'center',
-    justifyContent: 'center',
+    position: "absolute",
+    alignItems: "center",
+    justifyContent: "center",
     zIndex: 15, // Maior que o battleLogContainer (zIndex: 10)
   },
-  
+
   // Player (esquerda, maior)
   playerSpritePosition: {
-    bottom: '-5%',
-    left: '-9%',
+    bottom: "10%",
+    left: "-20%",
     width: width * 0.75,
     height: height * 0.45,
   },
-  
+
   // Oponente (direita, menor)
   opponentSpritePosition: {
-    top: '25%',
-    right: '8%',
+    top: "30%",
+    right: "8%",
     width: width * 0.4,
-    height: height * 0.32,
+    height: height * 0.28,
   },
-  
+
   pokemonImg: {
-    width: '100%',
-    height: '100%',
+    width: "100%",
+    height: "100%",
   },
-  
+
   // ========================================
   // DAMAGE DISPLAY - Below Health Bar
   // ========================================
   damageText: {
-    position: 'absolute',
+    position: "absolute",
     bottom: -25,
-    left: '50%',
+    left: "50%",
     transform: [{ translateX: -25 }],
     fontSize: 16,
-    fontWeight: 'bold',
-    fontFamily: 'monospace',
-    color: '#FF4444',
-    textShadowColor: 'rgba(0,0,0,0.8)',
+    fontWeight: "bold",
+    fontFamily: "monospace",
+    color: "#FF4444",
+    textShadowColor: "rgba(0,0,0,0.8)",
     textShadowOffset: { width: 1, height: 1 },
     textShadowRadius: 0,
     zIndex: 50,
   },
-  
+
   // ========================================
-  // ÁREA DE LOGS (Lado Direito sem caixa)
+  // TEXT BOX INTERATIVO - Topo da Tela
+  // ========================================
+  battleTextBox: {
+    position: "absolute",
+    top: 50,
+    left: 10,
+    right: 10,
+    zIndex: 40,
+    backgroundColor: "#ffffff",
+    borderRadius: 12,
+    borderWidth: 3,
+    borderColor: "#000000",
+    padding: 18,
+    minHeight: 85,
+    shadowColor: "#000",
+    shadowOffset: { width: 2, height: 2 },
+    shadowOpacity: 0.5,
+    shadowRadius: 4,
+    elevation: 10,
+  },
+  textBoxContent: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingBottom: 20,
+  },
+  textBoxMessage: {
+    flex: 1,
+    fontSize: 14,
+    fontFamily: "monospace",
+    color: "#2a2a2a",
+    lineHeight: 20,
+    letterSpacing: 0.5,
+    textAlign: "center",
+  },
+  textBoxIndicator: {
+    fontSize: 16,
+    color: "#2a2a2a",
+    marginLeft: 8,
+    opacity: 0.7,
+  },
+  textBoxCounterContainer: {
+    position: "absolute",
+    bottom: 6,
+    right: 10,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  textBoxCounter: {
+    fontSize: 11,
+    fontFamily: "monospace",
+    color: "rgba(0, 0, 0, 0.5)",
+    fontWeight: "bold",
+  },
+  textBoxNavButton: {
+    padding: 4,
+  },
+  textBoxNavArrow: {
+    fontSize: 14,
+    color: "#2a2a2a",
+    fontWeight: "bold",
+  },
+  textBoxNavArrowDisabled: {
+    opacity: 0.2,
+  },
+
+  // ========================================
+  // ÁREA DE LOGS (Lado Direito sem caixa) - REMOVIDO
   // ========================================
   battleLogContainer: {
-    position: 'absolute',
-    right: 0,
-    top: '60%', // Ajustado para 60% para garantir que não sobreponha o Coffeemon oponente
-    bottom: 0, // Ocupa até o final da arena (acima dos botões)
-    width: '350%', // Expansão máxima para gradiente
-    zIndex: 10,
-    alignItems: 'flex-end',
+    display: "none",
   },
-  
+
   logGradient: {
     flex: 1,
     paddingTop: 20, // Reduzido para evitar que logs fiquem escondidos
@@ -174,252 +254,336 @@ export const styles = StyleSheet.create({
   logScrollContent: {
     gap: 6,
     flexGrow: 1,
-    justifyContent: 'flex-end',
+    justifyContent: "flex-end",
   },
 
   logEmptyState: {
     fontSize: 11,
-    fontFamily: 'monospace',
-    color: 'rgba(255, 255, 255, 0.7)',
-    textAlign: 'right',
+    fontFamily: "monospace",
+    color: "rgba(255, 255, 255, 0.7)",
+    textAlign: "right",
   },
 
   logEntryRow: {
-    flexDirection: 'column',
-    alignItems: 'flex-end',
+    flexDirection: "column",
+    alignItems: "flex-end",
     marginBottom: 4,
   },
 
   logEntryTextContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'flex-end',
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "flex-end",
   },
 
   logEntryText: {
     fontSize: 12,
-    fontFamily: 'monospace',
-    color: '#FFFFFF',
-    textAlign: 'right',
+    fontFamily: "monospace",
+    color: "#FFFFFF",
+    textAlign: "right",
     letterSpacing: 0.5,
   },
 
   logEntryDamageText: {
-    color: '#FF4B4B',
-    fontWeight: 'bold',
+    color: "#FF4B4B",
+    fontWeight: "bold",
   },
-  
+
   // ========================================
   // CONTAINER DE AÇÕES - Painel Inferior
   // ========================================
   battleActionsContainer: {
-    backgroundColor: '#F5E6D3',
-    paddingHorizontal: 12,
-    paddingTop: 13,
-    height: 330, // Aumentado para garantir que todos os ataques caibam sem cortes
-    borderTopWidth: 3,
-    borderTopColor: '#8B7355',
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
+    paddingHorizontal: 16,
+    paddingBottom: 20,
+    height: 300,
     zIndex: 20,
   },
-  
+
   // ========================================
   // ÁREA DE PROMPT DE AÇÃO
   // ========================================
   actionPromptContainer: {
-    backgroundColor: '#FFFFF0',
-    borderRadius: 6,
-    borderWidth: 3,
-    borderColor: '#333',
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    marginBottom: 8,
-    alignItems: 'center',
-    flexDirection: 'row',
+    display: "none",
   },
   actionPromptText: {
     fontSize: 14,
-    fontWeight: 'bold',
-    fontFamily: 'monospace',
-    color: '#333',
-    textAlign: 'center',
-    textTransform: 'uppercase',
+    fontWeight: "bold",
+    fontFamily: "monospace",
+    color: "#333",
+    textAlign: "center",
+    textTransform: "uppercase",
     flex: 1,
   },
   backButtonSmall: {
-    backgroundColor: '#5A67D8',
+    backgroundColor: "#5A67D8",
     borderRadius: 4,
     borderWidth: 2,
-    borderColor: '#434190',
+    borderColor: "#434190",
     paddingHorizontal: 8,
     paddingVertical: 6,
     marginRight: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     minWidth: 40,
   },
   backButtonIcon: {
     fontSize: 16,
-    fontWeight: 'bold',
-    color: '#FFFFFF',
-    textAlign: 'center',
+    fontWeight: "bold",
+    color: "#FFFFFF",
+    textAlign: "center",
   },
-  
+
   // ========================================
   // GRID DE BOTÕES DE AÇÃO (4 botões principais)
+  // Layout circular flutuante estilo mobile game
   // ========================================
   mainActionsGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
-    marginBottom: 12,
+    position: "relative",
+    width: "100%",
+    height: "100%",
   },
   mainActionButton: {
-    width: '48%',
-    paddingVertical: 14,
-    paddingHorizontal: 12,
-    marginBottom: 8,
-    borderRadius: 6,
-    borderWidth: 3,
-    borderColor: '#333',
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
+    position: "absolute",
+    borderRadius: 1000,
+    borderWidth: 4,
+    borderColor: "rgba(255, 255, 255, 0.8)",
+    flexDirection: "column",
+    alignItems: "center",
+    justifyContent: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.5,
+    shadowRadius: 15,
+    elevation: 12,
   },
-  // Botão Atacar (Vermelho/Laranja)
+  // Botão Atacar (Vermelho) - MAIOR, CANTO INFERIOR DIREITO (movido um pouco para cima)
   attackActionButton: {
-    backgroundColor: '#E57C5C',
-    borderTopWidth: 4,
-    borderLeftWidth: 4,
-    borderTopColor: '#F5A88E',
-    borderLeftColor: '#F5A88E',
+    backgroundColor: "#FF4757",
+    width: buttonSizes.attack,
+    height: buttonSizes.attack,
+    bottom: buttonPositions.marginBottom + height * 0.015, // +1.5% da altura para subir levemente
+    right: buttonPositions.marginSide,
   },
-  // Botão Habilidade Especial (Roxo)
+  // Botão Trocar (Azul) - MÉDIO, À ESQUERDA DO ATACAR (orbitando)
   specialActionButton: {
-    backgroundColor: '#9C7DBF',
-    borderTopWidth: 4,
-    borderLeftWidth: 4,
-    borderTopColor: '#C5A8E0',
-    borderLeftColor: '#C5A8E0',
+    backgroundColor: "#3EDBF0",
+    width: buttonSizes.switch,
+    height: buttonSizes.switch,
+    bottom: buttonPositions.marginBottom + height * 0.005, // Levemente acima (0.5%)
+    right:
+      buttonSizes.attack + buttonPositions.marginSide + buttonPositions.spacing,
   },
-  // Botão Item (Amarelo)
+  // Botão Item (Verde) - PEQUENO, ACIMA E À ESQUERDA (orbitando o atacar)
   itemActionButton: {
-    backgroundColor: '#F5D663',
-    borderTopWidth: 4,
-    borderLeftWidth: 4,
-    borderTopColor: '#FFE896',
-    borderLeftColor: '#FFE896',
+    backgroundColor: "#26D07C",
+    width: buttonSizes.item,
+    height: buttonSizes.item,
+    bottom: buttonSizes.attack * 0.85 + buttonPositions.marginBottom, // Acima e à esquerda do atacar
+    right:
+      buttonSizes.attack + buttonPositions.marginSide - buttonSizes.item * 0.1, // À esquerda orbitando
   },
-  // Botão Fugir (Azul)
+  // Botão Fugir (Roxo) - PEQUENO, ENTRE O AZUL E O VERMELHO (embaixo)
   fleeActionButton: {
-    backgroundColor: '#7DB8D9',
-    borderTopWidth: 4,
-    borderLeftWidth: 4,
-    borderTopColor: '#A8D5ED',
-    borderLeftColor: '#A8D5ED',
+    backgroundColor: "#A29BFE",
+    width: buttonSizes.flee,
+    height: buttonSizes.flee,
+    bottom: buttonPositions.marginBottom + buttonPositions.fleeOffsetY,
+    right: buttonSizes.attack + buttonPositions.marginSide + buttonPositions.spacing + buttonSizes.switch + buttonPositions.spacing + buttonPositions.fleeOffsetX,
   },
   actionButtonDisabled: {
-    opacity: 0.5,
-    backgroundColor: '#C0C0C0',
-    borderTopColor: '#D0D0D0',
-    borderLeftColor: '#D0D0D0',
+    opacity: 0.3,
+    backgroundColor: "#CCCCCC",
   },
   actionButtonContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
+    flexDirection: "column",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  actionButtonIconImage: {
+    width: Math.min(width * 0.12, 50),
+    height: Math.min(width * 0.12, 50),
+    tintColor: "#FFFFFF",
   },
   actionButtonIcon: {
-    fontSize: 24,
-    marginRight: pixelArt.spacing.sm,
+    fontSize: Math.min(width * 0.12, 48),
   },
   actionButtonText: {
-    ...pixelArt.typography.pixelButton,
-    fontSize: 13,
-    color: '#FFFFFF',
-    textShadowColor: 'rgba(0,0,0,0.5)',
-    textShadowOffset: { width: 1, height: 1 },
-    textShadowRadius: 0,
+    display: "none",
   },
-  
+
   // ========================================
-  // GRID DE ATAQUES (quando modo ataque ativo)
+  // GRID DE ATAQUES - Estilo Pokémon Moderno
   // ========================================
   attacksContainer: {
-    marginBottom: pixelArt.spacing.md,
+    flex: 1,
+    justifyContent: "center",
   },
   attacksGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "space-between",
+    gap: 10,
+    paddingHorizontal: 4,
   },
   attackButton: {
-    marginBottom: 8,
-    borderRadius: pixelArt.borders.radiusMedium,
-    paddingVertical: 10,
-    paddingHorizontal: pixelArt.spacing.md,
-    backgroundColor: '#9C7DBF',
-    borderWidth: pixelArt.borders.widthBold,
-    borderColor: '#333',
-    borderTopWidth: 4,
-    borderLeftWidth: 4,
-    borderTopColor: '#C5A8E0',
-    borderLeftColor: '#C5A8E0',
-    alignItems: 'center',
-    justifyContent: 'center',
+    width: "48%",
+    minHeight: 115,
+    borderRadius: 14,
+    overflow: "hidden",
+    borderWidth: 3,
+    borderColor: "#333",
+    backgroundColor: "#FFFFFF",
+    ...pixelArt.shadows.card,
+  },
+  emptySlot: {
+    width: "48%",
+    minHeight: 115,
+    borderRadius: 14,
+    borderWidth: 3,
+    borderStyle: "dashed",
+    borderColor: "#666",
+    backgroundColor: "rgba(255,255,255,0.05)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  emptySlotText: {
+    ...pixelArt.typography.pixelBody,
+    fontSize: 12,
+    color: "#666",
+    opacity: 0.5,
   },
   attackButtonDisabled: {
-    backgroundColor: '#C0C0C0',
-    opacity: 0.5,
-    borderTopColor: '#D0D0D0',
-    borderLeftColor: '#D0D0D0',
+    opacity: 0.4,
+    borderColor: "#999",
   },
-  attackButtonContent: {
-    alignItems: 'center',
-    justifyContent: 'center',
+  attackButtonGradient: {
+    flex: 1,
+    padding: 12,
+    justifyContent: "space-between",
+  },
+  attackButtonHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
+    marginBottom: 6,
+  },
+  attackTypeBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 6,
+    borderWidth: 2,
+    borderColor: "rgba(255,255,255,0.4)",
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
   },
   attackTypeIcon: {
-    fontSize: 24,
-    marginBottom: pixelArt.spacing.xs,
+    fontSize: 16,
   },
-  attackButtonText: {
-    ...pixelArt.typography.pixelButton,
-    fontSize: 12,
-    color: '#FFFFFF',
-    textShadowColor: 'rgba(0,0,0,0.5)',
-    textShadowOffset: { width: 1, height: 1 },
-    textShadowRadius: 0,
-  },
-  movePowerBadge: {
+  attackTypeText: {
     ...pixelArt.typography.pixelBody,
     fontSize: 10,
-    color: '#FFFFFF',
-    marginTop: pixelArt.spacing.xs,
-    opacity: 0.9,
+    color: "#FFFFFF",
+    fontWeight: "bold",
+    textTransform: "uppercase",
+    textShadowColor: "rgba(0,0,0,0.3)",
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 2,
   },
-  
+  attackCategoryBadge: {
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+    backgroundColor: "rgba(0,0,0,0.2)",
+  },
+  attackCategoryText: {
+    ...pixelArt.typography.pixelBody,
+    fontSize: 8,
+    color: "#FFFFFF",
+    fontWeight: "bold",
+  },
+  attackButtonName: {
+    ...pixelArt.typography.pixelSubtitle,
+    fontSize: 16,
+    color: "#FFFFFF",
+    fontWeight: "bold",
+    marginVertical: 6,
+    textShadowColor: "rgba(0,0,0,0.5)",
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 2,
+  },
+  attackDescription: {
+    ...pixelArt.typography.pixelBody,
+    fontSize: 10,
+    color: "rgba(255,255,255,0.9)",
+    lineHeight: 14,
+    marginBottom: 6,
+  },
+  attackButtonFooter: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  attackPowerContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    backgroundColor: "rgba(0,0,0,0.15)",
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+  },
+  attackPowerLabel: {
+    ...pixelArt.typography.pixelBody,
+    fontSize: 9,
+    color: "#FFFFFF",
+    fontWeight: "bold",
+  },
+  attackPowerValue: {
+    ...pixelArt.typography.pixelButton,
+    fontSize: 14,
+    color: "#FFFFFF",
+    fontWeight: "bold",
+  },
+  attackEffectIndicator: {
+    backgroundColor: "rgba(255,255,255,0.3)",
+    paddingHorizontal: 6,
+    paddingVertical: 3,
+    borderRadius: 4,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.5)",
+  },
+  attackEffectText: {
+    fontSize: 10,
+  },
+
   // ========================================
   // BOTÕES DE TROCA - Pixel Art Cards
   // ========================================
   switchGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "space-between",
   },
   switchButton: {
-    width: '48%',
-    backgroundColor: '#FFFFFF',
+    width: "48%",
+    backgroundColor: "#FFFFFF",
     borderRadius: pixelArt.borders.radiusMedium,
     paddingVertical: pixelArt.spacing.md,
     paddingHorizontal: pixelArt.spacing.sm,
     marginBottom: pixelArt.spacing.sm,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     minHeight: 120,
     borderWidth: pixelArt.borders.widthBold,
-    borderColor: '#333',
+    borderColor: "#333",
   },
   switchButtonDisabled: {
-    backgroundColor: '#C0C0C0',
+    backgroundColor: "#C0C0C0",
     opacity: 0.5,
   },
   switchButtonImage: {
@@ -430,42 +594,42 @@ export const styles = StyleSheet.create({
   switchButtonName: {
     ...pixelArt.typography.pixelSubtitle,
     fontSize: 12,
-    color: '#333',
-    textAlign: 'center',
+    color: "#333",
+    textAlign: "center",
     marginBottom: pixelArt.spacing.xs,
   },
   switchButtonHpBar: {
-    width: '90%',
+    width: "90%",
     height: 10,
-    backgroundColor: '#E0E0E0',
+    backgroundColor: "#E0E0E0",
     borderRadius: pixelArt.borders.radiusSmall,
     borderWidth: 2,
-    borderColor: '#333',
-    overflow: 'hidden',
+    borderColor: "#333",
+    overflow: "hidden",
     marginTop: pixelArt.spacing.xs,
   },
   switchButtonHpFill: {
-    height: '100%',
-    backgroundColor: '#4CAF50',
+    height: "100%",
+    backgroundColor: "#4CAF50",
   },
   switchButtonHpText: {
     ...pixelArt.typography.pixelBody,
     fontSize: 10,
-    color: '#666',
+    color: "#666",
     marginTop: 4,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
-  
+
   // ========================================
   // BOTÕES INFERIORES - Pixel Art
   // ========================================
   bottomButtonsContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginTop: 'auto',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginTop: "auto",
   },
   bagButton: {
-    width: '48%',
+    width: "48%",
     ...pixelArt.buttons.action,
     opacity: 0.5,
   },
@@ -473,12 +637,12 @@ export const styles = StyleSheet.create({
     ...pixelArt.buttons.text,
   },
   runButton: {
-    width: '48%',
+    width: "48%",
     backgroundColor: pixelArt.buttons.danger.backgroundColor,
     borderRadius: pixelArt.buttons.danger.borderRadius,
     paddingVertical: pixelArt.buttons.danger.paddingVertical,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     borderTopWidth: pixelArt.buttons.danger.borderTopWidth,
     borderLeftWidth: pixelArt.buttons.danger.borderLeftWidth,
     borderTopColor: pixelArt.buttons.danger.borderTopColor,
@@ -492,27 +656,27 @@ export const styles = StyleSheet.create({
   runButtonText: {
     ...pixelArt.buttons.text,
   },
-  
+
   // ========================================
   // OVERLAY DE FIM DE BATALHA
   // ========================================
   battleEndOverlay: {
-    position: 'absolute',
+    position: "absolute",
     top: 0,
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: 'rgba(0, 0, 0, 0.85)',
+    backgroundColor: "rgba(0, 0, 0, 0.85)",
     zIndex: 1000,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
   battleEndCard: {
     backgroundColor: pixelArt.colors.cardInnerBg,
     borderRadius: pixelArt.borders.radiusMedium,
     padding: pixelArt.spacing.xxl,
-    alignItems: 'center',
-    width: '85%',
+    alignItems: "center",
+    width: "85%",
     maxWidth: 400,
     borderWidth: pixelArt.borders.widthBold,
     borderTopColor: pixelArt.colors.borderLight,
@@ -525,21 +689,21 @@ export const styles = StyleSheet.create({
     ...pixelArt.typography.pixelTitle,
     fontSize: 20,
     color: pixelArt.colors.sparkleColor,
-    textAlign: 'center',
+    textAlign: "center",
     marginBottom: pixelArt.spacing.lg,
   },
   battleEndWinner: {
     ...pixelArt.typography.pixelSubtitle,
     fontSize: 16,
     color: pixelArt.colors.textDark,
-    textAlign: 'center',
+    textAlign: "center",
     marginBottom: pixelArt.spacing.md,
   },
   battleEndSubtext: {
     ...pixelArt.typography.pixelBody,
     fontSize: 12,
     color: pixelArt.colors.textLight,
-    textAlign: 'center',
+    textAlign: "center",
     marginBottom: pixelArt.spacing.xl,
   },
   battleEndButton: {
@@ -549,23 +713,23 @@ export const styles = StyleSheet.create({
   battleEndButtonText: {
     ...pixelArt.buttons.text,
   },
-  
+
   // ========================================
   // MODAL DE SELEÇÃO - Pixel Art
   // ========================================
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.7)',
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: "rgba(0, 0, 0, 0.7)",
+    justifyContent: "center",
+    alignItems: "center",
   },
   modalContent: {
     backgroundColor: pixelArt.colors.cardInnerBg,
     borderRadius: pixelArt.borders.radiusMedium,
     padding: pixelArt.spacing.lg,
-    width: '90%',
+    width: "90%",
     maxWidth: 600,
-    maxHeight: '80%',
+    maxHeight: "80%",
     borderWidth: pixelArt.borders.widthBold,
     borderTopColor: pixelArt.colors.borderLight,
     borderLeftColor: pixelArt.colors.borderLight,
@@ -577,7 +741,7 @@ export const styles = StyleSheet.create({
     ...pixelArt.typography.pixelTitle,
     fontSize: 16,
     color: pixelArt.colors.textDark,
-    textAlign: 'center',
+    textAlign: "center",
     marginBottom: pixelArt.spacing.lg,
   },
   modalScroll: {
@@ -592,18 +756,18 @@ export const styles = StyleSheet.create({
     borderRightColor: pixelArt.colors.borderDark,
     borderRadius: pixelArt.borders.radiusMedium,
     padding: pixelArt.spacing.md,
-    backgroundColor: '#f9f9f9',
+    backgroundColor: "#f9f9f9",
   },
   teamColumnTitle: {
     ...pixelArt.typography.pixelSubtitle,
     fontSize: 14,
     color: pixelArt.colors.textLight,
-    textAlign: 'center',
+    textAlign: "center",
     marginBottom: pixelArt.spacing.md,
   },
   teamCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     backgroundColor: pixelArt.colors.cardInnerBg,
     borderWidth: pixelArt.borders.widthThick,
     borderTopColor: pixelArt.colors.borderLight,
@@ -617,10 +781,10 @@ export const styles = StyleSheet.create({
   },
   teamCardDisabled: {
     opacity: 0.5,
-    backgroundColor: '#f0f0f0',
+    backgroundColor: "#f0f0f0",
   },
   teamCardOpponent: {
-    backgroundColor: '#f8f9fa',
+    backgroundColor: "#f8f9fa",
   },
   teamCardImage: {
     width: 60,
@@ -641,7 +805,7 @@ export const styles = StyleSheet.create({
     fontSize: 11,
     color: pixelArt.colors.textLight,
   },
-  
+
   // ========================================
   // TELAS DE ERRO E LOADING
   // ========================================
@@ -651,8 +815,8 @@ export const styles = StyleSheet.create({
   },
   errorContainer: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     padding: pixelArt.spacing.xl,
   },
   errorText: {
@@ -660,27 +824,27 @@ export const styles = StyleSheet.create({
     fontSize: 16,
     color: pixelArt.colors.error,
     marginBottom: pixelArt.spacing.sm,
-    textAlign: 'center',
+    textAlign: "center",
   },
   errorSubtext: {
     ...pixelArt.typography.pixelBody,
     fontSize: 12,
     color: pixelArt.colors.textLight,
     marginBottom: pixelArt.spacing.lg,
-    textAlign: 'center',
+    textAlign: "center",
   },
   loadingText: {
     ...pixelArt.typography.pixelTitle,
     fontSize: 18,
     color: pixelArt.colors.sparkleColor,
     marginBottom: pixelArt.spacing.sm,
-    textAlign: 'center',
+    textAlign: "center",
   },
   loadingSubtext: {
     ...pixelArt.typography.pixelBody,
     fontSize: 12,
     color: pixelArt.colors.textLight,
-    textAlign: 'center',
+    textAlign: "center",
   },
   returnButton: {
     ...pixelArt.buttons.primary,
@@ -690,22 +854,22 @@ export const styles = StyleSheet.create({
   returnButtonText: {
     ...pixelArt.buttons.text,
   },
-  
+
   // ========================================
   // SWITCH MODE - Cards de Troca
   // ========================================
   switchCandidateCard: {
-    backgroundColor: 'rgba(245, 230, 211, 0.95)',
+    backgroundColor: "rgba(245, 230, 211, 0.95)",
     borderRadius: 12,
     borderWidth: 3,
-    borderColor: '#8B7355',
+    borderColor: "#8B7355",
     padding: 12,
-    alignItems: 'center',
+    alignItems: "center",
     minHeight: 160,
   },
   switchCandidateCardDisabled: {
-    backgroundColor: 'rgba(150, 150, 150, 0.5)',
-    borderColor: '#666',
+    backgroundColor: "rgba(150, 150, 150, 0.5)",
+    borderColor: "#666",
   },
   switchCandidateImage: {
     width: 80,
@@ -715,22 +879,22 @@ export const styles = StyleSheet.create({
   switchCandidateName: {
     ...pixelArt.typography.pixelBody,
     fontSize: 12,
-    fontWeight: 'bold',
-    color: '#333',
-    textAlign: 'center',
+    fontWeight: "bold",
+    color: "#333",
+    textAlign: "center",
     marginBottom: 4,
   },
   switchCandidateHp: {
     ...pixelArt.typography.pixelBody,
     fontSize: 10,
-    color: '#666',
-    textAlign: 'center',
+    color: "#666",
+    textAlign: "center",
   },
   switchCandidateReason: {
     ...pixelArt.typography.pixelBody,
     fontSize: 9,
-    color: '#ff6b6b',
-    textAlign: 'center',
+    color: "#ff6b6b",
+    textAlign: "center",
     marginTop: 4,
   },
 
@@ -745,72 +909,70 @@ export const styles = StyleSheet.create({
     gap: 8,
   },
   itemButton: {
-    backgroundColor: 'rgba(44, 44, 46, 0.95)',
+    backgroundColor: "rgba(44, 44, 46, 0.95)",
     borderRadius: 12,
     borderWidth: 3,
     padding: 12,
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
   },
   itemButtonDisabled: {
     opacity: 0.5,
-    borderColor: '#4A4A4C',
+    borderColor: "#4A4A4C",
   },
   itemButtonContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 12,
     flex: 1,
   },
   itemIcon: {
     fontSize: 32,
     width: 40,
-    textAlign: 'center',
+    textAlign: "center",
   },
   itemTextContainer: {
     flex: 1,
   },
   itemName: {
     fontSize: 16,
-    fontWeight: 'bold',
-    color: '#FFFFFF',
+    fontWeight: "bold",
+    color: "#FFFFFF",
     marginBottom: 2,
   },
   itemNameDisabled: {
-    color: '#8E8E93',
+    color: "#8E8E93",
   },
   itemDescription: {
     fontSize: 12,
-    color: '#AEAEB2',
+    color: "#AEAEB2",
   },
   itemDescriptionDisabled: {
-    color: '#636366',
+    color: "#636366",
   },
   itemQuantityBadge: {
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 12,
     minWidth: 40,
-    alignItems: 'center',
+    alignItems: "center",
   },
   itemQuantityText: {
     fontSize: 14,
-    fontWeight: 'bold',
-    color: '#FFFFFF',
+    fontWeight: "bold",
+    color: "#FFFFFF",
   },
   itemOutOfStockBadge: {
-    backgroundColor: '#FF3B30',
+    backgroundColor: "#FF3B30",
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 12,
     minWidth: 40,
-    alignItems: 'center',
+    alignItems: "center",
   },
   itemOutOfStockText: {
     fontSize: 14,
-    fontWeight: 'bold',
-    color: '#FFFFFF',
+    fontWeight: "bold",
+    color: "#FFFFFF",
   },
 });
-
-
