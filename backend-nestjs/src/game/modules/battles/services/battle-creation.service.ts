@@ -110,6 +110,7 @@ export class BattleCreationService {
       activeCoffeemonIndex: null,
       hasSelectedCoffeemon: false,
       inventory: player.inventory || {},
+      hasUsedItem: false,
       coffeemons: team.map((c): CoffeemonState => {
         const calculatedStats = this.statsCalculator.calculateAllStats(c.coffeemon, c.level, c.evs);
         const maxHp = calculatedStats.hp;

@@ -119,6 +119,7 @@ export class UseItemAction implements IBattleAction<BattleActionType.USE_ITEM> {
 
     // Decrementar também no estado da batalha (memória)
     player.inventory[itemId]--;
+    player.hasUsedItem = true;
 
     const targetIndex = targetCoffeemonIndex ?? player.activeCoffeemonIndex;
     if (targetIndex === null) {
@@ -136,15 +137,15 @@ export class UseItemAction implements IBattleAction<BattleActionType.USE_ITEM> {
     // Adicionar notificação para atualizar o inventário no frontend
     notifications.push({
       eventKey: 'ITEM_CONSUMED',
-      payload: { 
-        playerId, 
-        itemId, 
-        remainingQuantity: player.inventory[itemId] 
+      payload: {
+        playerId,
+        itemId,
+        remainingQuantity: player.inventory[itemId],
       },
     });
 
     return {
-      advanceTurn: true,
+      advanceTurn: false,
       notifications: notifications,
     };
   }

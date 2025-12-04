@@ -47,6 +47,17 @@ export class BattlePhaseManager {
       return battleState;
     }
 
+    if (action.actionType === BattleActionType.USE_ITEM) {
+      const updatedState = await this.actionExecutor.execute(
+        battleState,
+        playerId,
+        action.actionType,
+        action.payload
+      );
+
+      return updatedState;
+    }
+
     // SELECTION
     if (battleState.turnPhase === TurnPhase.SELECTION) {
       return this.handleSelectionPhase(battleState, playerId, action);
@@ -154,6 +165,9 @@ export class BattlePhaseManager {
     if (state.battleStatus === BattleStatus.FINISHED) {
       return state;
     }
+
+    state.player1.hasUsedItem = false;
+    state.player2.hasUsedItem = false;
 
     state.turnPhase = TurnPhase.END_OF_TURN;
     const allCoffeemons = [...state.player1.coffeemons, ...state.player2.coffeemons];

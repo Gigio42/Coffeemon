@@ -245,6 +245,13 @@ export class BattleValidatorService {
   ): Promise<ValidationResult | null> {
     const { itemId, targetCoffeemonIndex } = payload;
 
+    if (player.hasUsedItem) {
+      return this.fail('ACTION_ERROR', {
+        playerId,
+        error: 'Você já usou um item neste turno!',
+      });
+    }
+
     if (!player.inventory[itemId] || player.inventory[itemId] <= 0) {
       return this.fail('ACTION_ERROR', {
         playerId,
