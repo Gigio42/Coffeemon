@@ -1,8 +1,9 @@
-import React from 'react';
-import { View, TouchableOpacity, Text, StyleSheet } from 'react-native';
-import { theme } from '../../theme/theme';
+import React from "react";
+import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { battleIcons } from "../../../assets/iconsv2";
+import { theme } from "../../theme/theme";
 
-export type NavScreen = 'shop' | 'team' | 'battle' | 'catalog' | 'cafe';
+export type NavScreen = "shop" | "team" | "battle" | "catalog" | "cafe";
 
 interface BottomNavProps {
   activeScreen: NavScreen;
@@ -11,48 +12,61 @@ interface BottomNavProps {
 
 const styles = StyleSheet.create({
   container: {
-    flexDirection: 'row',
+    flexDirection: "row",
     backgroundColor: theme.colors.surface.base,
-    borderTopWidth: 1,
+    borderTopWidth: 2,
     borderTopColor: theme.colors.border.light,
-    paddingBottom: theme.spacing.md,
-    paddingTop: theme.spacing.sm,
-    paddingHorizontal: theme.spacing.xs,
+    paddingBottom: theme.spacing.lg,
+    paddingTop: theme.spacing.md,
+    paddingHorizontal: theme.spacing.sm,
     ...theme.shadows.lg,
   },
   navItem: {
     flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: theme.spacing.sm,
-    paddingHorizontal: theme.spacing.xs,
-    borderRadius: theme.radius.lg,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: theme.spacing.md,
+    paddingHorizontal: theme.spacing.sm,
+    borderRadius: theme.radius.xl,
+    marginHorizontal: 2,
   },
   navItemActive: {
     backgroundColor: theme.colors.accent.primary,
+    shadowColor: theme.colors.accent.primary,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.5,
+    shadowRadius: 8,
+    elevation: 6,
+    transform: [{ scale: 1.05 }],
   },
   icon: {
-    fontSize: 22,
-    marginBottom: 4,
+    width: 32,
+    height: 32,
+    marginBottom: 6,
   },
   label: {
     fontSize: theme.typography.size.xs,
     color: theme.colors.text.secondary,
-    fontWeight: theme.typography.weight.medium,
+    fontWeight: theme.typography.weight.semiBold,
+    letterSpacing: 0.3,
   },
   labelActive: {
     color: theme.colors.text.inverse,
     fontWeight: theme.typography.weight.bold,
+    letterSpacing: 0.5,
   },
 });
 
-export const BottomNav: React.FC<BottomNavProps> = ({ activeScreen, onNavigate }) => {
-  const navItems: { key: NavScreen; label: string; icon: string }[] = [
-    { key: 'shop', label: 'Shop', icon: '🛒' },
-    { key: 'team', label: 'Time', icon: '👥' },
-    { key: 'battle', label: 'Batalha', icon: '⚔️' },
-    { key: 'catalog', label: 'Catálogo', icon: '📖' },
-    { key: 'cafe', label: 'Café', icon: '☕' },
+export const BottomNav: React.FC<BottomNavProps> = ({
+  activeScreen,
+  onNavigate,
+}) => {
+  const navItems: { key: NavScreen; label: string; icon: any }[] = [
+    { key: "shop", label: "Shop", icon: battleIcons.marketplace },
+    { key: "team", label: "Time", icon: battleIcons.paw },
+    { key: "battle", label: "Batalha", icon: battleIcons.versus },
+    { key: "catalog", label: "Catálogo", icon: battleIcons.card },
+    { key: "cafe", label: "Café", icon: battleIcons.coffeeBreak },
   ];
 
   return (
@@ -67,7 +81,19 @@ export const BottomNav: React.FC<BottomNavProps> = ({ activeScreen, onNavigate }
           onPress={() => onNavigate(item.key)}
           activeOpacity={0.8}
         >
-          <Text style={styles.icon}>{item.icon}</Text>
+          <Image
+            source={item.icon}
+            style={[
+              styles.icon,
+              {
+                tintColor:
+                  activeScreen === item.key
+                    ? theme.colors.text.inverse
+                    : theme.colors.text.secondary,
+              },
+            ]}
+            resizeMode="contain"
+          />
           <Text
             style={[
               styles.label,

@@ -1,4 +1,4 @@
-import { StyleSheet, Dimensions } from "react-native";
+import { Dimensions, StyleSheet } from "react-native";
 import { pixelArt } from "../../theme/pixelArt";
 
 const { width, height } = Dimensions.get("window");
@@ -15,7 +15,7 @@ const buttonPositions = {
   marginBottom: Math.max(height * 0.09, 10), // Min 10px, 2% da altura
   marginSide: Math.max(width * 0.03, 12), // Min 12px, 3% da largura (era 5%)
   spacing: Math.max(width * 0.025, 10), // Min 10px, 2.5% da largura (era 3%)
-  
+
   // Posição do botão ROXO (fugir) - ajuste esses valores
   fleeOffsetX: -260, // Ajuste horizontal extra (positivo = mais à esquerda)
   fleeOffsetY: -60, // Ajuste vertical extra (positivo = sobe)
@@ -52,13 +52,13 @@ export const styles = StyleSheet.create({
 
   // HUD do Player (esquerda superior)
   playerHudPosition: {
-    top: "40%",
+    top: "70%",
     left: "-4%",
   },
 
   // HUD do Oponente (direita superior)
   opponentHudPosition: {
-    bottom: "35%",
+    bottom: "40%",
     right: "-4%",
   },
 
@@ -126,7 +126,7 @@ export const styles = StyleSheet.create({
 
   // Player (esquerda, maior)
   playerSpritePosition: {
-    bottom: "10%",
+    bottom: "20%",
     left: "-20%",
     width: width * 0.75,
     height: height * 0.45,
@@ -392,7 +392,13 @@ export const styles = StyleSheet.create({
     width: buttonSizes.flee,
     height: buttonSizes.flee,
     bottom: buttonPositions.marginBottom + buttonPositions.fleeOffsetY,
-    right: buttonSizes.attack + buttonPositions.marginSide + buttonPositions.spacing + buttonSizes.switch + buttonPositions.spacing + buttonPositions.fleeOffsetX,
+    right:
+      buttonSizes.attack +
+      buttonPositions.marginSide +
+      buttonPositions.spacing +
+      buttonSizes.switch +
+      buttonPositions.spacing +
+      buttonPositions.fleeOffsetX,
   },
   actionButtonDisabled: {
     opacity: 0.3,

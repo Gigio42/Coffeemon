@@ -9,6 +9,9 @@ export const battleIcons = {
   paw: require('./paw.png'),
   beans: require('./coffee-beans.png'),
   coach: require('./coach.png'),
+  versus: require('./versus.png'),
+  coffeeBreak: require('./coffee-break.png'),
+  marketplace: require('./shopping-center.png'),
 };
 
 export type BattleIconName = keyof typeof battleIcons;

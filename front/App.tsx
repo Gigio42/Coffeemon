@@ -170,6 +170,11 @@ export default function App() {
             setCurrentScreen(Screen.BATTLE);
           }}
           
+          // Callback chamado quando o usuário clica em "Café"
+          onNavigateToEcommerce={() => {
+            setCurrentScreen(Screen.ECOMMERCE);
+          }}
+          
           // Passa o componente MatchmakingScreen como prop
           MatchmakingScreen={MatchmakingScreen}
         />
