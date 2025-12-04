@@ -91,12 +91,6 @@ export class BattlePhaseManager {
 
     if (updatedState.player1.hasSelectedCoffeemon && updatedState.player2.hasSelectedCoffeemon) {
       updatedState.turnPhase = TurnPhase.SUBMISSION;
-      updatedState.events.push(
-        this.eventManager.createEvent({
-          eventKey: 'TURN_END',
-          payload: { turn: updatedState.turn },
-        })
-      );
     }
 
     return updatedState;

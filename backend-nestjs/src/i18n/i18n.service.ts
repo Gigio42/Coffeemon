@@ -5,6 +5,36 @@ import * as path from 'path';
 @Injectable()
 export class I18nService implements OnModuleInit {
   private translations: Record<string, Record<string, string>> = {};
+  private effectTypeTranslations: Record<string, Record<string, string>> = {
+    'pt-br': {
+      burn: 'Queimadura',
+      poison: 'Envenenamento',
+      sleep: 'Sono',
+      freeze: 'Congelamento',
+      attackUp: 'Aumento de Ataque',
+      defenseUp: 'Aumento de Defesa',
+      defenseDown: 'Redução de Defesa',
+      fixedHeal: 'um efeito de cura',
+      lifesteal: 'Roubo de Vida',
+      item: 'um item',
+      revive: 'revitalização',
+      status: 'um efeito de status',
+    },
+    en: {
+      burn: 'Burn',
+      poison: 'Poison',
+      sleep: 'Sleep',
+      freeze: 'Freeze',
+      attackUp: 'Attack Up',
+      defenseUp: 'Defense Up',
+      defenseDown: 'Defense Down',
+      fixedHeal: 'a healing effect',
+      lifesteal: 'Lifesteal',
+      item: 'an item',
+      revive: 'revival',
+      status: 'a status effect',
+    },
+  };
 
   onModuleInit() {
     this.loadTranslations();
@@ -36,8 +66,15 @@ export class I18nService implements OnModuleInit {
     let message = langFile[key] || `Missing translation for key: ${key}`;
 
     if (payload) {
-      for (const prop in payload) {
-        message = message.replace(`{${prop}}`, payload[prop]);
+      const translatedPayload = { ...payload };
+      if (payload.effectType) {
+        const effectLang =
+          this.effectTypeTranslations[lang] || this.effectTypeTranslations['pt-br'];
+        translatedPayload.effectType = effectLang[payload.effectType] || payload.effectType;
+      }
+
+      for (const prop in translatedPayload) {
+        message = message.replace(`{${prop}}`, translatedPayload[prop]);
       }
     }
 

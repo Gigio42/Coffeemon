@@ -29,7 +29,7 @@ export class StatusEffectsService {
 
     notifications.push({
       eventKey: 'STATUS_APPLIED',
-      payload: { targetName: target.name, effectType: effectLogic.name },
+      payload: { targetName: target.name, effectType: effectToApply.type },
     });
 
     if (effectLogic.onApply) {
@@ -66,7 +66,7 @@ export class StatusEffectsService {
 
     notifications.push({
       eventKey: 'STATUS_REMOVED',
-      payload: { coffeemonName: target.name, effectType: effectLogic.name },
+      payload: { coffeemonName: target.name, effectType: effectType },
     });
 
     return { removed: true, notifications };
@@ -96,7 +96,7 @@ export class StatusEffectsService {
 
         notifications.push({
           eventKey: 'STATUS_REMOVED',
-          payload: { coffeemonName: coffeemon.name, effectType: effectLogic.name },
+          payload: { coffeemonName: coffeemon.name, effectType: activeEffect.type },
         });
       } else {
         remainingEffects.push(activeEffect);

@@ -10,11 +10,11 @@
     "SWITCH_FAILED_INVALID_INDEX": "Invalid Coffeemon index!",
     "ATTACK_HIT": "{attackerName} attacks {targetName} dealing {damage} damage!",
     "ATTACK_MISS": "{attackerName} tried to attack {targetName}, but the move missed!",
-    "ATTACK_CRIT": "Critical hit! {attackerName} strikes {targetName} with a devastating blow!",
+    "ATTACK_CRIT": "Critical hit! {attackerName} strikes with a devastating blow!",
     "ATTACK_BLOCKED": "{targetName} managed to block part of the attack!",
     "COFFEEMON_FAINTED": "{coffeemonName} has been defeated and can no longer fight!",
-    "STATUS_APPLIED": "{targetName} is now suffering from {effectType}!",
+    "STATUS_APPLIED": "{targetName} was affected by {effectType}!",
     "STATUS_DAMAGE": "{coffeemonName} takes {damage} damage from {effectType}!",
-    "STATUS_REMOVED": "{coffeemonName} has recovered from {effectType} and is ready to act!",
-    "STATUS_HEAL": "{coffeemonName} recovered {amount} hit points!"
+    "STATUS_REMOVED": "The {effectType} effect on {coffeemonName} has ended!",
+    "STATUS_HEAL": "{coffeemonName} recovered {amount} HP thanks to {effectType}!"
   }

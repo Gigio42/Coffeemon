@@ -1550,7 +1550,7 @@ export default function BattleScreen({
             <View style={styles.textBoxContent}>
               <Text style={styles.textBoxMessage}>
                 {displayedText}
-                {isTyping && <Text style={styles.textBoxIndicator}>▮</Text>}
+              {isTyping && <Text style={styles.textBoxIndicator}>▮</Text>}
               </Text>
             </View>
 
