@@ -50,5 +50,10 @@
   { "coffeemonId": 9, "moveId": 17, "learnMethod": "start", "levelLearned": 1 },
   { "coffeemonId": 9, "moveId": 26, "learnMethod": "level_up", "levelLearned": 7 },
   { "coffeemonId": 9, "moveId": 3, "learnMethod": "level_up", "levelLearned": 11 },
-  { "coffeemonId": 9, "moveId": 16, "learnMethod": "level_up", "levelLearned": 15 }
+  { "coffeemonId": 9, "moveId": 16, "learnMethod": "level_up", "levelLearned": 15 },
+
+  { "coffeemonId": 10, "moveId": 3, "learnMethod": "start", "levelLearned": 1 },
+  { "coffeemonId": 10, "moveId": 13, "learnMethod": "start", "levelLearned": 1 },
+  { "coffeemonId": 10, "moveId": 6, "learnMethod": "level_up", "levelLearned": 7 },
+  { "coffeemonId": 10, "moveId": 26, "learnMethod": "level_up", "levelLearned": 15 }
 ]

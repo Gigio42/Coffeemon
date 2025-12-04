@@ -183,11 +183,77 @@ export default function CoffeemonDetailsModal({
               </View>
             </View>
             
-            <View style={styles.aboutInfoContainer}>
-               <Text style={[styles.aboutText, textSecondary]}>
-                 Level <Text style={{ fontWeight: 'bold', color: colors.text.primary }}>{coffeemon.level}</Text>
-               </Text>
-               {/* Add more flavor text or stats here if available */}
+            {/* Description Section */}
+            {coffeemon.coffeemon.description && (
+              <View style={styles.descriptionSection}>
+                <Text style={[styles.descriptionText, textSecondary]}>
+                  {coffeemon.coffeemon.description}
+                </Text>
+              </View>
+            )}
+
+            {/* Physical Characteristics */}
+            {(coffeemon.coffeemon.weight || coffeemon.coffeemon.height) && (
+              <View style={styles.characteristicsGrid}>
+                <Text style={[styles.subsectionTitle, textPrimary]}>Características Físicas</Text>
+                <View style={styles.characteristicsRow}>
+                  {coffeemon.coffeemon.height !== undefined && coffeemon.coffeemon.height !== null && (
+                    <View style={styles.characteristicCard}>
+                      <View style={styles.characteristicIconContainer}>
+                        <Text style={styles.characteristicIcon}>📏</Text>
+                      </View>
+                      <Text style={[styles.characteristicLabel, textTertiary]}>Altura</Text>
+                      <Text style={[styles.characteristicValue, textPrimary]}>
+                        {(() => {
+                          const heightNum = parseFloat(String(coffeemon.coffeemon.height || 0));
+                          if (heightNum >= 1) {
+                            return `${heightNum.toFixed(1)} m`;
+                          } else if (heightNum > 0) {
+                            return `${Math.round(heightNum * 100)} cm`;
+                          }
+                          return '-- cm';
+                        })()}
+                      </Text>
+                    </View>
+                  )}
+                  {coffeemon.coffeemon.weight !== undefined && coffeemon.coffeemon.weight !== null && (
+                    <View style={styles.characteristicCard}>
+                      <View style={styles.characteristicIconContainer}>
+                        <Text style={styles.characteristicIcon}>⚖️</Text>
+                      </View>
+                      <Text style={[styles.characteristicLabel, textTertiary]}>Peso</Text>
+                      <Text style={[styles.characteristicValue, textPrimary]}>
+                        {Number(coffeemon.coffeemon.weight).toFixed(1)} g
+                      </Text>
+                    </View>
+                  )}
+                </View>
+              </View>
+            )}
+
+            {/* Flavor Profile */}
+            {coffeemon.coffeemon.flavorProfile && (
+              <View style={styles.flavorSection}>
+                <Text style={[styles.subsectionTitle, textPrimary]}>Perfil de Sabor</Text>
+                <View style={[styles.flavorCard, { backgroundColor: typeColors.primary + '15', borderColor: typeColors.primary + '30' }]}>
+                  <Text style={styles.flavorIcon}>☕</Text>
+                  <Text style={[styles.flavorProfileText, { color: typeColors.dark }]}>
+                    {coffeemon.coffeemon.flavorProfile}
+                  </Text>
+                </View>
+              </View>
+            )}
+
+            {/* Level Info */}
+            <View style={styles.levelInfoSection}>
+              <View style={[styles.levelInfoCard, { backgroundColor: 'rgba(255,255,255,0.7)', borderColor: 'rgba(0,0,0,0.08)' }]}>
+                <Text style={[styles.levelInfoLabel, textTertiary]}>Nível Atual</Text>
+                <Text style={[styles.levelInfoValue, { color: typeColors.primary }]}>{coffeemon.level}</Text>
+              </View>
+              <View style={[styles.levelInfoCard, { backgroundColor: 'rgba(255,255,255,0.7)', borderColor: 'rgba(0,0,0,0.08)' }]}>
+                <Text style={[styles.levelInfoLabel, textTertiary]}>Experiência</Text>
+                <Text style={[styles.levelInfoValue, textPrimary]}>{coffeemon.experience} XP</Text>
+              </View>
             </View>
             
             {onToggleParty && (

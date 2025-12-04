@@ -771,7 +771,7 @@ export default function MatchmakingScreen({
     const sections: Record<typeof sheetTab, SlidingBottomSheetSection> = {
       backpack: {
         key: 'backpack',
-        title: `Mochila`,
+        title: `Cards`,
         content: backpackContent,
       },
       items: {

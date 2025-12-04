@@ -25,10 +25,10 @@ export class Coffeemon {
   @Column({ nullable: true })
   flavorProfile: string;
 
-  @Column({ nullable: true })
+  @Column({ type: 'float', nullable: true })
   weight: number;
 
-  @Column({ nullable: true })
+  @Column({ type: 'float', nullable: true })
   height: number;
 
   @Column({ type: 'simple-array' })

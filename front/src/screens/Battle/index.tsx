@@ -27,6 +27,8 @@ import CoffeemonCard from "../../components/CoffeemonCard";
 import CoffeemonSelectionModal from "../../components/CoffeemonSelectionModal";
 import ItemSelectionModal from "../../components/ItemSelectionModal";
 import ItemTargetModal from "../../components/ItemTargetModal";
+import MoveDetailsModal from "../../components/MoveDetailsModal/index";
+import VictoryModal from "../../components/Battle/VictoryModal";
 import { useBattle } from "../../hooks/useBattle";
 import { useBattleAnimations } from "../../hooks/useBattleAnimations";
 import { Coffeemon } from "../../types";
@@ -143,6 +145,9 @@ export default function BattleScreen({
     sendAction,
     selectInitialCoffeemon,
     resolveSpriteVariant,
+    battleRewards,
+    showVictoryModal,
+    setShowVictoryModal,
   } = battle;
 
   // Estado local para controle de tooltip de moves e modo de ação
@@ -160,8 +165,8 @@ export default function BattleScreen({
     React.useState<number>(0);
   const [displayedText, setDisplayedText] = React.useState<string>("");
   const [isTyping, setIsTyping] = React.useState<boolean>(false);
-  const [autoAdvanceTimeout, setAutoAdvanceTimeout] =
-    React.useState<NodeJS.Timeout | null>(null);
+  const [hasUnreadMessages, setHasUnreadMessages] = React.useState<boolean>(false);
+  const [lastProcessedLogLength, setLastProcessedLogLength] = React.useState<number>(0);
 
   // 🎯 OTIMISTIC UPDATE: Estado local para mostrar novo Coffeemon imediatamente
   const [optimisticActiveIndex, setOptimisticActiveIndex] = React.useState<
@@ -177,6 +182,10 @@ export default function BattleScreen({
   const [isItemTargetModalVisible, setItemTargetModalVisible] =
     React.useState<boolean>(false);
   const [selectedItem, setSelectedItem] = React.useState<Item | null>(null);
+  
+  // 🎯 SISTEMA DE DETALHES DE MOVES
+  const [selectedMoveForDetails, setSelectedMoveForDetails] = React.useState<any>(null);
+  const [showMoveDetails, setShowMoveDetails] = React.useState<boolean>(false);
 
   // Debug: Log quando o modal muda
   React.useEffect(() => {
@@ -198,11 +207,22 @@ export default function BattleScreen({
     console.log("[BattleScreen] items:", items);
   }, [items]);
 
+  // 📝 Detectar novas mensagens e bloquear ações
+  React.useEffect(() => {
+    if (log.length > lastProcessedLogLength) {
+      console.log("[BattleScreen] New messages detected:", log.length - lastProcessedLogLength);
+      setHasUnreadMessages(true);
+      // Não atualiza lastProcessedLogLength aqui - só quando ler todas
+    }
+  }, [log.length, lastProcessedLogLength]);
+
   // 📝 Efeito Typewriter - Anima o texto sendo digitado
   React.useEffect(() => {
     if (log.length === 0) {
       setDisplayedText("");
       setCurrentMessageIndex(0);
+      setHasUnreadMessages(false);
+      setLastProcessedLogLength(0);
       return;
     }
 
@@ -216,34 +236,18 @@ export default function BattleScreen({
       setIsTyping(true);
       const timeout = setTimeout(() => {
         setDisplayedText(fullMessage.slice(0, displayedText.length + 1));
-      }, 30); // Velocidade de digitação: 30ms por caractere
+      }, 20); // Velocidade de digitação: 20ms por caractere (mais rápido)
 
       return () => clearTimeout(timeout);
     } else {
       setIsTyping(false);
-
-      // Quando terminar de digitar, aguardar e avançar automaticamente
-      if (currentMessageIndex < log.length - 1) {
-        const advanceTimeout = setTimeout(() => {
-          setCurrentMessageIndex(currentMessageIndex + 1);
-          setDisplayedText("");
-        }, 2000); // Aguarda 2 segundos após terminar de digitar
-
-        setAutoAdvanceTimeout(advanceTimeout);
-        return () => clearTimeout(advanceTimeout);
-      }
+      // Não avança automaticamente - jogador precisa clicar
     }
   }, [log, currentMessageIndex, displayedText]);
 
   // Limpar timeout quando componente desmontar
   // Função para avançar/voltar mensagens ao clicar
   const handleTextBoxClick = () => {
-    // Cancela o auto-advance
-    if (autoAdvanceTimeout) {
-      clearTimeout(autoAdvanceTimeout);
-      setAutoAdvanceTimeout(null);
-    }
-
     if (isTyping) {
       // Se ainda está digitando, completa a mensagem imediatamente
       const currentMessage = log[currentMessageIndex] || "";
@@ -254,30 +258,40 @@ export default function BattleScreen({
       if (currentMessageIndex < log.length - 1) {
         setCurrentMessageIndex(currentMessageIndex + 1);
         setDisplayedText("");
+      } else {
+        // Chegou na última mensagem - marca como lido
+        console.log("[BattleScreen] All messages read, unlocking actions");
+        setHasUnreadMessages(false);
+        setLastProcessedLogLength(log.length);
       }
     }
   };
 
+  // Função para skip rápido - ir direto para última mensagem
+  const handleSkipToEnd = () => {
+    if (log.length > 0) {
+      const lastIndex = log.length - 1;
+      setCurrentMessageIndex(lastIndex);
+      setDisplayedText(log[lastIndex]);
+      setIsTyping(false);
+      setHasUnreadMessages(false);
+      setLastProcessedLogLength(log.length);
+      console.log("[BattleScreen] Skipped to last message");
+    }
+  };
+
   React.useEffect(() => {
+    // Apenas ajusta o índice se estiver fora dos limites
     if (log.length > 0 && currentMessageIndex >= log.length) {
       setCurrentMessageIndex(log.length - 1);
       setDisplayedText("");
-    } else if (log.length > 0 && currentMessageIndex < log.length - 1) {
-      // Nova mensagem chegou, mostra ela
-      setCurrentMessageIndex(log.length - 1);
-      setDisplayedText("");
     }
-  }, [log.length]);
+    // Não pula automaticamente para novas mensagens - jogador controla
+  }, [log.length, currentMessageIndex]);
 
   // Função para voltar mensagem anterior
   const handlePreviousMessage = (e: any) => {
     e.stopPropagation();
-
-    // Cancela auto-advance
-    if (autoAdvanceTimeout) {
-      clearTimeout(autoAdvanceTimeout);
-      setAutoAdvanceTimeout(null);
-    }
 
     if (currentMessageIndex > 0) {
       setCurrentMessageIndex(currentMessageIndex - 1);
@@ -288,12 +302,6 @@ export default function BattleScreen({
   // Função para próxima mensagem
   const handleNextMessage = (e: any) => {
     e.stopPropagation();
-
-    // Cancela auto-advance
-    if (autoAdvanceTimeout) {
-      clearTimeout(autoAdvanceTimeout);
-      setAutoAdvanceTimeout(null);
-    }
 
     if (currentMessageIndex < log.length - 1) {
       setCurrentMessageIndex(currentMessageIndex + 1);
@@ -1106,16 +1114,16 @@ export default function BattleScreen({
         </View>
 
         <View style={styles.mainActionsGrid}>
-          {/* Botão Atacar - DESABILITADO se Coffeemon estiver fainted */}
+          {/* Botão Atacar - DESABILITADO se tiver mensagens não lidas, Coffeemon estiver fainted ou pendente */}
           <TouchableOpacity
             style={[
               styles.mainActionButton,
               styles.attackActionButton,
-              (!canAct || myPendingAction || needsSwitch) &&
+              (!canAct || myPendingAction || needsSwitch || hasUnreadMessages) &&
                 styles.actionButtonDisabled,
             ]}
             onPress={() => setActionMode("attack")}
-            disabled={!canAct || myPendingAction || needsSwitch}
+            disabled={!canAct || myPendingAction || needsSwitch || hasUnreadMessages}
           >
             <Image
               source={getBattleIcon("attack")}
@@ -1123,7 +1131,7 @@ export default function BattleScreen({
             />
           </TouchableOpacity>
 
-          {/* Botão Trocar - DISPONÍVEL apenas no turno do jogador */}
+          {/* Botão Trocar - DISPONÍVEL apenas no turno do jogador, bloqueado se tiver mensagens */}
           <TouchableOpacity
             style={[
               styles.mainActionButton,
@@ -1131,17 +1139,20 @@ export default function BattleScreen({
               (!hasSwitchCandidate ||
                 isProcessing ||
                 myPendingAction ||
+                hasUnreadMessages ||
                 battleState?.turnPhase === "RESOLUTION" ||
                 !canAct) &&
                 styles.actionButtonDisabled,
               needsSwitch &&
-                canAct && { borderWidth: 6, borderColor: "#FFD700" }, // Destaque amarelo apenas quando for o turno E precisar trocar
+                canAct &&
+                !hasUnreadMessages && { borderWidth: 6, borderColor: "#FFD700" }, // Destaque amarelo apenas quando for o turno E precisar trocar
             ]}
             onPress={() => setSwitchModalVisible(true)}
             disabled={
               !hasSwitchCandidate ||
               isProcessing ||
               myPendingAction ||
+              hasUnreadMessages ||
               battleState?.turnPhase === "RESOLUTION" ||
               !canAct
             }
@@ -1152,12 +1163,12 @@ export default function BattleScreen({
             />
           </TouchableOpacity>
 
-          {/* Botão Item - HABILITADO se tiver itens e puder agir */}
+          {/* Botão Item - HABILITADO se tiver itens e puder agir, bloqueado se tiver mensagens */}
           <TouchableOpacity
             style={[
               styles.mainActionButton,
               styles.itemActionButton,
-              (!canAct || myPendingAction || items.length === 0) &&
+              (!canAct || myPendingAction || items.length === 0 || hasUnreadMessages) &&
                 styles.actionButtonDisabled,
             ]}
             onPress={() => {
@@ -1175,7 +1186,7 @@ export default function BattleScreen({
               );
               setItemModalVisible(true);
             }}
-            disabled={!canAct || myPendingAction || items.length === 0}
+            disabled={!canAct || myPendingAction || items.length === 0 || hasUnreadMessages}
           >
             <Image
               source={getBattleIcon("item")}
@@ -1229,122 +1240,100 @@ export default function BattleScreen({
       sour: { primary: "#4CAF50", secondary: "#81C784", icon: "🍃" },
     };
 
-    const getCategoryEmoji = (category: string) => {
-      if (category === "attack") return "⚔️";
-      if (category === "support") return "🛡️";
-      return "✨";
-    };
-
     return (
       <>
-        <View style={styles.actionPromptContainer}>
-          <TouchableOpacity
-            style={styles.backButtonSmall}
-            onPress={() => setActionMode("main")}
-          >
-            <Text style={styles.backButtonIcon}>◀️</Text>
-          </TouchableOpacity>
-          <Text style={styles.actionPromptText}>Escolha um ataque:</Text>
-        </View>
+        {/* Área clicável para voltar */}
+        <TouchableOpacity 
+          style={styles.attackBackdrop}
+          activeOpacity={1}
+          onPress={() => setActionMode("main")}
+        >
+          <View style={styles.actionPromptContainer}>
+            <TouchableOpacity
+              style={styles.backButtonSmall}
+              onPress={() => setActionMode("main")}
+            >
+              <Text style={styles.backButtonIcon}>◀️</Text>
+            </TouchableOpacity>
+            <Text style={styles.actionPromptText}>Escolha um ataque:</Text>
+          </View>
 
-        <View style={styles.attacksGrid}>
-          {/* Sistema de 4 slots fixos */}
-          {[0, 1, 2, 3].map((slotIndex) => {
-            const move = activeMon.moves[slotIndex];
+          <View style={styles.attacksGrid} onStartShouldSetResponder={() => true}>
+            {/* Sistema de 4 slots fixos */}
+            {[0, 1, 2, 3].map((slotIndex) => {
+              const move = activeMon.moves[slotIndex];
 
-            // Se não há move neste slot, renderiza placeholder pontilhado
-            if (!move) {
+              // Se não há move neste slot, renderiza placeholder pontilhado
+              if (!move) {
+                return (
+                  <View key={`empty-${slotIndex}`} style={styles.emptySlot}>
+                    <Text style={styles.emptySlotText}>- - -</Text>
+                  </View>
+                );
+              }
+
+              // ✅ VALIDAÇÃO: Verificar se pode usar este movimento específico
+              const moveValidation = canUseMove(myPlayerState, move.id);
+              const canUseThisMove =
+                canAttack && !myPendingAction && moveValidation.valid;
+
+              const moveType = (move as any).elementalType || "roasted";
+              const typeStyle = typeColors[moveType] || typeColors.roasted;
+
               return (
-                <View key={`empty-${slotIndex}`} style={styles.emptySlot}>
-                  <Text style={styles.emptySlotText}>- - -</Text>
-                </View>
-              );
-            }
-
-            // ✅ VALIDAÇÃO: Verificar se pode usar este movimento específico
-            const moveValidation = canUseMove(myPlayerState, move.id);
-            const canUseThisMove =
-              canAttack && !myPendingAction && moveValidation.valid;
-
-            const moveType = move.elementalType || "roasted";
-            const typeStyle = typeColors[moveType] || typeColors.roasted;
-            const hasEffects = move.effects && move.effects.length > 0;
-
-            return (
-              <TouchableOpacity
-                key={move.id}
-                style={[
-                  styles.attackButton,
-                  !canUseThisMove && styles.attackButtonDisabled,
-                ]}
-                onPress={() => {
-                  if (canUseThisMove) {
-                    sendAction("attack", { moveId: move.id });
-                    setActionMode("main");
-                  } else if (myPendingAction) {
-                    console.log("Você já submeteu uma ação neste turno!");
-                  } else if (!attackValidation.valid) {
-                    console.log("Ataque bloqueado:", attackValidation.reason);
-                  }
-                }}
-                onPressIn={() => setHoveredMoveId(move.id)}
-                onPressOut={() => setHoveredMoveId(null)}
-                disabled={!canUseThisMove}
-                activeOpacity={0.7}
-              >
-                <LinearGradient
-                  colors={[typeStyle.primary, typeStyle.secondary]}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 1 }}
-                  style={styles.attackButtonGradient}
+                <TouchableOpacity
+                  key={move.id}
+                  style={[
+                    styles.attackButtonCompact,
+                    !canUseThisMove && styles.attackButtonDisabled,
+                  ]}
+                  onPress={(e) => {
+                    e.stopPropagation();
+                    if (canUseThisMove) {
+                      sendAction("attack", { moveId: move.id });
+                      setActionMode("main");
+                    } else if (myPendingAction) {
+                      console.log("Você já submeteu uma ação neste turno!");
+                    } else if (!attackValidation.valid) {
+                      console.log("Ataque bloqueado:", attackValidation.reason);
+                    }
+                  }}
+                  disabled={!canUseThisMove}
+                  activeOpacity={0.7}
                 >
-                  {/* Header: Tipo e Categoria */}
-                  <View style={styles.attackButtonHeader}>
-                    <View style={styles.attackTypeBadge}>
-                      <Text style={styles.attackTypeIcon}>
-                        {typeStyle.icon}
-                      </Text>
-                      <Text style={styles.attackTypeText}>{moveType}</Text>
-                    </View>
-                    <View style={styles.attackCategoryBadge}>
-                      <Text style={styles.attackCategoryText}>
-                        {getCategoryEmoji(move.category)}{" "}
-                        {move.category === "attack" ? "ATK" : "SUP"}
-                      </Text>
-                    </View>
-                  </View>
-
-                  {/* Nome do Move */}
-                  <Text style={styles.attackButtonName} numberOfLines={1}>
-                    {move.name}
-                  </Text>
-
-                  {/* Descrição do Move (Nova!) */}
-                  {move.description && (
-                    <Text style={styles.attackDescription} numberOfLines={2}>
-                      {move.description}
+                  <LinearGradient
+                    colors={[typeStyle.primary, typeStyle.secondary]}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                    style={styles.attackButtonContent}
+                  >
+                    {/* Ícone do tipo grande e centralizado */}
+                    <Text style={styles.attackTypeEmojiLarge}>
+                      {typeStyle.icon}
                     </Text>
-                  )}
-
-                  {/* Footer: Poder e Efeitos */}
-                  <View style={styles.attackButtonFooter}>
-                    <View style={styles.attackPowerContainer}>
-                      <Text style={styles.attackPowerLabel}>PWR</Text>
-                      <Text style={styles.attackPowerValue}>
-                        {move.power || "—"}
-                      </Text>
-                    </View>
-                    {hasEffects && (
-                      <View style={styles.attackEffectIndicator}>
-                        <Text style={styles.attackEffectText}>✨</Text>
-                      </View>
-                    )}
-                  </View>
-                </LinearGradient>
-              </TouchableOpacity>
-            );
-          })}
-        </View>
+                    
+                    {/* Nome do Move */}
+                    <Text style={styles.attackButtonNameCompact} numberOfLines={2}>
+                      {move.name}
+                    </Text>
+                    
+                    {/* Botão de informação */}
+                    <TouchableOpacity
+                      style={styles.infoButtonBattle}
+                      onPress={(e) => {
+                        e.stopPropagation();
+                        setSelectedMoveForDetails(move);
+                        setShowMoveDetails(true);
+                      }}
+                    >
+                      <Text style={styles.infoIconBattle}>ⓘ</Text>
+                    </TouchableOpacity>
+                  </LinearGradient>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+        </TouchableOpacity>
       </>
     );
   };
@@ -1485,43 +1474,42 @@ export default function BattleScreen({
       style={styles.battleContainer}
       edges={["left", "right", "bottom"]}
     >
-      {battleEnded && (
-        <View style={styles.battleEndOverlay}>
-          <View style={styles.battleEndCard}>
-            <Text style={styles.battleEndTitle}>🏆 BATALHA TERMINOU! 🏆</Text>
-            <Text style={styles.battleEndWinner}>
-              Vencedor: {winnerId === playerId ? "VOCÊ" : "Oponente"}
-            </Text>
-            <Text style={styles.battleEndSubtext}>
-              Voltando ao matchmaking...
-            </Text>
-            <TouchableOpacity
-              style={styles.battleEndButton}
-              onPress={onNavigateToMatchmaking}
-            >
-              <Text style={styles.battleEndButtonText}>VOLTAR AGORA</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      )}
+      {/* Victory/Defeat Modal */}
+      <VictoryModal
+        visible={showVictoryModal}
+        isVictory={winnerId === playerId}
+        playerId={playerId}
+        winnerId={winnerId || 0}
+        rewards={battleRewards}
+        onClose={() => {
+          setShowVictoryModal(false);
+          onNavigateToMatchmaking();
+        }}
+      />
 
-      <ImageBackground
-        source={battleScenario}
+      <TouchableOpacity
+        activeOpacity={1}
+        onPress={hasUnreadMessages ? handleTextBoxClick : undefined}
         style={styles.battleArena}
-        resizeMode="cover"
+        disabled={!hasUnreadMessages}
       >
-        {playerSprite &&
-          renderCoffeemonSprite(
-            playerSprite.imageSource,
-            true,
-            `player-sprite-${playerSprite.index}-${playerSprite.state}-${playerSprite.variant}-${playerSprite.name}`
-          )}
-        {opponentSprite &&
-          renderCoffeemonSprite(
-            opponentSprite.imageSource,
-            false,
-            `opponent-sprite-${opponentSprite.state}-${opponentSprite.variant}-${opponentSprite.name}`
-          )}
+        <ImageBackground
+          source={battleScenario}
+          style={styles.battleArenaBackground}
+          resizeMode="cover"
+        >
+          {playerSprite &&
+            renderCoffeemonSprite(
+              playerSprite.imageSource,
+              true,
+              `player-sprite-${playerSprite.index}-${playerSprite.state}-${playerSprite.variant}-${playerSprite.name}`
+            )}
+          {opponentSprite &&
+            renderCoffeemonSprite(
+              opponentSprite.imageSource,
+              false,
+              `opponent-sprite-${opponentSprite.state}-${opponentSprite.variant}-${opponentSprite.name}`
+            )}
 
         {myPlayerState && (
           <BattleHUD
@@ -1552,7 +1540,10 @@ export default function BattleScreen({
         {/* Text Box Interativo - Topo da Tela */}
         {log.length > 0 && (
           <TouchableOpacity
-            style={styles.battleTextBox}
+            style={[
+              styles.battleTextBox,
+              hasUnreadMessages && styles.battleTextBoxUnread,
+            ]}
             onPress={handleTextBoxClick}
             activeOpacity={0.8}
           >
@@ -1580,7 +1571,10 @@ export default function BattleScreen({
                 </Text>
               </TouchableOpacity>
 
-              <Text style={styles.textBoxCounter}>
+              <Text style={[
+                styles.textBoxCounter,
+                hasUnreadMessages && styles.textBoxCounterUnread,
+              ]}>
                 {currentMessageIndex + 1}/{log.length}
               </Text>
 
@@ -1602,9 +1596,13 @@ export default function BattleScreen({
             </View>
           </TouchableOpacity>
         )}
-      </ImageBackground>
+        </ImageBackground>
+      </TouchableOpacity>
 
-      <View style={styles.battleActionsContainer}>
+      <View 
+        style={styles.battleActionsContainer}
+        pointerEvents={hasUnreadMessages ? "none" : "auto"}
+      >
         {/* Renderiza conteúdo baseado no modo de ação */}
         {actionMode === "main" && renderMainActionButtons()}
         {actionMode === "attack" && renderAttackButtons()}
@@ -1650,6 +1648,16 @@ export default function BattleScreen({
         }
         title="Trocar Coffeemon"
         emptyMessage="Nenhum Coffeemon disponível para troca"
+      />
+
+      {/* Modal de Detalhes de Moves */}
+      <MoveDetailsModal
+        visible={showMoveDetails}
+        move={selectedMoveForDetails}
+        onClose={() => {
+          setShowMoveDetails(false);
+          setSelectedMoveForDetails(null);
+        }}
       />
 
       {/* Modais de Itens */}

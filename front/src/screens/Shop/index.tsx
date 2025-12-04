@@ -181,6 +181,10 @@ export const ShopScreen: React.FC<ShopScreenProps> = ({ token }) => {
         baseAttack: coffeemon.baseAttack,
         baseDefense: coffeemon.baseDefense,
         baseSpeed: coffeemon.baseSpeed,
+        description: coffeemon.description,
+        weight: coffeemon.weight,
+        height: coffeemon.height,
+        flavorProfile: coffeemon.flavorProfile,
       },
       learnedMoves: [],
     };

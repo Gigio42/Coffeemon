@@ -115,5 +115,17 @@
     "baseAttack": 85,
     "baseDefense": 40,
     "baseSpeed": 100
+  },
+  {
+    "id": 10,
+    "name": "Amoreon",
+    "types": ["fruity"],
+    "description": "Habitante de bosques densos e sombreados, Amoreon usa suas grandes orelhas em forma de folha para se camuflar entre a vegetação rasteira. Sua cauda maciça, formada por um cacho de amoras silvestres envolto em vinhas espinhosas, exala um aroma doce e profundo. Apesar da aparência fofa de sua pelagem manchada, ele se torna territorial se provocado, usando o peso de sua cauda para desferir golpes esmagadores.",    "flavorProfile": "Amora",
+    "weight": 5.5,
+    "height": 0.4,
+    "baseHp": 75,
+    "baseAttack": 82,
+    "baseDefense": 60,
+    "baseSpeed": 88
   }
 ]

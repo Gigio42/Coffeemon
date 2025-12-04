@@ -60,6 +60,11 @@ const coffeemonImages: CoffeemonImageMap = {
     back: require('./chamomilley/back.png'),
     hurt: require('./chamomilley/hurt.png'),
   },
+  amoreon: {
+    default: require('./amoreon/default.png'),
+    back: require('./amoreon/back.png'),
+    hurt: require('./amoreon/hurt.png'),
+  },
   crambeline: {
     default: require('./crambeline/default.png'),
     back: require('./crambeline/default.png'), // Usando default como back

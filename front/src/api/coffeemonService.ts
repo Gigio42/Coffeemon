@@ -33,6 +33,10 @@ export interface PlayerCoffeemon {
     baseAttack?: number;
     baseDefense?: number;
     baseSpeed?: number;
+    description?: string;
+    weight?: number;
+    height?: number;
+    flavorProfile?: string;
   };
 }
 
@@ -46,6 +50,9 @@ export interface Coffeemon {
   baseDefense: number;
   baseSpeed: number;
   defaultImage?: string;
+  weight?: number;
+  height?: number;
+  flavorProfile?: string;
 }
 
 /**

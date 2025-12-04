@@ -32,9 +32,10 @@ interface ICoffeemonData {
   baseAttack: number;
   baseDefense: number;
   baseSpeed: number;
-  defaultImage?: string;
-  backImage?: string;
-  hurtImage?: string;
+  description?: string;
+  flavorProfile?: string;
+  weight?: number;
+  height?: number;
 }
 
 interface ILearnsetData {
@@ -102,7 +103,12 @@ export class SeedService implements OnModuleInit {
         baseAttack: data.baseAttack,
         baseDefense: data.baseDefense,
         baseSpeed: data.baseSpeed,
+        description: data.description,
+        flavorProfile: data.flavorProfile,
+        weight: data.weight,
+        height: data.height,
       };
+
       const newCoffeemon = this.coffeemonRepository.create(coffeemonToCreate);
       await this.coffeemonRepository.save(newCoffeemon);
     }

@@ -40,6 +40,37 @@ export const styles = StyleSheet.create({
     flex: 1, // Ocupa todo espaço restante acima dos botões
     backgroundColor: "transparent",
   },
+  battleArenaBackground: {
+    position: "relative",
+    width: "100%",
+    flex: 1,
+    backgroundColor: "transparent",
+  },
+  clickOverlay: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    justifyContent: "center",
+    alignItems: "center",
+    zIndex: 35,
+  },
+  clickIndicator: {
+    backgroundColor: "rgba(0, 0, 0, 0.7)",
+    paddingVertical: 15,
+    paddingHorizontal: 25,
+    borderRadius: 20,
+    borderWidth: 2,
+    borderColor: "#FFD700",
+  },
+  clickIndicatorText: {
+    fontSize: 16,
+    fontFamily: "monospace",
+    fontWeight: "bold",
+    color: "#FFD700",
+    textAlign: "center",
+  },
 
   // ========================================
   // BARRAS DE HP - Topo da Tela (Estilo Pixel Art)
@@ -50,16 +81,16 @@ export const styles = StyleSheet.create({
     zIndex: 30,
   },
 
-  // HUD do Player (esquerda superior)
+  // HUD do Player (esquerda, acima do sprite)
   playerHudPosition: {
-    top: "70%",
-    left: "-4%",
+    bottom: "60%",
+    left: "1%",
   },
 
-  // HUD do Oponente (direita superior)
+  // HUD do Oponente (direita, abaixo do sprite)
   opponentHudPosition: {
-    bottom: "40%",
-    right: "-4%",
+    bottom: "35%",
+    right: "1%",
   },
 
   // Container Principal com display: flex e align-items: center
@@ -184,8 +215,14 @@ export const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 10,
   },
+  battleTextBoxUnread: {
+    borderColor: "#FFD700",
+    borderWidth: 4,
+    shadowColor: "#FFD700",
+    shadowOpacity: 0.8,
+  },
   textBoxContent: {
-    flexDirection: "row",
+    flexDirection: "column",
     alignItems: "center",
     justifyContent: "center",
     paddingBottom: 20,
@@ -198,12 +235,29 @@ export const styles = StyleSheet.create({
     lineHeight: 20,
     letterSpacing: 0.5,
     textAlign: "center",
+    width: "100%",
   },
   textBoxIndicator: {
     fontSize: 16,
     color: "#2a2a2a",
     marginLeft: 8,
     opacity: 0.7,
+  },
+  continueIndicator: {
+    marginTop: 8,
+    paddingVertical: 4,
+    paddingHorizontal: 12,
+    backgroundColor: "rgba(255, 215, 0, 0.2)",
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "#FFD700",
+  },
+  continueIndicatorText: {
+    fontSize: 11,
+    fontFamily: "monospace",
+    color: "#FF6B00",
+    fontWeight: "bold",
+    textAlign: "center",
   },
   textBoxCounterContainer: {
     position: "absolute",
@@ -217,6 +271,10 @@ export const styles = StyleSheet.create({
     fontSize: 11,
     fontFamily: "monospace",
     color: "rgba(0, 0, 0, 0.5)",
+    fontWeight: "bold",
+  },
+  textBoxCounterUnread: {
+    color: "#FFD700",
     fontWeight: "bold",
   },
   textBoxNavButton: {
@@ -341,6 +399,36 @@ export const styles = StyleSheet.create({
   // GRID DE BOTÕES DE AÇÃO (4 botões principais)
   // Layout circular flutuante estilo mobile game
   // ========================================
+  mainActionButtonsContainer: {
+    position: "relative",
+    width: "100%",
+    height: "100%",
+  },
+  unreadMessagesBanner: {
+    position: "absolute",
+    bottom: "50%",
+    left: "5%",
+    right: "5%",
+    zIndex: 100,
+    backgroundColor: "rgba(255, 215, 0, 0.95)",
+    borderRadius: 12,
+    borderWidth: 3,
+    borderColor: "#FF6B00",
+    padding: 12,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.6,
+    shadowRadius: 8,
+    elevation: 15,
+  },
+  unreadMessagesText: {
+    fontSize: 14,
+    fontFamily: "monospace",
+    fontWeight: "bold",
+    color: "#2a2a2a",
+    textAlign: "center",
+    letterSpacing: 0.5,
+  },
   mainActionsGrid: {
     position: "relative",
     width: "100%",
@@ -437,7 +525,7 @@ export const styles = StyleSheet.create({
   },
   attackButton: {
     width: "48%",
-    minHeight: 115,
+    minHeight: 125,
     borderRadius: 14,
     overflow: "hidden",
     borderWidth: 3,
@@ -447,7 +535,7 @@ export const styles = StyleSheet.create({
   },
   emptySlot: {
     width: "48%",
-    minHeight: 115,
+    minHeight: 125,
     borderRadius: 14,
     borderWidth: 3,
     borderStyle: "dashed",
@@ -458,9 +546,10 @@ export const styles = StyleSheet.create({
   },
   emptySlotText: {
     ...pixelArt.typography.pixelBody,
-    fontSize: 12,
+    fontSize: 18,
     color: "#666",
     opacity: 0.5,
+    letterSpacing: 2,
   },
   attackButtonDisabled: {
     opacity: 0.4,
@@ -981,4 +1070,63 @@ export const styles = StyleSheet.create({
     fontWeight: "bold",
     color: "#FFFFFF",
   },
+  
+  // ========================================
+  // CARDS DE ATAQUE COMPACTOS
+  // ========================================
+  attackBackdrop: {
+    flex: 1,
+    justifyContent: "center",
+  },
+  attackButtonCompact: {
+    width: "48%",
+    minHeight: 125,
+    borderRadius: 14,
+    overflow: "hidden",
+    borderWidth: 3,
+    borderColor: "#333",
+    backgroundColor: "#FFFFFF",
+    ...pixelArt.shadows.card,
+    position: "relative",
+  },
+  attackButtonContent: {
+    flex: 1,
+    padding: 19,
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  attackTypeEmojiLarge: {
+    fontSize: 38,
+  },
+  attackButtonNameCompact: {
+    ...pixelArt.typography.pixelSubtitle,
+    fontSize: 14,
+    color: "#FFFFFF",
+    fontWeight: "bold",
+    textAlign: "center",
+    lineHeight: 16,
+    textShadowColor: "rgba(0,0,0,0.5)",
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 2,
+    flex: 1,
+  },
+  infoButtonBattle: {
+    position: "absolute",
+    top: 6,
+    right: 6,
+    width: 32,
+    height: 32,
+    borderRadius: 10,
+    backgroundColor: "rgba(0,0,0,0.6)",
+    justifyContent: "center",
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.3)",
+  },
+  infoIconBattle: {
+    fontSize: 12,
+    color: "#FFFFFF",
+    fontWeight: "bold",
+  },
 });
+
