@@ -13,10 +13,13 @@ interface AttackActionsProps {
 
 const getCategoryEmoji = (category: string) => {
   switch (category?.toLowerCase()) {
+    case "físico":
     case "physical":
       return "⚔️";
+    case "especial":
     case "special":
       return "✨";
+    case "estado":
     case "status":
       return "🔮";
     default:

@@ -74,13 +74,13 @@ export default function CoffeemonDetailsModal({
 }: CoffeemonDetailsModalProps) {
   const { width: viewportWidth, height: viewportHeight } = useWindowDimensions();
   const { colors } = useTheme();
-  const [activeTab, setActiveTab] = useState<'about' | 'status' | 'moves'>('status');
+  const [activeTab, setActiveTab] = useState<'sobre' | 'stats' | 'golpes'>('stats');
   const [showSwapSelection, setShowSwapSelection] = useState(false);
 
   React.useEffect(() => {
     if (visible) {
       setShowSwapSelection(false);
-      setActiveTab('about');
+      setActiveTab('sobre');
     }
   }, [visible, coffeemon]);
 
@@ -133,21 +133,21 @@ export default function CoffeemonDetailsModal({
 
   const renderTabContent = () => {
     switch (activeTab) {
-      case 'status':
+      case 'stats':
         return (
           <View style={styles.section}>
             {renderStatBar('HP', stats.hp, '#FF5959')}
-            {renderStatBar('ATK', stats.attack, '#F5AC78')}
+            {renderStatBar('ATQ', stats.attack, '#F5AC78')}
             {renderStatBar('DEF', stats.defense, '#FAE078')}
-            {renderStatBar('SPD', stats.speed, '#9DB7F5')}
+            {renderStatBar('VEL', stats.speed, '#9DB7F5')}
             
             <View style={[styles.xpContainer, { borderTopColor: 'rgba(0,0,0,0.05)' }]}>
-              <Text style={[styles.xpLabel, textSecondary]}>Experience</Text>
+              <Text style={[styles.xpLabel, textSecondary]}>Experiência</Text>
               <Text style={[styles.xpValue, textPrimary]}>{coffeemon.experience} XP</Text>
             </View>
           </View>
         );
-      case 'moves':
+      case 'golpes':
         return (
           <View style={styles.section}>
             {coffeemon.learnedMoves && coffeemon.learnedMoves.length > 0 ? (
@@ -161,8 +161,8 @@ export default function CoffeemonDetailsModal({
                   </View>
                   <Text style={[styles.moveDesc, textSecondary]}>{lm.move.description}</Text>
                   <View style={[styles.moveStats, { borderTopColor: 'rgba(0,0,0,0.05)' }]}>
-                    <Text style={[styles.moveStat, textTertiary]}>Power: {lm.move.power}</Text>
-                    <Text style={[styles.moveStat, textTertiary]}>Category: {lm.move.category}</Text>
+                    <Text style={[styles.moveStat, textTertiary]}>Poder: {lm.move.power}</Text>
+                    <Text style={[styles.moveStat, textTertiary]}>Categoria: {lm.move.category}</Text>
                   </View>
                 </View>
               ))
@@ -171,7 +171,7 @@ export default function CoffeemonDetailsModal({
             )}
           </View>
         );
-      case 'about':
+      case 'sobre':
         return (
           <View style={[styles.section, { flex: 1 }]}>
             <View style={styles.aboutHeader}>
@@ -430,7 +430,14 @@ export default function CoffeemonDetailsModal({
                             
                             {/* Tabs */}
                             <View style={styles.tabsContainer}>
-                                {(['about', 'status', 'moves'] as const).map((tab) => (
+                                {(['sobre', 'stats', 'golpes'] as const).map((tab) => {
+                                    const tabLabels = {
+                                        sobre: 'SOBRE',
+                                        stats: 'STATS',
+                                        golpes: 'GOLPES'
+                                    };
+                                    
+                                    return (
                                     <TouchableOpacity
                                         key={tab}
                                         style={[
@@ -444,10 +451,11 @@ export default function CoffeemonDetailsModal({
                                             { color: colors.text.tertiary },
                                             activeTab === tab && { color: typeColors.primary, fontWeight: '800' }
                                         ]}>
-                                            {tab.toUpperCase()}
+                                            {tabLabels[tab]}
                                         </Text>
                                     </TouchableOpacity>
-                                ))}
+                                    );
+                                })}
                             </View>
 
                             <ScrollView 
