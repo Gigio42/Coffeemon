@@ -142,7 +142,6 @@ export default function VictoryModal({
                   {hasPlayerLevelUp && (
                     <View style={styles.levelUpSection}>
                       <View style={styles.levelUpBadge}>
-                        <Text style={styles.levelUpIcon}>🎉</Text>
                         <Text style={styles.levelUpTitle}>
                           Você subiu de nível!
                         </Text>
@@ -171,33 +170,37 @@ export default function VictoryModal({
 
                             {hasLevelUp && (
                               <View style={styles.coffeemonLevelUp}>
-                                <Text style={styles.coffeemonLevelUpIcon}>
-                                  ⬆️
-                                </Text>
-                                <Text style={styles.coffeemonLevelUpText}>
-                                  Nível {coffeemonReward.levelUp!.newLevel}
-                                </Text>
-                                <Text style={styles.coffeemonExpText}>
-                                  (+{coffeemonReward.levelUp!.expGained} XP)
-                                </Text>
+                                <View style={styles.levelUpBadgeSmall}>
+                                  <Text style={styles.levelUpArrow}>↑</Text>
+                                </View>
+                                <View style={styles.levelUpInfo}>
+                                  <Text style={styles.coffeemonLevelUpText}>
+                                    Nível {coffeemonReward.levelUp!.newLevel}
+                                  </Text>
+                                  <Text style={styles.coffeemonExpText}>
+                                    +{coffeemonReward.levelUp!.expGained} XP
+                                  </Text>
+                                </View>
                               </View>
                             )}
 
                             {hasMoves && (
                               <View style={styles.learnedMovesContainer}>
                                 <Text style={styles.learnedMovesTitle}>
-                                  🎓 Novas Habilidades:
+                                  Novas Habilidades
                                 </Text>
-                                {coffeemonReward.learnedMoves.map(
-                                  (moveName, moveIdx) => (
-                                    <Text
-                                      key={moveIdx}
-                                      style={styles.learnedMoveText}
-                                    >
-                                      • {moveName}
-                                    </Text>
-                                  )
-                                )}
+                                <View style={styles.movesList}>
+                                  {coffeemonReward.learnedMoves.map(
+                                    (moveName, moveIdx) => (
+                                      <View key={moveIdx} style={styles.moveItem}>
+                                        <View style={styles.moveBullet} />
+                                        <Text style={styles.learnedMoveText}>
+                                          {moveName}
+                                        </Text>
+                                      </View>
+                                    )
+                                  )}
+                                </View>
                               </View>
                             )}
                           </View>

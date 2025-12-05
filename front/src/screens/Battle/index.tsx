@@ -8,6 +8,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import Animated from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Socket } from "socket.io-client";
 import {
@@ -289,6 +290,18 @@ export default function BattleScreen({
     // Não pula automaticamente para novas mensagens - jogador controla
   }, [log.length, currentMessageIndex]);
 
+  // 🏆 Mostrar modal de vitória quando batalha terminar E jogador ler última mensagem
+  React.useEffect(() => {
+    if (battleEnded && !hasUnreadMessages && !showVictoryModal) {
+      console.log('✅ [BattleScreen] Battle ended and all messages read - showing victory modal');
+      // Pequeno delay para garantir que animações e rewards chegaram
+      const timer = setTimeout(() => {
+        setShowVictoryModal(true);
+      }, 500);
+      return () => clearTimeout(timer);
+    }
+  }, [battleEnded, hasUnreadMessages, showVictoryModal, setShowVictoryModal]);
+
   // Função para voltar mensagem anterior
   const handlePreviousMessage = (e: any) => {
     e.stopPropagation();
@@ -371,9 +384,12 @@ export default function BattleScreen({
       return null;
     }
 
+    // Se o Coffeemon está fainted, usar variante sleeping
+    const isFainted = activeCoffeemon.isFainted || activeCoffeemon.currentHp <= 0;
+    
     const spriteState = resolveSpriteVariant(
       activeCoffeemon.name,
-      "default",
+      isFainted ? "sleeping" : "default",
       activeCoffeemon.statusEffects
     );
     const imageSource = getCoffeemonImageSource(
@@ -495,7 +511,7 @@ export default function BattleScreen({
         hp: coffeemon.currentHp,
         attack: coffeemon.attack,
         defense: coffeemon.defense,
-        level: 1,
+        level: coffeemon.level,
         experience: 0,
         isInParty: false,
         coffeemon: {
@@ -511,13 +527,11 @@ export default function BattleScreen({
         <View>
           <CoffeemonCard
             coffeemon={fakePlayerCoffeemon}
-            onToggleParty={
-              canSwitch ? async (c) => await onSelect() : async () => {}
-            }
+            onPress={canSwitch ? async (c) => await onSelect() : undefined}
             variant="large"
             isLoading={isLoading || !canSwitch}
-            maxHp={coffeemon.maxHp}
             disabled={!canSwitch}
+            showPartyIndicator={false}
           />
           {!canSwitch && reason && (
             <Text
@@ -549,7 +563,7 @@ export default function BattleScreen({
         hp: coffeemon.currentHp,
         attack: coffeemon.attack,
         defense: coffeemon.defense,
-        level: 1,
+        level: coffeemon.level,
         experience: 0,
         isInParty: false,
         coffeemon: {
@@ -567,13 +581,11 @@ export default function BattleScreen({
         <View>
           <CoffeemonCard
             coffeemon={fakePlayerCoffeemon}
-            onToggleParty={
-              canSelect ? async (c) => await onSelect() : async () => {}
-            }
+            onPress={canSelect ? async (c) => await onSelect() : undefined}
             variant="large"
             isLoading={isLoading || !canSelect}
-            maxHp={coffeemon.maxHp}
             disabled={!canSelect}
+            showPartyIndicator={false}
           />
           {!canSelect && reason && (
             <Text
@@ -844,17 +856,34 @@ export default function BattleScreen({
     const fallbackUrl =
       "https://via.placeholder.com/150/8B7355/FFFFFF?text=Coffeemon";
 
+    // Determinar se o Coffeemon está fainted
+    const activeIndex = isMe 
+      ? (optimisticActiveIndex ?? myPlayerState?.activeCoffeemonIndex)
+      : opponentPlayerState?.activeCoffeemonIndex;
+    
+    const activeMon = isMe
+      ? (activeIndex !== null && myPlayerState?.coffeemons?.[activeIndex])
+      : (activeIndex !== null && opponentPlayerState?.coffeemons?.[activeIndex]);
+    
+    const isFainted = activeMon && (activeMon.isFainted || activeMon.currentHp <= 0);
+
+    // Determinar qual estilo de animação usar
+    const animStyle = isMe ? playerAnimStyle : opponentAnimStyle;
+
     return (
-      <View
+      <Animated.View
         key={key || "coffeemon-sprite"}
         style={[
           styles.coffeemonSpriteContainer,
           isMe ? styles.playerSpritePosition : styles.opponentSpritePosition,
+          animStyle,
         ]}
       >
-        <Image
+        <Animated.Image
           source={imageSource || { uri: fallbackUrl }}
-          style={styles.pokemonImg}
+          style={[
+            styles.pokemonImg,
+          ]}
           resizeMode="contain"
           defaultSource={{ uri: fallbackUrl }}
           onError={(error) => {
@@ -862,7 +891,22 @@ export default function BattleScreen({
             console.log("Image not found, using placeholder:", imageSource);
           }}
         />
-      </View>
+        {/* Overlay cinza forte para simular grayscale quando fainted */}
+        {isFainted && (
+          <View
+            style={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              backgroundColor: '#555555',
+              opacity: 0.7,
+              mixBlendMode: 'color' as any,
+            }}
+          />
+        )}
+      </Animated.View>
     );
   };
 
@@ -1122,7 +1166,11 @@ export default function BattleScreen({
               (!canAct || myPendingAction || needsSwitch || hasUnreadMessages) &&
                 styles.actionButtonDisabled,
             ]}
-            onPress={() => setActionMode("attack")}
+            onPress={() => {
+              if (!hasUnreadMessages) {
+                setActionMode("attack");
+              }
+            }}
             disabled={!canAct || myPendingAction || needsSwitch || hasUnreadMessages}
           >
             <Image
@@ -1147,7 +1195,11 @@ export default function BattleScreen({
                 canAct &&
                 !hasUnreadMessages && { borderWidth: 6, borderColor: "#FFD700" }, // Destaque amarelo apenas quando for o turno E precisar trocar
             ]}
-            onPress={() => setSwitchModalVisible(true)}
+            onPress={() => {
+              if (!hasUnreadMessages) {
+                setSwitchModalVisible(true);
+              }
+            }}
             disabled={
               !hasSwitchCandidate ||
               isProcessing ||
@@ -1172,19 +1224,10 @@ export default function BattleScreen({
                 styles.actionButtonDisabled,
             ]}
             onPress={() => {
-              console.log("[BattleScreen] Item button pressed!");
-              console.log("[BattleScreen] canAct:", canAct);
-              console.log("[BattleScreen] myPendingAction:", myPendingAction);
-              console.log("[BattleScreen] items.length:", items.length);
-              console.log(
-                "[BattleScreen] items array:",
-                JSON.stringify(items, null, 2)
-              );
-              console.log(
-                "[BattleScreen] Opening ItemSelectionModal with items:",
-                items
-              );
-              setItemModalVisible(true);
+              if (!hasUnreadMessages) {
+                console.log("[BattleScreen] Item button pressed!");
+                setItemModalVisible(true);
+              }
             }}
             disabled={!canAct || myPendingAction || items.length === 0 || hasUnreadMessages}
           >
@@ -1194,9 +1237,13 @@ export default function BattleScreen({
             />
           </TouchableOpacity>
 
-          {/* Botão Fugir - SEMPRE DISPONÍVEL */}
+          {/* Botão Fugir - SEMPRE DISPONÍVEL, NUNCA BLOQUEADO */}
           <TouchableOpacity
-            style={[styles.mainActionButton, styles.fleeActionButton]}
+            style={[
+              styles.mainActionButton, 
+              styles.fleeActionButton,
+              battleEnded && styles.actionButtonDisabled,
+            ]}
             onPress={onNavigateToMatchmaking}
             disabled={battleEnded}
           >
@@ -1493,16 +1540,17 @@ export default function BattleScreen({
         style={styles.battleArena}
         disabled={!hasUnreadMessages}
       >
-        <ImageBackground
-          source={battleScenario}
-          style={styles.battleArenaBackground}
-          resizeMode="cover"
-        >
-          {playerSprite &&
-            renderCoffeemonSprite(
-              playerSprite.imageSource,
-              true,
-              `player-sprite-${playerSprite.index}-${playerSprite.state}-${playerSprite.variant}-${playerSprite.name}`
+        <Animated.View style={[{ flex: 1 }, arenaWobble]} pointerEvents="box-none">
+          <ImageBackground
+            source={battleScenario}
+            style={styles.battleArenaBackground}
+            resizeMode="cover"
+          >
+            {playerSprite &&
+              renderCoffeemonSprite(
+                playerSprite.imageSource,
+                true,
+                `player-sprite-${playerSprite.index}-${playerSprite.state}-${playerSprite.variant}-${playerSprite.name}`
             )}
           {opponentSprite &&
             renderCoffeemonSprite(
@@ -1525,6 +1573,11 @@ export default function BattleScreen({
             damage={playerDamage}
             spriteVariant={playerHudVariant ?? "default"}
             imageSourceGetter={getCoffeemonImageSource}
+            playerName={
+              battleState?.player1Id === playerId
+                ? battleState?.player1Info?.username
+                : battleState?.player2Info?.username
+            }
           />
         )}
         {opponentPlayerState && (
@@ -1534,19 +1587,25 @@ export default function BattleScreen({
             damage={opponentDamage}
             spriteVariant={opponentHudVariant ?? "default"}
             imageSourceGetter={getCoffeemonImageSource}
+            playerName={
+              battleState?.player1Id === playerId
+                ? battleState?.player2Info?.username
+                : battleState?.player1Info?.username
+            }
           />
         )}
 
         {/* Text Box Interativo - Topo da Tela */}
         {log.length > 0 && (
-          <TouchableOpacity
-            style={[
-              styles.battleTextBox,
-              hasUnreadMessages && styles.battleTextBoxUnread,
-            ]}
-            onPress={handleTextBoxClick}
-            activeOpacity={0.8}
-          >
+          <View pointerEvents={hasUnreadMessages ? "auto" : "box-none"}>
+            <TouchableOpacity
+              style={[
+                styles.battleTextBox,
+                hasUnreadMessages && styles.battleTextBoxUnread,
+              ]}
+              onPress={handleTextBoxClick}
+              activeOpacity={0.8}
+            >
             <View style={styles.textBoxContent}>
               <Text style={styles.textBoxMessage}>
                 {displayedText}
@@ -1595,8 +1654,10 @@ export default function BattleScreen({
               </TouchableOpacity>
             </View>
           </TouchableOpacity>
+          </View>
         )}
         </ImageBackground>
+        </Animated.View>
       </TouchableOpacity>
 
       <View 

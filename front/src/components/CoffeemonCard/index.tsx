@@ -61,9 +61,13 @@ export default function CoffeemonCard({
     
     if (onPress) {
       onPress(coffeemon);
-    } else if (onToggleParty) {
-      await onToggleParty(coffeemon);
     }
+  };
+
+  const handleTogglePartyPress = async (e: any) => {
+    e.stopPropagation();
+    if (disabled || isLoading || !onToggleParty) return;
+    await onToggleParty(coffeemon);
   };
 
   // Minimalist Glass Container
@@ -143,7 +147,29 @@ export default function CoffeemonCard({
             {coffeemon.coffeemon.name}
           </Text>
 
-          {showHp && (
+          {/* Botão de Adicionar/Remover do Time */}
+          {showPartyIndicator && onToggleParty && (
+            <TouchableOpacity
+              style={[
+                styles.addButton,
+                {
+                  backgroundColor: coffeemon.isInParty ? typeColors.primary : 'rgba(0,0,0,0.1)',
+                }
+              ]}
+              onPress={handleTogglePartyPress}
+              activeOpacity={0.8}
+              disabled={disabled || isLoading}
+            >
+              <Text style={[
+                styles.addButtonText,
+                { color: coffeemon.isInParty ? '#FFF' : colors.text.secondary }
+              ]}>
+                {isLoading ? '...' : coffeemon.isInParty ? '★ No Time' : '+ Adicionar'}
+              </Text>
+            </TouchableOpacity>
+          )}
+
+          {showHp && !showPartyIndicator && (
             <View style={styles.hpContainer}>
               <View style={[styles.hpTrack, { backgroundColor: 'rgba(0,0,0,0.05)' }]}>
                 <LinearGradient
@@ -277,7 +303,7 @@ const styles = StyleSheet.create({
     height: 65,
   },
   infoSection: {
-    gap: 8,
+    gap: 6,
   },
   name: {
     fontSize: 16,
@@ -287,7 +313,21 @@ const styles = StyleSheet.create({
   },
   nameSmall: {
     fontSize: 11,
-    marginBottom: 4,
+    marginBottom: 0,
+  },
+  addButton: {
+    width: '100%',
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 4,
+  },
+  addButtonText: {
+    fontSize: 10,
+    fontWeight: '700',
+    letterSpacing: 0.5,
   },
   hpContainer: {
     width: '100%',

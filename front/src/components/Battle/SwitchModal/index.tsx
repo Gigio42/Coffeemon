@@ -85,7 +85,7 @@ export default function SwitchModal({
 
                     <View style={styles.statsRow}>
                       <View style={styles.statBlock}>
-                        <Text style={styles.statLabel}>ATK</Text>
+                        <Text style={styles.statLabel}>ATQ</Text>
                         <Text style={styles.statValue}>
                           {coffeemon.attack !== undefined ? coffeemon.attack : '--'}
                         </Text>
@@ -97,7 +97,7 @@ export default function SwitchModal({
                         </Text>
                       </View>
                       <View style={styles.statBlock}>
-                        <Text style={styles.statLabel}>SPD</Text>
+                        <Text style={styles.statLabel}>VEL</Text>
                         <Text style={styles.statValue}>
                           {coffeemon.speed !== undefined ? coffeemon.speed : '--'}
                         </Text>

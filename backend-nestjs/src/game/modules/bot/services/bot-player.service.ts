@@ -63,6 +63,7 @@ export class BotPlayerService {
     return {
       id: baseCoffeemon.id,
       name: `${baseCoffeemon.name}`,
+      level: level,
       types: baseCoffeemon.types,
       currentHp: maxHp,
       isFainted: false,

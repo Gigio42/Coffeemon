@@ -7,6 +7,7 @@ export interface SocketCallbacks {
   onConnectError?: (error: Error) => void;
   onMatchFound?: (data: any) => void;
   onAnyEvent?: (eventName: string, ...args: any[]) => void;
+  playerId?: number; // Added to register session
 }
 
 /**
@@ -37,6 +38,22 @@ export async function createSocket(
     // Evento: Socket conectado com sucesso
     socket.on('connect', () => {
       console.log('Socket connected:', socket.id);
+      
+      // Register session with backend if playerId is provided
+      if (callbacks.playerId) {
+        console.log('[Socket] Registering session for player', callbacks.playerId);
+        socket.emit('registerSession');
+        
+        // Listen for registration confirmation
+        socket.once('sessionRegistered', (data: any) => {
+          if (data.status === 'ok') {
+            console.log('[Socket] ✅ Session registered successfully for player', data.playerId);
+          } else {
+            console.error('[Socket] ❌ Session registration failed:', data.message);
+          }
+        });
+      }
+      
       if (callbacks.onConnect) {
         try {
           callbacks.onConnect(socket.id || '');

@@ -16,5 +16,6 @@
     "STATUS_APPLIED": "{targetName} foi afetado por {effectType}!",
     "STATUS_DAMAGE": "{coffeemonName} sofre {damage} de dano causado por {effectType}!",
     "STATUS_REMOVED": "O efeito de {effectType} em {coffeemonName} terminou!",
+    "STATUS_REFRESHED": "O efeito de {effectType} em {targetName} foi renovado!",
     "STATUS_HEAL": "{coffeemonName} recuperou {amount} pontos de vida graças a {effectType}!"
   }

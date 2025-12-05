@@ -23,6 +23,7 @@ interface BattleHUDProps {
   damage?: number | null;
   spriteVariant?: CoffeemonVariant;
   imageSourceGetter?: (name: string, variant?: CoffeemonVariant) => ImageSourcePropType;
+  playerName?: string;
 }
 
 const getTypeIcon = (type: string): ImageSourcePropType => {
@@ -49,20 +50,35 @@ export default function BattleHUD({
   damage,
   spriteVariant = 'default',
   imageSourceGetter,
+  playerName,
 }: BattleHUDProps) {
   const [damageAnim] = useState(new Animated.Value(0));
   const [currentDamage, setCurrentDamage] = useState<number | null>(null);
+  const [hpBarAnim] = useState(new Animated.Value(100)); // Inicializa em 100%
 
   const activeMon =
     playerState && playerState.activeCoffeemonIndex !== null
       ? playerState.coffeemons[playerState.activeCoffeemonIndex]
       : null;
 
+  const hpPercent = activeMon ? Math.max(0, Math.min(100, (activeMon.currentHp / activeMon.maxHp) * 100)) : 0;
+
+  // Animar barra de HP quando mudar
+  useEffect(() => {
+    if (activeMon) {
+      Animated.spring(hpBarAnim, {
+        toValue: hpPercent,
+        useNativeDriver: false, // width não pode usar native driver
+        tension: 50,
+        friction: 7,
+      }).start();
+    }
+  }, [hpPercent, hpBarAnim, activeMon]);
+
   // Handle damage animation
   useEffect(() => {
     if (damage && damage > 0) {
       setCurrentDamage(damage);
-      // console.log('BattleHUD received damage:', { isMe, damage });
       
       // Reset animation
       damageAnim.setValue(0);
@@ -90,7 +106,6 @@ export default function BattleHUD({
     return null;
   }
 
-  const hpPercent = Math.max(0, Math.min(100, (activeMon.currentHp / activeMon.maxHp) * 100));
   const containerStyle = isMe ? styles.playerHudPosition : styles.opponentHudPosition;
   const resolveImage = imageSourceGetter ?? getCoffeemonImage;
   const imageSource = resolveImage(activeMon.name, spriteVariant);
@@ -98,12 +113,24 @@ export default function BattleHUD({
   const monType = (activeMon as any)?.types?.[0] || (activeMon as any)?.type;
   const typeIconSource = getTypeIcon(monType);
   const typeColor = getTypeColor(monType);
-  // Corrigindo: usar o level do coffeemon, não do playerState
-  const level = activeMon.level ?? 1;
+  const level = activeMon.level;
+  
+  // Gera nome curto do jogador
+  const displayName = playerName || (isMe ? 'Você' : 'Oponente');
 
   return (
     <View style={[styles.hudContainer, containerStyle]}>
-      <View style={hudStyles.card}>
+      {/* Tag de Treinador */}
+      <View style={[hudStyles.trainerTag, isMe ? hudStyles.trainerTagLeft : hudStyles.trainerTagRight]}>
+        <View style={[hudStyles.trainerTagInner, isMe && hudStyles.trainerTagPlayer]}>
+          <Text style={hudStyles.trainerIcon}>{isMe ? '★' : '☆'}</Text>
+          <Text style={[hudStyles.trainerTagText, isMe && hudStyles.trainerTagTextPlayer]}>
+            {displayName}
+          </Text>
+        </View>
+      </View>
+      
+      <View style={[hudStyles.card, isMe && hudStyles.cardPlayer]}>
         <View style={hudStyles.topSection}>
           {/* Fundo do tipo com padrão */}
           <View style={[hudStyles.typeBackground, { backgroundColor: typeColor }]} />
@@ -122,11 +149,14 @@ export default function BattleHUD({
         <View style={hudStyles.barSection}>
           <Text style={hudStyles.hpLabelText}>HP</Text>
           <View style={hudStyles.barTrough}>
-            <View 
+            <Animated.View 
               style={[
                 hudStyles.barFill, 
                 { 
-                  width: `${hpPercent}%`,
+                  width: hpBarAnim.interpolate({
+                    inputRange: [0, 100],
+                    outputRange: ['0%', '100%'],
+                  }),
                   backgroundColor: hpPercent > 50 ? '#10b981' : hpPercent > 20 ? '#f59e0b' : '#ef4444'
                 }
               ]} 

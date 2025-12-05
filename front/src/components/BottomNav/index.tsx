@@ -62,7 +62,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({
   onNavigate,
 }) => {
   const navItems: { key: NavScreen; label: string; icon: any }[] = [
-    { key: "shop", label: "Shop", icon: battleIcons.marketplace },
+    { key: "shop", label: "Loja", icon: battleIcons.marketplace },
     { key: "team", label: "Time", icon: battleIcons.paw },
     { key: "battle", label: "Batalha", icon: battleIcons.versus },
     { key: "catalog", label: "Catálogo", icon: battleIcons.card },

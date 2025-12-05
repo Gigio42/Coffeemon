@@ -248,8 +248,8 @@ export default function MatchmakingScreen({
       return;
     }
 
-    // Tempo total estimado para o carregamento (em ms)
-    const totalTime = 2500; // 2.5 segundos
+    // Tempo total estimado para o carregamento (em ms) - REDUZIDO
+    const totalTime = 800; // 0.8 segundos (antes era 2.5s)
     const startTime = Date.now();
     const endTime = startTime + totalTime;
     let animationFrameId: number;
@@ -277,7 +277,7 @@ export default function MatchmakingScreen({
         setTimeout(() => {
           setShowContent(true);
           onIntroFinish?.();
-        }, 200);
+        }, 100);
       }
     };
 
@@ -820,20 +820,28 @@ export default function MatchmakingScreen({
       <SafeAreaView style={styles.container} edges={['top']}>
         {!showContent ? (
           <RNView style={styles.loadingContainer}>
-            <View style={[styles.backgroundVideo, { backgroundColor: '#0F1419' }]} />
+            <LinearGradient
+              colors={['#FFFFFF', '#F8FAFC', '#F1F5F9']}
+              locations={[0, 0.5, 1]}
+              style={styles.backgroundVideo}
+            />
             <View style={styles.loadingOverlay}>
               {/* Logo/Título Principal */}
+              <View style={styles.loadingLogoContainer}>
+                <View style={styles.loadingIconCircle}>
+                  <Text style={styles.loadingLogoEmoji}>☕</Text>
+                </View>
+              </View>
               <Text style={styles.loadingLogo}>COFFEEMON</Text>
-              <Text style={styles.loadingSubtitle}>Prepare-se para a batalha</Text>
+              <Text style={styles.loadingSubtitle}>Carregando sua aventura</Text>
               
               {/* Porcentagem de Progresso */}
               <Text style={styles.loadingPercentage}>{Math.round(progress)}%</Text>
               
               {/* Texto de Status */}
               <Text style={styles.loadingText}>
-                {progress < 30 ? 'Carregando recursos...' : 
-                 progress < 60 ? 'Preparando Coffeemons...' : 
-                 progress < 90 ? 'Finalizando...' : 
+                {progress < 40 ? 'Iniciando...' : 
+                 progress < 80 ? 'Preparando...' : 
                  'Pronto!'}
               </Text>
               
@@ -979,6 +987,8 @@ export default function MatchmakingScreen({
         onToggleParty={toggleParty}
         partyMembers={partyMembers}
         onSwapParty={swapPartyMembers}
+        onRefresh={fetchCoffeemons}
+        token={token}
       />
 
       <SlidingBottomSheet

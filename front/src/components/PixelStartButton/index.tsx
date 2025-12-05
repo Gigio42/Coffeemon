@@ -27,7 +27,7 @@ const PRESSED_SCALE = 0.95;
 const BOUNCE_SCALE = 1.05;
 
 export default function PixelStartButton({
-  label = 'START',
+  label = 'INICIAR',
   subtitle,
   disabled = false,
   onPress,

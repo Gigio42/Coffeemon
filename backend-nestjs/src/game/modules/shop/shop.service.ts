@@ -32,18 +32,19 @@ export class ShopService {
   @OnEvent('player.created')
   async handlePlayerCreation(event: PlayerCreatedEvent) {
     const { playerId } = event;
-    const starterPackIds = ['sweet-fruity', 'roast-blend', 'floral-pure'];
-    console.log(`[ShopService] Novo jogador ${playerId} criado. Dando pacotes iniciais...`);
 
     try {
-      for (const packId of starterPackIds) {
-        const pack = await this.gachaPackRepository.findOneBy({ id: packId });
-        if (pack) {
-          await this.awardPack(playerId, pack);
-        }
+      const player = await this.entityManager.findOne(Player, {
+        where: { id: playerId },
+      });
+
+      if (player) {
+        player.coins += 300;
+        await this.entityManager.save(Player, player);
+        console.log(`[ShopService] 300 moedas adicionadas ao jogador ${playerId}`);
       }
     } catch (error) {
-      console.error(`[ShopService] Falha ao dar starter packs para o player ${playerId}`, error);
+      console.error(`[ShopService] Falha ao dar moedas iniciais para o player ${playerId}`, error);
     }
   }
 

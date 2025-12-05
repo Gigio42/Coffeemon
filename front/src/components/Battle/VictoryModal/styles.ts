@@ -136,10 +136,26 @@ export const styles = StyleSheet.create({
   coffeemonLevelUp: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 8,
+    gap: 12,
     backgroundColor: "rgba(76, 175, 80, 0.2)",
-    padding: 8,
+    padding: 10,
     borderRadius: 8,
+  },
+  levelUpBadgeSmall: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: "#4CAF50",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  levelUpArrow: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "#FFFFFF",
+  },
+  levelUpInfo: {
+    flex: 1,
   },
   coffeemonLevelUpIcon: {
     fontSize: 20,
@@ -150,26 +166,40 @@ export const styles = StyleSheet.create({
     color: "#FFFFFF",
   },
   coffeemonExpText: {
-    fontSize: 14,
+    fontSize: 13,
     color: "#FFFFFFBB",
-    fontStyle: "italic",
+    marginTop: 2,
   },
   learnedMovesContainer: {
     backgroundColor: "rgba(33, 150, 243, 0.2)",
-    padding: 10,
+    padding: 12,
     borderRadius: 8,
-    gap: 5,
+    gap: 8,
   },
   learnedMovesTitle: {
     fontSize: 15,
     fontWeight: "bold",
     color: "#FFFFFF",
-    marginBottom: 5,
+    marginBottom: 4,
+  },
+  movesList: {
+    gap: 6,
+  },
+  moveItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  moveBullet: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: "#2196F3",
   },
   learnedMoveText: {
     fontSize: 14,
+    fontWeight: "600",
     color: "#FFFFFF",
-    paddingLeft: 10,
   },
   closeButton: {
     backgroundColor: "rgba(255, 255, 255, 0.25)",

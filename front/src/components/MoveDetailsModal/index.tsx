@@ -84,7 +84,7 @@ export default function MoveDetailsModal({ visible, move, onClose }: MoveDetails
 
               <View style={styles.statsGrid}>
                 <View style={styles.statBox}>
-                  <Text style={styles.statLabel}>Power</Text>
+                  <Text style={styles.statLabel}>Poder</Text>
                   <Text style={[styles.statValue, { color: colorScheme.primary }]}>
                     {move.power || '—'}
                   </Text>
@@ -92,7 +92,7 @@ export default function MoveDetailsModal({ visible, move, onClose }: MoveDetails
 
                 {move.category && (
                   <View style={styles.statBox}>
-                    <Text style={styles.statLabel}>Category</Text>
+                    <Text style={styles.statLabel}>Categoria</Text>
                     <Text style={[styles.statValue, { color: colorScheme.primary }]}>
                       {move.category}
                     </Text>
@@ -101,7 +101,7 @@ export default function MoveDetailsModal({ visible, move, onClose }: MoveDetails
 
                 {move.accuracy !== undefined && (
                   <View style={styles.statBox}>
-                    <Text style={styles.statLabel}>Accuracy</Text>
+                    <Text style={styles.statLabel}>Precisão</Text>
                     <Text style={[styles.statValue, { color: colorScheme.primary }]}>
                       {move.accuracy}%
                     </Text>
@@ -110,7 +110,7 @@ export default function MoveDetailsModal({ visible, move, onClose }: MoveDetails
 
                 {move.effectChance !== undefined && move.effectChance > 0 && (
                   <View style={styles.statBox}>
-                    <Text style={styles.statLabel}>Effect Chance</Text>
+                    <Text style={styles.statLabel}>Chance de Efeito</Text>
                     <Text style={[styles.statValue, { color: colorScheme.primary }]}>
                       {move.effectChance}%
                     </Text>
@@ -120,7 +120,7 @@ export default function MoveDetailsModal({ visible, move, onClose }: MoveDetails
 
               {move.effects && move.effects.length > 0 && (
                 <View style={styles.effectBox}>
-                  <Text style={styles.effectLabel}>Effects</Text>
+                  <Text style={styles.effectLabel}>Efeitos</Text>
                   <Text style={styles.effectValue}>
                     {move.effects.map((e: any) => e.type || e).join(', ')}
                   </Text>

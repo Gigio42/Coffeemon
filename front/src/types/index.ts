@@ -36,6 +36,7 @@ export interface CoffeemonModifiers {
 
 export interface Coffeemon {
   name: string;
+  level: number;
   currentHp: number;
   maxHp: number;
   isFainted: boolean;
@@ -43,7 +44,6 @@ export interface Coffeemon {
   moves: Move[];
   statusEffects?: StatusEffect[];
   types?: string[];
-  level?: number;
   // Stats base
   attack?: number;
   defense?: number;
@@ -59,12 +59,20 @@ export interface PlayerState {
   inventory?: Record<string, number>;
 }
 
+export interface PlayerInfo {
+  id: number;
+  username: string;
+  avatar?: string;
+}
+
 export interface BattleState {
   turn: number;
   player1Id: number;
   player2Id: number;
   player1: PlayerState;
   player2: PlayerState;
+  player1Info?: PlayerInfo;
+  player2Info?: PlayerInfo;
   currentPlayerId: number;
   battleStatus: BattleStatus;
   winnerId: number | null;

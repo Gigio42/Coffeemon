@@ -16,6 +16,7 @@ export interface StatusEffect {
 export interface CoffeemonState {
   id: number;
   name: string;
+  level: number;
   currentHp: number;
   maxHp: number;
   isFainted: boolean;

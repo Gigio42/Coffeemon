@@ -1,82 +1,179 @@
-import { StyleSheet } from 'react-native';
-import { colors, metrics } from '../../theme';
+import { StyleSheet, Dimensions, Platform } from 'react-native';
+import { pixelArt } from '../../theme';
+
+const { width } = Dimensions.get('window');
 
 export const styles = StyleSheet.create({
-  container: {
+  safeArea: {
     flex: 1,
-    backgroundColor: colors.background,
-    padding: metrics.spacing.md,
+    backgroundColor: '#f5f2e8', 
   },
-  configButton: {
-    position: 'absolute',
-    top: metrics.spacing.xs,
-    right: metrics.spacing.sm,
-    padding: metrics.spacing.sm,
-    zIndex: 10,
-  },
-  configButtonText: {
-    fontSize: metrics.fontSize.xxl,
-  },
-  loginContainer: {
+  container: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: metrics.spacing.lg,
+    padding: pixelArt.spacing.lg,
   },
-  loginTitle: {
-    fontSize: metrics.fontSize.xl,
-    fontWeight: 'bold',
-    marginBottom: metrics.spacing.xxl,
-    color: colors.text,
+  
+  // ========================================
+  // BOTÃO DE CONFIGURAÇÃO (Posicionado)
+  // ========================================
+  configButtonContainer: {
+    position: 'absolute',
+    top: Platform.OS === 'android' ? 20 : 10, // Ajuste para não colar na status bar
+    right: 20,
+    zIndex: 20,
+  },
+  configButton: {
+    backgroundColor: '#fff',
+    borderRadius: 8,
+    padding: 10,
+    borderWidth: 2,
+    borderColor: '#d4c5a0',
+    ...pixelArt.shadows.small,
+  },
+  configIcon: {
+    fontSize: 20,
+  },
+
+  // ========================================
+  // CARD DE LOGIN
+  // ========================================
+  loginCard: {
+    width: '100%',
+    maxWidth: 400,
+    backgroundColor: '#ffffff',
+    padding: pixelArt.spacing.xl,
+    borderRadius: pixelArt.borders.radiusMedium,
+    // Borda 3D estilo Pixel Art
+    borderTopWidth: 4,
+    borderLeftWidth: 4,
+    borderTopColor: '#faf8f0',
+    borderLeftColor: '#faf8f0',
+    borderBottomWidth: 4,
+    borderRightWidth: 4,
+    borderBottomColor: '#d4c5a0',
+    borderRightColor: '#d4c5a0',
+    ...pixelArt.shadows.card,
+    alignItems: 'center',
+  },
+
+  // ========================================
+  // CABEÇALHO (LOGO/TÍTULO)
+  // ========================================
+  headerContainer: {
+    alignItems: 'center',
+    marginBottom: pixelArt.spacing.xl,
+  },
+  logoIcon: {
+    fontSize: 48,
+    marginBottom: pixelArt.spacing.sm,
+  },
+  appTitle: {
+    ...pixelArt.typography.pixelTitle,
+    color: pixelArt.colors.coffeePrimary,
+    fontSize: 28,
+    textAlign: 'center',
+    marginBottom: 4,
+  },
+  appSubtitle: {
+    ...pixelArt.typography.pixelSubtitle,
+    color: pixelArt.colors.textLight,
+    fontSize: 12,
+    textAlign: 'center',
+  },
+
+  // ========================================
+  // FORMULÁRIO
+  // ========================================
+  formContainer: {
+    width: '100%',
+    gap: pixelArt.spacing.md,
+  },
+  inputGroup: {
+    marginBottom: pixelArt.spacing.sm,
+  },
+  label: {
+    ...pixelArt.typography.pixelBody,
+    fontSize: 12,
+    fontWeight: '700',
+    color: pixelArt.colors.textDark,
+    marginBottom: 4,
+    marginLeft: 2,
   },
   input: {
     width: '100%',
-    maxWidth: metrics.input.maxWidth,
-    height: metrics.input.height,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: metrics.borderRadius.sm,
-    paddingHorizontal: metrics.spacing.md,
-    marginBottom: metrics.spacing.md,
-    backgroundColor: colors.white,
+    height: 50,
+    backgroundColor: '#f9f9f9',
+    borderWidth: 2,
+    borderColor: '#e0e0e0',
+    borderRadius: pixelArt.borders.radiusSmall,
+    paddingHorizontal: pixelArt.spacing.md,
+    fontSize: 16,
+    color: pixelArt.colors.textDark,
+    fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace',
   },
+  inputError: {
+    borderColor: pixelArt.colors.error,
+    backgroundColor: '#fff0f0',
+  },
+
+  // ========================================
+  // BOTÕES
+  // ========================================
   loginButton: {
+    ...pixelArt.buttons.primary,
     width: '100%',
-    maxWidth: metrics.button.maxWidth,
-    height: metrics.button.height,
-    backgroundColor: colors.primary,
-    borderRadius: metrics.borderRadius.sm,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginTop: metrics.spacing.sm,
+    marginTop: pixelArt.spacing.md,
   },
   loginButtonText: {
-    color: colors.white,
-    fontSize: metrics.fontSize.md,
-    fontWeight: 'bold',
+    ...pixelArt.buttons.text,
+    fontSize: 14,
   },
+  
   toggleButton: {
-    marginTop: metrics.spacing.md,
-    paddingVertical: metrics.spacing.sm,
+    marginTop: pixelArt.spacing.lg,
+    padding: pixelArt.spacing.sm,
   },
   toggleButtonText: {
-    color: colors.primary,
-    fontSize: metrics.fontSize.sm,
+    ...pixelArt.typography.pixelBody,
+    fontSize: 13,
+    color: pixelArt.colors.textLight,
     textDecorationLine: 'underline',
-  },
-  message: {
-    marginTop: metrics.spacing.md,
-    fontSize: metrics.fontSize.sm,
     textAlign: 'center',
   },
-  clearCacheButton: {
-    marginTop: metrics.spacing.xxl,
-    paddingVertical: metrics.spacing.sm,
-    paddingHorizontal: metrics.spacing.md,
+
+  // ========================================
+  // FEEDBACK
+  // ========================================
+  messageContainer: {
+    marginTop: pixelArt.spacing.md,
+    padding: pixelArt.spacing.sm,
+    borderRadius: 4,
+    width: '100%',
+    alignItems: 'center',
   },
-  clearCacheText: {
-    color: colors.textLight,
-    fontSize: metrics.fontSize.xs,
-    textDecorationLine: 'underline',
+  messageText: {
+    ...pixelArt.typography.pixelBody,
+    fontSize: 12,
+    fontWeight: 'bold',
+    textAlign: 'center',
+  },
+
+  // ========================================
+  // FOOTER
+  // ========================================
+  footer: {
+    position: 'absolute',
+    bottom: 20,
+    alignItems: 'center',
+  },
+  footerText: {
+    ...pixelArt.typography.pixelBody,
+    fontSize: 10,
+    color: '#a0a0a0',
+  },
+  clearCacheButton: {
+    marginTop: 8,
   },
 });

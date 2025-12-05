@@ -11,16 +11,18 @@ import {
   Image,
   ImageBackground,
   ImageSourcePropType,
-  StyleSheet
+  StyleSheet,
+  Alert
 } from 'react-native';
 import { BlurView } from 'expo-blur';
 import { LinearGradient } from 'expo-linear-gradient';
-import { PlayerCoffeemon } from '../../api/coffeemonService';
+import { PlayerCoffeemon, fetchAvailableMoves, updateCoffeemonMoves } from '../../api/coffeemonService';
 import { styles } from './styles';
 import { getCoffeemonImage } from '../../../assets/coffeemons';
 import { getVariantForStatusEffects } from '../../utils/statusEffects';
 import { getTypeColorScheme } from '../../theme/colors';
 import { useTheme } from '../../theme/ThemeContext';
+import MoveCustomizer from '../MoveCustomizer';
 
 const LIMONETO_BACKGROUND = require('../../../assets/backgrounds/limonetoback.png');
 const JASMINELLE_BACKGROUND = require('../../../assets/backgrounds/jasminiback.png');
@@ -62,6 +64,8 @@ interface CoffeemonDetailsModalProps {
   onToggleParty?: (coffeemon: PlayerCoffeemon) => Promise<boolean | void> | void;
   partyMembers?: PlayerCoffeemon[];
   onSwapParty?: (newMember: PlayerCoffeemon, oldMember: PlayerCoffeemon) => Promise<boolean>;
+  onRefresh?: () => Promise<void>;
+  token?: string | null;
 }
 
 export default function CoffeemonDetailsModal({
@@ -71,16 +75,20 @@ export default function CoffeemonDetailsModal({
   onToggleParty,
   partyMembers = [],
   onSwapParty,
+  onRefresh,
+  token,
 }: CoffeemonDetailsModalProps) {
   const { width: viewportWidth, height: viewportHeight } = useWindowDimensions();
   const { colors } = useTheme();
-  const [activeTab, setActiveTab] = useState<'about' | 'status' | 'moves'>('status');
+  const [activeTab, setActiveTab] = useState<'sobre' | 'stats' | 'golpes'>('stats');
   const [showSwapSelection, setShowSwapSelection] = useState(false);
+  const [showMoveCustomizer, setShowMoveCustomizer] = useState(false);
 
   React.useEffect(() => {
     if (visible) {
       setShowSwapSelection(false);
-      setActiveTab('about');
+      setShowMoveCustomizer(false);
+      setActiveTab('sobre');
     }
   }, [visible, coffeemon]);
 
@@ -133,45 +141,53 @@ export default function CoffeemonDetailsModal({
 
   const renderTabContent = () => {
     switch (activeTab) {
-      case 'status':
+      case 'stats':
         return (
           <View style={styles.section}>
             {renderStatBar('HP', stats.hp, '#FF5959')}
-            {renderStatBar('ATK', stats.attack, '#F5AC78')}
+            {renderStatBar('ATQ', stats.attack, '#F5AC78')}
             {renderStatBar('DEF', stats.defense, '#FAE078')}
-            {renderStatBar('SPD', stats.speed, '#9DB7F5')}
+            {renderStatBar('VEL', stats.speed, '#9DB7F5')}
             
             <View style={[styles.xpContainer, { borderTopColor: 'rgba(0,0,0,0.05)' }]}>
-              <Text style={[styles.xpLabel, textSecondary]}>Experience</Text>
+              <Text style={[styles.xpLabel, textSecondary]}>Experiência</Text>
               <Text style={[styles.xpValue, textPrimary]}>{coffeemon.experience} XP</Text>
             </View>
           </View>
         );
-      case 'moves':
+      case 'golpes':
         return (
           <View style={styles.section}>
             {coffeemon.learnedMoves && coffeemon.learnedMoves.length > 0 ? (
-              coffeemon.learnedMoves.map((lm) => (
-                <View key={lm.id} style={[styles.moveCard, { backgroundColor: 'rgba(255,255,255,0.6)', borderColor: 'rgba(255,255,255,0.8)' }]}>
-                  <View style={styles.moveHeader}>
-                    <Text style={[styles.moveName, textPrimary]}>{lm.move.name}</Text>
-                    <View style={[styles.moveTypeBadge, { backgroundColor: typeColors.primary + '20' }]}>
-                      <Text style={[styles.moveType, { color: typeColors.primary }]}>{lm.move.elementalType || 'Normal'}</Text>
+              <>
+                {coffeemon.learnedMoves.map((lm) => (
+                  <View key={lm.id} style={[styles.moveCard, { backgroundColor: 'rgba(255,255,255,0.6)', borderColor: 'rgba(255,255,255,0.8)' }]}>
+                    <View style={styles.moveHeader}>
+                      <Text style={[styles.moveName, textPrimary]}>{lm.move.name}</Text>
+                      <View style={[styles.moveTypeBadge, { backgroundColor: typeColors.primary + '20' }]}>
+                        <Text style={[styles.moveType, { color: typeColors.primary }]}>{lm.move.elementalType || 'Normal'}</Text>
+                      </View>
+                    </View>
+                    <Text style={[styles.moveDesc, textSecondary]}>{lm.move.description}</Text>
+                    <View style={[styles.moveStats, { borderTopColor: 'rgba(0,0,0,0.05)' }]}>
+                      <Text style={[styles.moveStat, textTertiary]}>Poder: {lm.move.power}</Text>
+                      <Text style={[styles.moveStat, textTertiary]}>Categoria: {lm.move.category}</Text>
                     </View>
                   </View>
-                  <Text style={[styles.moveDesc, textSecondary]}>{lm.move.description}</Text>
-                  <View style={[styles.moveStats, { borderTopColor: 'rgba(0,0,0,0.05)' }]}>
-                    <Text style={[styles.moveStat, textTertiary]}>Power: {lm.move.power}</Text>
-                    <Text style={[styles.moveStat, textTertiary]}>Category: {lm.move.category}</Text>
-                  </View>
-                </View>
-              ))
+                ))}
+                <TouchableOpacity
+                  style={[styles.customizeMovesButton, { backgroundColor: typeColors.primary }]}
+                  onPress={() => setShowMoveCustomizer(true)}
+                >
+                  <Text style={styles.customizeMovesButtonText}>⚙️ Customizar Moves</Text>
+                </TouchableOpacity>
+              </>
             ) : (
               <Text style={[styles.noMoves, textTertiary]}>Nenhum movimento aprendido</Text>
             )}
           </View>
         );
-      case 'about':
+      case 'sobre':
         return (
           <View style={[styles.section, { flex: 1 }]}>
             <View style={styles.aboutHeader}>
@@ -321,6 +337,39 @@ export default function CoffeemonDetailsModal({
     </View>
   );
 
+  const handleLoadAvailableMoves = async (playerCoffeemonId: number) => {
+    if (!token) throw new Error('Token não disponível');
+    return await fetchAvailableMoves(token, playerCoffeemonId);
+  };
+
+  const handleSaveMoves = async (moveIds: number[]) => {
+    if (!token || !coffeemon) throw new Error('Token ou coffeemon não disponível');
+    
+    try {
+      // 1. Salvar no backend
+      await updateCoffeemonMoves(token, coffeemon.id, moveIds);
+      
+      // 2. Fechar o customizador
+      setShowMoveCustomizer(false);
+      
+      // 3. Atualizar os dados
+      if (onRefresh) {
+        await onRefresh();
+      }
+      
+      // 4. Fechar o modal de detalhes para forçar recarregar quando abrir novamente
+      onClose();
+      
+      // 5. Mostrar feedback de sucesso
+      setTimeout(() => {
+        Alert.alert('Sucesso', 'Moves atualizados com sucesso!');
+      }, 300);
+    } catch (error) {
+      console.error('Erro ao salvar moves:', error);
+      throw error; // Re-throw para o MoveCustomizer tratar
+    }
+  };
+
   return (
     <Modal
       visible={visible}
@@ -337,7 +386,17 @@ export default function CoffeemonDetailsModal({
 
         <View style={[styles.modalWrapper, { width: modalWidth, height: modalHeight }]}>
             <BlurView intensity={95} tint="light" style={styles.modalGlass}>
-                {showSwapSelection ? (
+                {showMoveCustomizer ? (
+                    coffeemon && (
+                        <MoveCustomizer
+                            coffeemon={coffeemon}
+                            onSave={handleSaveMoves}
+                            onClose={() => setShowMoveCustomizer(false)}
+                            onLoadAvailableMoves={handleLoadAvailableMoves}
+                            token={token}
+                        />
+                    )
+                ) : showSwapSelection ? (
                     renderSwapSelection()
                 ) : (
                     <>
@@ -408,8 +467,7 @@ export default function CoffeemonDetailsModal({
                                 colors={typeColors.gradient as any}
                                 start={{ x: 0, y: 0 }}
                                 end={{ x: 1, y: 1 }}
-                                style={StyleSheet.absoluteFillObject}
-                                opacity={0.8}
+                                style={[StyleSheet.absoluteFillObject, { opacity: 0.8 }]}
                             />
                             
                             <LinearGradient
@@ -430,7 +488,14 @@ export default function CoffeemonDetailsModal({
                             
                             {/* Tabs */}
                             <View style={styles.tabsContainer}>
-                                {(['about', 'status', 'moves'] as const).map((tab) => (
+                                {(['sobre', 'stats', 'golpes'] as const).map((tab) => {
+                                    const tabLabels = {
+                                        sobre: 'SOBRE',
+                                        stats: 'STATS',
+                                        golpes: 'GOLPES'
+                                    };
+                                    
+                                    return (
                                     <TouchableOpacity
                                         key={tab}
                                         style={[
@@ -444,10 +509,11 @@ export default function CoffeemonDetailsModal({
                                             { color: colors.text.tertiary },
                                             activeTab === tab && { color: typeColors.primary, fontWeight: '800' }
                                         ]}>
-                                            {tab.toUpperCase()}
+                                            {tabLabels[tab]}
                                         </Text>
                                     </TouchableOpacity>
-                                ))}
+                                    );
+                                })}
                             </View>
 
                             <ScrollView 

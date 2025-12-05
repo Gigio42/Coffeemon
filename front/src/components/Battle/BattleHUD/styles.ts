@@ -20,6 +20,51 @@ export const hudStyles = StyleSheet.create({
     shadowRadius: 12,
     elevation: 8,
   },
+  cardPlayer: {
+    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+  },
+  trainerTag: {
+    position: 'absolute',
+    top: -24,
+    zIndex: 10,
+  },
+  trainerTagLeft: {
+    left: 0,
+  },
+  trainerTagRight: {
+    right: 0,
+  },
+  trainerTagInner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    backgroundColor: 'rgba(156, 163, 175, 0.95)',
+    borderRadius: 12,
+    gap: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.15,
+    shadowRadius: 3,
+    elevation: 3,
+  },
+  trainerTagPlayer: {
+    backgroundColor: 'rgba(16, 185, 129, 0.95)',
+  },
+  trainerIcon: {
+    fontSize: 10,
+    color: '#FFFFFF',
+  },
+  trainerTagText: {
+    ...pixelFont,
+    fontSize: 10,
+    color: '#FFFFFF',
+    fontWeight: '700',
+    letterSpacing: 0.5,
+  },
+  trainerTagTextPlayer: {
+    fontWeight: '800',
+  },
   topSection: {
     flexDirection: 'row',
     justifyContent: 'space-between',
