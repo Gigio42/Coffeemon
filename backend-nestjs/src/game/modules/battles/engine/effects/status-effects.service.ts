@@ -20,7 +20,16 @@ export class StatusEffectsService {
     const existingEffect = target.statusEffects.find((e) => e.type === effectToApply.type);
     if (existingEffect) {
       existingEffect.duration = effectToApply.duration;
-      return [];
+      return [
+        {
+          eventKey: 'STATUS_REFRESHED',
+          payload: {
+            targetName: target.name,
+            effectType: effectToApply.type,
+            newDuration: effectToApply.duration,
+          },
+        },
+      ];
     }
 
     target.statusEffects.push(effectToApply);
