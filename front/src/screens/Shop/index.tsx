@@ -22,6 +22,7 @@ import { fetchPlayerData, fetchAllCoffeemons, Coffeemon } from '../../api/coffee
 import { getTypeColorScheme } from '../../theme/colors';
 import { getCoffeemonImage } from '../../../assets/coffeemons';
 import CoffeemonDetailsModal from '../../components/CoffeemonDetailsModal';
+import GachaRevealModal from '../../components/GachaRevealModal';
 import { useTheme } from '../../theme/ThemeContext';
 
 const { width } = Dimensions.get('window');
@@ -53,6 +54,10 @@ export const ShopScreen: React.FC<ShopScreenProps> = ({ token }) => {
   // Coffeemon details modal
   const [selectedCoffeemon, setSelectedCoffeemon] = useState<any>(null);
   const [detailsModalVisible, setDetailsModalVisible] = useState(false);
+  
+  // Gacha reveal modal
+  const [gachaRevealVisible, setGachaRevealVisible] = useState(false);
+  const [revealedCoffeemon, setRevealedCoffeemon] = useState<{ name: string; types: string[] } | null>(null);
   
   const bannerScrollRef = useRef<FlatList>(null);
 
@@ -109,11 +114,12 @@ export const ShopScreen: React.FC<ShopScreenProps> = ({ token }) => {
               setPlayerCoins(prev => prev - pack.cost);
               
               if (result.coffeemon) {
-                Alert.alert(
-                  '🎉 Parabéns!',
-                  `Você obteve ${result.coffeemon.name}!`,
-                  [{ text: 'OK' }]
-                );
+                // Show gacha reveal modal with animation
+                setRevealedCoffeemon({
+                  name: result.coffeemon.name,
+                  types: result.coffeemon.types || ['roasted'],
+                });
+                setGachaRevealVisible(true);
               } else {
                 Alert.alert('Sucesso', 'Pacote comprado com sucesso!');
               }
@@ -392,19 +398,16 @@ export const ShopScreen: React.FC<ShopScreenProps> = ({ token }) => {
                 {item.description}
               </Text>
               
-              <View style={styles.itemFooter}>
-                <View style={styles.itemCost}>
+              <TouchableOpacity
+                style={[styles.itemBuyButton, { backgroundColor: colors.accent.primary }]}
+                onPress={() => handleBuyItem(item)}
+                activeOpacity={0.8}
+              >
+                <View style={styles.itemBuyButtonContent}>
                   <Text style={styles.itemCostIcon}>💰</Text>
-                  <Text style={styles.itemCostText}>{item.cost}</Text>
+                  <Text style={styles.itemBuyButtonText}>{item.cost}</Text>
                 </View>
-                
-                <TouchableOpacity
-                  style={[styles.itemBuyButton, { backgroundColor: colors.accent.primary }]}
-                  onPress={() => handleBuyItem(item)}
-                >
-                  <Text style={styles.itemBuyButtonText}>Comprar</Text>
-                </TouchableOpacity>
-              </View>
+              </TouchableOpacity>
             </View>
           ))}
         </View>
@@ -488,6 +491,19 @@ export const ShopScreen: React.FC<ShopScreenProps> = ({ token }) => {
           setSelectedCoffeemon(null);
         }}
       />
+      
+      {/* Gacha Reveal Modal */}
+      {revealedCoffeemon && (
+        <GachaRevealModal
+          visible={gachaRevealVisible}
+          coffeemonName={revealedCoffeemon.name}
+          coffeemonTypes={revealedCoffeemon.types}
+          onClose={() => {
+            setGachaRevealVisible(false);
+            setRevealedCoffeemon(null);
+          }}
+        />
+      )}
     </SafeAreaView>
   );
 };

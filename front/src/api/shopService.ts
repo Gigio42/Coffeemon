@@ -52,7 +52,7 @@ export async function buyGachaPack(token: string, packId: string): Promise<any> 
     },
     body: JSON.stringify({
       productId: packId,
-      productType: 'GACHA',
+      productType: 'gacha',
     }),
   });
 
@@ -77,7 +77,7 @@ export async function buyItem(token: string, itemId: string): Promise<any> {
     },
     body: JSON.stringify({
       productId: itemId,
-      productType: 'ITEM',
+      productType: 'item',
     }),
   });
 

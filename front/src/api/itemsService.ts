@@ -160,7 +160,7 @@ export const buyItem = async (token: string, itemId: string): Promise<any> => {
       },
       body: JSON.stringify({
         productId: itemId,
-        productType: 'ITEM',
+        productType: 'item',
       }),
     });
 
