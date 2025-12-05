@@ -67,7 +67,8 @@ const coffeemonImages: CoffeemonImageMap = {
   },
   crambeline: {
     default: require('./crambeline/default.png'),
-    back: require('./crambeline/default.png'), // Usando default como back
+    back: require('./crambeline/back.png'), // Usando default como back
+    hurt: require('./crambeline/hurt.png'),
   },
   jack: {
     default: require('./Jack/default.png'),
