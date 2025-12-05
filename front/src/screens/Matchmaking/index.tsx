@@ -987,6 +987,8 @@ export default function MatchmakingScreen({
         onToggleParty={toggleParty}
         partyMembers={partyMembers}
         onSwapParty={swapPartyMembers}
+        onRefresh={fetchCoffeemons}
+        token={token}
       />
 
       <SlidingBottomSheet

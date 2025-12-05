@@ -509,13 +509,13 @@ export const styles = StyleSheet.create({
   sheetCardsGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    justifyContent: 'center',
+    justifyContent: 'space-between',
     width: '100%',
-    gap: spacing.md,
+    paddingHorizontal: spacing.sm,
   },
 
   sheetCardWrapper: {
-    width: 160,
+    width: '48%',
     marginBottom: spacing.md,
   },
 
@@ -529,14 +529,15 @@ export const styles = StyleSheet.create({
     flexWrap: 'wrap',
     justifyContent: 'space-between',
     width: '100%',
+    paddingHorizontal: spacing.sm,
   },
 
   sheetItemCard: {
     width: '48%',
     marginBottom: spacing.md,
     backgroundColor: '#FFFFFF',
-    borderRadius: radius.xl,
-    padding: spacing.md,
+    borderRadius: radius.lg,
+    padding: spacing.sm,
     borderWidth: 1,
     borderColor: '#E5E7EB',
     shadowColor: '#000000',

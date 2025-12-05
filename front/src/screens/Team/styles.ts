@@ -2,10 +2,10 @@ import { StyleSheet, Dimensions } from 'react-native';
 import { theme } from '../../theme/theme';
 
 const { width } = Dimensions.get('window');
-const COLUMN_COUNT = 2;
+const COLUMN_COUNT = 3;
 const GRID_PADDING = theme.spacing.lg;
-const ITEM_MARGIN = theme.spacing.md;
-const AVAILABLE_WIDTH = width - (GRID_PADDING * 2) - ITEM_MARGIN;
+const ITEM_MARGIN = theme.spacing.sm;
+const AVAILABLE_WIDTH = width - (GRID_PADDING * 2) - (ITEM_MARGIN * (COLUMN_COUNT - 1));
 const CARD_WIDTH = AVAILABLE_WIDTH / COLUMN_COUNT;
 
 export const styles = StyleSheet.create({
@@ -178,12 +178,12 @@ export const styles = StyleSheet.create({
     paddingBottom: 100,
   },
   columnWrapper: {
-    justifyContent: 'space-between',
+    justifyContent: 'flex-start',
     gap: ITEM_MARGIN,
   },
   collectionItem: {
     width: CARD_WIDTH,
-    marginBottom: theme.spacing.md,
+    marginBottom: theme.spacing.sm,
   },
   
   // Inventory Section

@@ -343,5 +343,150 @@ export class PlayerService {
 
     return this.playerRepository.save(player);
   }
-}
 
+  /**
+   * Atualiza os moves equipados de um PlayerCoffeemon
+   */
+  async updateCoffeemonMoves(
+    playerId: number,
+    playerCoffeemonId: number,
+    moveIds: number[]
+  ): Promise<PlayerCoffeemons> {
+    // Validar que tem entre 1 e 4 moves
+    if (moveIds.length < 1 || moveIds.length > 4) {
+      throw new BadRequestException('O Coffeemon deve ter entre 1 e 4 moves equipados');
+    }
+
+    // Buscar o PlayerCoffeemon
+    const playerCoffeemon = await this.playerCoffeemonRepository.findOne({
+      where: {
+        id: playerCoffeemonId,
+        player: { id: playerId },
+      },
+      relations: ['coffeemon', 'learnedMoves', 'learnedMoves.move'],
+    });
+
+    if (!playerCoffeemon) {
+      throw new NotFoundException(
+        `Player Coffeemon com ID ${playerCoffeemonId} não encontrado para o player ${playerId}`
+      );
+    }
+
+    // Buscar todos os moves disponíveis no learnset do Coffeemon
+    const availableMoves = await this.learnsetRepository.find({
+      where: {
+        coffeemon: { id: playerCoffeemon.coffeemon.id },
+      },
+      relations: ['move'],
+    });
+
+    const availableMoveIds = new Set(availableMoves.map((lm) => lm.move.id));
+
+    // Validar que todos os moves pertencem ao learnset do Coffeemon
+    for (const moveId of moveIds) {
+      if (!availableMoveIds.has(moveId)) {
+        throw new BadRequestException(
+          `Move com ID ${moveId} não está disponível para ${playerCoffeemon.coffeemon.name}`
+        );
+      }
+    }
+
+    // Validar que não há moves duplicados
+    const uniqueMoveIds = new Set(moveIds);
+    if (uniqueMoveIds.size !== moveIds.length) {
+      throw new BadRequestException('Não é permitido equipar o mesmo move mais de uma vez');
+    }
+
+    // Remover todos os moves atuais
+    await this.playerCoffeemonMoveRepository.delete({
+      playerCoffeemon: { id: playerCoffeemonId },
+    });
+
+    // Adicionar os novos moves nos slots corretos
+    const newMoves = moveIds.map((moveId, index) =>
+      this.playerCoffeemonMoveRepository.create({
+        playerCoffeemon: { id: playerCoffeemonId },
+        move: { id: moveId },
+        slot: index + 1,
+      })
+    );
+
+    await this.playerCoffeemonMoveRepository.save(newMoves);
+
+    // Retornar o PlayerCoffeemon atualizado
+    const updated = await this.playerCoffeemonRepository.findOne({
+      where: { id: playerCoffeemonId },
+      relations: ['coffeemon', 'learnedMoves', 'learnedMoves.move'],
+    });
+
+    if (!updated) {
+      throw new NotFoundException(`PlayerCoffeemon com ID ${playerCoffeemonId} não encontrado`);
+    }
+
+    return updated;
+  }
+
+  /**
+   * Retorna todos os moves disponíveis para um PlayerCoffeemon
+   * Filtra baseado no nível atual do Coffeemon
+   */
+  async getAvailableMovesForCoffeemon(playerId: number, playerCoffeemonId: number): Promise<any[]> {
+    const playerCoffeemon = await this.playerCoffeemonRepository.findOne({
+      where: {
+        id: playerCoffeemonId,
+        player: { id: playerId },
+      },
+      relations: ['coffeemon'],
+    });
+
+    if (!playerCoffeemon) {
+      throw new NotFoundException(
+        `Player Coffeemon com ID ${playerCoffeemonId} não encontrado para o player ${playerId}`
+      );
+    }
+
+    // Buscar todos os moves do learnset
+    const allMoves = await this.learnsetRepository.find({
+      where: {
+        coffeemon: { id: playerCoffeemon.coffeemon.id },
+      },
+      relations: ['move'],
+      order: {
+        levelLearned: 'ASC',
+        move: { name: 'ASC' },
+      },
+    });
+
+    // Filtrar moves que já foram desbloqueados
+    const unlockedMoves = allMoves.filter((lm) => {
+      // Moves de START são sempre disponíveis
+      if (lm.learnMethod === MoveLearnMethod.START) {
+        return true;
+      }
+
+      // Moves de LEVEL_UP só são disponíveis se o nível foi atingido
+      if (lm.learnMethod === MoveLearnMethod.LEVEL_UP) {
+        return (
+          lm.levelLearned !== null &&
+          lm.levelLearned !== undefined &&
+          lm.levelLearned <= playerCoffeemon.level
+        );
+      }
+
+      // Moves de EVOLUTION, MACHINE, TUTOR, EGG podem ser adicionados conforme a lógica do jogo
+      // Por enquanto, vamos permitir apenas START e LEVEL_UP
+      return false;
+    });
+
+    return unlockedMoves.map((lm) => ({
+      id: lm.move.id,
+      name: lm.move.name,
+      description: lm.move.description,
+      power: lm.move.power,
+      category: lm.move.category,
+      elementalType: lm.move.elementalType,
+      learnMethod: lm.learnMethod,
+      levelLearned: lm.levelLearned,
+    }));
+  }
+}

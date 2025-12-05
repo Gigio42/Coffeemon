@@ -527,12 +527,11 @@ export default function BattleScreen({
         <View>
           <CoffeemonCard
             coffeemon={fakePlayerCoffeemon}
-            onToggleParty={
-              canSwitch ? async (c) => await onSelect() : async () => {}
-            }
+            onPress={canSwitch ? async (c) => await onSelect() : undefined}
             variant="large"
             isLoading={isLoading || !canSwitch}
             disabled={!canSwitch}
+            showPartyIndicator={false}
           />
           {!canSwitch && reason && (
             <Text
@@ -582,12 +581,11 @@ export default function BattleScreen({
         <View>
           <CoffeemonCard
             coffeemon={fakePlayerCoffeemon}
-            onToggleParty={
-              canSelect ? async (c) => await onSelect() : async () => {}
-            }
+            onPress={canSelect ? async (c) => await onSelect() : undefined}
             variant="large"
             isLoading={isLoading || !canSelect}
             disabled={!canSelect}
+            showPartyIndicator={false}
           />
           {!canSelect && reason && (
             <Text

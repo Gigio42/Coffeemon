@@ -232,3 +232,57 @@ export async function fetchAllCoffeemons(token: string): Promise<Coffeemon[]> {
   return await response.json();
 }
 
+/**
+ * Busca todos os moves disponíveis para um PlayerCoffeemon
+ */
+export async function fetchAvailableMoves(
+  token: string,
+  playerCoffeemonId: number
+): Promise<Move[]> {
+  const url = await getServerUrl();
+  const response = await fetch(
+    `${url}/game/players/me/coffeemons/${playerCoffeemonId}/available-moves`,
+    {
+      method: 'GET',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+    }
+  );
+
+  if (!response.ok) {
+    throw new Error('Erro ao carregar moves disponíveis');
+  }
+
+  return await response.json();
+}
+
+/**
+ * Atualiza os moves equipados de um PlayerCoffeemon
+ */
+export async function updateCoffeemonMoves(
+  token: string,
+  playerCoffeemonId: number,
+  moveIds: number[]
+): Promise<PlayerCoffeemon> {
+  const url = await getServerUrl();
+  const response = await fetch(
+    `${url}/game/players/me/coffeemons/${playerCoffeemonId}/moves`,
+    {
+      method: 'PUT',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ moveIds }),
+    }
+  );
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({}));
+    throw new Error(error.message || 'Erro ao atualizar moves');
+  }
+
+  return await response.json();
+}

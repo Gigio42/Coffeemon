@@ -27,7 +27,8 @@ export const TeamScreen: React.FC<TeamScreenProps> = ({ token }) => {
     loading, 
     toggleParty, 
     swapPartyMembers,
-    partyLoading 
+    partyLoading,
+    fetchCoffeemons
   } = useCoffeemons({ token: token || '' });
 
   const [selectedCoffeemon, setSelectedCoffeemon] = useState<PlayerCoffeemon | null>(null);
@@ -102,13 +103,13 @@ export const TeamScreen: React.FC<TeamScreenProps> = ({ token }) => {
     <View style={styles.collectionItem}>
       <CoffeemonCard 
         coffeemon={item} 
-        onToggleParty={() => {}}
+        onToggleParty={handleToggle}
         onPress={() => handleCardPress(item)}
-        variant="large"
+        variant="small"
         isLoading={partyLoading === item.id}
-        showHp={false}
+        showHp={true}
         showStats={false}
-        showPartyIndicator={false}
+        showPartyIndicator={true}
       />
     </View>
   );
@@ -252,7 +253,7 @@ export const TeamScreen: React.FC<TeamScreenProps> = ({ token }) => {
           data={filteredCoffeemons}
           renderItem={renderCollectionItem}
           keyExtractor={(item) => item.id.toString()}
-          numColumns={2}
+          numColumns={3}
           contentContainerStyle={styles.collectionList}
           columnWrapperStyle={styles.columnWrapper}
           ListFooterComponent={renderInventory}
@@ -275,6 +276,8 @@ export const TeamScreen: React.FC<TeamScreenProps> = ({ token }) => {
         onToggleParty={handleToggle}
         partyMembers={partyMembers}
         onSwapParty={handleSwap}
+        onRefresh={fetchCoffeemons}
+        token={token}
       />
     </SafeAreaView>
   );

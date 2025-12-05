@@ -490,6 +490,8 @@ export const ShopScreen: React.FC<ShopScreenProps> = ({ token }) => {
           setDetailsModalVisible(false);
           setSelectedCoffeemon(null);
         }}
+        onRefresh={loadShopData}
+        token={token}
       />
       
       {/* Gacha Reveal Modal */}

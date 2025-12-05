@@ -42,48 +42,47 @@ export const CatalogScreen: React.FC<CatalogScreenProps> = ({ token }) => {
   const [selectedType, setSelectedType] = useState<CoffeemonType | 'all'>('all');
   const [showOnlyOwned, setShowOnlyOwned] = useState(false);
 
-  useEffect(() => {
-    const loadCatalog = async () => {
-      if (!token) return;
+  const loadCatalog = async () => {
+    if (!token) return;
+    
+    try {
+      setLoading(true);
       
+      const [coffeemonsData, itemsData] = await Promise.all([
+        fetchAllCoffeemons(token),
+        getItems(token)
+      ]);
+      
+      setCoffeemons(coffeemonsData);
+      setItems(itemsData);
+
       try {
-        setLoading(true);
-        
-        const [coffeemonsData, itemsData] = await Promise.all([
-          fetchAllCoffeemons(token),
-          getItems(token)
-        ]);
-        
-        setCoffeemons(coffeemonsData);
-        setItems(itemsData);
+        const playerData = await fetchPlayerData(token);
+        if (playerData && playerData.id) {
+          const playerCoffeemons = await fetchPlayerCoffeemons(token, playerData.id);
+          playerCoffeemons.sort((a, b) => b.level - a.level);
 
-        try {
-          const playerData = await fetchPlayerData(token);
-          if (playerData && playerData.id) {
-            const playerCoffeemons = await fetchPlayerCoffeemons(token, playerData.id);
-            playerCoffeemons.sort((a, b) => b.level - a.level);
-
-            const map = new Map<number, PlayerCoffeemon>();
-            playerCoffeemons.forEach(pc => {
-              if (!map.has(pc.coffeemon.id)) {
-                map.set(pc.coffeemon.id, pc);
-              }
-            });
-            setOwnedCoffeemonsMap(map);
-          }
-        } catch (playerErr) {
-          console.warn('Could not fetch player data for catalog ownership:', playerErr);
+          const map = new Map<number, PlayerCoffeemon>();
+          playerCoffeemons.forEach(pc => {
+            if (!map.has(pc.coffeemon.id)) {
+              map.set(pc.coffeemon.id, pc);
+            }
+          });
+          setOwnedCoffeemonsMap(map);
         }
-
-      } catch (err) {
-        console.error('Error loading catalog:', err);
-        setError('Falha ao carregar o catálogo.');
-      } finally {
-        setLoading(false);
+      } catch (playerErr) {
+        console.warn('Could not fetch player data for catalog ownership:', playerErr);
       }
-    };
 
-    loadCatalog();
+    } catch (err) {
+      console.error('Error loading catalog:', err);
+      setError('Falha ao carregar o catálogo.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {    loadCatalog();
   }, [token]);
 
   const handleOpenDetails = (coffeemon: PlayerCoffeemon) => {
@@ -344,6 +343,8 @@ export const CatalogScreen: React.FC<CatalogScreenProps> = ({ token }) => {
         visible={detailsModalVisible}
         coffeemon={selectedCoffeemon}
         onClose={handleCloseDetails}
+        onRefresh={loadCatalog}
+        token={token}
       />
     </SafeAreaView>
   );
