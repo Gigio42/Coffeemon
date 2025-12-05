@@ -46,7 +46,7 @@ export class PlayerService {
       user: { id: userId },
       level: 1,
       experience: 0,
-      coins: createPlayerDto.initialCoins || 100,
+      coins: createPlayerDto.initialCoins || 0,
       inventory: {
         small_potion: 5,
         revive_bean: 2,
