@@ -387,6 +387,9 @@ export const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     minWidth: 40,
+    position: 'absolute', // Posicionamento absoluto para não afetar o layout do texto
+    left: 12,
+    zIndex: 10, // Garante que o botão fique sobre o texto para receber cliques
   },
   backButtonIcon: {
     fontSize: 16,

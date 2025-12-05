@@ -62,7 +62,7 @@ export default function BattleHUD({
   useEffect(() => {
     if (damage && damage > 0) {
       setCurrentDamage(damage);
-      console.log('BattleHUD received damage:', { isMe, damage });
+      // console.log('BattleHUD received damage:', { isMe, damage });
       
       // Reset animation
       damageAnim.setValue(0);
