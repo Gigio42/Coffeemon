@@ -1,14 +1,16 @@
 import React, { useState } from 'react';
 import {
-  Text,
   View,
-  ScrollView,
+  Text,
+  FlatList,
   TouchableOpacity,
-  SafeAreaView,
-  ActivityIndicator,
   Image,
+  Alert,
+  ActivityIndicator,
   Platform,
+  ScrollView,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';

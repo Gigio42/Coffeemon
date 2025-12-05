@@ -19,6 +19,18 @@ export class Coffeemon {
   @Column({ unique: true })
   name: string;
 
+  @Column({ nullable: true })
+  description: string;
+
+  @Column({ nullable: true })
+  flavorProfile: string;
+
+  @Column({ type: 'float', nullable: true })
+  weight: number;
+
+  @Column({ type: 'float', nullable: true })
+  height: number;
+
   @Column({ type: 'simple-array' })
   types: CoffeemonType[];
 

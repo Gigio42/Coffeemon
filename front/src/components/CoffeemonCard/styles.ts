@@ -1,856 +1,301 @@
-import { StyleSheet } from 'react-native';
+import { StyleSheet, Dimensions } from 'react-native';
+import { colors, spacing, radius, typography, getTypeColorScheme } from '../../theme/colors';
 
-type PaletteTriplet = { light: string; dark: string; accent: string };
-type RGB = { r: number; g: number; b: number };
+const { width } = Dimensions.get('window');
 
-const CARD_WIDTH_LARGE = 210;
+const CARD_WIDTH_LARGE = 220;
 const CARD_WIDTH_SMALL = 160;
-const CARD_MIN_HEIGHT_LARGE = 320;
-const CARD_MIN_HEIGHT_SMALL = 260;
-const CARD_SHADOW_OFFSET = 10;
-const BORDER_WIDTH = 4;
-const PIXEL_CORNER_SIZE = BORDER_WIDTH * 2;
-const PIXEL_CORNER_OFFSET = BORDER_WIDTH + 2;
-
-function clampChannel(value: number): number {
-  return Math.min(255, Math.max(0, Math.round(value)));
-}
-
-function clamp01(value: number): number {
-  return Math.min(1, Math.max(0, value));
-}
-
-function hexToRgb(hex: string): RGB | null {
-  const normalized = hex.replace('#', '').trim();
-  if (![3, 6].includes(normalized.length)) {
-    return null;
-  }
-
-  const expanded = normalized.length === 3
-    ? normalized.split('').map((char) => char + char).join('')
-    : normalized;
-
-  const int = Number.parseInt(expanded, 16);
-  if (Number.isNaN(int)) {
-    return null;
-  }
-
-  return {
-    r: (int >> 16) & 255,
-    g: (int >> 8) & 255,
-    b: int & 255,
-  };
-}
-
-function rgbToHex({ r, g, b }: RGB): string {
-  const toHex = (channel: number) => clampChannel(channel).toString(16).padStart(2, '0');
-  return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
-}
-
-function mixColors(colorA: string, colorB: string, ratio: number): string {
-  const mix = clamp01(ratio);
-  const rgbA = hexToRgb(colorA);
-  const rgbB = hexToRgb(colorB);
-
-  if (!rgbA || !rgbB) {
-    return colorA;
-  }
-
-  const blended: RGB = {
-    r: rgbA.r + (rgbB.r - rgbA.r) * mix,
-    g: rgbA.g + (rgbB.g - rgbA.g) * mix,
-    b: rgbA.b + (rgbB.b - rgbA.b) * mix,
-  };
-
-  return rgbToHex(blended);
-}
-
-function lightenColor(color: string, amount: number): string {
-  return mixColors(color, '#ffffff', clamp01(amount));
-}
-
-function darkenColor(color: string, amount: number): string {
-  return mixColors(color, '#000000', clamp01(amount));
-}
-
-function withAlpha(hex: string, alpha: number): string {
-  const rgb = hexToRgb(hex);
-  if (!rgb) {
-    return `rgba(0, 0, 0, ${clamp01(alpha)})`;
-  }
-  const clampedAlpha = clamp01(alpha);
-  return `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${clampedAlpha})`;
-}
-
-export type PixelCardColors = {
-  cardBackground: string;
-  cardBorder: string;
-  cardShadow: string;
-  cardOuterFill: string;
-  cardOuterBorder: string;
-  cardGradientTop: string;
-  cardGradientBottom: string;
-  cardHighlight: string;
-  cardLowlight: string;
-  headerBackground: string;
-  headerBorder: string;
-  headerShadow: string;
-  iconBackground: string;
-  iconBorder: string;
-  iconShadow: string;
-  titleColor: string;
-  titleShadow: string;
-  barOuterBackground: string;
-  barOuterBorder: string;
-  barInnerBackground: string;
-  hpFill: string;
-  imageBackground: string;
-  imageBorder: string;
-  imageShadow: string;
-  footerBackground: string;
-  footerBorder: string;
-  footerShadow: string;
-  statBackground: string;
-  statBorder: string;
-  statShadow: string;
-  statLabelColor: string;
-  statValueColor: string;
-  statTextShadow: string;
-  overlayColor: string;
-  loadingOverlay: string;
-  removeButtonBackground: string;
-  removeButtonBorder: string;
-  removeButtonText: string;
-  cardShadowBlock: string;
-  cardShadowBorder: string;
-  cornerPixel: string;
-  cornerBorder: string;
-};
-
-export function buildPixelCardColors(palette: PaletteTriplet): PixelCardColors {
-  const baseDark = darkenColor(palette.dark, 0.65);
-  const deepDark = darkenColor(baseDark, 0.35);
-  const luminousLight = lightenColor(palette.light, 0.35);
-
-  const cardOuterBorder = darkenColor(deepDark, 0.15);
-  const cardOuterFill = darkenColor(baseDark, 0.05);
-  const cardBorder = darkenColor(baseDark, 0.1);
-  const cardBackground = mixColors(luminousLight, palette.accent, 0.25);
-  const cardGradientTop = lightenColor(cardBackground, 0.08);
-  const cardGradientBottom = mixColors(palette.accent, palette.dark, 0.45);
-  const cardShadow = darkenColor(deepDark, 0.1);
-  const cardShadowBlock = darkenColor(deepDark, 0.2);
-  const cardShadowBorder = darkenColor(cardShadowBlock, 0.15);
-  const cardHighlight = mixColors(palette.accent, luminousLight, 0.6);
-  const cardLowlight = mixColors(palette.accent, deepDark, 0.7);
-
-  const headerBackground = mixColors(baseDark, palette.accent, 0.35);
-  const headerBorder = darkenColor(baseDark, 0.15);
-  const headerShadow = darkenColor(baseDark, 0.35);
-
-  const iconBackground = lightenColor(palette.light, 0.48);
-  const iconBorder = darkenColor(palette.accent, 0.4);
-  const iconShadow = darkenColor(palette.accent, 0.55);
-
-  const titleColor = lightenColor(palette.light, 0.08);
-  const titleShadow = darkenColor(baseDark, 0.5);
-
-  const barOuterBackground = lightenColor(palette.accent, 0.25);
-  const barOuterBorder = darkenColor(palette.accent, 0.5);
-  const barInnerBackground = darkenColor(palette.accent, 0.3);
-  const hpFill = mixColors(palette.accent, luminousLight, 0.25);
-
-  const imageBackground = mixColors(luminousLight, palette.accent, 0.55);
-  const imageBorder = darkenColor(palette.accent, 0.45);
-  const imageShadow = darkenColor(palette.accent, 0.6);
-
-  const footerBackground = mixColors(luminousLight, baseDark, 0.6);
-  const footerBorder = darkenColor(baseDark, 0.2);
-  const footerShadow = darkenColor(baseDark, 0.4);
-
-  const statBackground = lightenColor(palette.light, 0.4);
-  const statBorder = darkenColor(palette.accent, 0.45);
-  const statShadow = darkenColor(palette.accent, 0.6);
-  const statLabelColor = darkenColor(palette.accent, 0.15);
-  const statValueColor = darkenColor(palette.dark, 0.2);
-  const statTextShadow = darkenColor(palette.accent, 0.6);
-
-  const overlayColor = withAlpha(darkenColor(baseDark, 0.15), 0.65);
-  const loadingOverlay = withAlpha(darkenColor(baseDark, 0.05), 0.45);
-
-  const removeButtonBackground = withAlpha(darkenColor(palette.accent, 0.1), 0.65);
-  const removeButtonBorder = lightenColor(palette.light, 0.4);
-  const removeButtonText = lightenColor(palette.light, 0.25);
-  const cornerPixel = mixColors(palette.accent, luminousLight, 0.5);
-  const cornerBorder = darkenColor(cardOuterBorder, 0.35);
-
-  return {
-    cardBackground,
-    cardBorder,
-    cardShadow,
-    cardOuterFill,
-    cardOuterBorder,
-    cardGradientTop,
-    cardGradientBottom,
-    cardHighlight,
-    cardLowlight,
-    headerBackground,
-    headerBorder,
-    headerShadow,
-    iconBackground,
-    iconBorder,
-    iconShadow,
-    titleColor,
-    titleShadow,
-    barOuterBackground,
-    barOuterBorder,
-    barInnerBackground,
-    hpFill,
-    imageBackground,
-    imageBorder,
-    imageShadow,
-    footerBackground,
-    footerBorder,
-    footerShadow,
-    statBackground,
-    statBorder,
-    statShadow,
-    statLabelColor,
-    statValueColor,
-    statTextShadow,
-    overlayColor,
-    loadingOverlay,
-    removeButtonBackground,
-    removeButtonBorder,
-    removeButtonText,
-    cardShadowBlock,
-    cardShadowBorder,
-    cornerPixel,
-    cornerBorder,
-  };
-}
-
-// Cores específicas para cada Coffeemon
-const coffeemonColors: { [key: string]: PaletteTriplet } = {
-  jasminelle: { light: '#E6D4F0', dark: '#7B4B9E', accent: '#A066C7' }, // Roxo suave (floral)
-  limonetto: { light: '#FFF9B8', dark: '#D4A017', accent: '#F5C243' }, // Amarelo limão
-  maprion: { light: '#E8A26A', dark: '#8E4B1F', accent: '#C1743A' }, // Laranja/Marrom
-  cocoly: { light: '#D4C4A8', dark: '#8B6F47', accent: '#A89968' }, // Bege/Castanho (nutty)
-  emberly: { light: '#FF9966', dark: '#CC4400', accent: '#E65C00' }, // Laranja queimado
-  cinnara: { light: '#FF8585', dark: '#B71C1C', accent: '#E53935' }, // Vermelho picante
-  herban: { light: '#B8E6B8', dark: '#2E7D32', accent: '#4CAF50' }, // Verde (sour)
-  chocobrawl: { light: '#D2A679', dark: '#6F4E37', accent: '#A67B5B' }, // Marrom chocolate
-};
-
-// Cores de fallback por tipo
-const typeColors: { [key: string]: PaletteTriplet } = {
-  floral: { light: '#A57BC4', dark: '#4A236A', accent: '#7D4B9F' },
-  sweet: { light: '#E8A26A', dark: '#8E4B1F', accent: '#C1743A' },
-  fruity: { light: '#FFF4D6', dark: '#E67E22', accent: '#F39C12' },
-  nutty: { light: '#F0E6D2', dark: '#8B6F47', accent: '#A0826D' },
-  roasted: { light: '#FFD6B3', dark: '#D35400', accent: '#E67E22' },
-  spicy: { light: '#FFD4D4', dark: '#C0392B', accent: '#E74C3C' },
-  sour: { light: '#D8F0DC', dark: '#27AE60', accent: '#2ECC71' },
-};
-
-export const PIXEL_FONT = 'PressStart2P_400Regular';
-
-const defaultPalette: PaletteTriplet = { light: '#F5F5F5', dark: '#795548', accent: '#8D6E63' };
-
-export function getTypeColor(type: string | undefined, name: string): { light: string; dark: string; accent: string } {
-  // Primeiro tenta buscar pela cor específica do Coffeemon
-  const coffeemonColor = coffeemonColors[name.toLowerCase()];
-  if (coffeemonColor) {
-    return coffeemonColor;
-  }
-  // Se não encontrar, usa a cor do tipo
-  if (!type) {
-    return defaultPalette;
-  }
-
-  const normalizedType = type.toLowerCase();
-  return typeColors[normalizedType] || defaultPalette;
-}
 
 export const styles = StyleSheet.create({
+  // Container
   touchableWrapper: {
-    width: '100%',
-    marginBottom: 20,
-  },
-
-  touchableWrapperSmall: {
-    width: '100%',
-    marginBottom: 16,
-  },
-
-  cardPixelWrapper: {
-    position: 'relative',
-    borderWidth: 0,
-    borderRadius: 20,
-    marginBottom: 0,
-    overflow: 'visible',
-    backgroundColor: 'transparent',
-    borderColor: 'transparent',
-    alignSelf: 'flex-start',
-    padding: 0,
-    width: CARD_WIDTH_LARGE,
-  },
-
-  cardPixelWrapperSmall: {
-    marginBottom: CARD_SHADOW_OFFSET,
-    alignSelf: 'flex-start',
-    width: CARD_WIDTH_SMALL * 1.4, // Ajustado para corresponder à largura do card
-  },
-
-  coffeemonCard: {
-    width: CARD_WIDTH_LARGE,
-    minHeight: CARD_MIN_HEIGHT_LARGE,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: '#E0E0E0',
-    padding: 0,
-    backgroundColor: '#F5E6D3',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    shadowColor: '#000000',
-    elevation: 3,
-    overflow: 'visible',
-    alignSelf: 'flex-start',
-  },
-
-  coffeemonCardSmall: {
-    width: CARD_WIDTH_SMALL * 1.4, // Aumenta a largura em 40%
-    minHeight: CARD_MIN_HEIGHT_SMALL,
-  },
-
-  coffeemonCardSelected: {
-    opacity: 0.95,
-  },
-
-  // ========================================
-  // HEADER
-  // ========================================
-  cardHeader: {
-    paddingVertical: 8,
-    paddingHorizontal: 10,
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 0,
-    borderColor: 'transparent',
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0,
-    shadowRadius: 0,
-    shadowColor: 'transparent',
-    elevation: 0,
-    marginBottom: 0,
-    backgroundColor: 'transparent',
-    width: '100%',
-  },
-
-  headerNameAndHp: {
-    flex: 1,
-  },
-
-  headerIconContainer: {
-    width: 28,
-    height: 28,
-    borderRadius: 0,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 2,
-    borderColor: '#000000',
-    shadowOffset: { width: -1, height: -1 },
+    marginBottom: spacing.md,
+    shadowColor: colors.shadow.lg,
+    shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.4,
-    shadowRadius: 0,
-    shadowColor: '#888888',
-    elevation: 1,
-    marginRight: 8,
-    backgroundColor: '#ffffff',
+    shadowRadius: 12,
+    elevation: 8,
+  },
+  touchableWrapperSmall: {
+    marginBottom: spacing.sm,
   },
 
-  headerIcon: {
-    fontSize: 16,
-  },
-
-  coffeemonName: {
-    fontSize: 14,
-    fontWeight: '900',
-    fontFamily: PIXEL_FONT,
-    letterSpacing: 0.8,
-    textAlign: 'center',
-    textShadowOffset: { width: 1, height: 1 },
-    textShadowRadius: 2,
-    color: '#FFFFFF',
-    textShadowColor: 'rgba(0, 0, 0, 0.5)',
-  },
-
-  // Barra de HP no Header (abaixo do nome)
-  headerStatBarOuter: {
-    width: '100%',
-    height: 12,
-    borderRadius: 0,
-    padding: 1,
-    borderWidth: 2,
-    borderColor: '#000000',
-    backgroundColor: '#ffe0a9',
-  },
-
-  headerStatBarInner: {
-    flex: 1,
-    borderRadius: 0,
+  // Card Base
+  cardContainer: {
+    borderRadius: radius.xl,
     overflow: 'hidden',
-    backgroundColor: '#ffffff',
-  },
-
-  headerStatBarFill: {
-    height: '100%',
-    borderRadius: 0,
-    backgroundColor: '#8BC34A',
-  },
-
-  // Stats no Header (abaixo da barra de HP)
-  headerStatsRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginTop: 4,
-  },
-
-  headerStatItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 4,
-    paddingVertical: 2,
-    backgroundColor: '#ffffff',
+    backgroundColor: colors.surface.card,
     borderWidth: 1,
-    borderColor: '#000000',
-    marginHorizontal: 2,
+    borderColor: colors.border.subtle,
   },
-
-  headerStatLabel: {
-    fontSize: 6,
-    fontWeight: '700',
-    fontFamily: PIXEL_FONT,
-    letterSpacing: 0.4,
-    textTransform: 'uppercase',
-    marginRight: 2,
-    color: '#333333',
+  cardContainerSmall: {
+    borderRadius: radius.lg,
   },
-
-  headerStatValue: {
-    fontSize: 8,
-    fontWeight: '900',
-    fontFamily: PIXEL_FONT,
-    letterSpacing: 0.4,
-    textShadowOffset: { width: 1, height: 1 },
-    textShadowRadius: 0,
-    color: '#0c2a66',
-    textShadowColor: '#000000',
+  cardSelected: {
+    borderColor: colors.accent.primary,
+    borderWidth: 2,
   },
-
-  // ========================================
-  // IMAGEM
-  // ========================================
-  imageContainer: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    height: 280,
-    borderWidth: 0,
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    borderBottomLeftRadius: 0,
-    borderBottomRightRadius: 0,
-    borderColor: 'transparent',
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0,
-    shadowRadius: 0,
-    shadowColor: 'transparent',
-    elevation: 0,
-    marginBottom: 0,
-    backgroundColor: 'transparent',
+  
+  // Image Section
+  imageSection: {
+    height: 220,
+    width: '100%',
+    position: 'relative',
     overflow: 'hidden',
   },
-
-  imageBackgroundFill: {
-    width: '100%',
-    height: '100%',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-
-  radialGradientOverlay: {
-    width: '100%',
-    height: '100%',
-    alignItems: 'center',
-    justifyContent: 'flex-start',
-    paddingTop: 10,
-  },
-
-  coffeemonImage: {
-    width: 160,
+  imageSectionSmall: {
     height: 160,
-    borderWidth: 0,
-    borderColor: 'transparent',
-    marginTop: 20,
   },
-
-  // ========================================
-  // FOOTER
-  // ========================================
-  cardFooter: {
-    borderTopWidth: 0,
-    marginTop: 'auto',
-    alignItems: 'center',
+  backgroundImage: {
     width: '100%',
+    height: '100%',
   },
-
-  typeBadgeOverlay: {
+  gradientOverlay: {
+    ...StyleSheet.absoluteFillObject,
+  },
+  
+  // Header (Name & Type)
+  headerOverlay: {
     position: 'absolute',
-    bottom: 10,
+    top: 0,
     left: 0,
     right: 0,
-    alignItems: 'center',
-    justifyContent: 'center',
+    padding: spacing.md,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    zIndex: 10,
   },
-
   typeBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 20,
-    paddingVertical: 6,
-    borderRadius: 16,
-    borderWidth: 2,
-    borderColor: '#000000',
-    backgroundColor: '#FFD700',
-  },
-
-  typeBadgeIcon: {
-    fontSize: 14,
-    marginRight: 6,
-  },
-
-  typeBadgeText: {
-    fontSize: 10,
-    fontWeight: '700',
-    fontFamily: PIXEL_FONT,
-    letterSpacing: 0.8,
-    color: '#ffffff',
-  },
-
-  actionsExpandedContainer: {
-    width: '100%',
-    backgroundColor: '#F5E6D3',
-    paddingHorizontal: 10,
-    paddingBottom: 10,
-    paddingTop: 10,
-    borderTopWidth: 1,
-    borderTopColor: '#E0E0E0',
-  },
-
-  actionButtonsRow: {
-    flexDirection: 'row',
-    width: '100%',
-    gap: 8,
-  },
-
-  actionButton: {
-    flex: 1,
-    height: 32,
-    borderRadius: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 4,
+    borderRadius: radius.full,
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
     borderWidth: 1,
-    borderColor: '#E0E0E0',
+    borderColor: 'rgba(255, 255, 255, 0.2)',
   },
-
-  actionButtonText: {
-    fontSize: 11,
-    fontWeight: '600',
-    color: '#2C2C2C',
-    textTransform: 'capitalize',
+  typeIcon: {
+    fontSize: 12,
+    marginRight: 4,
   },
-
-  removeButtonContainer: {
-    width: '100%',
-    marginTop: 10,
+  typeText: {
+    fontSize: typography.size.xs,
+    fontWeight: typography.weight.bold,
+    color: colors.text.inverse,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
   },
-
-  removeFromPartyButton: {
-    width: '100%',
-    height: 32,
-    borderRadius: 16,
+  
+  // Main Image
+  coffeemonImage: {
+    width: 180,
+    height: 180,
+    alignSelf: 'center',
+    marginTop: spacing.md,
+    zIndex: 5,
+  },
+  coffeemonImageSmall: {
+    width: 120,
+    height: 120,
+    marginTop: spacing.sm,
+  },
+  
+  // Footer / Info Section
+  infoSection: {
+    padding: spacing.md,
+    backgroundColor: colors.surface.card,
+  },
+  nameContainer: {
+    marginBottom: spacing.sm,
+  },
+  nameText: {
+    fontSize: typography.size.lg,
+    fontWeight: typography.weight.black,
+    color: colors.text.primary,
+    marginBottom: 2,
+  },
+  levelText: {
+    fontSize: typography.size.xs,
+    color: colors.text.tertiary,
+    fontWeight: typography.weight.medium,
+  },
+  
+  // Stats Preview (HP Bar)
+  hpContainer: {
+    marginTop: spacing.xs,
+  },
+  hpBarBg: {
+    height: 6,
+    backgroundColor: colors.surface.elevated,
+    borderRadius: radius.full,
+    overflow: 'hidden',
+  },
+  hpBarFill: {
+    height: '100%',
+    borderRadius: radius.full,
+  },
+  hpText: {
+    fontSize: 10,
+    color: colors.text.tertiary,
+    marginTop: 2,
+    textAlign: 'right',
+  },
+  
+  // Expanded Content
+  expandedContent: {
+    borderTopWidth: 1,
+    borderTopColor: colors.border.subtle,
+    backgroundColor: colors.surface.elevated,
+  },
+  tabsContainer: {
+    flexDirection: 'row',
+    padding: spacing.sm,
+    gap: spacing.sm,
+  },
+  tabButton: {
+    flex: 1,
+    paddingVertical: 6,
     alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#FF5252',
-    borderWidth: 0,
+    borderRadius: radius.md,
+    backgroundColor: colors.surface.base,
   },
-
-  removeFromPartyButtonText: {
-    fontSize: 11,
-    fontWeight: '600',
-    color: '#FFFFFF',
+  tabButtonActive: {
+    backgroundColor: colors.button.primary,
   },
-
-  // Estilos para conteúdo das abas
+  tabText: {
+    fontSize: typography.size.xs,
+    fontWeight: typography.weight.semibold,
+    color: colors.text.secondary,
+  },
+  tabTextActive: {
+    color: colors.text.inverse,
+    fontWeight: typography.weight.bold,
+  },
+  
+  // Tab Content Area
   tabContent: {
-    width: '100%',
-    marginTop: 12,
-    padding: 12,
-    backgroundColor: '#F5F5F5',
-    borderRadius: 12,
+    padding: spacing.md,
+    minHeight: 120,
   },
-
-  // Estilos para Status
+  
+  // Stats Tab
   statRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 8,
+    marginBottom: spacing.sm,
   },
-
   statLabel: {
     width: 40,
-    fontSize: 11,
-    fontFamily: PIXEL_FONT,
-    color: '#666666',
-    fontWeight: 'bold',
+    fontSize: typography.size.xs,
+    fontWeight: typography.weight.bold,
+    color: colors.text.secondary,
   },
-
   statBarContainer: {
     flex: 1,
-    height: 8,
-    backgroundColor: '#E0E0E0',
-    borderRadius: 4,
-    marginHorizontal: 8,
+    height: 6,
+    backgroundColor: colors.surface.base,
+    borderRadius: radius.full,
+    marginHorizontal: spacing.sm,
     overflow: 'hidden',
   },
-
   statBar: {
     height: '100%',
-    borderRadius: 4,
+    borderRadius: radius.full,
   },
-
   statValue: {
-    minWidth: 40,
-    fontSize: 11,
-    fontFamily: PIXEL_FONT,
-    color: '#333333',
+    width: 30,
+    fontSize: typography.size.xs,
+    fontWeight: typography.weight.bold,
+    color: colors.text.primary,
     textAlign: 'right',
   },
-
-  experienceRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginTop: 12,
-    paddingTop: 12,
-    borderTopWidth: 1,
-    borderTopColor: '#E0E0E0',
-  },
-
-  experienceLabel: {
-    fontSize: 11,
-    fontFamily: PIXEL_FONT,
-    color: '#666666',
-    fontWeight: 'bold',
-  },
-
-  experienceValue: {
-    fontSize: 11,
-    fontFamily: PIXEL_FONT,
-    color: '#333333',
-  },
-
-  // Estilos para Moves
+  
+  // Moves Tab
   moveItem: {
-    marginBottom: 12,
-    padding: 8,
-    backgroundColor: '#FFFFFF',
-    borderRadius: 8,
+    backgroundColor: colors.surface.base,
+    padding: spacing.sm,
+    borderRadius: radius.md,
+    marginBottom: spacing.sm,
     borderWidth: 1,
-    borderColor: '#E0E0E0',
+    borderColor: colors.border.subtle,
   },
-
   moveHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 4,
   },
-
   moveName: {
-    fontSize: 12,
-    fontFamily: PIXEL_FONT,
-    color: '#333333',
-    fontWeight: 'bold',
+    fontSize: typography.size.sm,
+    fontWeight: typography.weight.bold,
+    color: colors.text.primary,
   },
-
-  moveTypeChip: {
-    paddingHorizontal: 8,
+  moveType: {
+    fontSize: 9,
+    fontWeight: typography.weight.bold,
+    color: colors.text.inverse,
+    paddingHorizontal: 6,
     paddingVertical: 2,
-    borderRadius: 8,
+    borderRadius: radius.sm,
+    overflow: 'hidden',
   },
-
-  moveTypeText: {
-    fontSize: 9,
-    fontFamily: PIXEL_FONT,
-    color: '#FFFFFF',
-  },
-
-  moveDescription: {
+  moveDesc: {
     fontSize: 10,
-    fontFamily: PIXEL_FONT,
-    color: '#666666',
-    marginBottom: 4,
+    color: colors.text.secondary,
+    lineHeight: 14,
   },
-
-  moveMeta: {
+  
+  // About Tab
+  aboutRow: {
     flexDirection: 'row',
-    gap: 12,
+    justifyContent: 'space-between',
+    marginBottom: spacing.sm,
+    paddingBottom: spacing.sm,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border.subtle,
   },
-
-  moveMetaText: {
-    fontSize: 9,
-    fontFamily: PIXEL_FONT,
-    color: '#999999',
+  aboutLabel: {
+    fontSize: typography.size.sm,
+    color: colors.text.secondary,
   },
-
-  noMovesText: {
-    fontSize: 11,
-    fontFamily: PIXEL_FONT,
-    color: '#999999',
-    textAlign: 'center',
+  aboutValue: {
+    fontSize: typography.size.sm,
+    fontWeight: typography.weight.semibold,
+    color: colors.text.primary,
   },
-
-  // Estilos para About
-  aboutText: {
-    fontSize: 11,
-    fontFamily: PIXEL_FONT,
-    color: '#666666',
-    marginBottom: 6,
+  
+  // Actions
+  actionButtonContainer: {
+    padding: spacing.md,
+    paddingTop: 0,
   },
-
-  selectionOverlay: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderRadius: 0,
-    backgroundColor: 'rgba(0, 0, 0, 0.6)',
-  },
-
   removeButton: {
-    width: 48,
-    height: 48,
-    borderRadius: 0,
-    borderWidth: 4,
-    borderColor: '#FFFFFF',
-    justifyContent: 'center',
+    backgroundColor: colors.feedback.errorBg,
+    paddingVertical: spacing.sm,
+    borderRadius: radius.md,
     alignItems: 'center',
-    backgroundColor: 'rgba(255, 0, 0, 0.5)',
+    borderWidth: 1,
+    borderColor: colors.feedback.error,
   },
-
   removeButtonText: {
-    fontSize: 36,
-    lineHeight: 38,
-    fontWeight: 'bold',
-    fontFamily: PIXEL_FONT,
-    color: '#FFFFFF',
+    color: colors.feedback.error,
+    fontWeight: typography.weight.bold,
+    fontSize: typography.size.sm,
   },
-
+  
+  // Loading/Locked
   loadingOverlay: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: 'rgba(0, 0, 0, 0.4)',
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0,0,0,0.5)',
     justifyContent: 'center',
     alignItems: 'center',
-    borderRadius: 0,
+    zIndex: 20,
   },
-
-  cardShadowBlock: {
+  lockedOverlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: '#050505',
-    borderColor: '#000000',
-    transform: [{ translateX: CARD_SHADOW_OFFSET }, { translateY: CARD_SHADOW_OFFSET }],
-    borderRadius: 0,
-    borderWidth: BORDER_WIDTH,
-    pointerEvents: 'none',
-    zIndex: -1,
-  },
-
-  pixelOverlayContainer: {
-    position: 'absolute',
-    top: BORDER_WIDTH,
-    right: BORDER_WIDTH,
-    bottom: BORDER_WIDTH,
-    left: BORDER_WIDTH,
-    zIndex: 10,
-    pointerEvents: 'none',
-  },
-
-  pixelBorderHorizontal: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    height: BORDER_WIDTH,
-  },
-
-  pixelBorderTop: {
-    top: 0,
-  },
-
-  pixelBorderBottom: {
-    bottom: 0,
-  },
-
-  pixelBorderVertical: {
-    position: 'absolute',
-    top: 0,
-    bottom: 0,
-    width: BORDER_WIDTH,
-  },
-
-  pixelBorderLeft: {
-    left: 0,
-  },
-
-  pixelBorderRight: {
-    right: 0,
-  },
-
-  pixelCorner: {
-    position: 'absolute',
-    width: PIXEL_CORNER_SIZE,
-    height: PIXEL_CORNER_SIZE,
-    borderRadius: 0,
-    borderWidth: BORDER_WIDTH / 2,
-  },
-
-  pixelCornerTopLeft: {
-    top: PIXEL_CORNER_OFFSET,
-    left: PIXEL_CORNER_OFFSET,
-  },
-
-  pixelCornerTopRight: {
-    top: PIXEL_CORNER_OFFSET,
-    right: PIXEL_CORNER_OFFSET,
-  },
-
-  pixelCornerBottomLeft: {
-    bottom: PIXEL_CORNER_OFFSET,
-    left: PIXEL_CORNER_OFFSET,
-  },
-
-  pixelCornerBottomRight: {
-    bottom: PIXEL_CORNER_OFFSET,
-    right: PIXEL_CORNER_OFFSET,
+    backgroundColor: 'rgba(0,0,0,0.6)',
+    zIndex: 15,
   },
 });

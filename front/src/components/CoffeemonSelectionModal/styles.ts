@@ -1,5 +1,5 @@
 import { StyleSheet } from 'react-native';
-import { pixelArt } from '../../theme/pixelArt';
+import { theme } from '../../theme/theme';
 
 export const styles = StyleSheet.create({
   fullscreen: {
@@ -11,67 +11,66 @@ export const styles = StyleSheet.create({
     alignItems: 'center',
   },
   androidBackdrop: {
-    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
   },
   modalContainer: {
     backgroundColor: 'transparent',
-    borderRadius: 20,
+    borderRadius: theme.radius.xl,
   },
   modalHeader: {
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 20,
+    marginBottom: theme.spacing.lg,
   },
   modalTitleWrapper: {
-    backgroundColor: '#faf8f0', // Header com tom creme claro
-    paddingVertical: 6,
-    paddingHorizontal: 8,
-    borderRadius: 2,
+    backgroundColor: theme.colors.surface.elevated,
+    paddingVertical: theme.spacing.md,
+    paddingHorizontal: theme.spacing.lg,
+    borderRadius: theme.radius.full,
     width: '100%',
-    // Bordas pixeladas mais definidas
-    borderTopWidth: 3,
-    borderLeftWidth: 3,
-    borderTopColor: '#ffffff', // Borda clara para luz
-    borderLeftColor: '#ffffff',
-    borderBottomWidth: 3,
-    borderRightWidth: 3,
-    borderBottomColor: '#d4c5a0', // Borda escura para sombra
-    borderRightColor: '#d4c5a0',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: theme.colors.border.default,
+    ...theme.shadows.md,
   },
   modalTitle: {
-    ...pixelArt.typography.pixelTitle,
-    fontSize: 18,
-    color: '#333333', // --text-dark
-    textAlign: 'center' as const,
-    width: '100%', // Ocupar toda a largura disponível
+    fontSize: theme.typography.size.lg,
+    fontWeight: theme.typography.weight.black,
+    color: theme.colors.text.primary,
+    textAlign: 'center',
+    letterSpacing: 0.5,
+    textTransform: 'uppercase',
   },
   closeButton: {
-    padding: 5,
+    padding: theme.spacing.sm,
   },
   closeButtonText: {
     fontSize: 24,
-    color: '#7f8c8d',
+    color: theme.colors.text.tertiary,
   },
   modalContent: {
-    paddingBottom: 20,
+    paddingBottom: theme.spacing.lg,
   },
   carousel: {
     width: '100%',
   },
   carouselContent: {
-    paddingHorizontal: 4,
-    paddingRight: 16,
+    paddingHorizontal: theme.spacing.sm,
+    paddingRight: theme.spacing.md,
     flexDirection: 'row',
-    alignItems: 'flex-start',
+    alignItems: 'center',
+    gap: theme.spacing.lg,
   },
   carouselItem: {
-    marginRight: 12,
+    marginRight: theme.spacing.md,
+    width: 280,
   },
   emptyText: {
     textAlign: 'center',
-    fontSize: 18,
-    color: '#7f8c8d',
-    marginTop: 50,
+    fontSize: theme.typography.size.base,
+    color: theme.colors.text.secondary,
+    marginTop: theme.spacing.xxl,
+    fontWeight: theme.typography.weight.medium,
   },
 });

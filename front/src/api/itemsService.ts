@@ -145,3 +145,34 @@ export const giveInitialItems = async (token: string): Promise<{ message: string
     throw error;
   }
 };
+
+/**
+ * Compra um item da loja
+ */
+export const buyItem = async (token: string, itemId: string): Promise<any> => {
+  try {
+    const apiUrl = await getServerUrl();
+    const response = await fetch(`${apiUrl}/game/shop/buy`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        productId: itemId,
+        productType: 'item',
+      }),
+    });
+
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({}));
+      throw new Error(error.message || 'Falha ao comprar item');
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error('[itemsService] Error buying item:', error);
+    throw error;
+  }
+};
+

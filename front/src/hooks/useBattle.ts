@@ -5,6 +5,7 @@ import { CoffeemonVariant } from '../../assets/coffeemons';
 import { getBaseName } from '../utils/battleUtils';
 import { getEventMessage } from '../utils/battleMessages';
 import { deriveSpriteState, SpriteStateResult } from '../utils/spriteStateMachine';
+import { BattleReward } from '../components/Battle/VictoryModal';
 
 interface BattleEvent {
   type: string;
@@ -100,13 +101,29 @@ export function useBattle({
   const [isProcessing, setIsProcessing] = useState<boolean>(false);
   const [isBattleReady, setIsBattleReady] = useState<boolean>(false);
   const [recentDamageMap, setRecentDamageMap] = useState<Record<string, boolean>>({});
+  const [battleRewards, setBattleRewards] = useState<BattleReward | null>(null);
+  const [showVictoryModal, setShowVictoryModal] = useState<boolean>(false);
 
   const battleStateRef = useRef<BattleState>(battleState);
   const recentDamageTimeoutsRef = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
+  const coffeemonNameMapRef = useRef<Map<number, string>>(new Map());
 
   useEffect(() => {
     battleStateRef.current = battleState;
-  }, [battleState]);
+    
+    // Build coffeemon name map for rewards
+    if (battleState) {
+      const myPlayerState =
+        battleState.player1Id === playerId ? battleState.player1 : battleState.player2;
+      
+      if (myPlayerState?.coffeemons) {
+        myPlayerState.coffeemons.forEach((mon, idx) => {
+          // Store mapping using index as key (will be updated when we get actual IDs)
+          coffeemonNameMapRef.current.set(idx, mon.name);
+        });
+      }
+    }
+  }, [battleState, playerId]);
 
   const addLog = (msg: string) => {
     if (msg) {
@@ -272,9 +289,29 @@ export function useBattle({
     setWinnerId(winnerIdParam);
     addLog(`A batalha terminou! Vencedor: Jogador ${winnerIdParam}`);
 
+    // Initialize rewards structure
+    const myPlayerState =
+      battleStateRef.current.player1Id === playerId
+        ? battleStateRef.current.player1
+        : battleStateRef.current.player2;
+
+    const initialRewards: BattleReward = {
+      playerId,
+      coffeemonRewards: myPlayerState?.coffeemons?.map((mon: any, idx: number) => ({
+        playerCoffeemonId: idx, // Will be updated by actual events
+        coffeemonName: mon.name,
+        learnedMoves: [],
+      })) || [],
+      coins: 0,
+      totalExp: 0,
+    };
+
+    setBattleRewards(initialRewards);
+    
+    // Show modal after a short delay to let animations finish
     setTimeout(() => {
-      onNavigateToMatchmaking();
-    }, 4000);
+      setShowVictoryModal(true);
+    }, 1500);
   };
 
   const setupBattleEvents = () => {
@@ -354,6 +391,124 @@ export function useBattle({
       setIsBattleReady(true);
     };
 
+    // Handle reward events
+    const handlePlayerLevelUp = (data: { newLevel: number }) => {
+      console.log('[Battle] Player leveled up:', data);
+      setBattleRewards((prev) => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          playerLevelUp: { newLevel: data.newLevel },
+        };
+      });
+    };
+
+    const handleCoffeemonLevelUp = (data: {
+      playerCoffeemonId: number;
+      newLevel: number;
+      expGained: number;
+    }) => {
+      console.log('[Battle] Coffeemon leveled up:', data);
+      setBattleRewards((prev) => {
+        if (!prev) return prev;
+        
+        // Find existing reward or create new one
+        let updatedRewards = [...prev.coffeemonRewards];
+        const existingIdx = updatedRewards.findIndex(
+          (r) => r.playerCoffeemonId === data.playerCoffeemonId
+        );
+
+        // Try to get coffeemon name from map
+        const coffeemonName = coffeemonNameMapRef.current.get(data.playerCoffeemonId) || 
+                              `Coffeemon #${data.playerCoffeemonId}`;
+
+        if (existingIdx >= 0) {
+          updatedRewards[existingIdx] = {
+            ...updatedRewards[existingIdx],
+            coffeemonName, // Update name if available
+            levelUp: {
+              newLevel: data.newLevel,
+              expGained: data.expGained,
+            },
+          };
+        } else {
+          // Create new reward entry if not found
+          updatedRewards.push({
+            playerCoffeemonId: data.playerCoffeemonId,
+            coffeemonName,
+            learnedMoves: [],
+            levelUp: {
+              newLevel: data.newLevel,
+              expGained: data.expGained,
+            },
+          });
+        }
+
+        return {
+          ...prev,
+          coffeemonRewards: updatedRewards,
+          totalExp: prev.totalExp + data.expGained,
+        };
+      });
+    };
+
+    const handleCoffeemonLearnedMove = (data: {
+      playerCoffeemonId: number;
+      moveName: string;
+    }) => {
+      console.log('[Battle] Coffeemon learned move:', data);
+      setBattleRewards((prev) => {
+        if (!prev) return prev;
+        
+        let updatedRewards = [...prev.coffeemonRewards];
+        const existingIdx = updatedRewards.findIndex(
+          (r) => r.playerCoffeemonId === data.playerCoffeemonId
+        );
+
+        // Try to get coffeemon name from map
+        const coffeemonName = coffeemonNameMapRef.current.get(data.playerCoffeemonId) || 
+                              `Coffeemon #${data.playerCoffeemonId}`;
+
+        if (existingIdx >= 0) {
+          updatedRewards[existingIdx] = {
+            ...updatedRewards[existingIdx],
+            coffeemonName, // Update name if available
+            learnedMoves: [...updatedRewards[existingIdx].learnedMoves, data.moveName],
+          };
+        } else {
+          // Create new reward entry if not found
+          updatedRewards.push({
+            playerCoffeemonId: data.playerCoffeemonId,
+            coffeemonName,
+            learnedMoves: [data.moveName],
+          });
+        }
+
+        return {
+          ...prev,
+          coffeemonRewards: updatedRewards,
+        };
+      });
+    };
+
+    const handleInventoryUpdate = (data: { coins: number; inventory: any }) => {
+      console.log('[Battle] Inventory updated:', data);
+      setBattleRewards((prev) => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          coins: data.coins,
+        };
+      });
+    };
+
+    const handleBattleEndEvent = (data: { winnerId: number; battleState?: any }) => {
+      console.log('[Battle] Battle ended event:', data);
+      if (data.winnerId !== null && data.winnerId !== undefined) {
+        handleBattleEnd(data.winnerId);
+      }
+    };
+
     socket.on('battleUpdate', async (data: any) => {
       const now = Date.now();
       
@@ -381,6 +536,11 @@ export function useBattle({
     // Set up additional event listeners
     socket.on('error', handleError);
     socket.on('connect_error', handleError);
+    socket.on('battleEnd', handleBattleEndEvent);
+    socket.on('playerLevelUp', handlePlayerLevelUp);
+    socket.on('coffeemonLevelUp', handleCoffeemonLevelUp);
+    socket.on('coffeemonLearnedMove', handleCoffeemonLearnedMove);
+    socket.on('inventoryUpdate', handleInventoryUpdate);
 
     // Log initial connection status
     // console.log('[Battle] Socket connected:', socket.connected);
@@ -423,6 +583,10 @@ export function useBattle({
       socket.off('opponentDisconnected');
       socket.off('playerReconnected');
       socket.off('battleCancelled');
+      socket.off('playerLevelUp');
+      socket.off('coffeemonLevelUp');
+      socket.off('coffeemonLearnedMove');
+      socket.off('inventoryUpdate');
       Object.values(recentDamageTimeoutsRef.current).forEach((timeout) => {
         clearTimeout(timeout);
       });
@@ -486,5 +650,8 @@ export function useBattle({
     selectInitialCoffeemon,
     recentDamageMap,
     resolveSpriteVariant,
+    battleRewards,
+    showVictoryModal,
+    setShowVictoryModal,
   };
 }

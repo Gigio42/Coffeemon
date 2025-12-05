@@ -13,8 +13,7 @@ import {
 } from 'react-native';
 import { BlurView } from 'expo-blur';
 
-import { pixelArt } from '../../theme';
-import { PIXEL_FONT } from '../CoffeemonCard/styles';
+import { colors, spacing, radius, typography } from '../../theme/colors';
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
@@ -158,49 +157,43 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    paddingHorizontal: pixelArt.spacing.lg,
-    paddingBottom: pixelArt.spacing.lg,
-    paddingTop: pixelArt.spacing.md,
+    paddingHorizontal: spacing.lg,
+    paddingBottom: spacing.lg,
+    paddingTop: spacing.md,
   },
   container: {
     width: '100%',
-    backgroundColor: '#F5E6D3',
-    borderRadius: pixelArt.borders.radiusMedium,
-    borderTopWidth: 4,
-    borderLeftWidth: 4,
-    borderBottomWidth: 4,
-    borderRightWidth: 4,
-    borderTopColor: '#ffffff',
-    borderLeftColor: '#ffffff',
-    borderBottomColor: '#8B7355',
-    borderRightColor: '#8B7355',
+    backgroundColor: colors.surface.base,
+    borderRadius: radius.xl,
     overflow: 'hidden',
-    ...pixelArt.shadows.card,
+    borderWidth: 1,
+    borderColor: colors.border.subtle,
+    shadowColor: colors.shadow.xl,
+    shadowOffset: { width: 0, height: -4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 16,
+    elevation: 24,
   },
   handle: {
     alignSelf: 'center',
-    width: 64,
-    height: 6,
-    borderRadius: pixelArt.borders.radiusSmall,
-    backgroundColor: '#8B7355',
-    marginBottom: pixelArt.spacing.md,
-    borderWidth: pixelArt.borders.widthThin,
-    borderTopColor: pixelArt.colors.borderLight,
-    borderLeftColor: pixelArt.colors.borderLight,
-    borderBottomColor: pixelArt.colors.borderDark,
-    borderRightColor: pixelArt.colors.borderDark,
+    width: 48,
+    height: 4,
+    borderRadius: radius.full,
+    backgroundColor: colors.border.subtle,
+    marginTop: spacing.md,
+    marginBottom: spacing.md,
   },
   sectionsScroll: {
     maxHeight: '100%',
   },
   sectionsScrollContent: {
-    paddingBottom: pixelArt.spacing.lg,
+    paddingBottom: spacing.lg,
   },
   section: {
-    borderBottomWidth: pixelArt.borders.widthThin,
-    borderBottomColor: pixelArt.colors.borderDark,
-    paddingHorizontal: pixelArt.spacing.lg,
-    paddingBottom: pixelArt.spacing.lg,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border.subtle,
+    paddingHorizontal: spacing.lg,
+    paddingBottom: spacing.lg,
   },
   sectionLast: {
     borderBottomWidth: 0,
@@ -208,37 +201,32 @@ const styles = StyleSheet.create({
   sectionHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: pixelArt.spacing.sm,
-    paddingTop: pixelArt.spacing.sm,
+    marginBottom: spacing.sm,
+    paddingTop: spacing.sm,
   },
   sectionHeaderAccent: {
     width: 4,
-    height: '100%',
-    backgroundColor: '#D4C5A0',
-    marginRight: pixelArt.spacing.md,
+    height: 16,
+    backgroundColor: colors.accent.primary,
+    marginRight: spacing.md,
+    borderRadius: radius.full,
   },
   sectionHeaderContent: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
   },
-  sectionHeaderBullet: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: pixelArt.colors.borderDark,
-    marginRight: pixelArt.spacing.sm,
-  },
   sectionHeaderLabelWrapper: {
     flex: 1,
   },
   sectionTitle: {
-    ...pixelArt.typography.pixelSubtitle,
-    fontFamily: PIXEL_FONT,
-    color: '#8B7355',
+    fontSize: typography.size.base,
+    fontWeight: typography.weight.bold,
+    color: colors.text.secondary,
     textTransform: 'uppercase',
+    letterSpacing: 0.5,
   },
   sectionContent: {
-    marginTop: pixelArt.spacing.sm,
+    marginTop: spacing.sm,
   },
 });

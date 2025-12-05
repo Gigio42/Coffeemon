@@ -1,7 +1,9 @@
-import React from 'react';
-import { View, TouchableOpacity, Text, StyleSheet } from 'react-native';
+import React from "react";
+import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { battleIcons } from "../../../assets/iconsv2";
+import { theme } from "../../theme/theme";
 
-export type NavScreen = 'shop' | 'team' | 'battle' | 'catalog' | 'friends';
+export type NavScreen = "shop" | "team" | "battle" | "catalog" | "cafe";
 
 interface BottomNavProps {
   activeScreen: NavScreen;
@@ -10,50 +12,61 @@ interface BottomNavProps {
 
 const styles = StyleSheet.create({
   container: {
-    flexDirection: 'row',
-    backgroundColor: '#F5E6D3',
-    borderTopWidth: 1,
-    borderTopColor: '#E0E0E0',
-    paddingBottom: 8,
-    paddingTop: 8,
-    elevation: 8,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: -2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
+    flexDirection: "row",
+    backgroundColor: theme.colors.surface.base,
+    borderTopWidth: 2,
+    borderTopColor: theme.colors.border.light,
+    paddingBottom: theme.spacing.lg,
+    paddingTop: theme.spacing.md,
+    paddingHorizontal: theme.spacing.sm,
+    ...theme.shadows.lg,
   },
   navItem: {
     flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 8,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: theme.spacing.md,
+    paddingHorizontal: theme.spacing.sm,
+    borderRadius: theme.radius.xl,
+    marginHorizontal: 2,
   },
   navItemActive: {
-    backgroundColor: 'rgba(0, 0, 0, 0.05)',
-    borderRadius: 12,
+    backgroundColor: theme.colors.accent.primary,
+    shadowColor: theme.colors.accent.primary,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.5,
+    shadowRadius: 8,
+    elevation: 6,
+    transform: [{ scale: 1.05 }],
   },
   icon: {
-    fontSize: 24,
-    marginBottom: 4,
+    width: 32,
+    height: 32,
+    marginBottom: 6,
   },
   label: {
-    fontSize: 11,
-    color: '#666',
-    fontWeight: '500',
+    fontSize: theme.typography.size.xs,
+    color: theme.colors.text.secondary,
+    fontWeight: theme.typography.weight.semiBold,
+    letterSpacing: 0.3,
   },
   labelActive: {
-    color: '#000',
-    fontWeight: '700',
+    color: theme.colors.text.inverse,
+    fontWeight: theme.typography.weight.bold,
+    letterSpacing: 0.5,
   },
 });
 
-export const BottomNav: React.FC<BottomNavProps> = ({ activeScreen, onNavigate }) => {
-  const navItems: { key: NavScreen; label: string; icon: string }[] = [
-    { key: 'shop', label: 'Shop', icon: '🛒' },
-    { key: 'team', label: 'Time', icon: '👥' },
-    { key: 'battle', label: 'Batalha', icon: '⚔️' },
-    { key: 'catalog', label: 'Catálogo', icon: '📖' },
-    { key: 'friends', label: 'Amigos', icon: '🤝' },
+export const BottomNav: React.FC<BottomNavProps> = ({
+  activeScreen,
+  onNavigate,
+}) => {
+  const navItems: { key: NavScreen; label: string; icon: any }[] = [
+    { key: "shop", label: "Shop", icon: battleIcons.marketplace },
+    { key: "team", label: "Time", icon: battleIcons.paw },
+    { key: "battle", label: "Batalha", icon: battleIcons.versus },
+    { key: "catalog", label: "Catálogo", icon: battleIcons.card },
+    { key: "cafe", label: "Café", icon: battleIcons.coffeeBreak },
   ];
 
   return (
@@ -66,9 +79,21 @@ export const BottomNav: React.FC<BottomNavProps> = ({ activeScreen, onNavigate }
             activeScreen === item.key && styles.navItemActive,
           ]}
           onPress={() => onNavigate(item.key)}
-          activeOpacity={0.7}
+          activeOpacity={0.8}
         >
-          <Text style={styles.icon}>{item.icon}</Text>
+          <Image
+            source={item.icon}
+            style={[
+              styles.icon,
+              {
+                tintColor:
+                  activeScreen === item.key
+                    ? theme.colors.text.inverse
+                    : theme.colors.text.secondary,
+              },
+            ]}
+            resizeMode="contain"
+          />
           <Text
             style={[
               styles.label,

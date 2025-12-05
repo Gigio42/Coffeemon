@@ -41,6 +41,7 @@ export interface PlayerBattleState {
   coffeemons: CoffeemonState[];
   hasSelectedCoffeemon: boolean;
   inventory: PlayerInventory;
+  hasUsedItem: boolean;
 }
 
 export interface BattleState {

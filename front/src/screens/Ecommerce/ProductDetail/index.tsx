@@ -5,10 +5,11 @@ import {
   ScrollView,
   TouchableOpacity,
   Image,
-  SafeAreaView,
+  ActivityIndicator,
   TextInput,
   Platform,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Product } from '../../../types';

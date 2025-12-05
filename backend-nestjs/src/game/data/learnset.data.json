@@ -32,5 +32,28 @@
 
   { "coffeemonId": 6, "moveId": 11, "learnMethod": "start", "levelLearned": 1 },
   { "coffeemonId": 6, "moveId": 12, "learnMethod": "start", "levelLearned": 1 },
-  { "coffeemonId": 6, "moveId": 21, "learnMethod": "level_up", "levelLearned": 7 }
+  { "coffeemonId": 6, "moveId": 21, "learnMethod": "level_up", "levelLearned": 7 },
+
+  { "coffeemonId": 7, "moveId": 27, "learnMethod": "start", "levelLearned": 1 }, 
+  { "coffeemonId": 7, "moveId": 9, "learnMethod": "start", "levelLearned": 1 },
+  { "coffeemonId": 7, "moveId": 28, "learnMethod": "level_up", "levelLearned": 6 },
+  { "coffeemonId": 7, "moveId": 31, "learnMethod": "level_up", "levelLearned": 10 },
+  { "coffeemonId": 7, "moveId": 19, "learnMethod": "level_up", "levelLearned": 14 },
+
+  { "coffeemonId": 8, "moveId": 1, "learnMethod": "start", "levelLearned": 1 },
+  { "coffeemonId": 8, "moveId": 22, "learnMethod": "start", "levelLearned": 1 },
+  { "coffeemonId": 8, "moveId": 29, "learnMethod": "level_up", "levelLearned": 5 },
+  { "coffeemonId": 8, "moveId": 14, "learnMethod": "level_up", "levelLearned": 9 },
+  { "coffeemonId": 8, "moveId": 2, "learnMethod": "level_up", "levelLearned": 12 },
+
+  { "coffeemonId": 9, "moveId": 30, "learnMethod": "start", "levelLearned": 1 },
+  { "coffeemonId": 9, "moveId": 17, "learnMethod": "start", "levelLearned": 1 },
+  { "coffeemonId": 9, "moveId": 26, "learnMethod": "level_up", "levelLearned": 7 },
+  { "coffeemonId": 9, "moveId": 3, "learnMethod": "level_up", "levelLearned": 11 },
+  { "coffeemonId": 9, "moveId": 16, "learnMethod": "level_up", "levelLearned": 15 },
+
+  { "coffeemonId": 10, "moveId": 3, "learnMethod": "start", "levelLearned": 1 },
+  { "coffeemonId": 10, "moveId": 13, "learnMethod": "start", "levelLearned": 1 },
+  { "coffeemonId": 10, "moveId": 6, "learnMethod": "level_up", "levelLearned": 7 },
+  { "coffeemonId": 10, "moveId": 26, "learnMethod": "level_up", "levelLearned": 15 }
 ]

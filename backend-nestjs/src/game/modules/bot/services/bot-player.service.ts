@@ -34,6 +34,7 @@ export class BotPlayerService {
         activeCoffeemonIndex: null,
         coffeemons: botParty,
         hasSelectedCoffeemon: false,
+        hasUsedItem: false,
         inventory: {},
       },
       profile,
@@ -61,7 +62,7 @@ export class BotPlayerService {
 
     return {
       id: baseCoffeemon.id,
-      name: `${baseCoffeemon.name} (Lvl ${level})`,
+      name: `${baseCoffeemon.name}`,
       types: baseCoffeemon.types,
       currentHp: maxHp,
       isFainted: false,

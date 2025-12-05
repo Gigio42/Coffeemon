@@ -10,8 +10,8 @@ import {
   Image,
   ActivityIndicator,
   View as RNView,
+  StyleSheet,
 } from 'react-native';
-import { Video, ResizeMode } from 'expo-av';
 import type { ImageSourcePropType } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -26,23 +26,26 @@ import { PlayerCoffeemon } from '../../api/coffeemonService';
 import { giveInitialItems, getPlayerItems, getItemIcon, getItemColor, Item } from '../../api/itemsService';
 import { prefetchPalette, useDynamicPalette, type Palette } from '../../utils/colorPalette';
 import { getCoffeemonImage } from '../../../assets/coffeemons';
-const MOCHILA_ICON = require('../../../assets/icons/mochila.png');
-const BOT_ICON = require('../../../assets/icons/bot.png');
-const START_ICON = require('../../../assets/icons/start.png');
+
+// Novos ícones modernos
+const BACKPACK_ICON = require('../../../assets/iconsv2/card.png');
+const BOT_ICON = require('../../../assets/iconsv2/coach.png');
+const START_ICON = require('../../../assets/iconsv2/swords.png');
+
 import { getVariantForStatusEffects } from '../../utils/statusEffects';
 
 import CoffeemonSelectionModal from '../../components/CoffeemonSelectionModal';
 import CoffeemonCard from '../../components/CoffeemonCard';
+import TeamFormation from '../../components/TeamFormation';
 import SlidingBottomSheet, { type SlidingBottomSheetSection } from '../../components/SlidingBottomSheet';
 import CoffeemonDetailsModal from '../../components/CoffeemonDetailsModal';
 
 import { styles } from './styles';
-import { pixelArt } from '../../theme/pixelArt';
-import { getTypeColor } from '../../components/CoffeemonCard/styles';
+import { getTypeColorScheme, spacing } from '../../theme/colors';
 import QRScanner from './QRScanner';
 
 const CARD_WIDTH = 110;
-const CARD_HORIZONTAL_MARGIN = pixelArt.spacing.xs;
+const CARD_HORIZONTAL_MARGIN = spacing.sm;
 const CARD_TOTAL_WIDTH = CARD_WIDTH + CARD_HORIZONTAL_MARGIN * 2;
 const SWIPE_THRESHOLD = CARD_TOTAL_WIDTH * 0.4;
 const SWIPE_VELOCITY_THRESHOLD = 0.4;
@@ -168,307 +171,6 @@ function buildGradientPalette(palette: Palette): GradientPalette {
   };
 }
 
-// Componente inline para o carrossel do time
-function TeamCarouselInline({
-  coffeemons,
-  onToggleParty: onTogglePartyProp,
-  partyLoading,
-  onScrollInterruption,
-  onActiveCoffeemonChange,
-  onCoffeemonPress,
-}: {
-  coffeemons: PlayerCoffeemon[];
-  onToggleParty: (coffeemon: PlayerCoffeemon) => void;
-  partyLoading: number | null;
-  onScrollInterruption?: (interrupting: boolean) => void;
-  onActiveCoffeemonChange?: (coffeemon: PlayerCoffeemon | null) => void;
-  onCoffeemonPress?: (coffeemon: PlayerCoffeemon) => void;
-}) {
-  // Ordem visual dos cards (posição 0 = esquerda, 1 = centro, 2 = direita)
-  const [displayOrder, setDisplayOrder] = useState<number[]>(() => coffeemons.map((_, index) => index));
-  const scaleValuesRef = React.useRef<Animated.Value[]>([]);
-  const opacityValuesRef = React.useRef<Animated.Value[]>([]);
-  const translateYValuesRef = React.useRef<Animated.Value[]>([]);
-  const translateXValuesRef = React.useRef<Animated.Value[]>([]);
-  const accumulatedDxRef = React.useRef(0);
-  const previousDxRef = React.useRef(0);
-  const swipeTriggeredRef = React.useRef(false);
-
-  // Inicializar arrays de animação
-  const initializeAnimationArrays = React.useCallback(() => {
-    scaleValuesRef.current = coffeemons.map(() => new Animated.Value(1));
-    opacityValuesRef.current = coffeemons.map(() => new Animated.Value(1));
-    translateYValuesRef.current = coffeemons.map(() => new Animated.Value(0));
-    translateXValuesRef.current = coffeemons.map(() => new Animated.Value(0));
-  }, [coffeemons.length]);
-
-  // Atualizar arrays e ordem quando coffeemons muda
-  React.useEffect(() => {
-    initializeAnimationArrays();
-    setDisplayOrder(coffeemons.map((_, index) => index));
-  }, [coffeemons.length, initializeAnimationArrays]);
-
-  React.useEffect(() => {
-    if (coffeemons.length === 0) {
-      onActiveCoffeemonChange?.(null);
-      return;
-    }
-
-    const centerIndex = Math.floor(displayOrder.length / 2);
-    const activeIndex = displayOrder[centerIndex];
-    const active = typeof activeIndex === 'number' ? coffeemons[activeIndex] : undefined;
-
-    if (active) {
-      onActiveCoffeemonChange?.(active);
-    }
-  }, [coffeemons, displayOrder, onActiveCoffeemonChange]);
-
-  const animateCards = React.useCallback(
-    (order: number[]) => {
-      const centerPosition = Math.floor(order.length / 2);
-      coffeemons.forEach((_, originalIndex) => {
-        if (originalIndex >= scaleValuesRef.current.length || originalIndex >= opacityValuesRef.current.length) {
-          return;
-        }
-
-        const position = order.indexOf(originalIndex);
-        if (position === -1) return; // Card não está na ordem atual
-
-        const distance = Math.abs(position - centerPosition);
-
-        const scale = distance === 0 ? 0.92 : distance === 1 ? 0.8 : 0.7;
-        const opacity = distance === 0 ? 1 : distance === 1 ? 0.6 : 0.4;
-        const translateY = distance === 0 ? 0 : distance === 1 ? 16 : 26;
-        const translateXTarget =
-          (position - centerPosition) * (CARD_TOTAL_WIDTH * 0.62) -
-          CAROUSEL_BASE_OFFSET -
-          (position === centerPosition ? CENTER_CARD_EXTRA_OFFSET : 0) -
-          (position < centerPosition ? LEFT_CARD_EXTRA_OFFSET : 0);
-
-        scaleValuesRef.current[originalIndex]?.stopAnimation?.();
-        opacityValuesRef.current[originalIndex]?.stopAnimation?.();
-        translateYValuesRef.current[originalIndex]?.stopAnimation?.();
-        translateXValuesRef.current[originalIndex]?.stopAnimation?.();
-
-        Animated.parallel([
-          Animated.timing(scaleValuesRef.current[originalIndex], {
-            toValue: scale,
-            duration: CARD_ANIMATION_DURATION,
-            easing: Easing.bezier(0.25, 0.8, 0.25, 1),
-            useNativeDriver: false,
-          }),
-          Animated.timing(opacityValuesRef.current[originalIndex], {
-            toValue: opacity,
-            duration: CARD_ANIMATION_DURATION,
-            easing: Easing.bezier(0.25, 0.8, 0.25, 1),
-            useNativeDriver: false,
-          }),
-          Animated.timing(translateYValuesRef.current[originalIndex], {
-            toValue: translateY,
-            duration: CARD_ANIMATION_DURATION,
-            easing: Easing.bezier(0.25, 0.8, 0.25, 1),
-            useNativeDriver: false,
-          }),
-          Animated.timing(translateXValuesRef.current[originalIndex], {
-            toValue: translateXTarget,
-            duration: CARD_ANIMATION_DURATION,
-            easing: Easing.bezier(0.25, 0.8, 0.25, 1),
-            useNativeDriver: false,
-          }),
-        ]).start();
-      });
-    },
-    [coffeemons.length]
-  );
-
-  React.useEffect(() => {
-    if (coffeemons.length > 0) {
-      animateCards(displayOrder);
-    }
-  }, [coffeemons.length, displayOrder, animateCards]);
-  const animateSwipe = React.useCallback(
-    (direction: 'left' | 'right') => {
-      setDisplayOrder((prev) => {
-        if (prev.length <= 1) {
-          return prev;
-        }
-
-        const newOrder = direction === 'left'
-          ? [...prev.slice(1), prev[0]]
-          : [prev[prev.length - 1], ...prev.slice(0, prev.length - 1)];
-
-        animateCards(newOrder);
-        return newOrder;
-      });
-    },
-    [animateCards]
-  );
-
-  const panResponder = React.useMemo(
-    () =>
-      PanResponder.create({
-        onMoveShouldSetPanResponder: (_, gestureState) => {
-          const { dx, dy } = gestureState;
-          return (
-            displayOrder.length > 1 &&
-            Math.abs(dx) > Math.abs(dy) &&
-            Math.abs(dx) > 5
-          );
-        },
-        onPanResponderGrant: () => {
-          onScrollInterruption?.(true);
-          accumulatedDxRef.current = 0;
-          previousDxRef.current = 0;
-          swipeTriggeredRef.current = false;
-        },
-        onPanResponderMove: (_, { dx }) => {
-          if (displayOrder.length <= 1 || swipeTriggeredRef.current) {
-            return;
-          }
-
-          const delta = dx - previousDxRef.current;
-          previousDxRef.current = dx;
-
-          accumulatedDxRef.current += delta;
-
-          // Trigger swipe only once per gesture
-          if (Math.abs(accumulatedDxRef.current) >= SWIPE_THRESHOLD) {
-            const direction = accumulatedDxRef.current < 0 ? 'left' : 'right';
-            animateSwipe(direction);
-            swipeTriggeredRef.current = true;
-          }
-        },
-        onPanResponderRelease: (_, { dx, vx }) => {
-          if (displayOrder.length > 1 && !swipeTriggeredRef.current) {
-            const shouldSwipeLeft = dx <= -SWIPE_THRESHOLD || vx <= -SWIPE_VELOCITY_THRESHOLD;
-            const shouldSwipeRight = dx >= SWIPE_THRESHOLD || vx >= SWIPE_VELOCITY_THRESHOLD;
-
-            if (shouldSwipeLeft) {
-              animateSwipe('left');
-            } else if (shouldSwipeRight) {
-              animateSwipe('right');
-            }
-          }
-
-          accumulatedDxRef.current = 0;
-          previousDxRef.current = 0;
-          swipeTriggeredRef.current = false;
-          onScrollInterruption?.(false);
-        },
-        onPanResponderTerminate: () => {
-          accumulatedDxRef.current = 0;
-          previousDxRef.current = 0;
-          swipeTriggeredRef.current = false;
-          onScrollInterruption?.(false);
-        },
-      }),
-    [animateSwipe, displayOrder.length]
-  );
-  const centerPosition = Math.floor(displayOrder.length / 2);
-  const getIsActive = (originalIndex: number) => displayOrder.indexOf(originalIndex) === centerPosition;
-
-  return (
-    <View style={styles.carouselContainer}>
-      <Animated.View
-        {...panResponder.panHandlers}
-        style={[
-          styles.carouselTrack,
-        ]}
-      >
-        {displayOrder.map((originalIndex, position) => {
-          const coffeemon = coffeemons[originalIndex];
-          const isActive = getIsActive(originalIndex);
-
-          // Verificações de segurança para arrays de animação
-          const scaleValue = scaleValuesRef.current[originalIndex];
-          const translateYValue = translateYValuesRef.current[originalIndex];
-          const translateXValue = translateXValuesRef.current[originalIndex];
-          const opacityValue = opacityValuesRef.current[originalIndex];
-
-          if (!scaleValue || !opacityValue || !translateXValue || !coffeemon) {
-            return null; // Não renderizar se os valores não existirem
-          }
-
-          return (
-            <View
-              key={coffeemon.id}
-              style={[
-                styles.carouselCardWrapper,
-                {
-                  zIndex: isActive ? 300 : 200,
-                  elevation: isActive ? 8 : 2,
-                },
-              ]}
-            >
-              <TouchableOpacity
-                style={styles.carouselCard}
-                onPress={() => {
-                  if (!isActive) {
-                    const direction: 'left' | 'right' =
-                      position < centerPosition ? 'right' : 'left';
-                    animateSwipe(direction);
-                  } else {
-                    onCoffeemonPress?.(coffeemon);
-                  }
-                }}
-                activeOpacity={0.9}
-              >
-                <Animated.View
-                  style={[
-                    styles.carouselCard,
-                    {
-                      transform: [
-                        { translateX: translateXValue ?? 0 },
-                        { translateY: translateYValue ?? 0 },
-                        { scale: scaleValue },
-                      ],
-                      opacity: opacityValue,
-                    },
-                  ]}
-                >
-                  <CoffeemonCard
-                    coffeemon={{
-                      id: coffeemon.id,
-                      hp: coffeemon.hp,
-                      attack: coffeemon.attack,
-                      defense: coffeemon.defense,
-                      level: coffeemon.level,
-                      experience: coffeemon.experience,
-                      isInParty: true,
-                      learnedMoves: coffeemon.learnedMoves,
-                      coffeemon: {
-                        id: coffeemon.coffeemon.id,
-                        name: coffeemon.coffeemon.name,
-                        types: coffeemon.coffeemon.types,
-                        baseHp: coffeemon.coffeemon.baseHp,
-                        baseAttack: coffeemon.coffeemon.baseAttack,
-                        baseDefense: coffeemon.coffeemon.baseDefense,
-                        baseSpeed: coffeemon.coffeemon.baseSpeed,
-                      },
-                    }}
-                    onToggleParty={async () => {
-                      if (!isActive) {
-                        return;
-                      }
-                      await Promise.resolve(onTogglePartyProp(coffeemon));
-                    }}
-                    variant="large"
-                    isLoading={partyLoading === coffeemon.id}
-                    disabled={!isActive}
-                    onPress={isActive ? onCoffeemonPress : undefined}
-                  />
-                  {/* Star indicator removed as per request */}
-                </Animated.View>
-              </TouchableOpacity>
-            </View>
-          );
-        })}
-      </Animated.View>
-
-      {/* Indicadores removidos conforme solicitado */}
-    </View>
-  );
-}
 
 interface MatchmakingScreenProps {
   token: string;
@@ -770,7 +472,12 @@ export default function MatchmakingScreen({
     if (!activeCoffeemon) {
       return DEFAULT_BACKGROUND_PALETTE;
     }
-    return getTypeColor(activeCoffeemon.coffeemon.types?.[0], activeCoffeemon.coffeemon.name);
+    const colors = getTypeColorScheme(activeCoffeemon.coffeemon.types?.[0] || 'roasted');
+    return {
+      light: colors.light,
+      dark: colors.dark,
+      accent: colors.primary,
+    };
   }, [activeCoffeemon]);
 
   const activeVariant = useMemo(
@@ -814,7 +521,12 @@ export default function MatchmakingScreen({
           coffeemonList.map(async (coffeemon) => {
             const variant = getVariantForStatusEffects(coffeemon.statusEffects, 'default');
             const assetModule = getCoffeemonImage(coffeemon.coffeemon.name, variant);
-            const fallback = getTypeColor(coffeemon.coffeemon.types?.[0], coffeemon.coffeemon.name);
+            const colors = getTypeColorScheme(coffeemon.coffeemon.types?.[0] || 'roasted');
+            const fallback = {
+              light: colors.light,
+              dark: colors.dark,
+              accent: colors.primary,
+            };
             await prefetchPalette(assetModule, fallback);
           }),
         );
@@ -1025,7 +737,7 @@ export default function MatchmakingScreen({
             />
             <View style={styles.sheetBotContent}>
               <View style={styles.sheetBotInfo}>
-                <Text style={[styles.sheetBotLabel, { marginRight: pixelArt.spacing.xs }]}>Mia</Text>
+                <Text style={[styles.sheetBotLabel, { marginRight: spacing.sm }]}>Mia</Text>
                 <Text style={styles.sheetBotDescription}>Nível 5</Text>
               </View>
             </View>
@@ -1047,7 +759,7 @@ export default function MatchmakingScreen({
             />
             <View style={styles.sheetBotContent}>
               <View style={styles.sheetBotInfo}>
-                <Text style={[styles.sheetBotLabel, { marginRight: pixelArt.spacing.xs }]}>John</Text>
+                <Text style={[styles.sheetBotLabel, { marginRight: spacing.sm }]}>John</Text>
                 <Text style={styles.sheetBotDescription}>Nível 15</Text>
               </View>
             </View>
@@ -1059,7 +771,7 @@ export default function MatchmakingScreen({
     const sections: Record<typeof sheetTab, SlidingBottomSheetSection> = {
       backpack: {
         key: 'backpack',
-        title: `Mochila`,
+        title: `Cards`,
         content: backpackContent,
       },
       items: {
@@ -1092,41 +804,53 @@ export default function MatchmakingScreen({
     <View style={styles.fullScreenContainer}>
       <View
         pointerEvents="none"
-        style={[styles.dynamicBackground, { backgroundColor: '#F5E6D3' }]}
+        style={[styles.dynamicBackground]}
       >
+        <LinearGradient
+          colors={['#F8F9FA', '#FFFFFF', '#F8F9FA']}
+          locations={[0, 0.5, 1]}
+          style={StyleSheet.absoluteFillObject}
+        />
         <Animated.Image
           source={NOISE_SOURCE}
           resizeMode="repeat"
-          style={[styles.grainOverlay, { transform: [{ translateY: grainParallax }], opacity: 0.03 }]}
+          style={[styles.grainOverlay, { transform: [{ translateY: grainParallax }], opacity: 0.02 }]}
         />
       </View>
       <SafeAreaView style={styles.container} edges={['top']}>
         {!showContent ? (
           <RNView style={styles.loadingContainer}>
-            <Video
-              source={require('../../../assets/backgrounds/Vídeo do WhatsApp de 2025-11-15 à(s) 01.12.33_6a86bb16.mp4')}
-              style={styles.backgroundVideo}
-              shouldPlay
-              isLooping
-              isMuted
-              resizeMode={ResizeMode.COVER}
-            />
+            <View style={[styles.backgroundVideo, { backgroundColor: '#0F1419' }]} />
             <View style={styles.loadingOverlay}>
-              <ActivityIndicator size="large" color="#fff9f0" />
-              <Text style={styles.loadingText}>Preparando matchmaking...</Text>
+              {/* Logo/Título Principal */}
+              <Text style={styles.loadingLogo}>COFFEEMON</Text>
+              <Text style={styles.loadingSubtitle}>Prepare-se para a batalha</Text>
               
-              {/* Barra de carregamento pixelada */}
+              {/* Porcentagem de Progresso */}
+              <Text style={styles.loadingPercentage}>{Math.round(progress)}%</Text>
+              
+              {/* Texto de Status */}
+              <Text style={styles.loadingText}>
+                {progress < 30 ? 'Carregando recursos...' : 
+                 progress < 60 ? 'Preparando Coffeemons...' : 
+                 progress < 90 ? 'Finalizando...' : 
+                 'Pronto!'}
+              </Text>
+              
+              {/* Barra de Carregamento Moderna */}
               <View style={styles.loadingBarContainer}>
                 <Animated.View 
                   style={[
                     styles.loadingBar, 
                     { 
                       width: `${progress}%`,
-                      backgroundColor: progress > 50 ? '#F5E6D3' : '#E8D5B5'
                     }
                   ]}
                 >
-                  <View style={styles.loadingBarPixelEffect} />
+                  {/* Efeito de brilho na ponta da barra */}
+                  {progress > 5 && progress < 100 && (
+                    <View style={styles.loadingBarGlow} />
+                  )}
                 </Animated.View>
               </View>
             </View>
@@ -1176,36 +900,20 @@ export default function MatchmakingScreen({
 
             {/* Status removido */}
 
-            {player && (
-              <View style={styles.playerHeader}>
-                <Image source={{ uri: player.user?.avatar || `https://api.dicebear.com/7.x/thumbs/png?seed=${player.id}&size=40` }} style={styles.playerAvatar} />
-                <Text style={styles.playerName}>{user?.username || player.user?.username || 'Player'}</Text>
-              </View>
-            )}
-
             <PlayerStatus token={token} />
 
-            <View style={[styles.scrollView, styles.scrollContent]}>
-              <View style={styles.teamCarouselSticky}>
-                <View style={styles.teamColumn}>
-                  <Text style={styles.teamColumnTitle}>{`Meu Time (${partyMembers.length}/3)`}</Text>
-
-                  {partyMembers.length === 0 ? (
-                    <Text style={styles.teamEmptyMessage}>Adicione Coffeemons ao seu time</Text>
-                  ) : (
-                    <TeamCarouselInline
-                      coffeemons={partyMembers}
-                      onToggleParty={toggleParty}
-                      partyLoading={partyLoading}
-                      onScrollInterruption={setCarouselInteracting}
-                      onActiveCoffeemonChange={handleActiveCoffeemonChange}
-                      onCoffeemonPress={handleOpenDetailsModal}
-                    />
-                  )}
-                </View>
+            <View style={styles.teamContainer}>
+              <View style={styles.teamHeader}>
+                <Text style={styles.teamTitle}>Minha Equipe</Text>
+                <Text style={styles.teamCount}>{partyMembers.length}/3</Text>
               </View>
 
-              <View style={styles.scrollBody} />
+              <TeamFormation
+                partyMembers={partyMembers}
+                onCoffeemonPress={handleOpenDetailsModal}
+                onAddPress={() => handleOpenSheet('backpack')}
+                activeCoffeemonId={activeCoffeemon?.id}
+              />
             </View>
 
             <View style={styles.bottomBar}>
@@ -1218,7 +926,7 @@ export default function MatchmakingScreen({
                   }}
                   disabled={!showBackpackButton}
                 >
-                  <Image source={MOCHILA_ICON} style={styles.bottomBarIcon} />
+                  <Image source={BACKPACK_ICON} style={styles.bottomBarIcon} />
                 </TouchableOpacity>
               </Animated.View>
 
