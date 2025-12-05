@@ -71,8 +71,8 @@ export class NotificationsGateway {
 
     this.server.to(battleRoom).emit('matchFound', { battleId: event.battleId });
 
-    const p1View = this.battleViewService.buildPlayerView(fullState, player1Id);
-    const p2View = this.battleViewService.buildPlayerView(fullState, player2Id);
+    const p1View = await this.battleViewService.buildPlayerView(fullState, player1Id);
+    const p2View = await this.battleViewService.buildPlayerView(fullState, player2Id);
 
     if (p1Socket) {
       p1Socket.emit('battleUpdate', { battleState: p1View });
@@ -83,11 +83,11 @@ export class NotificationsGateway {
   }
 
   @OnEvent('battle.state.updated')
-  handleBattleStateUpdate(event: BattleStateUpdatedEvent): void {
+  async handleBattleStateUpdate(event: BattleStateUpdatedEvent): Promise<void> {
     const fullState = event.battleState;
     const { player1Id, player2Id, player1SocketId, player2SocketId } = fullState;
-    const p1View = this.battleViewService.buildPlayerView(fullState, player1Id);
-    const p2View = this.battleViewService.buildPlayerView(fullState, player2Id);
+    const p1View = await this.battleViewService.buildPlayerView(fullState, player1Id);
+    const p2View = await this.battleViewService.buildPlayerView(fullState, player2Id);
 
     this.server.to(player1SocketId).emit('battleUpdate', { battleState: p1View });
 
@@ -123,7 +123,7 @@ export class NotificationsGateway {
     if (socket) {
       await socket.join(battleRoom);
 
-      const playerView = this.battleViewService.buildPlayerView(fullState, event.playerId);
+      const playerView = await this.battleViewService.buildPlayerView(fullState, event.playerId);
       socket.emit('battleUpdate', { battleState: playerView });
 
       socket.to(battleRoom).emit('playerReconnected', {

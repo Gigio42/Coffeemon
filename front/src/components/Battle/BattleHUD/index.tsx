@@ -23,6 +23,7 @@ interface BattleHUDProps {
   damage?: number | null;
   spriteVariant?: CoffeemonVariant;
   imageSourceGetter?: (name: string, variant?: CoffeemonVariant) => ImageSourcePropType;
+  playerName?: string;
 }
 
 const getTypeIcon = (type: string): ImageSourcePropType => {
@@ -49,6 +50,7 @@ export default function BattleHUD({
   damage,
   spriteVariant = 'default',
   imageSourceGetter,
+  playerName,
 }: BattleHUDProps) {
   const [damageAnim] = useState(new Animated.Value(0));
   const [currentDamage, setCurrentDamage] = useState<number | null>(null);
@@ -100,10 +102,23 @@ export default function BattleHUD({
   const typeColor = getTypeColor(monType);
   // Corrigindo: usar o level do coffeemon, não do playerState
   const level = activeMon.level ?? 1;
+  
+  // Gera nome curto do jogador
+  const displayName = playerName || (isMe ? 'Você' : 'Oponente');
 
   return (
     <View style={[styles.hudContainer, containerStyle]}>
-      <View style={hudStyles.card}>
+      {/* Tag de Treinador */}
+      <View style={[hudStyles.trainerTag, isMe ? hudStyles.trainerTagLeft : hudStyles.trainerTagRight]}>
+        <View style={[hudStyles.trainerTagInner, isMe && hudStyles.trainerTagPlayer]}>
+          <Text style={hudStyles.trainerIcon}>{isMe ? '★' : '☆'}</Text>
+          <Text style={[hudStyles.trainerTagText, isMe && hudStyles.trainerTagTextPlayer]}>
+            {displayName}
+          </Text>
+        </View>
+      </View>
+      
+      <View style={[hudStyles.card, isMe && hudStyles.cardPlayer]}>
         <View style={hudStyles.topSection}>
           {/* Fundo do tipo com padrão */}
           <View style={[hudStyles.typeBackground, { backgroundColor: typeColor }]} />

@@ -1525,6 +1525,11 @@ export default function BattleScreen({
             damage={playerDamage}
             spriteVariant={playerHudVariant ?? "default"}
             imageSourceGetter={getCoffeemonImageSource}
+            playerName={
+              battleState?.player1Id === playerId
+                ? battleState?.player1Info?.username
+                : battleState?.player2Info?.username
+            }
           />
         )}
         {opponentPlayerState && (
@@ -1534,6 +1539,11 @@ export default function BattleScreen({
             damage={opponentDamage}
             spriteVariant={opponentHudVariant ?? "default"}
             imageSourceGetter={getCoffeemonImageSource}
+            playerName={
+              battleState?.player1Id === playerId
+                ? battleState?.player2Info?.username
+                : battleState?.player1Info?.username
+            }
           />
         )}
 

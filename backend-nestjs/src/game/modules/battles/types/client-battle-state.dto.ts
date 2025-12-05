@@ -5,11 +5,19 @@ import { BattleStatus, TurnPhase } from './enums';
 export type ClientCoffeemonState = CoffeemonState;
 export type ClientPlayerBattleState = PlayerBattleState;
 
+export interface PlayerInfo {
+  id: number;
+  username: string;
+  avatar?: string;
+}
+
 export interface ClientBattleState {
   player1Id: number;
   player2Id: number;
   player1: ClientPlayerBattleState;
   player2: ClientPlayerBattleState;
+  player1Info?: PlayerInfo;
+  player2Info?: PlayerInfo;
   turn: number;
   battleStatus: BattleStatus;
   winnerId?: number;
