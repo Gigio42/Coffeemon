@@ -487,7 +487,7 @@ export default function BattleScreen({
         hp: coffeemon.currentHp,
         attack: coffeemon.attack,
         defense: coffeemon.defense,
-        level: 1,
+        level: coffeemon.level,
         experience: 0,
         isInParty: false,
         coffeemon: {
@@ -541,7 +541,7 @@ export default function BattleScreen({
         hp: coffeemon.currentHp,
         attack: coffeemon.attack,
         defense: coffeemon.defense,
-        level: 1,
+        level: coffeemon.level,
         experience: 0,
         isInParty: false,
         coffeemon: {

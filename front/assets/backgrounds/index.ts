@@ -1,15 +1,15 @@
 import type { ImageSourcePropType } from 'react-native';
 
 const backgroundMap = {
-  field: require('./field.png'),
   mountains: require('./mountains.png'),
+  jungle: require('./jungle.png'),
 } satisfies Record<string, ImageSourcePropType>;
 
 export type BackgroundKey = keyof typeof backgroundMap;
 
 export const backgroundKeys = Object.keys(backgroundMap) as BackgroundKey[];
 
-export const DEFAULT_BACKGROUND_KEY: BackgroundKey = 'field';
+export const DEFAULT_BACKGROUND_KEY: BackgroundKey = 'mountains';
 
 export const backgroundSources = backgroundKeys.map((key) => backgroundMap[key]);
 

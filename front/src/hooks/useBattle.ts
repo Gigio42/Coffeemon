@@ -101,8 +101,19 @@ export function useBattle({
   const [isProcessing, setIsProcessing] = useState<boolean>(false);
   const [isBattleReady, setIsBattleReady] = useState<boolean>(false);
   const [recentDamageMap, setRecentDamageMap] = useState<Record<string, boolean>>({});
-  const [battleRewards, setBattleRewards] = useState<BattleReward | null>(null);
+  const [battleRewards, setBattleRewards] = useState<BattleReward | null>({
+    playerId,
+    coffeemonRewards: [],
+    coins: 0,
+    totalExp: 0,
+  });
   const [showVictoryModal, setShowVictoryModal] = useState<boolean>(false);
+  const battleRewardsRef = useRef<BattleReward | null>(null);
+  
+  // Manter referência sincronizada
+  useEffect(() => {
+    battleRewardsRef.current = battleRewards;
+  }, [battleRewards]);
 
   const battleStateRef = useRef<BattleState>(battleState);
   const recentDamageTimeoutsRef = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
@@ -111,15 +122,17 @@ export function useBattle({
   useEffect(() => {
     battleStateRef.current = battleState;
     
-    // Build coffeemon name map for rewards
+    // Build coffeemon name map for rewards using actual ID from backend
     if (battleState) {
       const myPlayerState =
         battleState.player1Id === playerId ? battleState.player1 : battleState.player2;
       
       if (myPlayerState?.coffeemons) {
-        myPlayerState.coffeemons.forEach((mon, idx) => {
-          // Store mapping using index as key (will be updated when we get actual IDs)
-          coffeemonNameMapRef.current.set(idx, mon.name);
+        myPlayerState.coffeemons.forEach((mon: any) => {
+          // Use the actual playerCoffeemonId from backend (mon.id)
+          if (mon.id) {
+            coffeemonNameMapRef.current.set(mon.id, mon.name);
+          }
         });
       }
     }
@@ -131,187 +144,232 @@ export function useBattle({
     }
   };
 
-  const playAnimationForEvent = async (event: BattleEvent, fullState: BattleState) => {
-    try {
-      const payload = event.payload || {};
-      const myPlayerState =
-        fullState.player1Id === playerId ? fullState.player1 : fullState.player2;
-      const isPlayerAttacker = payload.playerId === playerId;
-
-      const activeMonName =
-        myPlayerState && myPlayerState.activeCoffeemonIndex !== null
-          ? getBaseName(myPlayerState.coffeemons[myPlayerState.activeCoffeemonIndex].name)
-          : '';
-
-      const isPlayerTarget = payload.targetName === activeMonName;
-
-      switch (event.type) {
-        case 'ATTACK_HIT':
-          await animationHandlers.playShake(!isPlayerAttacker);
-          break;
-        case 'ATTACK_CRIT':
-          await animationHandlers.playCritShake();
-          break;
-        case 'ATTACK_MISS':
-        case 'ATTACK_BLOCKED':
-          // Sem animação para miss/block - mais rápido
-          break;
-        case 'COFFEEMON_FAINTED':
-          await animationHandlers.playFaint(isPlayerTarget);
-          break;
-        case 'SWITCH_SUCCESS':
-          animationHandlers.reset();
-          await animationHandlers.playSwitchIn(payload.playerId === playerId);
-          break;
-        case 'STATUS_DAMAGE':
-          // Sem animação para status damage - mais rápido
-          break;
-        default:
-          // Sem delay para outros eventos
-          break;
-      }
-    } catch (error) {
-      console.error('Error in playAnimationForEvent:', event.type, error);
-    }
-  };
+  // Helper para delays
+  const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
   const processEventSequence = async (events: BattleEvent[], fullState: BattleState) => {
-    // Limitar número de eventos para evitar sobrecarga no mobile
-    const maxEvents = 5;
-    const eventsToProcess = events.slice(0, maxEvents);
+    if (events.length === 0) return;
     
-    if (events.length > maxEvents) {
-      console.warn(`Too many events (${events.length}), processing only first ${maxEvents}`);
+    console.log(`🎮 Processing ${events.length} battle events`);
+    
+    // Estados do jogo para determinar quem é quem
+    const myPlayerState = fullState.player1Id === playerId ? fullState.player1 : fullState.player2;
+    const opponentPlayerState = fullState.player1Id === playerId ? fullState.player2 : fullState.player1;
+    
+    // 🎯 SEPARAR EVENTOS EM GRUPOS PARA PROCESSAMENTO SEQUENCIAL CORRETO
+    // Pokémon sempre processa switch-in COMPLETAMENTE antes de qualquer outra ação
+    const switchEvents: BattleEvent[] = [];
+    const otherEvents: BattleEvent[] = [];
+    
+    for (const event of events) {
+      if (event.type === 'SWITCH_IN' || event.type === 'COFFEEMON_SENT_OUT') {
+        switchEvents.push(event);
+      } else {
+        otherEvents.push(event);
+      }
     }
-
-    for (let i = 0; i < eventsToProcess.length; i++) {
-      const event = eventsToProcess[i];
+    
+    // 1️⃣ PROCESSAR TODOS OS SWITCH-INS PRIMEIRO (com bloqueio total)
+    console.log(`🔄 Processing ${switchEvents.length} switch events first`);
+    for (let i = 0; i < switchEvents.length; i++) {
+      const event = switchEvents[i];
+      const payload = event.payload || {};
       
       try {
-        const payload = event.payload || {};
+        console.log(`📋 Switch Event ${i + 1}/${switchEvents.length}: ${event.type}`, payload);
+        const message = getEventMessage(event);
+        addLog(message);
+        
+        // 🚫 BLOQUEIO: Nenhum outro evento pode processar durante switch-in
+        const isPlayerAttacker = payload.playerId === playerId;
+        await animationHandlers.playSwitchIn(isPlayerAttacker);
+        
+        // Delay maior após switch para garantir que está completo
+        await delay(700);
+        
+      } catch (error) {
+        console.error(`❌ Error processing switch event ${i + 1}:`, event.type, error);
+      }
+    }
+    
+    // 2️⃣ PROCESSAR TODOS OS OUTROS EVENTOS DEPOIS
+    console.log(`⚔️ Processing ${otherEvents.length} battle events after switches`);
+    for (let i = 0; i < otherEvents.length; i++) {
+      const event = otherEvents[i];
+      const payload = event.payload || {};
+      
+      try {
+        console.log(`📋 Event ${i + 1}/${otherEvents.length}: ${event.type}`, payload);
 
-        // Gerar mensagem amigável usando o helper
+        // Gerar mensagem amigável
         const message = getEventMessage(event);
         let finalMessage = message;
 
+        // Adicionar dano à mensagem se aplicável
         if (
           payload?.damage > 0 &&
           (event.type === 'ATTACK_HIT' || event.type === 'ATTACK_CRIT' || event.type === 'STATUS_DAMAGE') &&
           !/\d/.test(message)
         ) {
-          const damageValue = Math.round(payload.damage);
-          finalMessage = `${message} (-${damageValue} HP)`;
+          finalMessage = `${message} (-${Math.round(payload.damage)} HP)`;
         }
 
-        // console.log('Processing event:', { type: event.type, message: finalMessage, payload: event.payload });
         addLog(finalMessage);
         
-        // Handle damage display
-        // console.log('Checking for damage:', event.type, payload.damage);
-        if ((event.type === 'ATTACK_HIT' || event.type === 'ATTACK_CRIT' || event.type === 'STATUS_DAMAGE') && payload.damage > 0) {
-          // Para ataques, usar playerId se disponível, senão determinar pelo target
-          let isPlayerTakingDamage = false;
-          let damagedMonName: string | null = null;
-          
-          if (payload.playerId !== undefined) {
-            // Se temos playerId, é o atacante
-            isPlayerTakingDamage = payload.playerId !== playerId;
-            damagedMonName = payload.targetName ?? null;
-          } else if (payload.targetName) {
-            // Fallback: verificar se o target é o Coffeemon ativo do jogador
-            const myPlayerState =
-              fullState.player1Id === playerId ? fullState.player1 : fullState.player2;
-            const activeMonName =
-              myPlayerState && myPlayerState.activeCoffeemonIndex !== null
-                ? getBaseName(myPlayerState.coffeemons[myPlayerState.activeCoffeemonIndex].name)
-                : '';
-            const targetIsPlayer = payload.targetName === activeMonName;
-            isPlayerTakingDamage = targetIsPlayer;
-            damagedMonName = payload.targetName;
-          } else if (payload.coffeemonName) {
-            damagedMonName = payload.coffeemonName;
-          }
-          
-          // console.log('Damage event detected:', {
-          //   type: event.type,
-          //   playerId,
-          //   payload,
-          //   isPlayerTakingDamage,
-          //   damage: payload.damage
-          // });
-          
-          if (isPlayerTakingDamage) {
-            setPlayerDamage(payload.damage);
-          } else {
-            setOpponentDamage(payload.damage);
-          }
-
-          if (damagedMonName) {
-            const baseKey = getBaseName(damagedMonName).toLowerCase();
-            setRecentDamageMap((prev) => {
-              if (prev[baseKey]) {
-                return prev;
-              }
-              return { ...prev, [baseKey]: true };
-            });
-
-            if (recentDamageTimeoutsRef.current[baseKey]) {
-              clearTimeout(recentDamageTimeoutsRef.current[baseKey]);
-            }
-
-            recentDamageTimeoutsRef.current[baseKey] = setTimeout(() => {
-              setRecentDamageMap((prev) => {
-                if (!prev[baseKey]) {
-                  return prev;
-                }
-                const { [baseKey]: _, ...rest } = prev;
-                return rest;
-              });
-              delete recentDamageTimeoutsRef.current[baseKey];
-            }, RECENT_DAMAGE_DURATION_MS);
-          }
-        }
+        // 🎬 EXECUTAR ANIMAÇÕES BASEADAS NO TIPO DE EVENTO
+        await executeEventAnimation(event, payload, myPlayerState, opponentPlayerState);
         
-        // Sem delay entre eventos - modo performance
+        // 💔 ATUALIZAR INDICADOR DE DANO NA HUD
+        updateDamageIndicators(event, payload, myPlayerState);
+        
       } catch (error) {
-        console.error('Error processing event:', event, error);
-        // Continuar processando próximos eventos mesmo se um falhar
+        console.error(`❌ Error processing event ${i + 1}:`, event.type, error);
       }
     }
   };
 
-  const handleBattleEnd = (winnerIdParam: number) => {
+  // Função auxiliar para executar animação baseada no evento
+  const executeEventAnimation = async (
+    event: BattleEvent, 
+    payload: any,
+    myPlayerState: PlayerState,
+    opponentPlayerState: PlayerState
+  ) => {
+    // Determinar quem é o alvo/atacante
+    const isPlayerAttacker = payload.playerId === playerId;
+    const isPlayerTarget = !isPlayerAttacker || (
+      payload.targetName && 
+      myPlayerState?.activeCoffeemonIndex !== null &&
+      payload.targetName === getBaseName(myPlayerState.coffeemons[myPlayerState.activeCoffeemonIndex].name)
+    );
+
+    switch (event.type) {
+      case 'ATTACK_START':
+        await animationHandlers.playLunge(isPlayerAttacker);
+        await delay(150);
+        break;
+        
+      case 'ATTACK_HIT':
+        if (payload.damage > 0) {
+          await animationHandlers.playShake(isPlayerTarget);
+        }
+        await delay(200);
+        break;
+        
+      case 'ATTACK_CRIT':
+        await animationHandlers.playCritShake();
+        await delay(250);
+        break;
+        
+      case 'COFFEEMON_FAINTED':
+        const faintedIsPlayer = determineFaintedPlayer(payload, myPlayerState);
+        await animationHandlers.playFaint(faintedIsPlayer);
+        // Delay maior após faint para apreciar a animação
+        await delay(900);
+        break;
+        
+      case 'STATUS_DAMAGE':
+        if (payload.damage > 0) {
+          await animationHandlers.playShake(isPlayerTarget);
+        }
+        await delay(150);
+        break;
+        
+      default:
+        // Pequena pausa para outros eventos
+        await delay(100);
+        break;
+    }
+  };
+
+  // Determinar se o Coffeemon que desmaiou é do jogador
+  const determineFaintedPlayer = (payload: any, myPlayerState: PlayerState): boolean => {
+    if (payload.playerId !== undefined) {
+      return payload.playerId === playerId;
+    }
+    
+    if (payload.coffeemonName && myPlayerState?.activeCoffeemonIndex !== null) {
+      const myActiveMon = myPlayerState.coffeemons[myPlayerState.activeCoffeemonIndex];
+      return payload.coffeemonName === getBaseName(myActiveMon.name);
+    }
+    
+    return false;
+  };
+
+  // Atualizar indicadores de dano na HUD
+  const updateDamageIndicators = (event: BattleEvent, payload: any, myPlayerState: PlayerState) => {
+    const damageEvents = ['ATTACK_HIT', 'ATTACK_CRIT', 'STATUS_DAMAGE'];
+    
+    if (!damageEvents.includes(event.type) || !payload.damage || payload.damage <= 0) {
+      return;
+    }
+
+    // Determinar quem recebeu dano
+    let isPlayerTakingDamage = false;
+    let damagedMonName: string | null = null;
+    
+    if (payload.playerId !== undefined) {
+      isPlayerTakingDamage = payload.playerId !== playerId;
+      damagedMonName = payload.targetName ?? null;
+    } else if (payload.targetName && myPlayerState?.activeCoffeemonIndex !== null) {
+      const myActiveMon = myPlayerState.coffeemons[myPlayerState.activeCoffeemonIndex];
+      const myActiveMonName = getBaseName(myActiveMon.name);
+      isPlayerTakingDamage = payload.targetName === myActiveMonName;
+      damagedMonName = payload.targetName;
+    } else if (payload.coffeemonName) {
+      damagedMonName = payload.coffeemonName;
+    }
+    
+    // Atualizar indicador de dano
+    if (isPlayerTakingDamage) {
+      setPlayerDamage(payload.damage);
+    } else {
+      setOpponentDamage(payload.damage);
+    }
+
+    // Atualizar mapa de dano recente
+    if (damagedMonName) {
+      const baseKey = getBaseName(damagedMonName).toLowerCase();
+      setRecentDamageMap((prev) => {
+        if (prev[baseKey]) {
+          return prev;
+        }
+        return { ...prev, [baseKey]: true };
+      });
+
+      if (recentDamageTimeoutsRef.current[baseKey]) {
+        clearTimeout(recentDamageTimeoutsRef.current[baseKey]);
+      }
+
+      recentDamageTimeoutsRef.current[baseKey] = setTimeout(() => {
+        setRecentDamageMap((prev) => {
+          if (!prev[baseKey]) {
+            return prev;
+          }
+          const { [baseKey]: _, ...rest } = prev;
+          return rest;
+        });
+        delete recentDamageTimeoutsRef.current[baseKey];
+      }, RECENT_DAMAGE_DURATION_MS);
+    }
+  };
+
+  const handleBattleEnd = async (winnerIdParam: number) => {
     if (battleEnded || battleStateRef.current.battleStatus === BattleStatus.FINISHED) {
       return;
     }
 
+    console.log('🏆 [Battle] Battle ended, winner:', winnerIdParam);
+    console.log('💰 [Battle] Current rewards state:', battleRewardsRef.current);
+    
     setBattleEnded(true);
     setWinnerId(winnerIdParam);
     addLog(`A batalha terminou! Vencedor: Jogador ${winnerIdParam}`);
 
-    // Initialize rewards structure
-    const myPlayerState =
-      battleStateRef.current.player1Id === playerId
-        ? battleStateRef.current.player1
-        : battleStateRef.current.player2;
-
-    const initialRewards: BattleReward = {
-      playerId,
-      coffeemonRewards: myPlayerState?.coffeemons?.map((mon: any, idx: number) => ({
-        playerCoffeemonId: idx, // Will be updated by actual events
-        coffeemonName: mon.name,
-        learnedMoves: [],
-      })) || [],
-      coins: 0,
-      totalExp: 0,
-    };
-
-    setBattleRewards(initialRewards);
-    
-    // Show modal after a short delay to let animations finish
-    setTimeout(() => {
-      setShowVictoryModal(true);
-    }, 1500);
+    // ⚠️ NÃO inicializar recompensas aqui - esperar eventos do backend
+    // As recompensas vêm via socket events: playerLevelUp, coffeemonLevelUp, inventoryUpdate
+    // ⚠️ NÃO mostrar modal automaticamente - esperar jogador ler último diálogo
+    // O modal será mostrado via useEffect quando hasUnreadMessages ficar false
   };
 
   const setupBattleEvents = () => {
@@ -342,13 +400,12 @@ export function useBattle({
           // Atualizar estado primeiro (síncrono)
           setBattleState(newBattleState);
 
-          // Processar eventos com animações otimizadas
+          // Processar eventos com animações em sequência
           if (newBattleState.events && newBattleState.events.length > 0) {
-            // Limitar eventos para não sobrecarregar
-            const eventsToProcess = newBattleState.events.slice(0, 5);
+            console.log(`📦 Received ${newBattleState.events.length} events from backend`);
             
-            // Processar de forma não bloqueante
-            processEventSequence(eventsToProcess, newBattleState).catch(err => {
+            // Processar TODOS os eventos em ordem
+            processEventSequence(newBattleState.events, newBattleState).catch(err => {
               console.error('Error processing events:', err);
             }).finally(() => {
               setIsProcessing(false);
@@ -393,13 +450,18 @@ export function useBattle({
 
     // Handle reward events
     const handlePlayerLevelUp = (data: { newLevel: number }) => {
-      console.log('[Battle] Player leveled up:', data);
+      console.log('🎉 [Battle] Player leveled up:', data);
       setBattleRewards((prev) => {
-        if (!prev) return prev;
-        return {
+        const updated = {
           ...prev,
+          playerId: prev?.playerId || playerId,
+          coffeemonRewards: prev?.coffeemonRewards || [],
+          coins: prev?.coins || 0,
+          totalExp: prev?.totalExp || 0,
           playerLevelUp: { newLevel: data.newLevel },
         };
+        console.log('📊 Updated rewards with player level up:', updated);
+        return updated;
       });
     };
 
@@ -408,9 +470,11 @@ export function useBattle({
       newLevel: number;
       expGained: number;
     }) => {
-      console.log('[Battle] Coffeemon leveled up:', data);
+      console.log('⬆️ [Battle] Coffeemon leveled up:', data);
       setBattleRewards((prev) => {
-        if (!prev) return prev;
+        if (!prev) {
+          prev = { playerId, coffeemonRewards: [], coins: 0, totalExp: 0 };
+        }
         
         // Find existing reward or create new one
         let updatedRewards = [...prev.coffeemonRewards];
@@ -444,11 +508,13 @@ export function useBattle({
           });
         }
 
-        return {
+        const updated = {
           ...prev,
           coffeemonRewards: updatedRewards,
           totalExp: prev.totalExp + data.expGained,
         };
+        console.log('📊 Updated rewards with coffeemon level up:', updated);
+        return updated;
       });
     };
 
@@ -456,9 +522,11 @@ export function useBattle({
       playerCoffeemonId: number;
       moveName: string;
     }) => {
-      console.log('[Battle] Coffeemon learned move:', data);
+      console.log('🎯 [Battle] Coffeemon learned move:', data);
       setBattleRewards((prev) => {
-        if (!prev) return prev;
+        if (!prev) {
+          prev = { playerId, coffeemonRewards: [], coins: 0, totalExp: 0 };
+        }
         
         let updatedRewards = [...prev.coffeemonRewards];
         const existingIdx = updatedRewards.findIndex(
@@ -484,21 +552,27 @@ export function useBattle({
           });
         }
 
-        return {
+        const updated = {
           ...prev,
           coffeemonRewards: updatedRewards,
         };
+        console.log('📊 Updated rewards with learned move:', updated);
+        return updated;
       });
     };
 
     const handleInventoryUpdate = (data: { coins: number; inventory: any }) => {
-      console.log('[Battle] Inventory updated:', data);
+      console.log('💰 [Battle] Inventory updated:', data);
       setBattleRewards((prev) => {
-        if (!prev) return prev;
-        return {
+        const updated = {
           ...prev,
+          playerId: prev?.playerId || playerId,
+          coffeemonRewards: prev?.coffeemonRewards || [],
+          totalExp: prev?.totalExp || 0,
           coins: data.coins,
         };
+        console.log('📊 Updated rewards with coins:', updated);
+        return updated;
       });
     };
 

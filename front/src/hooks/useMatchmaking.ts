@@ -87,10 +87,11 @@ export function useMatchmaking({
       console.log('Setting up socket connection for player:', playerId);
 
       const s = await socketService.createSocket(token, {
-      onConnect: (socketId) => {
-        addLog(`Conectado ao servidor. Socket ID: ${socketId}`);
-        setMatchStatus('Conectado');
-      },
+        playerId, // Register session with backend
+        onConnect: (socketId) => {
+          addLog(`Conectado ao servidor. Socket ID: ${socketId}`);
+          setMatchStatus('Conectado');
+        },
       onConnectError: (err) => {
         addLog(`Erro de conexão: ${err.message}`);
         setMatchStatus('Erro de conexão');

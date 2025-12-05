@@ -118,6 +118,7 @@ export class BattleCreationService {
         return {
           id: c.id,
           name: c.coffeemon.name,
+          level: c.level,
           types: c.coffeemon.types,
           currentHp: maxHp,
           isFainted: false,

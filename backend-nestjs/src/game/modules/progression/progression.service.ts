@@ -134,11 +134,13 @@ export class ProgressionService {
     }
     player.experience += expGained;
     let currentLevel = player.level;
+    let leveledUp = false;
     while (currentLevel < MAX_LEVEL) {
       const expToNextLevel = this.statsCalculator.calculateTotalExpForLevel(currentLevel + 1);
       if (player.experience < expToNextLevel) break;
       currentLevel++;
       player.level = currentLevel;
+      leveledUp = true;
       this.eventEmitter.emit('player.leveled.up', new PlayerLeveledUpEvent(playerId, currentLevel));
     }
     return this.playerRepository.save(player);
@@ -154,11 +156,13 @@ export class ProgressionService {
     }
     playerCoffeemon.experience += expGained;
     let currentLevel = playerCoffeemon.level;
+    let leveledUp = false;
     while (currentLevel < 100) {
       const expToNextLevel = this.statsCalculator.calculateTotalExpForLevel(currentLevel + 1);
       if (playerCoffeemon.experience < expToNextLevel) break;
       currentLevel++;
       playerCoffeemon.level = currentLevel;
+      leveledUp = true;
       this.eventEmitter.emit(
         'coffeemon.leveled.up',
         new CoffeemonLeveledUpEvent(playerId, playerCoffeemon.id, currentLevel, expGained)

@@ -36,6 +36,7 @@ export interface CoffeemonModifiers {
 
 export interface Coffeemon {
   name: string;
+  level: number;
   currentHp: number;
   maxHp: number;
   isFainted: boolean;
@@ -43,7 +44,6 @@ export interface Coffeemon {
   moves: Move[];
   statusEffects?: StatusEffect[];
   types?: string[];
-  level?: number;
   // Stats base
   attack?: number;
   defense?: number;

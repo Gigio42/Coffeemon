@@ -106,6 +106,8 @@ export class NotificationsGateway {
         inventory: event.updatedPlayer.inventory,
         coins: event.updatedPlayer.coins,
       });
+    } else {
+      console.warn(`   No socket found for player ${event.playerId}`);
     }
   }
 
@@ -191,6 +193,8 @@ export class NotificationsGateway {
       this.server.to(socketId).emit('playerLevelUp', {
         newLevel: event.newLevel,
       });
+    } else {
+      console.warn(`   No socket found for player ${event.playerId}`);
     }
   }
 
@@ -203,6 +207,8 @@ export class NotificationsGateway {
         newLevel: event.newLevel,
         expGained: event.expGained,
       });
+    } else {
+      console.warn(`   No socket found for player ${event.playerId}`);
     }
   }
 
@@ -214,6 +220,8 @@ export class NotificationsGateway {
         playerCoffeemonId: event.playerCoffeemonId,
         moveName: event.moveName,
       });
+    } else {
+      console.warn(`   No socket found for player ${event.playerId}`);
     }
   }
 }
