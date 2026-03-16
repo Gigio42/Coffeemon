@@ -19,7 +19,6 @@ import {
 } from 'src/game/shared/events/game.events';
 import { WsGameAuthGuard } from 'src/game/shared/auth/guards/ws-game-auth-guard';
 import { WsPlayerGuard } from 'src/game/modules/player/auth/ws-player.guard';
-import { SocketManagerService } from 'src/game/shared/socket-manager/socket-manager.service';
 import { WsSendMessageDto } from './dto/ws-send-message.dto';
 import { ContentFilterService } from 'src/game/shared/content-filter/content-filter.service';
 import { SocialService } from './social.service';
@@ -33,7 +32,6 @@ export class SocialGateway {
 
   constructor(
     private readonly socialService: SocialService,
-    private readonly socketManager: SocketManagerService,
     private readonly eventEmitter: EventEmitter2,
     private readonly contentFilter: ContentFilterService
   ) {}
@@ -179,10 +177,7 @@ export class SocialGateway {
   async handlePlayerOnline(event: PlayerOnlineEvent) {
     const friendIds = await this.socialService.getFriendIds(event.playerId);
     for (const friendId of friendIds) {
-      const socketId = this.socketManager.getSocketId(friendId);
-      if (socketId) {
-        this.server.to(socketId).emit('friendOnline', { playerId: event.playerId });
-      }
+      this.server.to(`player:${friendId}`).emit('friendOnline', { playerId: event.playerId });
     }
   }
 
@@ -190,10 +185,7 @@ export class SocialGateway {
   async handlePlayerOffline(event: PlayerOfflineEvent) {
     const friendIds = await this.socialService.getFriendIds(event.playerId);
     for (const friendId of friendIds) {
-      const socketId = this.socketManager.getSocketId(friendId);
-      if (socketId) {
-        this.server.to(socketId).emit('friendOffline', { playerId: event.playerId });
-      }
+      this.server.to(`player:${friendId}`).emit('friendOffline', { playerId: event.playerId });
     }
   }
 }

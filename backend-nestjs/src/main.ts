@@ -3,11 +3,17 @@ import { NestFactory } from '@nestjs/core';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { AppModule } from './app.module';
+import { RedisIoAdapter } from './game/shared/adapters/redis-io.adapter';
 
 async function bootstrap() {
   // NESTJS
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
   app.enableCors();
+
+  // REDIS SOCKET.IO ADAPTER
+  const redisIoAdapter = new RedisIoAdapter(app);
+  redisIoAdapter.connect();
+  app.useWebSocketAdapter(redisIoAdapter);
 
   app.useGlobalPipes(
     new ValidationPipe({
