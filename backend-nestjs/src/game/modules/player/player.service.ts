@@ -1,6 +1,7 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { InjectRepository } from '@nestjs/typeorm';
+import { randomBytes } from 'crypto';
 import { PlayerCreatedEvent } from 'src/game/shared/events/game.events';
 import { EntityManager, Repository } from 'typeorm';
 import { UsersService } from '../../../ecommerce/users/users.service';
@@ -42,8 +43,11 @@ export class PlayerService {
       throw new BadRequestException(`User with ID ${userId} already is a player`);
     }
 
+    const uid = randomBytes(3).toString('hex').toUpperCase();
+
     const player = this.playerRepository.create({
       user: { id: userId },
+      uid,
       level: 1,
       experience: 0,
       coins: createPlayerDto.initialCoins || 0,
@@ -88,6 +92,18 @@ export class PlayerService {
 
     if (!player) {
       throw new NotFoundException(`Player with user ID ${userId} not found`);
+    }
+
+    if (!player.uid) {
+      let uid = '';
+      let collision = true;
+      while (collision) {
+        uid = randomBytes(3).toString('hex').toUpperCase();
+        const existing = await this.playerRepository.findOne({ where: { uid } });
+        collision = !!existing;
+      }
+      await this.playerRepository.update(player.id, { uid });
+      player.uid = uid;
     }
 
     return player;

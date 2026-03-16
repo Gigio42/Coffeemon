@@ -1,4 +1,5 @@
 import { UseGuards } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import {
   ConnectedSocket,
   OnGatewayConnection,
@@ -7,9 +8,10 @@ import {
   WebSocketGateway,
 } from '@nestjs/websockets';
 import { SocketWithUser } from '../auth/types/auth.types';
+import { PlayerOfflineEvent, PlayerOnlineEvent } from './shared/events/game.events';
 import { WsPlayerGuard } from './modules/player/auth/ws-player.guard';
 import { WsGameAuthGuard } from './shared/auth/guards/ws-game-auth-guard';
-import { SocketManagerService } from './shared/socket-manager/socket-manager.service'; // 1. IMPORTAR
+import { SocketManagerService } from './shared/socket-manager/socket-manager.service';
 
 @WebSocketGateway({
   cors: {
@@ -18,7 +20,10 @@ import { SocketManagerService } from './shared/socket-manager/socket-manager.ser
   },
 })
 export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
-  constructor(private readonly socketManager: SocketManagerService) {}
+  constructor(
+    private readonly socketManager: SocketManagerService,
+    private readonly eventEmitter: EventEmitter2
+  ) {}
 
   @UseGuards(WsGameAuthGuard, WsPlayerGuard)
   @SubscribeMessage('registerSession')
@@ -28,6 +33,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
     if (playerId) {
       this.socketManager.register(playerId, socket);
       socket.emit('sessionRegistered', { status: 'ok', playerId });
+      this.eventEmitter.emit('player.online', new PlayerOnlineEvent(playerId));
     } else {
       socket.emit('sessionRegistered', { status: 'error', message: 'Player not found.' });
     }
@@ -38,6 +44,10 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   handleDisconnect(socket: SocketWithUser) {
+    const playerId = this.socketManager.getPlayerId(socket.id);
     this.socketManager.unregister(socket);
+    if (playerId) {
+      this.eventEmitter.emit('player.offline', new PlayerOfflineEvent(playerId));
+    }
   }
 }

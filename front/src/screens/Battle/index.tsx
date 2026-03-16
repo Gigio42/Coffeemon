@@ -1,10 +1,17 @@
 import { LinearGradient } from "expo-linear-gradient";
-import React, { useMemo } from "react";
+import React, { useMemo, useRef, useState } from "react";
 import {
+  FlatList,
   Image,
   ImageBackground,
+  KeyboardAvoidingView,
+  Modal,
+  Platform,
+  Pressable,
   ScrollView,
+  StyleSheet,
   Text,
+  TextInput,
   TouchableOpacity,
   View,
 } from "react-native";
@@ -32,6 +39,8 @@ import MoveDetailsModal from "../../components/MoveDetailsModal/index";
 import VictoryModal from "../../components/Battle/VictoryModal";
 import { useBattle } from "../../hooks/useBattle";
 import { useBattleAnimations } from "../../hooks/useBattleAnimations";
+import { useMatchChat } from "../../hooks/useMatchChat";
+import { MatchChatMessage } from "../../types/social";
 import { Coffeemon } from "../../types";
 import { getBattleScenario } from "../../utils/battleUtils";
 import {
@@ -41,6 +50,244 @@ import {
   canUseMove,
 } from "../../utils/battleValidation";
 import { styles } from "./styles";
+
+// ─── Match Chat Modal ─────────────────────────────────────────────────────────
+
+const CHAT_ICON = require("../../../assets/iconsv2/chat.png");
+
+function MatchChatModal({
+  visible,
+  messages,
+  playerId,
+  onSend,
+  onClose,
+}: {
+  visible: boolean;
+  messages: MatchChatMessage[];
+  playerId: number;
+  onSend: (text: string) => void;
+  onClose: () => void;
+}) {
+  const [text, setText] = useState("");
+  const listRef = useRef<FlatList>(null);
+
+  React.useEffect(() => {
+    if (visible && messages.length > 0) {
+      setTimeout(() => listRef.current?.scrollToEnd({ animated: true }), 100);
+    }
+  }, [visible, messages.length]);
+
+  const handleSend = () => {
+    if (!text.trim()) return;
+    onSend(text.trim());
+    setText("");
+  };
+
+  return (
+    <Modal
+      visible={visible}
+      transparent
+      animationType="slide"
+      onRequestClose={onClose}
+    >
+      {/* Toque fora fecha */}
+      <Pressable style={chatModalStyles.backdrop} onPress={onClose}>
+        <KeyboardAvoidingView
+          behavior={Platform.OS === "ios" ? "padding" : undefined}
+          style={chatModalStyles.sheetWrapper}
+        >
+          {/* Impede que cliques no painel fechem o modal */}
+          <Pressable style={chatModalStyles.sheet} onPress={(e) => e.stopPropagation()}>
+            {/* Handle + header */}
+            <View style={chatModalStyles.handle} />
+            <View style={chatModalStyles.header}>
+              <TouchableOpacity style={chatModalStyles.backBtn} onPress={onClose} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+                <Text style={chatModalStyles.backBtnText}>←</Text>
+              </TouchableOpacity>
+              <Text style={chatModalStyles.headerTitle}>Chat da Partida</Text>
+            </View>
+
+            {/* Messages */}
+            <FlatList
+              ref={listRef}
+              data={messages}
+              keyExtractor={(_, i) => i.toString()}
+              style={chatModalStyles.list}
+              contentContainerStyle={chatModalStyles.listContent}
+              ListEmptyComponent={
+                <Text style={chatModalStyles.empty}>
+                  Nenhuma mensagem ainda.{"\n"}Diga algo ao seu oponente!
+                </Text>
+              }
+              renderItem={({ item }) => {
+                const isMine = item.senderId === playerId;
+                return (
+                  <View style={[chatModalStyles.bubble, isMine ? chatModalStyles.bubbleMine : chatModalStyles.bubbleTheirs]}>
+                    {!isMine && (
+                      <Text style={chatModalStyles.bubbleSender}>{item.senderUsername}</Text>
+                    )}
+                    <Text style={[chatModalStyles.bubbleText, isMine && chatModalStyles.bubbleTextMine]}>
+                      {item.content}
+                    </Text>
+                  </View>
+                );
+              }}
+            />
+
+            {/* Input */}
+            <View style={chatModalStyles.inputRow}>
+              <TextInput
+                style={chatModalStyles.input}
+                value={text}
+                onChangeText={setText}
+                placeholder="Mensagem..."
+                placeholderTextColor="rgba(255,255,255,0.35)"
+                maxLength={200}
+                onSubmitEditing={handleSend}
+                blurOnSubmit={false}
+                autoFocus={visible}
+              />
+              <TouchableOpacity
+                style={[chatModalStyles.sendBtn, !text.trim() && { opacity: 0.4 }]}
+                onPress={handleSend}
+                disabled={!text.trim()}
+              >
+                <Text style={chatModalStyles.sendBtnText}>↑</Text>
+              </TouchableOpacity>
+            </View>
+          </Pressable>
+        </KeyboardAvoidingView>
+      </Pressable>
+    </Modal>
+  );
+}
+
+const chatModalStyles = StyleSheet.create({
+  backdrop: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.55)",
+    justifyContent: "flex-end",
+  },
+  sheetWrapper: {
+    width: "100%",
+  },
+  sheet: {
+    backgroundColor: "#0F0A19",
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    borderTopWidth: 1,
+    borderColor: "rgba(108,63,212,0.4)",
+    height: 380,
+    overflow: "hidden",
+  },
+  handle: {
+    width: 36,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: "rgba(255,255,255,0.2)",
+    alignSelf: "center",
+    marginTop: 10,
+    marginBottom: 4,
+  },
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: "rgba(255,255,255,0.07)",
+    gap: 10,
+  },
+  backBtn: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: "rgba(255,255,255,0.08)",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  backBtnText: {
+    color: "#6C3FD4",
+    fontSize: 18,
+    fontWeight: "700",
+    lineHeight: 20,
+  },
+  headerTitle: {
+    flex: 1,
+    color: "#fff",
+    fontWeight: "700",
+    fontSize: 15,
+  },
+  list: { flex: 1 },
+  listContent: { padding: 12, gap: 6, flexGrow: 1, justifyContent: "flex-end" },
+  empty: {
+    color: "rgba(255,255,255,0.3)",
+    textAlign: "center",
+    fontSize: 13,
+    lineHeight: 20,
+    marginTop: 32,
+  },
+  bubble: {
+    maxWidth: "76%",
+    paddingVertical: 7,
+    paddingHorizontal: 12,
+    borderRadius: 14,
+    marginBottom: 4,
+  },
+  bubbleMine: {
+    alignSelf: "flex-end",
+    backgroundColor: "#6C3FD4",
+    borderBottomRightRadius: 3,
+  },
+  bubbleTheirs: {
+    alignSelf: "flex-start",
+    backgroundColor: "rgba(255,255,255,0.1)",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.08)",
+    borderBottomLeftRadius: 3,
+  },
+  bubbleSender: {
+    color: "rgba(255,255,255,0.5)",
+    fontSize: 10,
+    fontWeight: "600",
+    marginBottom: 3,
+  },
+  bubbleText: {
+    color: "rgba(255,255,255,0.8)",
+    fontSize: 14,
+    lineHeight: 19,
+  },
+  bubbleTextMine: { color: "#fff" },
+  inputRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    borderTopWidth: 1,
+    borderTopColor: "rgba(255,255,255,0.07)",
+    gap: 8,
+  },
+  input: {
+    flex: 1,
+    height: 40,
+    backgroundColor: "rgba(255,255,255,0.07)",
+    borderRadius: 20,
+    paddingHorizontal: 16,
+    color: "#fff",
+    fontSize: 14,
+    borderWidth: 1,
+    borderColor: "rgba(108,63,212,0.4)",
+  },
+  sendBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: "#6C3FD4",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  sendBtnText: { color: "#fff", fontSize: 18, fontWeight: "700" },
+});
 
 interface BattleScreenProps {
   battleId: string;
@@ -187,6 +434,11 @@ export default function BattleScreen({
   // 🎯 SISTEMA DE DETALHES DE MOVES
   const [selectedMoveForDetails, setSelectedMoveForDetails] = React.useState<any>(null);
   const [showMoveDetails, setShowMoveDetails] = React.useState<boolean>(false);
+
+  // 💬 CHAT EM PARTIDA (somente PvP, não bot)
+  const isBotBattle = !!initialBattleData?.isBotBattle;
+  const [chatOpen, setChatOpen] = useState(false);
+  const matchChat = useMatchChat({ socket, playerId, enabled: !isBotBattle });
 
   // Debug: Log quando o modal muda
   React.useEffect(() => {
@@ -1240,7 +1492,7 @@ export default function BattleScreen({
           {/* Botão Fugir - SEMPRE DISPONÍVEL, NUNCA BLOQUEADO */}
           <TouchableOpacity
             style={[
-              styles.mainActionButton, 
+              styles.mainActionButton,
               styles.fleeActionButton,
               battleEnded && styles.actionButtonDisabled,
             ]}
@@ -1252,6 +1504,30 @@ export default function BattleScreen({
               style={styles.actionButtonIconImage}
             />
           </TouchableOpacity>
+
+          {/* Botão Chat - só PvP */}
+          {!isBotBattle && (
+            <TouchableOpacity
+              style={[styles.mainActionButton, styles.chatActionButton]}
+              onPress={() => {
+                setChatOpen(true);
+                matchChat.markRead();
+              }}
+              activeOpacity={0.8}
+            >
+              <Image
+                source={CHAT_ICON}
+                style={styles.actionButtonIconImage}
+              />
+              {matchChat.unreadCount > 0 && (
+                <View style={styles.chatUnreadBadge}>
+                  <Text style={styles.chatUnreadBadgeText}>
+                    {matchChat.unreadCount > 9 ? "9+" : matchChat.unreadCount}
+                  </Text>
+                </View>
+              )}
+            </TouchableOpacity>
+          )}
         </View>
       </>
     );
@@ -1735,6 +2011,18 @@ export default function BattleScreen({
         coffeemons={myPlayerState?.coffeemons || []}
         onSelectTarget={handleSelectItemTarget}
         onClose={handleCloseItemModals}
+      />
+
+      {/* Modal de chat em partida (somente PvP) */}
+      <MatchChatModal
+        visible={chatOpen}
+        messages={matchChat.messages}
+        playerId={playerId}
+        onSend={matchChat.send}
+        onClose={() => {
+          setChatOpen(false);
+          matchChat.onClose();
+        }}
       />
     </SafeAreaView>
   );

@@ -10,6 +10,9 @@ export class Player {
   @PrimaryGeneratedColumn()
   id: number;
 
+  @Column({ unique: true, nullable: true })
+  uid: string;
+
   @OneToOne(() => User, (user) => user.player)
   @JoinColumn()
   user: User;

@@ -11,6 +11,7 @@ import { MatchmakingModule } from './modules/matchmaking/matchmaking.module';
 import { PlayerModule } from './modules/player/player.module';
 import { ProgressionModule } from './modules/progression/progression.module';
 import { ShopModule } from './modules/shop/shop.module';
+import { SocialModule } from './modules/social/social.module';
 import { CacheModule } from './shared/cache/cache.module';
 import { NotificationsModule } from './shared/notifications/notifications.module';
 import { SocketManagerModule } from './shared/socket-manager/socket-manager.module';
@@ -30,6 +31,7 @@ import { SocketManagerModule } from './shared/socket-manager/socket-manager.modu
     UsersModule,
     ItemsModule,
     ShopModule,
+    SocialModule,
     SocketManagerModule,
   ],
   providers: [GameGateway],

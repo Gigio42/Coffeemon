@@ -1,5 +1,7 @@
-import { StyleSheet } from 'react-native';
+import { StyleSheet, Dimensions } from 'react-native';
 import { theme } from '../../theme/theme';
+
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 export const styles = StyleSheet.create({
   container: {
@@ -11,6 +13,24 @@ export const styles = StyleSheet.create({
     ...theme.shadows.md,
     borderWidth: 1,
     borderColor: theme.colors.border.default,
+    position: 'relative',
+  },
+
+  // Gear button
+  gearButton: {
+    position: 'absolute',
+    top: theme.spacing.sm,
+    right: theme.spacing.sm,
+    zIndex: 1,
+    width: 32,
+    height: 32,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  gearIcon: {
+    width: 18,
+    height: 18,
+    tintColor: theme.colors.text.tertiary,
   },
 
   // Player Info
@@ -147,6 +167,128 @@ export const styles = StyleSheet.create({
   xpBarFill: {
     height: '100%',
     borderRadius: theme.radius.full,
+  },
+
+  // ── Settings Modal ────────────────────────────────────────────────────────────
+  menuOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.45)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: theme.spacing.xl,
+  },
+  menuCard: {
+    width: Math.min(SCREEN_WIDTH - theme.spacing.xl * 2, 340),
+    backgroundColor: theme.colors.surface.base,
+    borderRadius: theme.radius.xxl,
+    overflow: 'hidden',
+    ...theme.shadows.lg,
+  },
+
+  // Profile header inside card
+  menuHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: theme.spacing.lg,
+    gap: theme.spacing.md,
+  },
+  menuAvatar: {
+    width: 52,
+    height: 52,
+    borderRadius: theme.radius.full,
+    backgroundColor: theme.colors.accent.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexShrink: 0,
+  },
+  menuAvatarText: {
+    fontSize: theme.typography.size.xl,
+    fontWeight: theme.typography.weight.black,
+    color: theme.colors.text.inverse,
+  },
+  menuUserInfo: {
+    flex: 1,
+    gap: 2,
+  },
+  menuUsername: {
+    fontSize: theme.typography.size.base,
+    fontWeight: theme.typography.weight.bold,
+    color: theme.colors.text.primary,
+  },
+  menuUid: {
+    fontSize: theme.typography.size.xs,
+    color: theme.colors.text.tertiary,
+    letterSpacing: 1,
+  },
+  menuLevelBadge: {
+    alignSelf: 'flex-start',
+    backgroundColor: theme.colors.accent.primary,
+    borderRadius: theme.radius.full,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    marginTop: 2,
+  },
+  menuLevelText: {
+    fontSize: 10,
+    fontWeight: theme.typography.weight.bold,
+    color: theme.colors.text.inverse,
+  },
+  menuCloseButton: {
+    width: 28,
+    height: 28,
+    borderRadius: theme.radius.full,
+    backgroundColor: theme.colors.background.tertiary,
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexShrink: 0,
+  },
+  menuCloseText: {
+    fontSize: 13,
+    color: theme.colors.text.secondary,
+    fontWeight: theme.typography.weight.bold,
+    lineHeight: 16,
+  },
+
+  // Divider
+  menuDivider: {
+    height: 1,
+    backgroundColor: theme.colors.border.light,
+    marginHorizontal: theme.spacing.md,
+  },
+
+  // Menu items
+  menuItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: theme.spacing.lg,
+    paddingVertical: theme.spacing.md,
+    gap: theme.spacing.md,
+  },
+  menuItemEmoji: {
+    fontSize: 20,
+    width: 28,
+    textAlign: 'center',
+  },
+  menuItemBody: {
+    flex: 1,
+    gap: 1,
+  },
+  menuItemTitle: {
+    fontSize: theme.typography.size.base,
+    fontWeight: theme.typography.weight.semibold,
+    color: theme.colors.text.primary,
+  },
+  menuItemTitleDanger: {
+    color: theme.colors.feedback.error,
+  },
+  menuItemSub: {
+    fontSize: theme.typography.size.xs,
+    color: theme.colors.text.tertiary,
+  },
+  menuItemArrow: {
+    fontSize: 22,
+    color: theme.colors.text.tertiary,
+    lineHeight: 24,
   },
 
   // Loading & Error

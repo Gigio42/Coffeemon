@@ -908,7 +908,11 @@ export default function MatchmakingScreen({
 
             {/* Status removido */}
 
-            <PlayerStatus token={token} />
+            <PlayerStatus
+                token={token}
+                onLogout={onNavigateToLogin}
+                onNavigateToEcommerce={onNavigateToEcommerce}
+              />
 
             <View style={styles.teamContainer}>
               <View style={styles.teamHeader}>
