@@ -396,6 +396,9 @@ export default function BattleScreen({
     battleRewards,
     showVictoryModal,
     setShowVictoryModal,
+    opponentDisconnected,
+    disconnectCountdown,
+    isReconnecting,
   } = battle;
 
   // Estado local para controle de modo de ação
@@ -1756,6 +1759,87 @@ export default function BattleScreen({
           matchChat.onClose();
         }}
       />
+
+      {/* Overlay: oponente desconectado */}
+      {opponentDisconnected && !battleEnded && (
+        <View style={battleOverlayStyles.backdrop}>
+          <View style={battleOverlayStyles.card}>
+            <Text style={battleOverlayStyles.icon}>⚠️</Text>
+            <Text style={battleOverlayStyles.title}>Oponente desconectou</Text>
+            <Text style={battleOverlayStyles.subtitle}>
+              Aguardando reconexão...
+            </Text>
+            {disconnectCountdown !== null && (
+              <View style={battleOverlayStyles.countdownRow}>
+                <Text style={battleOverlayStyles.countdownLabel}>A partida encerra em</Text>
+                <Text style={battleOverlayStyles.countdownNumber}>{disconnectCountdown}s</Text>
+              </View>
+            )}
+          </View>
+        </View>
+      )}
+
+      {/* Overlay: próprio socket reconectando */}
+      {isReconnecting && (
+        <View style={battleOverlayStyles.backdrop}>
+          <View style={battleOverlayStyles.card}>
+            <Text style={battleOverlayStyles.icon}>🔄</Text>
+            <Text style={battleOverlayStyles.title}>Reconectando...</Text>
+            <Text style={battleOverlayStyles.subtitle}>
+              Tentando voltar para a batalha
+            </Text>
+          </View>
+        </View>
+      )}
     </SafeAreaView>
   );
 }
+
+const battleOverlayStyles = StyleSheet.create({
+  backdrop: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0,0,0,0.75)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 999,
+  },
+  card: {
+    backgroundColor: '#1E1A14',
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: '#C8A26B',
+    paddingVertical: 28,
+    paddingHorizontal: 36,
+    alignItems: 'center',
+    gap: 8,
+    minWidth: 220,
+  },
+  icon: {
+    fontSize: 36,
+  },
+  title: {
+    color: '#F5E6C8',
+    fontSize: 17,
+    fontWeight: 'bold',
+    textAlign: 'center',
+  },
+  subtitle: {
+    color: '#A89070',
+    fontSize: 13,
+    textAlign: 'center',
+  },
+  countdownRow: {
+    marginTop: 8,
+    alignItems: 'center',
+    gap: 2,
+  },
+  countdownLabel: {
+    color: '#A89070',
+    fontSize: 12,
+  },
+  countdownNumber: {
+    color: '#FF6B6B',
+    fontSize: 36,
+    fontWeight: 'bold',
+  },
+});
