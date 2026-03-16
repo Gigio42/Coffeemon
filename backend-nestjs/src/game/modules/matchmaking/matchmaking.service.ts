@@ -31,10 +31,12 @@ export class MatchmakingService {
       new PlayerJoinedQueueEvent(command.playerId, command.socketId)
     );
 
-    const opponent = await this.roomCache.findOpponentInRoom(matchmakingRoom, command.playerId);
+    const opponent = await this.roomCache.findAndClaimOpponent(
+      matchmakingRoom,
+      command.playerId,
+      command.socketId
+    );
     if (!opponent) return;
-
-    await this.roomCache.makeMatch(matchmakingRoom, command.playerId, opponent.playerId);
 
     this.eventEmitter.emit(
       'match.pair.found',
