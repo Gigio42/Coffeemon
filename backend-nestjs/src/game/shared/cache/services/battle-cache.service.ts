@@ -6,6 +6,7 @@ import { RedisService } from '../../../../infrastructure/redis/redis.service';
 export class BattleCacheService {
   private readonly BATTLE_PREFIX = 'battle:';
   private readonly BATTLES_LIST_KEY = 'battles:active';
+  private readonly BATTLE_TTL = 7200; // 2 horas
 
   constructor(private redisService: RedisService) {}
 
@@ -21,7 +22,11 @@ export class BattleCacheService {
 
   async set(battleId: string, state: BattleState): Promise<void> {
     try {
-      await this.redisService.set(`${this.BATTLE_PREFIX}${battleId}`, JSON.stringify(state));
+      await this.redisService.set(
+        `${this.BATTLE_PREFIX}${battleId}`,
+        JSON.stringify(state),
+        this.BATTLE_TTL
+      );
 
       const battleIdsData = await this.redisService.get(this.BATTLES_LIST_KEY);
       const battleIds = battleIdsData ? JSON.parse(battleIdsData) : [];
@@ -47,26 +52,6 @@ export class BattleCacheService {
       }
     } catch (error) {
       console.error('Error deleting battle from Redis:', error);
-    }
-  }
-
-  async getAll(): Promise<{ battleId: string; state: BattleState }[]> {
-    try {
-      const battleIdsData = await this.redisService.get(this.BATTLES_LIST_KEY);
-      const battleIds = battleIdsData ? JSON.parse(battleIdsData) : [];
-      const battles: { battleId: string; state: BattleState }[] = [];
-
-      for (const battleId of battleIds) {
-        const state = await this.get(battleId);
-        if (state) {
-          battles.push({ battleId, state });
-        }
-      }
-
-      return battles;
-    } catch (error) {
-      console.error('Error getting all battles from Redis:', error);
-      return [];
     }
   }
 }

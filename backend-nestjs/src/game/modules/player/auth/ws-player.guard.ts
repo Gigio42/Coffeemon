@@ -22,6 +22,7 @@ export class WsPlayerGuard implements CanActivate {
       }
 
       socket.data.playerId = player.id;
+      socket.data.username = player.user?.username ?? '';
 
       return true;
     } catch (error) {

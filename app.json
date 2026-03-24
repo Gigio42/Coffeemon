@@ -1,0 +1,12 @@
+{
+  "expo": {
+    "extra": {
+      "eas": {
+        "projectId": "1a7a3ee8-4225-493c-80d4-3b6359faf38a"
+      }
+    },
+    "android": {
+      "package": "com.gigio42.coffeemon"
+    }
+  }
+}

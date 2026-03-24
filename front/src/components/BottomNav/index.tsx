@@ -3,7 +3,7 @@ import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { battleIcons } from "../../../assets/iconsv2";
 import { theme } from "../../theme/theme";
 
-export type NavScreen = "shop" | "team" | "battle" | "catalog" | "cafe";
+export type NavScreen = "shop" | "team" | "battle" | "catalog" | "social";
 
 interface BottomNavProps {
   activeScreen: NavScreen;
@@ -63,10 +63,10 @@ export const BottomNav: React.FC<BottomNavProps> = ({
 }) => {
   const navItems: { key: NavScreen; label: string; icon: any }[] = [
     { key: "shop", label: "Loja", icon: battleIcons.marketplace },
-    { key: "team", label: "Time", icon: battleIcons.paw },
+    { key: "team", label: "Equipe", icon: battleIcons.paw },
     { key: "battle", label: "Batalha", icon: battleIcons.versus },
     { key: "catalog", label: "Catálogo", icon: battleIcons.card },
-    { key: "cafe", label: "Café", icon: battleIcons.coffeeBreak },
+    { key: "social", label: "Social", icon: battleIcons.people },
   ];
 
   return (

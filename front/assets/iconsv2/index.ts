@@ -12,6 +12,11 @@ export const battleIcons = {
   versus: require('./versus.png'),
   coffeeBreak: require('./coffee-break.png'),
   marketplace: require('./shopping-center.png'),
+  people: require('./people.png'),
+  copy: require('./copy.png'),
+  qrCode: require('./qr-code.png'),
+  settings: require('./settings.png'),
+  chat: require('./chat.png'),
 };
 
 export type BattleIconName = keyof typeof battleIcons;

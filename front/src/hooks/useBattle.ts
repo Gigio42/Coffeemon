@@ -108,7 +108,12 @@ export function useBattle({
     totalExp: 0,
   });
   const [showVictoryModal, setShowVictoryModal] = useState<boolean>(false);
+  const [opponentDisconnected, setOpponentDisconnected] = useState<boolean>(false);
+  const [disconnectCountdown, setDisconnectCountdown] = useState<number | null>(null);
+  const [isReconnecting, setIsReconnecting] = useState<boolean>(false);
   const battleRewardsRef = useRef<BattleReward | null>(null);
+  const countdownIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const isReconnectingRef = useRef<boolean>(false);
   
   // Manter referência sincronizada
   useEffect(() => {
@@ -616,6 +621,55 @@ export function useBattle({
     socket.on('coffeemonLearnedMove', handleCoffeemonLearnedMove);
     socket.on('inventoryUpdate', handleInventoryUpdate);
 
+    // Oponente desconectou — inicia contagem regressiva de 30s
+    socket.on('opponentDisconnected', () => {
+      setOpponentDisconnected(true);
+      let count = 30;
+      setDisconnectCountdown(count);
+      countdownIntervalRef.current = setInterval(() => {
+        count -= 1;
+        setDisconnectCountdown(count);
+        if (count <= 0 && countdownIntervalRef.current) {
+          clearInterval(countdownIntervalRef.current);
+          countdownIntervalRef.current = null;
+        }
+      }, 1000);
+    });
+
+    // Oponente reconectou — limpa contagem
+    socket.on('playerReconnected', () => {
+      setOpponentDisconnected(false);
+      setDisconnectCountdown(null);
+      if (countdownIntervalRef.current) {
+        clearInterval(countdownIntervalRef.current);
+        countdownIntervalRef.current = null;
+      }
+    });
+
+    // Batalha cancelada por desconexão prolongada
+    socket.on('battleCancelled', () => {
+      if (countdownIntervalRef.current) {
+        clearInterval(countdownIntervalRef.current);
+        countdownIntervalRef.current = null;
+      }
+      onNavigateToMatchmaking();
+    });
+
+    // Próprio socket desconectou — mostra overlay de reconectando
+    socket.on('disconnect', () => {
+      isReconnectingRef.current = true;
+      setIsReconnecting(true);
+    });
+
+    // Próprio socket reconectou — re-entra na batalha
+    socket.on('connect', () => {
+      if (isReconnectingRef.current) {
+        isReconnectingRef.current = false;
+        setIsReconnecting(false);
+        socket.emit('joinBattle', { battleId });
+      }
+    });
+
     // Log initial connection status
     // console.log('[Battle] Socket connected:', socket.connected);
     if (socket.connected) {
@@ -657,10 +711,15 @@ export function useBattle({
       socket.off('opponentDisconnected');
       socket.off('playerReconnected');
       socket.off('battleCancelled');
+      socket.off('disconnect');
+      socket.off('connect');
       socket.off('playerLevelUp');
       socket.off('coffeemonLevelUp');
       socket.off('coffeemonLearnedMove');
       socket.off('inventoryUpdate');
+      if (countdownIntervalRef.current) {
+        clearInterval(countdownIntervalRef.current);
+      }
       Object.values(recentDamageTimeoutsRef.current).forEach((timeout) => {
         clearTimeout(timeout);
       });
@@ -727,5 +786,8 @@ export function useBattle({
     battleRewards,
     showVictoryModal,
     setShowVictoryModal,
+    opponentDisconnected,
+    disconnectCountdown,
+    isReconnecting,
   };
 }

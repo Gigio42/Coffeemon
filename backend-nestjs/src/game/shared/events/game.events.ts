@@ -157,3 +157,51 @@ export class PlayerWantsToBattleBotCommand {
 export class ExecuteBotTurnCommand {
   constructor(public readonly battleId: string) {}
 }
+export class MatchChatMessageEvent {
+  constructor(
+    public readonly battleId: string,
+    public readonly senderId: number,
+    public readonly senderUsername: string,
+    public readonly content: string,
+    public readonly timestamp: Date
+  ) {}
+}
+
+export class PlayerOnlineEvent {
+  constructor(public readonly playerId: number) {}
+}
+
+export class PlayerOfflineEvent {
+  constructor(public readonly playerId: number) {}
+}
+
+export class SocialFriendRequestSentEvent {
+  constructor(
+    public readonly fromPlayerId: number,
+    public readonly toPlayerId: number,
+    public readonly requestId: number,
+    public readonly fromUsername: string
+  ) {}
+}
+
+export class SocialMessageSentEvent {
+  constructor(
+    public readonly conversationId: string,
+    public readonly messageId: string,
+    public readonly senderId: number,
+    public readonly senderUsername: string,
+    public readonly content: string,
+    public readonly createdAt: Date,
+    public readonly player1Id: number,
+    public readonly player2Id: number
+  ) {}
+}
+
+export class SocialFriendRequestAcceptedEvent {
+  constructor(
+    public readonly requestId: number,
+    public readonly acceptorPlayerId: number,
+    public readonly acceptorUsername: string,
+    public readonly requesterPlayerId: number
+  ) {}
+}

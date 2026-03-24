@@ -1,10 +1,17 @@
 import { LinearGradient } from "expo-linear-gradient";
-import React, { useMemo } from "react";
+import React, { useMemo, useRef, useState } from "react";
 import {
+  FlatList,
   Image,
   ImageBackground,
+  KeyboardAvoidingView,
+  Modal,
+  Platform,
+  Pressable,
   ScrollView,
+  StyleSheet,
   Text,
+  TextInput,
   TouchableOpacity,
   View,
 } from "react-native";
@@ -32,6 +39,8 @@ import MoveDetailsModal from "../../components/MoveDetailsModal/index";
 import VictoryModal from "../../components/Battle/VictoryModal";
 import { useBattle } from "../../hooks/useBattle";
 import { useBattleAnimations } from "../../hooks/useBattleAnimations";
+import { useMatchChat } from "../../hooks/useMatchChat";
+import { MatchChatMessage } from "../../types/social";
 import { Coffeemon } from "../../types";
 import { getBattleScenario } from "../../utils/battleUtils";
 import {
@@ -41,6 +50,244 @@ import {
   canUseMove,
 } from "../../utils/battleValidation";
 import { styles } from "./styles";
+
+// ─── Match Chat Modal ─────────────────────────────────────────────────────────
+
+const CHAT_ICON = require("../../../assets/iconsv2/chat.png");
+
+function MatchChatModal({
+  visible,
+  messages,
+  playerId,
+  onSend,
+  onClose,
+}: {
+  visible: boolean;
+  messages: MatchChatMessage[];
+  playerId: number;
+  onSend: (text: string) => void;
+  onClose: () => void;
+}) {
+  const [text, setText] = useState("");
+  const listRef = useRef<FlatList>(null);
+
+  React.useEffect(() => {
+    if (visible && messages.length > 0) {
+      setTimeout(() => listRef.current?.scrollToEnd({ animated: true }), 100);
+    }
+  }, [visible, messages.length]);
+
+  const handleSend = () => {
+    if (!text.trim()) return;
+    onSend(text.trim());
+    setText("");
+  };
+
+  return (
+    <Modal
+      visible={visible}
+      transparent
+      animationType="slide"
+      onRequestClose={onClose}
+    >
+      {/* Toque fora fecha */}
+      <Pressable style={chatModalStyles.backdrop} onPress={onClose}>
+        <KeyboardAvoidingView
+          behavior={Platform.OS === "ios" ? "padding" : undefined}
+          style={chatModalStyles.sheetWrapper}
+        >
+          {/* Impede que cliques no painel fechem o modal */}
+          <Pressable style={chatModalStyles.sheet} onPress={(e) => e.stopPropagation()}>
+            {/* Handle + header */}
+            <View style={chatModalStyles.handle} />
+            <View style={chatModalStyles.header}>
+              <TouchableOpacity style={chatModalStyles.backBtn} onPress={onClose} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+                <Text style={chatModalStyles.backBtnText}>←</Text>
+              </TouchableOpacity>
+              <Text style={chatModalStyles.headerTitle}>Chat da Partida</Text>
+            </View>
+
+            {/* Messages */}
+            <FlatList
+              ref={listRef}
+              data={messages}
+              keyExtractor={(_, i) => i.toString()}
+              style={chatModalStyles.list}
+              contentContainerStyle={chatModalStyles.listContent}
+              ListEmptyComponent={
+                <Text style={chatModalStyles.empty}>
+                  Nenhuma mensagem ainda.{"\n"}Diga algo ao seu oponente!
+                </Text>
+              }
+              renderItem={({ item }) => {
+                const isMine = item.senderId === playerId;
+                return (
+                  <View style={[chatModalStyles.bubble, isMine ? chatModalStyles.bubbleMine : chatModalStyles.bubbleTheirs]}>
+                    {!isMine && (
+                      <Text style={chatModalStyles.bubbleSender}>{item.senderUsername}</Text>
+                    )}
+                    <Text style={[chatModalStyles.bubbleText, isMine && chatModalStyles.bubbleTextMine]}>
+                      {item.content}
+                    </Text>
+                  </View>
+                );
+              }}
+            />
+
+            {/* Input */}
+            <View style={chatModalStyles.inputRow}>
+              <TextInput
+                style={chatModalStyles.input}
+                value={text}
+                onChangeText={setText}
+                placeholder="Mensagem..."
+                placeholderTextColor="rgba(255,255,255,0.35)"
+                maxLength={200}
+                onSubmitEditing={handleSend}
+                blurOnSubmit={false}
+                autoFocus={visible}
+              />
+              <TouchableOpacity
+                style={[chatModalStyles.sendBtn, !text.trim() && { opacity: 0.4 }]}
+                onPress={handleSend}
+                disabled={!text.trim()}
+              >
+                <Text style={chatModalStyles.sendBtnText}>↑</Text>
+              </TouchableOpacity>
+            </View>
+          </Pressable>
+        </KeyboardAvoidingView>
+      </Pressable>
+    </Modal>
+  );
+}
+
+const chatModalStyles = StyleSheet.create({
+  backdrop: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.55)",
+    justifyContent: "flex-end",
+  },
+  sheetWrapper: {
+    width: "100%",
+  },
+  sheet: {
+    backgroundColor: "#0F0A19",
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    borderTopWidth: 1,
+    borderColor: "rgba(108,63,212,0.4)",
+    height: 380,
+    overflow: "hidden",
+  },
+  handle: {
+    width: 36,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: "rgba(255,255,255,0.2)",
+    alignSelf: "center",
+    marginTop: 10,
+    marginBottom: 4,
+  },
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: "rgba(255,255,255,0.07)",
+    gap: 10,
+  },
+  backBtn: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: "rgba(255,255,255,0.08)",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  backBtnText: {
+    color: "#6C3FD4",
+    fontSize: 18,
+    fontWeight: "700",
+    lineHeight: 20,
+  },
+  headerTitle: {
+    flex: 1,
+    color: "#fff",
+    fontWeight: "700",
+    fontSize: 15,
+  },
+  list: { flex: 1 },
+  listContent: { padding: 12, gap: 6, flexGrow: 1, justifyContent: "flex-end" },
+  empty: {
+    color: "rgba(255,255,255,0.3)",
+    textAlign: "center",
+    fontSize: 13,
+    lineHeight: 20,
+    marginTop: 32,
+  },
+  bubble: {
+    maxWidth: "76%",
+    paddingVertical: 7,
+    paddingHorizontal: 12,
+    borderRadius: 14,
+    marginBottom: 4,
+  },
+  bubbleMine: {
+    alignSelf: "flex-end",
+    backgroundColor: "#6C3FD4",
+    borderBottomRightRadius: 3,
+  },
+  bubbleTheirs: {
+    alignSelf: "flex-start",
+    backgroundColor: "rgba(255,255,255,0.1)",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.08)",
+    borderBottomLeftRadius: 3,
+  },
+  bubbleSender: {
+    color: "rgba(255,255,255,0.5)",
+    fontSize: 10,
+    fontWeight: "600",
+    marginBottom: 3,
+  },
+  bubbleText: {
+    color: "rgba(255,255,255,0.8)",
+    fontSize: 14,
+    lineHeight: 19,
+  },
+  bubbleTextMine: { color: "#fff" },
+  inputRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    borderTopWidth: 1,
+    borderTopColor: "rgba(255,255,255,0.07)",
+    gap: 8,
+  },
+  input: {
+    flex: 1,
+    height: 40,
+    backgroundColor: "rgba(255,255,255,0.07)",
+    borderRadius: 20,
+    paddingHorizontal: 16,
+    color: "#fff",
+    fontSize: 14,
+    borderWidth: 1,
+    borderColor: "rgba(108,63,212,0.4)",
+  },
+  sendBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: "#6C3FD4",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  sendBtnText: { color: "#fff", fontSize: 18, fontWeight: "700" },
+});
 
 interface BattleScreenProps {
   battleId: string;
@@ -149,10 +396,12 @@ export default function BattleScreen({
     battleRewards,
     showVictoryModal,
     setShowVictoryModal,
+    opponentDisconnected,
+    disconnectCountdown,
+    isReconnecting,
   } = battle;
 
-  // Estado local para controle de tooltip de moves e modo de ação
-  const [hoveredMoveId, setHoveredMoveId] = React.useState<number | null>(null);
+  // Estado local para controle de modo de ação
   const [actionMode, setActionMode] = React.useState<
     "main" | "attack" | "item"
   >("main");
@@ -188,6 +437,11 @@ export default function BattleScreen({
   const [selectedMoveForDetails, setSelectedMoveForDetails] = React.useState<any>(null);
   const [showMoveDetails, setShowMoveDetails] = React.useState<boolean>(false);
 
+  // 💬 CHAT EM PARTIDA (somente PvP, não bot)
+  const isBotBattle = !!initialBattleData?.isBotBattle;
+  const [chatOpen, setChatOpen] = useState(false);
+  const matchChat = useMatchChat({ socket, playerId, enabled: !isBotBattle });
+
   // Debug: Log quando o modal muda
   React.useEffect(() => {
     console.log(
@@ -203,15 +457,9 @@ export default function BattleScreen({
     );
   }, [isItemTargetModalVisible]);
 
-  React.useEffect(() => {
-    console.log("[BattleScreen] items state changed, count:", items.length);
-    console.log("[BattleScreen] items:", items);
-  }, [items]);
-
   // 📝 Detectar novas mensagens e bloquear ações
   React.useEffect(() => {
     if (log.length > lastProcessedLogLength) {
-      console.log("[BattleScreen] New messages detected:", log.length - lastProcessedLogLength);
       setHasUnreadMessages(true);
       // Não atualiza lastProcessedLogLength aqui - só quando ler todas
     }
@@ -228,7 +476,6 @@ export default function BattleScreen({
     }
 
     const currentMessage = log[currentMessageIndex] || "";
-    console.log("[BattleScreen] Current message from log:", currentMessage);
 
     // O log já vem com as mensagens processadas do useBattle
     const fullMessage = currentMessage;
@@ -260,24 +507,9 @@ export default function BattleScreen({
         setCurrentMessageIndex(currentMessageIndex + 1);
         setDisplayedText("");
       } else {
-        // Chegou na última mensagem - marca como lido
-        console.log("[BattleScreen] All messages read, unlocking actions");
         setHasUnreadMessages(false);
         setLastProcessedLogLength(log.length);
       }
-    }
-  };
-
-  // Função para skip rápido - ir direto para última mensagem
-  const handleSkipToEnd = () => {
-    if (log.length > 0) {
-      const lastIndex = log.length - 1;
-      setCurrentMessageIndex(lastIndex);
-      setDisplayedText(log[lastIndex]);
-      setIsTyping(false);
-      setHasUnreadMessages(false);
-      setLastProcessedLogLength(log.length);
-      console.log("[BattleScreen] Skipped to last message");
     }
   };
 
@@ -353,13 +585,6 @@ export default function BattleScreen({
       spriteState.variant
     );
 
-    console.log("[BattleScreen] Player sprite updated:", {
-      name: activeCoffeemon.name,
-      index: activeIndex,
-      optimistic: optimisticActiveIndex !== null,
-      variant: spriteState.variant,
-      state: spriteState.state,
-    });
 
     return {
       imageSource,
@@ -527,7 +752,7 @@ export default function BattleScreen({
         <View>
           <CoffeemonCard
             coffeemon={fakePlayerCoffeemon}
-            onPress={canSwitch ? async (c) => await onSelect() : undefined}
+            onPress={canSwitch ? () => onSelect() : undefined}
             variant="large"
             isLoading={isLoading || !canSwitch}
             disabled={!canSwitch}
@@ -581,7 +806,7 @@ export default function BattleScreen({
         <View>
           <CoffeemonCard
             coffeemon={fakePlayerCoffeemon}
-            onPress={canSelect ? async (c) => await onSelect() : undefined}
+            onPress={canSelect ? () => onSelect() : undefined}
             variant="large"
             isLoading={isLoading || !canSelect}
             disabled={!canSelect}
@@ -614,22 +839,8 @@ export default function BattleScreen({
   );
 
   const handleSelectSwitchCandidate = (index: number) => {
-    console.log("[BattleScreen] 🔄 Switch candidate selected:", index, {
-      isProcessing,
-      myPendingAction,
-      turnPhase: battleState?.turnPhase,
-    });
-
-    // ✅ VALIDAÇÕES SIMPLES: Não permitir durante processamento ou resolução
-    if (isProcessing) {
-      console.warn("[BattleScreen] ❌ Cannot switch - battle is processing");
-      return;
-    }
-
-    if (myPendingAction) {
-      console.warn("[BattleScreen] ❌ Cannot switch - action already pending");
-      return;
-    }
+    if (isProcessing) return;
+    if (myPendingAction) return;
 
     if (battleState?.turnPhase === "RESOLUTION") {
       console.warn(
@@ -761,38 +972,14 @@ export default function BattleScreen({
 
   // 💼 Carregar itens disponíveis ao iniciar a batalha
   React.useEffect(() => {
-    console.log("[BattleScreen] useEffect for loading items triggered");
-
     const loadItems = async () => {
-      console.log("[BattleScreen] loadItems function started");
       try {
-        console.log(
-          "[BattleScreen] Token from props:",
-          token ? "Token exists" : "No token"
-        );
-
         if (token) {
-          console.log("[BattleScreen] Calling getPlayerItems...");
           const playerItems = await getPlayerItems(token);
-          console.log("[BattleScreen] Player items received:", playerItems);
           setItems(playerItems);
-          console.log(
-            "[BattleScreen] Player items loaded:",
-            playerItems.length,
-            "items"
-          );
-          playerItems.forEach((item) => {
-            console.log(`[BattleScreen]   - ${item.name}: ${item.quantity}x`);
-          });
-        } else {
-          console.warn("[BattleScreen] No token provided in props!");
         }
       } catch (error) {
         console.error("[BattleScreen] Error loading items:", error);
-        console.error(
-          "[BattleScreen] Error details:",
-          JSON.stringify(error, null, 2)
-        );
       }
     };
 
@@ -801,7 +988,6 @@ export default function BattleScreen({
 
   // 💼 Funções de manipulação de itens
   const handleSelectItem = (item: Item) => {
-    console.log("[BattleScreen] Item selected:", item.id);
     setSelectedItem(item);
     setItemModalVisible(false);
     setItemTargetModalVisible(true);
@@ -886,9 +1072,7 @@ export default function BattleScreen({
           ]}
           resizeMode="contain"
           defaultSource={{ uri: fallbackUrl }}
-          onError={(error) => {
-            // Silenciar erro de imagem - não causar crash
-            console.log("Image not found, using placeholder:", imageSource);
+          onError={() => {
           }}
         />
         {/* Overlay cinza forte para simular grayscale quando fainted */}
@@ -910,175 +1094,6 @@ export default function BattleScreen({
     );
   };
 
-  const renderLogEntry = (
-    message: string,
-    index: number,
-    totalMessages: number,
-    myPlayerState: any,
-    opponentPlayerState: any
-  ) => {
-    if (!message) {
-      return null;
-    }
-
-    // Inverter: logs mais recentes (index menor) têm opacidade total, mais antigos têm menos
-    const opacity = Math.max(0.3, Math.min(1, 1 - index * 0.1));
-
-    // Identificar nomes de Coffeemons do player e oponente
-    const playerCoffeemonNames =
-      myPlayerState?.coffeemons?.map((mon: any) => mon?.name).filter(Boolean) ||
-      [];
-    const opponentCoffeemonNames =
-      opponentPlayerState?.coffeemons
-        ?.map((mon: any) => mon?.name)
-        .filter(Boolean) || [];
-
-    // Função para renderizar texto com cores
-    const renderColoredText = (text: string) => {
-      type MatchType = "player" | "opponent" | "damage";
-      type ColoredPartType = MatchType | "default";
-      interface ColoredPart {
-        text: string;
-        color: string;
-        type: ColoredPartType;
-      }
-
-      // Se não há nomes para verificar, retornar texto normal
-      if (
-        playerCoffeemonNames.length === 0 &&
-        opponentCoffeemonNames.length === 0
-      ) {
-        return [{ text, color: "#FFFFFF", type: "default" as ColoredPartType }];
-      }
-
-      const parts: ColoredPart[] = [];
-      let lastIndex = 0;
-      interface MatchSegment {
-        index: number;
-        length: number;
-        text: string;
-        color: string;
-        type: MatchType;
-      }
-      const allMatches: MatchSegment[] = [];
-
-      // Coletar todas as correspondências primeiro
-      playerCoffeemonNames.forEach((name: string) => {
-        const regex = new RegExp(`\\b${name}\\b`, "gi");
-        let match;
-        while ((match = regex.exec(text)) !== null) {
-          allMatches.push({
-            index: match.index,
-            length: match[0].length,
-            text: match[0],
-            color: "#61D26A", // Verde para player
-            type: "player",
-          });
-        }
-      });
-
-      opponentCoffeemonNames.forEach((name: string) => {
-        const regex = new RegExp(`\\b${name}\\b`, "gi");
-        let match;
-        while ((match = regex.exec(text)) !== null) {
-          allMatches.push({
-            index: match.index,
-            length: match[0].length,
-            text: match[0],
-            color: "#FF5A5F", // Vermelho para oponente
-            type: "opponent",
-          });
-        }
-      });
-
-      const damagePatterns = [
-        /-\d+\s*(?:HP|hp)?/g,
-        /\b\d+\s+de\s+dano\b/gi,
-        /\b\d+\s*dano\b/gi,
-      ];
-
-      damagePatterns.forEach((pattern) => {
-        let match;
-        while ((match = pattern.exec(text)) !== null) {
-          const matchText = match[0];
-          const startIndex = match.index;
-          const endIndex = startIndex + matchText.length;
-          const overlaps = allMatches.some(
-            (existing) =>
-              startIndex < existing.index + existing.length &&
-              existing.index < endIndex
-          );
-
-          if (!overlaps) {
-            allMatches.push({
-              index: startIndex,
-              length: matchText.length,
-              text: matchText,
-              color: "#FF4B4B",
-              type: "damage",
-            });
-          }
-        }
-      });
-
-      // Ordenar por posição
-      allMatches.sort((a, b) => a.index - b.index);
-
-      // Construir partes
-      allMatches.forEach((match) => {
-        // Adicionar texto antes da correspondência
-        if (match.index > lastIndex) {
-          parts.push({
-            text: text.slice(lastIndex, match.index),
-            color: "#FFFFFF",
-            type: "default",
-          });
-        }
-        // Adicionar nome colorido
-        parts.push({
-          text: match.text,
-          color: match.color,
-          type: match.type,
-        });
-        lastIndex = match.index + match.length;
-      });
-
-      // Adicionar texto restante
-      if (lastIndex < text.length) {
-        parts.push({
-          text: text.slice(lastIndex),
-          color: "#FFFFFF",
-          type: "default",
-        });
-      }
-
-      return parts.length > 0
-        ? parts
-        : [{ text, color: "#FFFFFF", type: "default" as ColoredPartType }];
-    };
-
-    const coloredParts = renderColoredText(message);
-
-    return (
-      <View key={`log-${index}`} style={[styles.logEntryRow, { opacity }]}>
-        <View style={styles.logEntryTextContainer}>
-          {coloredParts.map((part, partIndex) => (
-            <Text
-              key={partIndex}
-              style={[
-                styles.logEntryText,
-                { color: part.color },
-                part.type === "damage" && styles.logEntryDamageText,
-              ]}
-            >
-              {part.text}
-            </Text>
-          ))}
-        </View>
-      </View>
-    );
-  };
-
   const renderMainActionButtons = () => {
     // ✅ VERIFICAR SE TROCA É NECESSÁRIA: Coffeemon ativo está fainted
     const activeIndex =
@@ -1087,28 +1102,6 @@ export default function BattleScreen({
       activeIndex !== null ? myPlayerState?.coffeemons?.[activeIndex] : null;
     const needsSwitch =
       activeMon && (activeMon.isFainted || activeMon.currentHp <= 0);
-
-    // 🔍 DEBUG: Verificar condições dos botões
-    console.log("[BattleScreen] Button conditions:", {
-      canAct,
-      myPendingAction,
-      needsSwitch,
-      hasSwitchCandidate,
-      isProcessing,
-      turnPhase: battleState?.turnPhase,
-      activeIndex,
-      activeMon: activeMon
-        ? {
-            name: activeMon.name,
-            hp: activeMon.currentHp,
-            fainted: activeMon.isFainted,
-          }
-        : null,
-      hasPendingEvents: battleState?.events && battleState.events.length > 0,
-      eventsCount: battleState?.events?.length || 0,
-      playerHasSelected: myPlayerState?.hasSelectedCoffeemon,
-      opponentHasSelected: opponentPlayerState?.hasSelectedCoffeemon,
-    });
 
     let statusText = "";
 
@@ -1225,7 +1218,6 @@ export default function BattleScreen({
             ]}
             onPress={() => {
               if (!hasUnreadMessages) {
-                console.log("[BattleScreen] Item button pressed!");
                 setItemModalVisible(true);
               }
             }}
@@ -1240,7 +1232,7 @@ export default function BattleScreen({
           {/* Botão Fugir - SEMPRE DISPONÍVEL, NUNCA BLOQUEADO */}
           <TouchableOpacity
             style={[
-              styles.mainActionButton, 
+              styles.mainActionButton,
               styles.fleeActionButton,
               battleEnded && styles.actionButtonDisabled,
             ]}
@@ -1252,6 +1244,30 @@ export default function BattleScreen({
               style={styles.actionButtonIconImage}
             />
           </TouchableOpacity>
+
+          {/* Botão Chat - só PvP */}
+          {!isBotBattle && (
+            <TouchableOpacity
+              style={[styles.mainActionButton, styles.chatActionButton]}
+              onPress={() => {
+                setChatOpen(true);
+                matchChat.markRead();
+              }}
+              activeOpacity={0.8}
+            >
+              <Image
+                source={CHAT_ICON}
+                style={styles.actionButtonIconImage}
+              />
+              {matchChat.unreadCount > 0 && (
+                <View style={styles.chatUnreadBadge}>
+                  <Text style={styles.chatUnreadBadgeText}>
+                    {matchChat.unreadCount > 9 ? "9+" : matchChat.unreadCount}
+                  </Text>
+                </View>
+              )}
+            </TouchableOpacity>
+          )}
         </View>
       </>
     );
@@ -1674,12 +1690,9 @@ export default function BattleScreen({
         visible={showSelectionModal}
         availableCoffeemons={initialSelectionCandidates}
         onSelectCoffeemon={async (candidate) => {
-          await selectInitialCoffeemon(candidate.index);
+          selectInitialCoffeemon(candidate.index);
         }}
-        onClose={() => {
-          // Modal de seleção inicial não pode ser fechado
-          console.log("[BattleScreen] Cannot close initial selection modal");
-        }}
+        onClose={() => {}}
         renderCoffeemonCard={renderInitialSelectionCard}
         keyExtractor={(candidate) =>
           `${candidate.coffeemon.name}-${candidate.index}`
@@ -1695,8 +1708,6 @@ export default function BattleScreen({
           await handleSelectSwitchCandidate(candidate.index);
         }}
         onClose={() => {
-          // ✅ FECHAMENTO SIMPLES: Sempre permitir fechar o modal
-          console.log("[BattleScreen] Closing switch modal");
           setSwitchModalVisible(false);
           if (stuckRecoveryTimeout) {
             clearTimeout(stuckRecoveryTimeout);
@@ -1736,6 +1747,99 @@ export default function BattleScreen({
         onSelectTarget={handleSelectItemTarget}
         onClose={handleCloseItemModals}
       />
+
+      {/* Modal de chat em partida (somente PvP) */}
+      <MatchChatModal
+        visible={chatOpen}
+        messages={matchChat.messages}
+        playerId={playerId}
+        onSend={matchChat.send}
+        onClose={() => {
+          setChatOpen(false);
+          matchChat.onClose();
+        }}
+      />
+
+      {/* Overlay: oponente desconectado */}
+      {opponentDisconnected && !battleEnded && (
+        <View style={battleOverlayStyles.backdrop}>
+          <View style={battleOverlayStyles.card}>
+            <Text style={battleOverlayStyles.icon}>⚠️</Text>
+            <Text style={battleOverlayStyles.title}>Oponente desconectou</Text>
+            <Text style={battleOverlayStyles.subtitle}>
+              Aguardando reconexão...
+            </Text>
+            {disconnectCountdown !== null && (
+              <View style={battleOverlayStyles.countdownRow}>
+                <Text style={battleOverlayStyles.countdownLabel}>A partida encerra em</Text>
+                <Text style={battleOverlayStyles.countdownNumber}>{disconnectCountdown}s</Text>
+              </View>
+            )}
+          </View>
+        </View>
+      )}
+
+      {/* Overlay: próprio socket reconectando */}
+      {isReconnecting && (
+        <View style={battleOverlayStyles.backdrop}>
+          <View style={battleOverlayStyles.card}>
+            <Text style={battleOverlayStyles.icon}>🔄</Text>
+            <Text style={battleOverlayStyles.title}>Reconectando...</Text>
+            <Text style={battleOverlayStyles.subtitle}>
+              Tentando voltar para a batalha
+            </Text>
+          </View>
+        </View>
+      )}
     </SafeAreaView>
   );
 }
+
+const battleOverlayStyles = StyleSheet.create({
+  backdrop: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0,0,0,0.75)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 999,
+  },
+  card: {
+    backgroundColor: '#1E1A14',
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: '#C8A26B',
+    paddingVertical: 28,
+    paddingHorizontal: 36,
+    alignItems: 'center',
+    gap: 8,
+    minWidth: 220,
+  },
+  icon: {
+    fontSize: 36,
+  },
+  title: {
+    color: '#F5E6C8',
+    fontSize: 17,
+    fontWeight: 'bold',
+    textAlign: 'center',
+  },
+  subtitle: {
+    color: '#A89070',
+    fontSize: 13,
+    textAlign: 'center',
+  },
+  countdownRow: {
+    marginTop: 8,
+    alignItems: 'center',
+    gap: 2,
+  },
+  countdownLabel: {
+    color: '#A89070',
+    fontSize: 12,
+  },
+  countdownNumber: {
+    color: '#FF6B6B',
+    fontSize: 36,
+    fontWeight: 'bold',
+  },
+});

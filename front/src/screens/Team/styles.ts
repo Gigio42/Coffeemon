@@ -85,22 +85,6 @@ export const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: theme.colors.background.primary,
   },
-  collectionHeader: {
-    paddingHorizontal: theme.spacing.lg,
-    paddingTop: theme.spacing.md,
-    paddingBottom: 0,
-  },
-  collectionTitle: {
-    fontSize: 20,
-    fontWeight: '800',
-    color: theme.colors.text.primary,
-    marginBottom: 2,
-  },
-  collectionSubtitle: {
-    fontSize: 13,
-    color: theme.colors.text.secondary,
-    fontWeight: '500',
-  },
 
   // Search & Filters - Consistent with Catalog
   filterSection: {
@@ -184,76 +168,6 @@ export const styles = StyleSheet.create({
   collectionItem: {
     width: CARD_WIDTH,
     marginBottom: theme.spacing.sm,
-  },
-  
-  // Inventory Section
-  inventorySection: {
-    marginTop: theme.spacing.xl,
-    borderTopWidth: 1,
-    borderTopColor: theme.colors.border.subtle,
-    paddingTop: theme.spacing.lg,
-  },
-  itemsHeader: {
-    marginBottom: theme.spacing.md,
-  },
-  itemsTitle: {
-    fontSize: 18,
-    fontWeight: '800',
-    color: theme.colors.text.primary,
-  },
-  itemsSubtitle: {
-    fontSize: 13,
-    color: theme.colors.text.secondary,
-  },
-  itemsGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: theme.spacing.md,
-  },
-  itemCard: {
-    width: (width - theme.spacing.lg * 2 - theme.spacing.md * 2) / 3,
-    backgroundColor: '#FFFFFF',
-    borderRadius: theme.radius.lg,
-    padding: theme.spacing.md,
-    borderWidth: 1,
-    borderColor: 'rgba(0,0,0,0.03)',
-    alignItems: 'center',
-    ...theme.shadows.sm,
-  },
-  itemIconContainer: {
-    width: 40,
-    height: 40,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: theme.spacing.xs,
-  },
-  itemEmoji: {
-    fontSize: 24,
-  },
-  itemBadge: {
-    position: 'absolute',
-    top: -6,
-    right: -6,
-    minWidth: 20,
-    height: 20,
-    borderRadius: theme.radius.full,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: 4,
-    borderWidth: 2,
-    borderColor: '#FFFFFF',
-    ...theme.shadows.sm,
-  },
-  itemBadgeText: {
-    color: '#FFFFFF',
-    fontSize: 10,
-    fontWeight: 'bold',
-  },
-  itemName: {
-    fontSize: 11,
-    fontWeight: '600',
-    color: theme.colors.text.primary,
-    textAlign: 'center',
   },
   
   // Loading & Empty States

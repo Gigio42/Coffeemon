@@ -491,6 +491,43 @@ export const styles = StyleSheet.create({
       buttonPositions.spacing +
       buttonPositions.fleeOffsetX,
   },
+  // Botão Chat (Roxo escuro) - posicionado acima do botão Fugir
+  chatActionButton: {
+    backgroundColor: "#6C3FD4",
+    width: buttonSizes.flee,
+    height: buttonSizes.flee,
+    bottom:
+      buttonPositions.marginBottom +
+      buttonPositions.fleeOffsetY +
+      buttonSizes.flee +
+      buttonPositions.spacing,
+    right:
+      buttonSizes.attack +
+      buttonPositions.marginSide +
+      buttonPositions.spacing +
+      buttonSizes.switch +
+      buttonPositions.spacing +
+      buttonPositions.fleeOffsetX,
+  },
+  chatUnreadBadge: {
+    position: "absolute",
+    top: -3,
+    right: -3,
+    minWidth: 18,
+    height: 18,
+    borderRadius: 9,
+    backgroundColor: "#EF4444",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 3,
+    borderWidth: 2,
+    borderColor: "#fff",
+  },
+  chatUnreadBadgeText: {
+    color: "#fff",
+    fontSize: 9,
+    fontWeight: "700",
+  },
   actionButtonDisabled: {
     opacity: 0.3,
     backgroundColor: "#CCCCCC",

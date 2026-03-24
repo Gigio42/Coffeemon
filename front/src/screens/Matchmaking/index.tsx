@@ -324,13 +324,29 @@ export default function MatchmakingScreen({
   const { user } = useUser(token);
 
   // Hook de Matchmaking (Socket, status, logs)
-  const { matchStatus, log, findMatch, findBotMatch } =
+  const { matchStatus, isSearching, log, findMatch, cancelMatch, findBotMatch } =
     useMatchmaking({
       token,
       playerId,
       onNavigateToLogin,
       onNavigateToBattle,
     });
+
+  const searchingPulse = React.useRef(new Animated.Value(1)).current;
+  React.useEffect(() => {
+    if (!isSearching) {
+      searchingPulse.setValue(1);
+      return;
+    }
+    const pulse = Animated.loop(
+      Animated.sequence([
+        Animated.timing(searchingPulse, { toValue: 1.15, duration: 700, useNativeDriver: true }),
+        Animated.timing(searchingPulse, { toValue: 1, duration: 700, useNativeDriver: true }),
+      ])
+    );
+    pulse.start();
+    return () => pulse.stop();
+  }, [isSearching]);
 
   // Handlers
   const animateStartPress = () => {
@@ -908,7 +924,11 @@ export default function MatchmakingScreen({
 
             {/* Status removido */}
 
-            <PlayerStatus token={token} />
+            <PlayerStatus
+                token={token}
+                onLogout={onNavigateToLogin}
+                onNavigateToEcommerce={onNavigateToEcommerce}
+              />
 
             <View style={styles.teamContainer}>
               <View style={styles.teamHeader}>
@@ -996,6 +1016,73 @@ export default function MatchmakingScreen({
         sections={sheetSections}
         onClose={handleCloseSheet}
       />
+
+      {/* Overlay de busca por partida */}
+      {isSearching && (
+        <View style={searchingOverlayStyles.backdrop}>
+          <View style={searchingOverlayStyles.card}>
+            <Animated.View style={{ transform: [{ scale: searchingPulse }] }}>
+              <Image source={START_ICON} style={searchingOverlayStyles.icon} />
+            </Animated.View>
+            <Text style={searchingOverlayStyles.title}>Procurando partida...</Text>
+            <ActivityIndicator color="#C8A26B" size="small" style={{ marginBottom: 8 }} />
+            <Text style={searchingOverlayStyles.subtitle}>Aguardando um oponente</Text>
+            <TouchableOpacity style={searchingOverlayStyles.cancelBtn} onPress={cancelMatch}>
+              <Text style={searchingOverlayStyles.cancelText}>Cancelar</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      )}
     </View>
   );
 }
+
+const searchingOverlayStyles = StyleSheet.create({
+  backdrop: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0,0,0,0.7)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  card: {
+    backgroundColor: '#1E1A14',
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: '#C8A26B',
+    paddingVertical: 32,
+    paddingHorizontal: 40,
+    alignItems: 'center',
+    gap: 10,
+    minWidth: 240,
+  },
+  icon: {
+    width: 56,
+    height: 56,
+    tintColor: '#C8A26B',
+  },
+  title: {
+    color: '#F5E6C8',
+    fontSize: 18,
+    fontWeight: 'bold',
+    textAlign: 'center',
+  },
+  subtitle: {
+    color: '#A89070',
+    fontSize: 13,
+    textAlign: 'center',
+  },
+  cancelBtn: {
+    marginTop: 8,
+    paddingVertical: 10,
+    paddingHorizontal: 28,
+    backgroundColor: '#3A2A1A',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#6B4C2A',
+  },
+  cancelText: {
+    color: '#F5E6C8',
+    fontSize: 15,
+    fontWeight: '600',
+  },
+});

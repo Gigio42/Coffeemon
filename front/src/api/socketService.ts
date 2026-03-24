@@ -131,6 +131,13 @@ export function findBotMatch(socket: Socket, botProfileId: string): void {
 }
 
 /**
+ * Cancela a busca por partida
+ */
+export function leaveQueue(socket: Socket): void {
+  socket.emit('leaveQueue');
+}
+
+/**
  * Desconecta o socket
  */
 export function disconnectSocket(socket: Socket): void {

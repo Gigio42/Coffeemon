@@ -7,6 +7,7 @@ import { BattleState } from "../../types";
 import { CatalogScreen } from "../Catalog";
 import { ShopScreen } from "../Shop";
 import { TeamScreen } from "../Team";
+import { SocialScreen } from "../Social";
 
 interface MainNavProps {
   token: string | null;
@@ -43,11 +44,7 @@ export const MainNavScreen: React.FC<MainNavProps> = ({
   const [introShown, setIntroShown] = useState(false);
 
   const handleNavigate = (screen: NavScreen) => {
-    if (screen === "cafe") {
-      onNavigateToEcommerce();
-    } else {
-      setActiveScreen(screen);
-    }
+    setActiveScreen(screen);
   };
 
   const renderScreen = () => {
@@ -69,6 +66,8 @@ export const MainNavScreen: React.FC<MainNavProps> = ({
         );
       case "catalog":
         return <CatalogScreen token={token} />;
+      case "social":
+        return <SocialScreen token={token} playerId={playerId} />;
       default:
         return <ShopScreen />;
     }

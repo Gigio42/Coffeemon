@@ -97,95 +97,63 @@ export class RoomCacheService {
     return data ? JSON.parse(data) : null;
   }
 
-  async getActiveMembers(roomId: string): Promise<RoomMember[]> {
-    const roomData = await this.getRoomData(roomId);
-    return roomData ? roomData.members.filter((m) => m.status === 'active') : [];
-  }
-
-  async findOpponentInRoom(roomId: string, playerId: number): Promise<RoomMember | null> {
-    try {
-      const roomData = await this.getRoomData(roomId);
-      if (!roomData || roomData.type !== 'matchmaking') return null;
-
-      // Encontra oponente via FIFO
-      const availableOpponents = roomData.members.filter(
-        (member) => member.playerId !== playerId && member.status === 'active'
-      );
-
-      if (availableOpponents.length === 0) return null;
-
-      // Retorna o que está esperando há mais tempo
-      return availableOpponents.sort(
-        (a, b) => new Date(a.joinedAt).getTime() - new Date(b.joinedAt).getTime()
-      )[0];
-    } catch (error) {
-      console.error('Erro ao procurar oponente:', error);
-      return null;
-    }
-  }
-
-  async makeMatch(
+  async findAndClaimOpponent(
     roomId: string,
-    player1Id: number,
-    player2Id: number
-  ): Promise<{ player1: RoomMember; player2: RoomMember } | null> {
-    try {
-      const roomData = await this.getRoomData(roomId);
-      if (!roomData) return null;
+    joiningPlayerId: number,
+    joiningSocketId: string
+  ): Promise<RoomMember | null> {
+    const client = this.redis.getClient();
+    const roomKey = `room:${roomId}`;
+    const MAX_RETRIES = 5;
 
-      const player1 = roomData.members.find((m) => m.playerId === player1Id);
-      const player2 = roomData.members.find((m) => m.playerId === player2Id);
+    for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
+      await client.watch(roomKey);
 
-      if (!player1 || !player2) return null;
-
-      roomData.members = roomData.members.filter(
-        (m) => m.playerId !== player1Id && m.playerId !== player2Id
-      );
-
-      if (roomData.members.length === 0) {
-        await this.redis.del(`room:${roomId}`);
-      } else {
-        await this.redis.set(`room:${roomId}`, JSON.stringify(roomData), 600);
+      const raw = await client.get(roomKey);
+      if (!raw) {
+        await client.unwatch();
+        return null;
       }
 
-      await Promise.all([
-        this.redis.del(`player:${player1Id}:rooms`),
-        this.redis.del(`player:${player2Id}:rooms`),
-        this.redis.del(`socket:${player1.socketId}:rooms`),
-        this.redis.del(`socket:${player2.socketId}:rooms`),
-      ]);
+      const data = JSON.parse(raw) as RoomData;
+      if (data.type !== 'matchmaking') {
+        await client.unwatch();
+        return null;
+      }
 
-      return { player1, player2 };
-    } catch (error) {
-      console.error('Erro ao fazer match:', error);
-      return null;
+      const opponent = data.members
+        .filter((m) => m.playerId !== joiningPlayerId && m.status === 'active')
+        .sort((a, b) => new Date(a.joinedAt).getTime() - new Date(b.joinedAt).getTime())[0];
+
+      if (!opponent) {
+        await client.unwatch();
+        return null;
+      }
+
+      data.members = data.members.filter(
+        (m) => m.playerId !== joiningPlayerId && m.playerId !== opponent.playerId
+      );
+
+      const pipeline = client.multi();
+
+      if (data.members.length === 0) {
+        pipeline.del(roomKey);
+      } else {
+        pipeline.set(roomKey, JSON.stringify(data), 'EX', 600);
+      }
+
+      pipeline.del(`player:${joiningPlayerId}:rooms`);
+      pipeline.del(`player:${opponent.playerId}:rooms`);
+      pipeline.del(`socket:${joiningSocketId}:room`);
+      pipeline.del(`socket:${opponent.socketId}:room`);
+
+      const results = await pipeline.exec();
+      if (results !== null) {
+        return opponent;
+      }
     }
-  }
 
-  async getQueueStats(roomId: string): Promise<{
-    count: number;
-    avgWaitTime: number;
-    roomCreatedAt?: Date;
-  }> {
-    try {
-      const members = await this.getActiveMembers(roomId);
-      const roomData = await this.getRoomData(roomId);
-
-      if (!roomData) return { count: 0, avgWaitTime: 0 };
-
-      const now = new Date().getTime();
-      const totalWaitTime = members.reduce((sum, member) => {
-        return sum + (now - new Date(member.joinedAt).getTime());
-      }, 0);
-
-      return {
-        count: members.length,
-        avgWaitTime: members.length > 0 ? totalWaitTime / members.length : 0,
-        roomCreatedAt: roomData.createdAt,
-      };
-    } catch (error) {
-      console.error('Erro ao buscar estatísticas da room:', error);
-      return { count: 0, avgWaitTime: 0 };
-    }
+    console.error('[RoomCache] findAndClaimOpponent: máximo de tentativas atingido');
+    return null;
   }
 }

@@ -128,6 +128,7 @@ export interface User {
 
 export interface Player {
   id: number;
+  uid: string;
   coins: number;
   level: number;
   experience: number;

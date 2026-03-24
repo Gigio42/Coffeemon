@@ -15,8 +15,10 @@ interface UseMatchmakingProps {
 interface UseMatchmakingResult {
   socket: Socket | null;
   matchStatus: string;
+  isSearching: boolean;
   log: string[];
   findMatch: () => void;
+  cancelMatch: () => void;
   findBotMatch: (botProfileId: string) => void;
   handleLogout: () => Promise<void>;
 }
@@ -146,6 +148,13 @@ export function useMatchmaking({
     socketService.findPvPMatch(socket);
   }
 
+  function cancelMatch() {
+    if (!socket) return;
+    socketService.leaveQueue(socket);
+    setMatchStatus('Conectado');
+    addLog('Busca por partida cancelada.');
+  }
+
   function findBotMatch(botProfileId: string) {
     try {
       if (!socket) {
@@ -183,8 +192,10 @@ export function useMatchmaking({
   return {
     socket,
     matchStatus,
+    isSearching: matchStatus === 'Procurando',
     log,
     findMatch,
+    cancelMatch,
     findBotMatch,
     handleLogout,
   };
