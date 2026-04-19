@@ -165,6 +165,33 @@ export async function getStoredUserId(): Promise<string | null> {
 }
 
 /**
+ * Cria uma conta guest temporária (expira em 7 dias)
+ */
+export async function loginGuest(): Promise<AuthResponse> {
+  const url = await getServerUrl();
+  const response = await fetch(`${url}/auth/guest`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+  });
+
+  const data = await response.json();
+
+  if (!data.access_token) {
+    throw new Error(data.message || 'Falha ao criar conta temporária');
+  }
+
+  return data;
+}
+
+export async function saveIsGuest(isGuest: boolean): Promise<void> {
+  await AsyncStorage.setItem('is_guest', isGuest ? '1' : '0');
+}
+
+export async function getIsGuest(): Promise<boolean> {
+  return (await AsyncStorage.getItem('is_guest')) === '1';
+}
+
+/**
  * Limpa dados de autenticação
  */
 export async function clearAuthData(): Promise<void> {

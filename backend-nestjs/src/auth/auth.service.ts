@@ -20,11 +20,26 @@ export class AuthService {
     return null;
   }
 
-  login(user: { email: string; id: number; role: UserRole }) {
+  async login(user: { email: string; id: number; role: UserRole }) {
+    await this.usersService.updateLastLogin(user.id);
     const payload = { email: user.email, id: user.id, role: user.role };
-    return {
-      access_token: this.jwtService.sign(payload),
-    };
+    return { access_token: this.jwtService.sign(payload) };
+  }
+
+  async guest(): Promise<{ access_token: string }> {
+    await this.usersService.deleteExpiredGuests();
+
+    const suffix = Math.random().toString(36).slice(2, 8).toUpperCase();
+    const randomPwd = Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2);
+
+    const user = await this.usersService.createGuest({
+      username: `Trainer_${suffix}`,
+      email: `guest_${Date.now()}_${suffix}@coffeemon.tmp`,
+      password: randomPwd,
+    });
+
+    const payload = { email: user.email, id: user.id, role: user.role, isGuest: true };
+    return { access_token: this.jwtService.sign(payload, { expiresIn: '7d' }) };
   }
 
   async register(username: string, email: string, password: string) {

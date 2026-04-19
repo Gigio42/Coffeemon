@@ -34,31 +34,39 @@ export const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: pixelArt.spacing.lg,
-    paddingTop: pixelArt.spacing.lg + statusBarHeight, // Evita sobreposição com status bar
-    backgroundColor: '#f5f2e8', // Cor creme clara
-    borderBottomWidth: 3,
-    borderBottomColor: '#d4c5a0', // Borda creme mais escura
-    borderTopWidth: 2,
-    borderTopColor: '#faf8f0', // Borda creme mais clara
-    ...pixelArt.shadows.innerBorder,
+    paddingHorizontal: 16,
+    paddingTop: 16 + statusBarHeight,
+    paddingBottom: 16,
+    backgroundColor: '#1C1007',
+    shadowColor: '#1C1007',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.35,
+    shadowRadius: 14,
+    elevation: 14,
   },
 
   backButton: {
-    marginRight: pixelArt.spacing.md,
+    marginRight: 12,
     padding: 8,
+    backgroundColor: 'rgba(255,255,255,0.10)',
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.15)',
   },
 
   backButtonText: {
-    fontSize: 24,
-    color: '#8B7355',
+    fontSize: 20,
+    color: 'rgba(255,255,255,0.85)',
     fontWeight: '700',
   },
 
   headerTitle: {
-    ...pixelArt.typography.pixelTitle,
-    color: pixelArt.colors.coffeePrimary,
-    fontSize: 16,
+    fontFamily: 'monospace',
+    color: '#F5D080',
+    fontSize: 14,
+    fontWeight: '900',
+    letterSpacing: 2,
+    textTransform: 'uppercase',
   },
 
   // ========================================
@@ -266,14 +274,17 @@ export const styles = StyleSheet.create({
   },
 
   headerTitleContainer: {
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
     gap: 8,
   },
 
   headerIcon: {
-    width: 36,
-    height: 36,
+    width: 24,
+    height: 24,
+    tintColor: '#F5D080',
   },
 
   checkoutButtonContent: {

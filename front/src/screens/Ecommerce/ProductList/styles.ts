@@ -1,165 +1,166 @@
-import { StyleSheet, Platform, StatusBar } from 'react-native';
-import { pixelArt } from '../../../theme';
+import { StyleSheet, Platform } from 'react-native';
 
-// Para Android, considera a altura da status bar
-const statusBarHeight = Platform.OS === 'android' ? StatusBar.currentHeight || 0 : 0;
+const C = {
+  espresso:    '#1C1007',
+  espressoMid: '#2D1810',
+  coffee:      '#8B4513',
+  caramel:     '#C8793A',
+  gold:        '#F5D080',
+  cream:       '#FAF7F2',
+  creamWarm:   '#FDF8EE',
+  white:       '#FFFFFF',
+  inputBg:     'rgba(255,255,255,0.10)',
+  inputBorder: 'rgba(255,255,255,0.20)',
+  placeholder: 'rgba(255,255,255,0.45)',
+  textLight:   'rgba(255,255,255,0.85)',
+  searchBg:    '#FFFFFF',
+  searchBorder:'rgba(196, 165, 120, 0.3)',
+  muted:       '#7A6050',
+  error:       '#E74C3C',
+};
 
 export const styles = StyleSheet.create({
-  // ========================================
-  // CONTAINER PRINCIPAL COM GRADIENTE - Como no HTML
-  // ========================================
   container: {
     flex: 1,
-    backgroundColor: '#f5f2e8', // Cor creme clara - mesma do header
+    backgroundColor: C.cream,
   },
 
-  // Overlay de scanline (simulação de CRT)
-  scanlineOverlay: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: 'transparent',
-    pointerEvents: 'none',
-    opacity: 0.15,
-  },
-
-  // ========================================
-  // HEADER PIXEL ART
-  // ========================================
+  // ─────────────────────────────────────────────
+  // HEADER — espresso escuro com branding
+  // ─────────────────────────────────────────────
   header: {
-    padding: pixelArt.spacing.xl, // Padding maior
-    backgroundColor: '#f5f2e8', // Cor creme clara
-    borderBottomWidth: 3,
-    borderBottomColor: '#d4c5a0', // Borda creme mais escura
-    // Borda 3D no header
-    borderTopWidth: 2,
-    borderTopColor: '#faf8f0', // Borda creme mais clara
-    ...pixelArt.shadows.innerBorder,
-    // Sombra sutil
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 5,
+    backgroundColor: C.espresso,
+    paddingHorizontal: 20,
+    paddingTop: Platform.OS === 'android' ? 18 : 16,
+    paddingBottom: 18,
+    shadowColor: C.espresso,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.35,
+    shadowRadius: 14,
+    elevation: 14,
   },
 
-  // ========================================
-  // BARRA DE PESQUISA
-  // ========================================
+  headerTop: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 14,
+  },
+
+  brandRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+
+  brandIcon: {
+    fontSize: 22,
+  },
+
+  brandTitle: {
+    fontFamily: 'monospace',
+    fontSize: 16,
+    fontWeight: '900',
+    letterSpacing: 3,
+    color: C.gold,
+    textTransform: 'uppercase',
+  },
+
+  brandSubtitle: {
+    fontFamily: 'monospace',
+    fontSize: 8,
+    color: 'rgba(245,208,128,0.55)',
+    letterSpacing: 1.5,
+    textTransform: 'uppercase',
+    marginTop: 1,
+  },
+
+  cartChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    borderRadius: 20,
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.2)',
+    gap: 6,
+  },
+
+  cartChipIcon: {
+    width: 18,
+    height: 18,
+    tintColor: C.gold,
+  },
+
+  cartChipCount: {
+    fontFamily: 'monospace',
+    fontSize: 12,
+    fontWeight: '900',
+    color: C.gold,
+  },
+
+  cartChipBadge: {
+    backgroundColor: C.caramel,
+    borderRadius: 9,
+    minWidth: 18,
+    height: 18,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 3,
+  },
+
+  cartChipBadgeText: {
+    fontFamily: 'monospace',
+    fontSize: 9,
+    fontWeight: '900',
+    color: C.white,
+  },
+
+  // ─────────────────────────────────────────────
+  // SEARCH BAR
+  // ─────────────────────────────────────────────
   searchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#ffffff',
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 0, // Remove padding vertical
-    height: 48, // Altura fixa
-    borderWidth: 2,
-    borderColor: '#d4c5a0',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-    borderTopWidth: 1,
-    borderLeftWidth: 1,
-    borderTopColor: '#faf8f0',
-    borderLeftColor: '#faf8f0',
-    borderBottomWidth: 2,
-    borderRightWidth: 2,
-    borderBottomColor: '#d4c5a0',
-    borderRightColor: '#d4c5a0',
+    backgroundColor: C.inputBg,
+    borderRadius: 14,
+    paddingHorizontal: 14,
+    height: 46,
+    borderWidth: 1,
+    borderColor: C.inputBorder,
   },
 
   searchIcon: {
-    width: 24, // Maior para melhor visibilidade
-    height: 24,
-    marginRight: 12, // Mais espaço
-    opacity: 1, // Totalmente visível
-    // Removido tintColor para manter cor original
+    width: 18,
+    height: 18,
+    marginRight: 10,
+    tintColor: C.placeholder,
   },
 
   searchInput: {
     flex: 1,
-    ...pixelArt.typography.pixelBody,
-    fontSize: 16,
-    color: '#000000',
-    height: 40, // Altura fixa para evitar sobreposição
+    fontFamily: 'monospace',
+    fontSize: 14,
+    color: C.white,
     paddingVertical: 0,
-    paddingHorizontal: 0,
-    fontWeight: '500',
-    textAlignVertical: 'center', // Centraliza verticalmente no Android
+    height: 40,
+    textAlignVertical: 'center',
   },
 
-  // ========================================
-  // BOTÃO DO CARRINHO (REMOVIDO - mantido para referência)
-  // ========================================
-  /*
-  cartButton: {
-    ...pixelArt.buttons.primary,
-    position: 'relative',
+  searchClear: {
+    padding: 4,
   },
 
-  cartIcon: {
-    fontSize: 20,
+  searchClearText: {
+    color: 'rgba(255,255,255,0.4)',
+    fontSize: 16,
+    fontWeight: '700',
   },
 
-  cartIconImage: {
-    width: 36,
-    height: 36,
-  },
-
-  badge: {
-    position: 'absolute',
-    top: -6,
-    right: -6,
-    backgroundColor: pixelArt.colors.error,
-    borderRadius: 10,
-    minWidth: 20,
-    height: 20,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: 4,
-    // Borda do badge
-    borderWidth: 2,
-    borderColor: '#ffffff',
-    ...pixelArt.shadows.button,
-  },
-
-  badgeText: {
-    ...pixelArt.typography.pixelButton,
-    color: '#ffffff',
-    fontSize: 10,
-  },
-  */
-
-  // ========================================
-  // CONTADOR DE RESULTADOS
-  // ========================================
-  resultsCounter: {
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    backgroundColor: 'rgba(255, 255, 255, 0.8)',
-    marginHorizontal: 12,
-    marginTop: 8,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#d4c5a0',
-  },
-
-  resultsText: {
-    ...pixelArt.typography.pixelBody,
-    fontSize: 12,
-    color: '#8B4513',
-    textAlign: 'center',
-    fontWeight: '600',
-  },
-
-  // ========================================
-  // SCROLL VIEW E GRID
-  // ========================================
+  // ─────────────────────────────────────────────
+  // CONTEÚDO
+  // ─────────────────────────────────────────────
   gradientContainer: {
     flex: 1,
   },
@@ -172,56 +173,77 @@ export const styles = StyleSheet.create({
     flex: 1,
   },
 
-  scrollView: {
-    flex: 1,
-  },
-
   productsGrid: {
-    paddingHorizontal: 16,
-    paddingVertical: 16,
-    paddingBottom: 100,
+    paddingHorizontal: 14,
+    paddingTop: 16,
+    paddingBottom: 120,
   },
 
   productRow: {
     justifyContent: 'space-between',
-    paddingHorizontal: 4,
   },
 
-  // ========================================
-  // LOADING E ERROR STATES
-  // ========================================
+  // Resultados de busca
+  resultsCounter: {
+    marginHorizontal: 14,
+    marginTop: 12,
+    marginBottom: 0,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    backgroundColor: 'rgba(139,69,19,0.08)',
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: 'rgba(139,69,19,0.12)',
+  },
+
+  resultsText: {
+    fontFamily: 'monospace',
+    fontSize: 11,
+    color: C.coffee,
+    textAlign: 'center',
+    fontWeight: '600',
+  },
+
+  // ─────────────────────────────────────────────
+  // ESTADOS
+  // ─────────────────────────────────────────────
   centerContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#f5f2e8', // Cor creme clara - mesma do header
+    backgroundColor: C.cream,
+    padding: 32,
   },
 
   loadingText: {
-    ...pixelArt.typography.pixelBody,
-    color: pixelArt.colors.textDark,
-    marginTop: pixelArt.spacing.md,
+    fontFamily: 'monospace',
+    color: C.muted,
+    marginTop: 12,
+    fontSize: 13,
   },
 
   errorContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: pixelArt.spacing.xl,
-    backgroundColor: '#f5f2e8', // Cor creme clara - mesma do header
+    padding: 32,
+    backgroundColor: C.cream,
   },
 
   errorText: {
-    ...pixelArt.typography.pixelBody,
-    color: pixelArt.colors.error,
+    fontFamily: 'monospace',
+    color: C.error,
     textAlign: 'center',
-    marginBottom: pixelArt.spacing.lg,
+    marginBottom: 16,
+    fontSize: 13,
   },
 
   retryButton: {
-    ...pixelArt.buttons.action,
-    paddingVertical: pixelArt.spacing.md,
-    paddingHorizontal: pixelArt.spacing.xl,
+    backgroundColor: C.coffee,
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 12,
+    marginTop: 8,
   },
 
   retryButtonContent: {
@@ -231,11 +253,17 @@ export const styles = StyleSheet.create({
   },
 
   retryIcon: {
-    width: 32,
-    height: 32,
+    width: 20,
+    height: 20,
+    tintColor: C.white,
   },
 
   retryButtonText: {
-    ...pixelArt.buttons.text,
+    fontFamily: 'monospace',
+    color: C.white,
+    fontSize: 12,
+    fontWeight: '900',
+    textTransform: 'uppercase',
+    letterSpacing: 1,
   },
 });

@@ -1,146 +1,137 @@
-/**
- * ========================================
- * ECOMMERCE SCREEN - HUB DO E-COMMERCE
- * ========================================
- * 
- * Esta é a tela principal do e-commerce que gerencia:
- * 1. Navegação entre as sub-telas (Produtos, Carrinho, Pedidos, Perfil)
- * 2. Estado compartilhado do carrinho
- * 3. Dados de autenticação
- */
-
 import React, { useEffect, useState } from 'react';
 import { View, TouchableOpacity, Text, Image } from 'react-native';
 import ProductListScreen from './ProductList';
 import ProductDetailScreen from './ProductDetail';
 import CartScreen from './Cart';
 import OrderHistoryScreen from './Orders';
-import ProfileScreen from './Profile';
-import { Product } from '../../types';
+import { CartItem, Product } from '../../types';
 import { styles } from './styles';
 import { fetchPlayerCoffeemons, fetchPlayerData } from '../../api/coffeemonService';
 import { getCoffeemonImage } from '../../../assets/coffeemons';
 import { getVariantForStatusEffects } from '../../utils/statusEffects';
-import { getTypeColor } from '../../components/CoffeemonCard/styles';
 import { prefetchPalette } from '../../utils/colorPalette';
+import { checkoutWithItems } from '../../api/cartService';
 
-// Sub-telas do e-commerce
 enum EcommerceTab {
   PRODUCTS = 'PRODUCTS',
   PRODUCT_DETAIL = 'PRODUCT_DETAIL',
   CART = 'CART',
   ORDERS = 'ORDERS',
-  PROFILE = 'PROFILE'
 }
 
 interface EcommerceScreenProps {
-  token: string;
-  userId: number;
-  onNavigateToMatchmaking: () => void;
+  token?: string;
+  userId?: number;
+  onNavigateToGame: () => void;
   onLogout: () => void;
 }
 
-export default function EcommerceScreen({ 
-  token, 
-  userId, 
-  onNavigateToMatchmaking,
-  onLogout 
+export default function EcommerceScreen({
+  token,
+  userId,
+  onNavigateToGame,
+  onLogout,
 }: EcommerceScreenProps) {
-  // Controla qual sub-tela está sendo exibida
   const [currentTab, setCurrentTab] = useState<EcommerceTab>(EcommerceTab.PRODUCTS);
-  
-  // Contador de itens no carrinho (para badge)
-  const [cartCount, setCartCount] = useState<number>(0);
-  
-  // Produto selecionado para visualização detalhada
+  const [localCart, setLocalCart] = useState<CartItem[]>([]);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
 
   useEffect(() => {
-    if (!token) {
-      return;
-    }
-
+    if (!token) return;
     let cancelled = false;
 
     const preloadCoffeemonPalettes = async () => {
       try {
         const playerData = await fetchPlayerData(token);
         const playerId = playerData?.id;
-        if (!playerId) {
-          return;
-        }
+        if (!playerId) return;
 
         const coffeemons = await fetchPlayerCoffeemons(token, playerId);
         await Promise.allSettled(
           coffeemons.map(async (coffeemon) => {
-            if (cancelled) {
-              return;
-            }
-
+            if (cancelled) return;
             const variant = getVariantForStatusEffects(coffeemon.statusEffects, 'default');
             const assetModule = getCoffeemonImage(coffeemon.coffeemon.name, variant);
-            const fallbackPalette = getTypeColor(coffeemon.coffeemon.type, coffeemon.coffeemon.name);
-            await prefetchPalette(assetModule, fallbackPalette);
+            await prefetchPalette(assetModule);
           })
         );
-      } catch (error) {
-        console.warn('[Ecommerce] Failed to prefetch Coffeemon palettes', error);
+      } catch {
+        // silencioso — prefetch é opcional
       }
     };
 
     preloadCoffeemonPalettes();
-
-    return () => {
-      cancelled = true;
-    };
+    return () => { cancelled = true; };
   }, [token]);
 
-  // Atualiza o contador do carrinho
-  const handleCartUpdate = (count: number) => {
-    setCartCount(count);
+  // ─── Carrinho local ──────────────────────────
+  const handleAddToCart = (product: Product, quantity: number) => {
+    setLocalCart((prev) => {
+      const existing = prev.find((i) => i.product.id === product.id);
+      if (existing) {
+        return prev.map((i) =>
+          i.product.id === product.id ? { ...i, quantity: i.quantity + quantity } : i
+        );
+      }
+      return [...prev, { product, quantity }];
+    });
   };
 
-  // Navega para detalhes do produto
-  const handleViewProduct = (product: Product) => {
-    setSelectedProduct(product);
-    setCurrentTab(EcommerceTab.PRODUCT_DETAIL);
+  const handleUpdateQuantity = (productId: number, quantity: number) => {
+    if (quantity < 1) {
+      setLocalCart((prev) => prev.filter((i) => i.product.id !== productId));
+    } else {
+      setLocalCart((prev) =>
+        prev.map((i) => (i.product.id === productId ? { ...i, quantity } : i))
+      );
+    }
   };
 
-  // Renderiza a tela atual
+  const handleRemoveItem = (productId: number) => {
+    setLocalCart((prev) => prev.filter((i) => i.product.id !== productId));
+  };
+
+  const handleCheckout = async () => {
+    const items = localCart.map((i) => ({ productId: i.product.id, quantity: i.quantity }));
+    await checkoutWithItems(items, token);
+    setLocalCart([]);
+  };
+
+  // ─── Telas ───────────────────────────────────
   const renderScreen = () => {
     switch (currentTab) {
       case EcommerceTab.PRODUCTS:
         return (
           <ProductListScreen
-            token={token}
-            onViewProduct={handleViewProduct}
+            onViewProduct={(product) => {
+              setSelectedProduct(product);
+              setCurrentTab(EcommerceTab.PRODUCT_DETAIL);
+            }}
             onNavigateToCart={() => setCurrentTab(EcommerceTab.CART)}
-            onNavigateToMatchmaking={onNavigateToMatchmaking}
-            cartCount={cartCount}
+            cartCount={localCart.length}
+            onAddToCart={handleAddToCart}
           />
         );
 
       case EcommerceTab.PRODUCT_DETAIL:
         return selectedProduct ? (
           <ProductDetailScreen
-            token={token}
             product={selectedProduct}
             onBack={() => setCurrentTab(EcommerceTab.PRODUCTS)}
-            onAddedToCart={() => {
-              // Poderia atualizar o contador aqui
-              setCurrentTab(EcommerceTab.CART);
-            }}
+            onAddedToCart={() => setCurrentTab(EcommerceTab.CART)}
+            onAddToCart={handleAddToCart}
           />
         ) : null;
 
       case EcommerceTab.CART:
         return (
           <CartScreen
-            token={token}
+            cartItems={localCart}
             onBack={() => setCurrentTab(EcommerceTab.PRODUCTS)}
-            onCartUpdate={handleCartUpdate}
+            onUpdateQuantity={handleUpdateQuantity}
+            onRemoveItem={handleRemoveItem}
+            onCheckout={handleCheckout}
             onCheckoutComplete={() => setCurrentTab(EcommerceTab.ORDERS)}
-            onLogout={onLogout}
           />
         );
 
@@ -149,18 +140,7 @@ export default function EcommerceScreen({
           <OrderHistoryScreen
             token={token}
             onBack={() => setCurrentTab(EcommerceTab.PRODUCTS)}
-            onLogout={onLogout}
-          />
-        );
-
-      case EcommerceTab.PROFILE:
-        return (
-          <ProfileScreen
-            token={token}
-            userId={userId}
-            onLogout={onLogout}
-            onNavigateToGame={onNavigateToMatchmaking}
-            onBack={() => setCurrentTab(EcommerceTab.PRODUCTS)}
+            onNavigateToLogin={onNavigateToGame}
           />
         );
 
@@ -169,131 +149,108 @@ export default function EcommerceScreen({
     }
   };
 
+  const cartQty = localCart.reduce((s, i) => s + i.quantity, 0);
+  const isDetail = currentTab === EcommerceTab.PRODUCT_DETAIL;
+
   return (
     <View style={styles.container}>
       {renderScreen()}
-      
-      {/* Barra de Navegação Inferior - Só mostra nas telas principais, não nos detalhes */}
-      {currentTab !== EcommerceTab.PRODUCT_DETAIL && (
+
+      {!isDetail && (
         <View style={styles.tabBar}>
-          <View style={styles.tabGroup}>
-            {/* Tab: Produtos */}
-            <TouchableOpacity
-              style={styles.tabButton}
-              onPress={() => setCurrentTab(EcommerceTab.PRODUCTS)}
-            >
-              <Image
-                source={require('../../../assets/icons/loja.png')}
-                style={[
-                  styles.tabIconImage,
-                  currentTab === EcommerceTab.PRODUCTS && styles.tabIconActive
-                ]}
-                resizeMode="contain"
-              />
-              <Text
-                style={[
-                  styles.tabLabel,
-                  currentTab === EcommerceTab.PRODUCTS && styles.tabLabelActive
-                ]}
-              >
-                Produtos
-              </Text>
-            </TouchableOpacity>
 
-            {/* Tab: Carrinho */}
-            <TouchableOpacity
-              style={styles.tabButton}
-              onPress={() => setCurrentTab(EcommerceTab.CART)}
-            >
-              <View>
-                <Image
-                  source={require('../../../assets/icons/icone_carrinho_compra.png')}
-                  style={[
-                    styles.tabIconImage,
-                    currentTab === EcommerceTab.CART && styles.tabIconActive
-                  ]}
-                  resizeMode="contain"
-                />
-                {cartCount > 0 && (
-                  <View style={styles.badge}>
-                    <Text style={styles.badgeText}>{cartCount}</Text>
-                  </View>
-                )}
-              </View>
-              <Text
-                style={[
-                  styles.tabLabel,
-                  currentTab === EcommerceTab.CART && styles.tabLabelActive
-                ]}
-              >
-                Carrinho
-              </Text>
-            </TouchableOpacity>
-          </View>
-
-          {/* Botão central: Matchmaking */}
+          {/* ── Produtos ── */}
           <TouchableOpacity
-            style={styles.centerButtonWrapper}
-            onPress={onNavigateToMatchmaking}
-            activeOpacity={0.85}
+            style={styles.tabButton}
+            onPress={() => setCurrentTab(EcommerceTab.PRODUCTS)}
+            activeOpacity={0.7}
           >
-            <View style={styles.centerButton}>
-              <Image
-                source={require('../../../assets/icons/escudo.png')}
-                style={styles.centerButtonIcon}
-                resizeMode="contain"
-              />
-            </View>
-            <Text style={styles.centerButtonLabel}>Match</Text>
+            <Image
+              source={require('../../../assets/icons/loja.png')}
+              style={[
+                styles.tabIconImage,
+                currentTab === EcommerceTab.PRODUCTS && styles.tabIconActive,
+              ]}
+              resizeMode="contain"
+            />
+            <Text style={[
+              styles.tabLabel,
+              currentTab === EcommerceTab.PRODUCTS && styles.tabLabelActive,
+            ]}>
+              Loja
+            </Text>
+            <View style={currentTab === EcommerceTab.PRODUCTS ? styles.tabDot : styles.tabDotHidden} />
           </TouchableOpacity>
 
-          <View style={styles.tabGroup}>
-            {/* Tab: Pedidos */}
-            <TouchableOpacity
-              style={styles.tabButton}
-              onPress={() => setCurrentTab(EcommerceTab.ORDERS)}
-            >
+          {/* ── Carrinho ── */}
+          <TouchableOpacity
+            style={styles.tabButton}
+            onPress={() => setCurrentTab(EcommerceTab.CART)}
+            activeOpacity={0.7}
+          >
+            <View style={styles.badgeWrapper}>
               <Image
-                source={require('../../../assets/icons/icone_caixa_produto.png')}
+                source={require('../../../assets/icons/icone_carrinho_compra.png')}
                 style={[
                   styles.tabIconImage,
-                  currentTab === EcommerceTab.ORDERS && styles.tabIconActive
+                  currentTab === EcommerceTab.CART && styles.tabIconActive,
                 ]}
                 resizeMode="contain"
               />
-              <Text
-                style={[
-                  styles.tabLabel,
-                  currentTab === EcommerceTab.ORDERS && styles.tabLabelActive
-                ]}
-              >
-                Pedidos
-              </Text>
-            </TouchableOpacity>
+              {cartQty > 0 && (
+                <View style={styles.badge}>
+                  <Text style={styles.badgeText}>{cartQty > 9 ? '9+' : cartQty}</Text>
+                </View>
+              )}
+            </View>
+            <Text style={[
+              styles.tabLabel,
+              currentTab === EcommerceTab.CART && styles.tabLabelActive,
+            ]}>
+              Carrinho
+            </Text>
+            <View style={currentTab === EcommerceTab.CART ? styles.tabDot : styles.tabDotHidden} />
+          </TouchableOpacity>
 
-            {/* Tab: Perfil */}
-            <TouchableOpacity
-              style={styles.tabButton}
-              onPress={() => setCurrentTab(EcommerceTab.PROFILE)}
-            >
+          {/* ── Pedidos ── */}
+          <TouchableOpacity
+            style={styles.tabButton}
+            onPress={() => setCurrentTab(EcommerceTab.ORDERS)}
+            activeOpacity={0.7}
+          >
+            <Image
+              source={require('../../../assets/icons/icone_caixa_produto.png')}
+              style={[
+                styles.tabIconImage,
+                currentTab === EcommerceTab.ORDERS && styles.tabIconActive,
+              ]}
+              resizeMode="contain"
+            />
+            <Text style={[
+              styles.tabLabel,
+              currentTab === EcommerceTab.ORDERS && styles.tabLabelActive,
+            ]}>
+              Pedidos
+            </Text>
+            <View style={currentTab === EcommerceTab.ORDERS ? styles.tabDot : styles.tabDotHidden} />
+          </TouchableOpacity>
+
+          {/* ── GAME (botão destaque — direita) ── */}
+          <TouchableOpacity
+            style={styles.gameTabButton}
+            onPress={onNavigateToGame}
+            activeOpacity={0.85}
+          >
+            <View style={styles.gameButtonInner}>
               <Image
-                source={require('../../../assets/icons/icone_perfil_usuario_generico.png')}
-                style={[
-                  styles.tabIconImage,
-                  currentTab === EcommerceTab.PROFILE && styles.tabIconActive
-                ]}
+                source={require('../../../assets/icons/escudo.png')}
+                style={styles.gameButtonIcon}
                 resizeMode="contain"
               />
-              <Text
-                style={[
-                  styles.tabLabel,
-                  currentTab === EcommerceTab.PROFILE && styles.tabLabelActive
-                ]}
-              >
-                Perfil
-              </Text>
-            </TouchableOpacity>
-          </View>
+              <Text style={styles.gameButtonLabel}>Jogar</Text>
+            </View>
+          </TouchableOpacity>
+
         </View>
       )}
     </View>
