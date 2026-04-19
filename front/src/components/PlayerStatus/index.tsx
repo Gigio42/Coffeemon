@@ -179,8 +179,8 @@ export default function PlayerStatus({
               >
                 <Text style={styles.menuItemEmoji}>👤</Text>
                 <View style={styles.menuItemBody}>
-                  <Text style={styles.menuItemTitle}>Meu Perfil</Text>
-                  <Text style={styles.menuItemSub}>Informações da conta</Text>
+                  <Text style={styles.menuItemTitle}>Conta</Text>
+                  <Text style={styles.menuItemSub}>Gerenciar conta</Text>
                 </View>
                 <Text style={styles.menuItemArrow}>›</Text>
               </TouchableOpacity>

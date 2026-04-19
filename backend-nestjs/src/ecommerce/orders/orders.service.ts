@@ -129,6 +129,4 @@ export class OrdersService {
 
     return { message: 'Pedido realizado com sucesso!', orderId: savedOrder.id };
   }
-
-  /* ### Funções Auxiliares ### */
 }

@@ -34,7 +34,14 @@ export default function App() {
   // App começa no ecommerce — login só é necessário para o jogo
   const [currentScreen, setCurrentScreen] = useState<Screen>(Screen.ECOMMERCE);
 
-  const [authData, setAuthData] = useState<{ token: string; playerId: number; userId: number } | null>(null);
+  const [authData, setAuthData] = useState<{ token: string; playerId: number; userId: number; isGuest?: boolean } | null>(null);
+
+  const decodeIsGuest = (token: string): boolean => {
+    try {
+      const b64 = token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
+      return JSON.parse(atob(b64))?.isGuest === true;
+    } catch { return false; }
+  };
 
   const [battleData, setBattleData] = useState<{
     battleId: string;
@@ -82,7 +89,7 @@ export default function App() {
         <LoginScreen
           // Após login/registro/demo → vai direto ao jogo
           onNavigateToMatchmaking={(token, playerId, userId) => {
-            setAuthData({ token, playerId, userId });
+            setAuthData({ token, playerId, userId, isGuest: decodeIsGuest(token) });
             setCurrentScreen(Screen.MATCHMAKING);
           }}
           // Botão "← Loja" para voltar sem fazer login
@@ -102,6 +109,8 @@ export default function App() {
         <MainNavScreen
           token={authData.token}
           playerId={authData.playerId}
+          userId={authData.userId}
+          isGuest={authData.isGuest}
 
           onNavigateToLogin={() => {
             setAuthData(null);

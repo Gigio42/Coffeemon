@@ -4,7 +4,6 @@ import { Socket } from "socket.io-client";
 import { BottomNav, NavScreen } from "../../components/BottomNav";
 import { colors } from "../../theme/colors";
 import { BattleState } from "../../types";
-import { CatalogScreen } from "../Catalog";
 import { ShopScreen } from "../Shop";
 import { TeamScreen } from "../Team";
 import { SocialScreen } from "../Social";
@@ -12,6 +11,8 @@ import { SocialScreen } from "../Social";
 interface MainNavProps {
   token: string | null;
   playerId: number;
+  userId?: number;
+  isGuest?: boolean;
   onNavigateToLogin: () => void;
   onNavigateToBattle: (
     battleId: string,
@@ -35,6 +36,8 @@ const styles = StyleSheet.create({
 export const MainNavScreen: React.FC<MainNavProps> = ({
   token,
   playerId,
+  userId,
+  isGuest,
   onNavigateToLogin,
   onNavigateToBattle,
   onNavigateToEcommerce,
@@ -44,12 +47,16 @@ export const MainNavScreen: React.FC<MainNavProps> = ({
   const [introShown, setIntroShown] = useState(false);
 
   const handleNavigate = (screen: NavScreen) => {
+    if (screen === "menu") {
+      onNavigateToEcommerce();
+      return;
+    }
     setActiveScreen(screen);
   };
 
   const renderScreen = () => {
     switch (activeScreen) {
-      case "shop":
+      case "catalog":
         return <ShopScreen token={token} />;
       case "team":
         return <TeamScreen token={token} />;
@@ -64,12 +71,27 @@ export const MainNavScreen: React.FC<MainNavProps> = ({
             onIntroFinish={() => setIntroShown(true)}
           />
         );
-      case "catalog":
-        return <CatalogScreen token={token} />;
       case "social":
-        return <SocialScreen token={token} playerId={playerId} />;
+        return (
+          <SocialScreen
+            token={token}
+            playerId={playerId}
+            userId={userId}
+            isGuest={isGuest}
+            onLogout={onNavigateToLogin}
+          />
+        );
       default:
-        return <ShopScreen />;
+        return (
+          <MatchmakingScreen
+            token={token}
+            playerId={playerId}
+            onNavigateToLogin={onNavigateToLogin}
+            onNavigateToBattle={onNavigateToBattle}
+            skipIntro={introShown}
+            onIntroFinish={() => setIntroShown(true)}
+          />
+        );
     }
   };
 

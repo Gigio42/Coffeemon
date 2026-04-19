@@ -23,20 +23,26 @@ import FriendQRModal from '../../components/FriendQRModal';
 
 const COPY_ICON = require('../../../assets/iconsv2/copy.png');
 const QR_ICON = require('../../../assets/iconsv2/qr-code.png');
+const PEOPLE_ICON = require('../../../assets/iconsv2/people.png');
 
 interface SocialScreenProps {
   token: string | null;
   playerId: number;
+  userId?: number;
+  isGuest?: boolean;
+  onLogout?: () => void;
 }
 
 type SocialTab = 'friends' | 'chat';
 
 // ─── Avatar ──────────────────────────────────────────────────────────────────
 
-function AvatarPlaceholder({ username }: { username: string }) {
+function AvatarPlaceholder({ username, size = 42 }: { username: string; size?: number }) {
   return (
-    <View style={styles.avatar}>
-      <Text style={styles.avatarText}>{username.charAt(0).toUpperCase()}</Text>
+    <View style={[styles.avatar, { width: size, height: size, borderRadius: size / 2 }]}>
+      <Text style={[styles.avatarText, size > 42 && { fontSize: 24 }]}>
+        {username.charAt(0).toUpperCase()}
+      </Text>
     </View>
   );
 }
@@ -52,18 +58,13 @@ function RequestCard({
 }) {
   return (
     <View style={styles.card}>
-      <View style={{ position: 'relative' }}>
-        <AvatarPlaceholder username={request.fromUsername} />
-      </View>
+      <AvatarPlaceholder username={request.fromUsername} />
       <View style={styles.cardInfo}>
         <Text style={styles.cardUsername}>{request.fromUsername}</Text>
         <Text style={styles.cardMeta}>Quer ser seu amigo</Text>
       </View>
       <View style={styles.cardActions}>
-        <TouchableOpacity
-          style={styles.actionButton}
-          onPress={() => onAccept(request.id)}
-        >
+        <TouchableOpacity style={styles.actionButton} onPress={() => onAccept(request.id)}>
           <Text style={styles.actionButtonText}>Aceitar</Text>
         </TouchableOpacity>
       </View>
@@ -95,10 +96,7 @@ function FriendCard({
         </Text>
       </View>
       <View style={styles.cardActions}>
-        <TouchableOpacity
-          style={styles.actionButton}
-          onPress={() => onChat(friend)}
-        >
+        <TouchableOpacity style={styles.actionButton} onPress={() => onChat(friend)}>
           <Text style={styles.actionButtonText}>Chat</Text>
         </TouchableOpacity>
         <TouchableOpacity
@@ -165,7 +163,6 @@ function ChatWindow({
   const listRef = useRef<FlatList>(null);
   const isAtBottomRef = useRef(true);
 
-  // Scroll to end when new messages arrive, only if already at bottom
   useEffect(() => {
     if (messages.length > 0 && isAtBottomRef.current) {
       setTimeout(() => listRef.current?.scrollToEnd({ animated: true }), 80);
@@ -180,16 +177,14 @@ function ChatWindow({
   const handleScroll = (e: any) => {
     const { contentOffset, contentSize, layoutMeasurement } = e.nativeEvent;
     const distanceFromBottom = contentSize.height - layoutMeasurement.height - contentOffset.y;
-    const atBottom = distanceFromBottom <= SCROLL_BOTTOM_THRESHOLD;
-    isAtBottomRef.current = atBottom;
-    setShowScrollBtn(!atBottom);
+    isAtBottomRef.current = distanceFromBottom <= SCROLL_BOTTOM_THRESHOLD;
+    setShowScrollBtn(!isAtBottomRef.current);
   };
 
   const handleSend = () => {
     if (!text.trim()) return;
     onSend(text);
     setText('');
-    // After sending, scroll to bottom
     isAtBottomRef.current = true;
     setTimeout(() => listRef.current?.scrollToEnd({ animated: true }), 80);
   };
@@ -197,20 +192,10 @@ function ChatWindow({
   const renderMessage = ({ item }: { item: ChatMessage }) => {
     const isMine = item.senderId === playerId;
     return (
-      <View
-        style={[
-          styles.messageBubble,
-          isMine ? styles.messageBubbleMine : styles.messageBubbleTheirs,
-        ]}
-      >
-        <Text style={[styles.messageText, isMine && styles.messageTextMine]}>
-          {item.content}
-        </Text>
+      <View style={[styles.messageBubble, isMine ? styles.messageBubbleMine : styles.messageBubbleTheirs]}>
+        <Text style={[styles.messageText, isMine && styles.messageTextMine]}>{item.content}</Text>
         <Text style={[styles.messageTime, isMine && styles.messageTimeMine]}>
-          {new Date(item.createdAt).toLocaleTimeString('pt-BR', {
-            hour: '2-digit',
-            minute: '2-digit',
-          })}
+          {new Date(item.createdAt).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
         </Text>
       </View>
     );
@@ -221,7 +206,6 @@ function ChatWindow({
       style={styles.chatOverlay}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
-      {/* Header */}
       <View style={styles.chatHeader}>
         <TouchableOpacity style={styles.chatBackButton} onPress={onClose}>
           <Text style={styles.chatBackText}>←</Text>
@@ -229,7 +213,6 @@ function ChatWindow({
         <Text style={styles.chatHeaderUsername}>{conversation.friendUsername}</Text>
       </View>
 
-      {/* Messages */}
       <View style={{ flex: 1 }}>
         {isLoading ? (
           <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
@@ -247,21 +230,15 @@ function ChatWindow({
             onScroll={handleScroll}
             scrollEventThrottle={100}
             onContentSizeChange={() => {
-              if (isAtBottomRef.current) {
-                listRef.current?.scrollToEnd({ animated: false });
-              }
+              if (isAtBottomRef.current) listRef.current?.scrollToEnd({ animated: false });
             }}
             ListEmptyComponent={
               <View style={styles.emptyState}>
-                <Text style={styles.emptyStateText}>
-                  Nenhuma mensagem ainda.{'\n'}Diga olá!
-                </Text>
+                <Text style={styles.emptyStateText}>Nenhuma mensagem ainda.{'\n'}Diga olá!</Text>
               </View>
             }
           />
         )}
-
-        {/* Scroll-to-bottom button */}
         {showScrollBtn && (
           <TouchableOpacity style={styles.scrollToBottomBtn} onPress={scrollToBottom}>
             <Text style={styles.scrollToBottomText}>↓</Text>
@@ -269,7 +246,6 @@ function ChatWindow({
         )}
       </View>
 
-      {/* Input */}
       <View style={styles.chatInputRow}>
         <TextInput
           style={styles.chatInput}
@@ -293,14 +269,35 @@ function ChatWindow({
 
 function FriendsTab({
   social,
+  isGuest,
   onOpenChat,
   onOpenQR,
+  onCreateAccount,
 }: {
   social: ReturnType<typeof useSocial>;
+  isGuest?: boolean;
   onOpenChat: (friend: Friend) => void;
   onOpenQR: () => void;
+  onCreateAccount: () => void;
 }) {
   const [uid, setUid] = useState('');
+
+  if (isGuest) {
+    return (
+      <ScrollView contentContainerStyle={styles.scrollContent}>
+        <View style={styles.guestBanner}>
+          <Image source={PEOPLE_ICON} style={styles.guestBannerIcon} />
+          <Text style={styles.guestBannerTitle}>Faça parte da comunidade</Text>
+          <Text style={styles.guestBannerSubtitle}>
+            Crie uma conta gratuita para adicionar amigos, trocar mensagens e participar das batalhas em grupo.
+          </Text>
+          <TouchableOpacity style={styles.guestBannerButton} onPress={onCreateAccount}>
+            <Text style={styles.guestBannerButtonText}>Criar conta gratuita</Text>
+          </TouchableOpacity>
+        </View>
+      </ScrollView>
+    );
+  }
 
   const handleAdd = () => {
     if (!uid.trim()) return;
@@ -310,7 +307,6 @@ function FriendsTab({
 
   return (
     <ScrollView contentContainerStyle={styles.scrollContent}>
-      {/* Add friend */}
       <View style={styles.addFriendRow}>
         <TextInput
           style={styles.addFriendInput}
@@ -329,33 +325,21 @@ function FriendsTab({
         </TouchableOpacity>
       </View>
 
-      {/* Pending requests */}
       {social.pendingRequests.length > 0 && (
         <>
-          <Text style={styles.sectionTitle}>
-            Pedidos pendentes ({social.pendingRequests.length})
-          </Text>
+          <Text style={styles.sectionTitle}>Pedidos pendentes ({social.pendingRequests.length})</Text>
           {social.pendingRequests.map((req) => (
-            <RequestCard
-              key={req.id}
-              request={req}
-              onAccept={social.acceptRequest}
-            />
+            <RequestCard key={req.id} request={req} onAccept={social.acceptRequest} />
           ))}
         </>
       )}
 
-      {/* Friends list */}
-      <Text style={styles.sectionTitle}>
-        Amigos ({social.friends.length})
-      </Text>
+      <Text style={styles.sectionTitle}>Amigos ({social.friends.length})</Text>
       {social.isLoading ? (
         <ActivityIndicator color={theme.colors.accent.primary} />
       ) : social.friends.length === 0 ? (
         <View style={styles.emptyState}>
-          <Text style={styles.emptyStateText}>
-            Você ainda não tem amigos.{'\n'}Adicione alguém acima!
-          </Text>
+          <Text style={styles.emptyStateText}>Você ainda não tem amigos.{'\n'}Adicione alguém acima!</Text>
         </View>
       ) : (
         social.friends.map((friend) => (
@@ -373,11 +357,7 @@ function FriendsTab({
 
 // ─── Chat tab ─────────────────────────────────────────────────────────────────
 
-function ChatTab({
-  chat,
-}: {
-  chat: ReturnType<typeof useChat>;
-}) {
+function ChatTab({ chat }: { chat: ReturnType<typeof useChat> }) {
   return (
     <ScrollView contentContainerStyle={styles.scrollContent}>
       <Text style={styles.sectionTitle}>Conversas</Text>
@@ -389,11 +369,7 @@ function ChatTab({
         </View>
       ) : (
         chat.conversations.map((conv) => (
-          <ConversationCard
-            key={conv.id}
-            conversation={conv}
-            onOpen={chat.openConversation}
-          />
+          <ConversationCard key={conv.id} conversation={conv} onOpen={chat.openConversation} />
         ))
       )}
     </ScrollView>
@@ -402,7 +378,13 @@ function ChatTab({
 
 // ─── Main Social Screen ───────────────────────────────────────────────────────
 
-export const SocialScreen: React.FC<SocialScreenProps> = ({ token, playerId }) => {
+export const SocialScreen: React.FC<SocialScreenProps> = ({
+  token,
+  playerId,
+  userId,
+  isGuest,
+  onLogout,
+}) => {
   const [activeTab, setActiveTab] = useState<SocialTab>('friends');
   const [qrModalVisible, setQrModalVisible] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -429,7 +411,6 @@ export const SocialScreen: React.FC<SocialScreenProps> = ({ token, playerId }) =
     setTimeout(() => setCopied(false), 2000);
   };
 
-  // Open chat from friend card
   const handleOpenChatFromFriend = async (friend: Friend) => {
     const existing = chat.conversations.find((c) => c.friendId === friend.playerId);
     if (existing) {
@@ -450,18 +431,20 @@ export const SocialScreen: React.FC<SocialScreenProps> = ({ token, playerId }) =
       chat.openConversation(newConv);
       setActiveTab('chat');
     } catch {
-      // silent — chat will open but show empty
+      // silencioso
     }
   };
+
+  const tabs: { key: SocialTab; label: string }[] = [
+    { key: 'friends', label: 'Amigos' },
+    { key: 'chat',    label: 'Chat' },
+  ];
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       {/* Header */}
       <View style={styles.header}>
-        {/* Linha 1: título */}
         <Text style={styles.headerTitle}>Social</Text>
-
-        {/* Linha 2: UID sempre visível */}
         <View style={styles.uidRow}>
           <Text style={styles.uidLabel}>UID</Text>
           <View style={styles.uidChip}>
@@ -475,55 +458,39 @@ export const SocialScreen: React.FC<SocialScreenProps> = ({ token, playerId }) =
             activeOpacity={0.7}
             disabled={!social.myUid}
           >
-            {copied ? (
-              <Text style={styles.copiedText}>✓</Text>
-            ) : (
-              <Image source={COPY_ICON} style={styles.copyIcon} />
-            )}
+            {copied
+              ? <Text style={styles.copiedText}>✓</Text>
+              : <Image source={COPY_ICON} style={styles.copyIcon} />}
           </TouchableOpacity>
         </View>
       </View>
 
       {/* Sub-tabs */}
       <View style={styles.tabs}>
-        <TouchableOpacity
-          style={[styles.tabButton, activeTab === 'friends' && styles.tabButtonActive]}
-          onPress={() => setActiveTab('friends')}
-        >
-          <Text
-            style={[
-              styles.tabButtonText,
-              activeTab === 'friends' && styles.tabButtonTextActive,
-            ]}
+        {tabs.map((tab) => (
+          <TouchableOpacity
+            key={tab.key}
+            style={[styles.tabButton, activeTab === tab.key && styles.tabButtonActive]}
+            onPress={() => setActiveTab(tab.key)}
           >
-            Amigos
-          </Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.tabButton, activeTab === 'chat' && styles.tabButtonActive]}
-          onPress={() => setActiveTab('chat')}
-        >
-          <Text
-            style={[
-              styles.tabButtonText,
-              activeTab === 'chat' && styles.tabButtonTextActive,
-            ]}
-          >
-            Chat
-          </Text>
-        </TouchableOpacity>
+            <Text style={[styles.tabButtonText, activeTab === tab.key && styles.tabButtonTextActive]}>
+              {tab.label}
+            </Text>
+          </TouchableOpacity>
+        ))}
       </View>
 
       {/* Content */}
-      {activeTab === 'friends' ? (
+      {activeTab === 'friends' && (
         <FriendsTab
           social={social}
+          isGuest={isGuest}
           onOpenChat={handleOpenChatFromFriend}
           onOpenQR={() => setQrModalVisible(true)}
+          onCreateAccount={onLogout ?? (() => {})}
         />
-      ) : (
-        <ChatTab chat={chat} />
       )}
+      {activeTab === 'chat' && <ChatTab chat={chat} />}
 
       {/* Chat window overlay */}
       {chat.activeConversation && (
@@ -543,9 +510,7 @@ export const SocialScreen: React.FC<SocialScreenProps> = ({ token, playerId }) =
           visible={qrModalVisible}
           myUid={social.myUid}
           onClose={() => setQrModalVisible(false)}
-          onAddByUid={(uid) => {
-            social.addFriend(uid);
-          }}
+          onAddByUid={(uid) => social.addFriend(uid)}
         />
       ) : null}
     </SafeAreaView>

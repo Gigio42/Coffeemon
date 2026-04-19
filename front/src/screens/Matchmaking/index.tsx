@@ -23,7 +23,7 @@ import PlayerStatus from '../../components/PlayerStatus';
 import { useMatchmaking } from '../../hooks/useMatchmaking';
 import { useCoffeemons } from '../../hooks/useCoffeemons';
 import { PlayerCoffeemon } from '../../api/coffeemonService';
-import { giveInitialItems, getPlayerItems, getItemIcon, getItemColor, Item } from '../../api/itemsService';
+import { getPlayerItems, getItemIcon, getItemColor, Item } from '../../api/itemsService';
 import { prefetchPalette, useDynamicPalette, type Palette } from '../../utils/colorPalette';
 import { getCoffeemonImage } from '../../../assets/coffeemons';
 
@@ -207,7 +207,6 @@ export default function MatchmakingScreen({
   const [sheetVisible, setSheetVisible] = useState(false);
   const [activeCoffeemon, setActiveCoffeemon] = useState<PlayerCoffeemon | null>(null);
   const [palettesReady, setPalettesReady] = useState(false);
-  const [debugMenuVisible, setDebugMenuVisible] = useState(false);
   const [items, setItems] = useState<Item[]>([]);
   const [showContent, setShowContent] = useState(skipIntro);
   const [progress, setProgress] = useState(skipIntro ? 100 : 0);
@@ -229,8 +228,6 @@ export default function MatchmakingScreen({
     fetchCoffeemons,
     toggleParty,
     swapPartyMembers,
-    giveAllCoffeemons,
-    addMissingMoves,
     initialized: coffeemonsInitialized,
   } = useCoffeemons({
     token,
@@ -447,41 +444,6 @@ export default function MatchmakingScreen({
   const handleActiveCoffeemonChange = useCallback((coffeemon: PlayerCoffeemon | null) => {
     setActiveCoffeemon(coffeemon);
   }, []);
-
-  const handleGiveAllCoffeemonsDebug = useCallback(async () => {
-    try {
-      await giveAllCoffeemons();
-      Alert.alert('Success', 'All Coffeemons added to your collection!');
-      setDebugMenuVisible(false);
-    } catch (error) {
-      console.error('Failed to give all coffeemons:', error);
-      Alert.alert('Error', 'Failed to give coffeemons. Please try again.');
-    }
-  }, [giveAllCoffeemons]);
-
-  const handleAddMissingMovesDebug = useCallback(async () => {
-    try {
-      await addMissingMoves();
-      setDebugMenuVisible(false);
-    } catch (error) {
-      console.error('Failed to add missing moves:', error);
-      Alert.alert('Error', 'Failed to add moves. Please try again.');
-    }
-  }, [addMissingMoves]);
-
-  const handleGiveItems = useCallback(async () => {
-    try {
-      await giveInitialItems(token);
-      // Recarregar itens após adicionar
-      const updatedItems = await getPlayerItems(token);
-      setItems(updatedItems);
-      Alert.alert('Success', 'Items added to your inventory!');
-      setDebugMenuVisible(false);
-    } catch (error) {
-      console.error('Failed to give items:', error);
-      Alert.alert('Error', 'Failed to give items. Please try again.');
-    }
-  }, [token]);
 
   // Fallback palette based on Coffeemon's primary type
   const fallbackPalette = useMemo(() => {
@@ -889,37 +851,6 @@ export default function MatchmakingScreen({
               >
                 <Text style={styles.floatingBackButtonText}>←</Text>
               </TouchableOpacity>
-            )}
-
-            {/* Debug Menu */}
-            <TouchableOpacity
-              style={styles.debugMenuButton}
-              onPress={() => setDebugMenuVisible(!debugMenuVisible)}
-            >
-              <Text style={styles.debugMenuIcon}>⋮</Text>
-            </TouchableOpacity>
-
-            {debugMenuVisible && (
-              <View style={styles.debugMenuPopup}>
-                <TouchableOpacity
-                  style={styles.debugMenuItem}
-                  onPress={handleGiveAllCoffeemonsDebug}
-                >
-                  <Text style={styles.debugMenuItemText}>Give All Coffeemons</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={styles.debugMenuItem}
-                  onPress={handleAddMissingMovesDebug}
-                >
-                  <Text style={styles.debugMenuItemText}>Add Missing Moves</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={[styles.debugMenuItem, styles.debugMenuItemLast]}
-                  onPress={handleGiveItems}
-                >
-                  <Text style={styles.debugMenuItemText}>Give Items</Text>
-                </TouchableOpacity>
-              </View>
             )}
 
             {/* Status removido */}

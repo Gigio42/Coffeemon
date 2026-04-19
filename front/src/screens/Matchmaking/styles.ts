@@ -213,68 +213,6 @@ export const styles = StyleSheet.create({
     fontWeight: typography.weight.bold,
   },
 
-  // Debug Menu
-  debugMenuButton: {
-    position: 'absolute',
-    top: statusBarHeight + spacing.lg,
-    right: spacing.lg,
-    zIndex: 1000,
-    width: 44,
-    height: 44,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#FFFFFF',
-    borderRadius: radius.full,
-    borderWidth: 1,
-    borderColor: '#E5E7EB',
-    shadowColor: '#000000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 4,
-  },
-
-  debugMenuIcon: {
-    fontSize: 20,
-    color: '#1A1A1A',
-    fontWeight: typography.weight.bold,
-  },
-
-  debugMenuPopup: {
-    position: 'absolute',
-    top: statusBarHeight + spacing.lg + 50,
-    right: spacing.lg,
-    zIndex: 1001,
-    backgroundColor: '#FFFFFF',
-    borderRadius: radius.xl,
-    borderWidth: 1,
-    borderColor: '#E5E7EB',
-    minWidth: 200,
-    shadowColor: '#000000',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.15,
-    shadowRadius: 16,
-    elevation: 12,
-    overflow: 'hidden',
-  },
-
-  debugMenuItem: {
-    paddingVertical: spacing.md,
-    paddingHorizontal: spacing.lg,
-    borderBottomWidth: 1,
-    borderBottomColor: '#F3F4F6',
-  },
-
-  debugMenuItemLast: {
-    borderBottomWidth: 0,
-  },
-
-  debugMenuItemText: {
-    fontSize: typography.size.sm,
-    color: '#1A1A1A',
-    fontWeight: typography.weight.medium,
-  },
-  
   // Background & Scroll
   backgroundContainer: {
     ...StyleSheet.absoluteFillObject,

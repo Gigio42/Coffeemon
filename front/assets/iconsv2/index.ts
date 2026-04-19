@@ -17,6 +17,11 @@ export const battleIcons = {
   qrCode: require('./qr-code.png'),
   settings: require('./settings.png'),
   chat: require('./chat.png'),
+  menu: require('./menu.png'),
+  catalog: require('./card.png'),
+  paperPlane: require('./paper-plane.png'),
+  back: require('./back.png'),
+  globalNetwork: require('./global-network.png'),
 };
 
 export type BattleIconName = keyof typeof battleIcons;
