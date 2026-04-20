@@ -63,8 +63,8 @@ export const styles = StyleSheet.create({
   deckSlotContainer: {
     flex: 1,
     maxWidth: (width - (HORIZONTAL_PADDING * 2) - (GRID_GAP * 2)) / 3,
-    minHeight: 158,
-    maxHeight: 158,
+    minHeight: 152,
+    maxHeight: 152,
     justifyContent: 'flex-start',
     overflow: 'hidden',
     borderRadius: theme.radius.lg,

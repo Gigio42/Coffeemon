@@ -23,6 +23,7 @@ import { getVariantForStatusEffects } from '../../utils/statusEffects';
 import { getTypeColorScheme } from '../../theme/colors';
 import { useTheme } from '../../theme/ThemeContext';
 import MoveCustomizer from '../MoveCustomizer';
+import TypeIcon from '../TypeIcon';
 
 const LIMONETO_BACKGROUND = require('../../../assets/backgrounds/limonetoback.png');
 const JASMINELLE_BACKGROUND = require('../../../assets/backgrounds/jasminiback.png');
@@ -39,22 +40,6 @@ const COFFEEMON_BACKGROUNDS: Record<string, ImageSourcePropType> = {
   emberly: EMBERLY_BACKGROUND,
   gingerlynn: GINGERLYNN_BACKGROUND,
   almondino: ALMONDINO_BACKGROUND,
-};
-
-const getTypeIcon = (type?: string): string => {
-  const icons: Record<string, string> = {
-    roasted: '🔥',
-    sweet: '🍬',
-    bitter: '☕',
-    milky: '🥛',
-    iced: '❄️',
-    nutty: '🌰',
-    fruity: '🍎',
-    spicy: '🌶️',
-    sour: '🍋',
-    floral: '🌸',
-  };
-  return icons[type || 'roasted'] || '☕';
 };
 
 interface CoffeemonDetailsModalProps {
@@ -417,7 +402,12 @@ export default function CoffeemonDetailsModal({
                             
                             <View style={styles.heroOverlay}>
                                 <View style={styles.typePill}>
-                                    <Text style={styles.typeIcon}>{getTypeIcon(coffeemon.coffeemon.types[0])}</Text>
+                                    <TypeIcon
+                                        type={coffeemon.coffeemon.types[0]}
+                                        size={16}
+                                        strokeWidth={2.4}
+                                        style={styles.typeIcon}
+                                    />
                                     <Text style={styles.typeName}>{coffeemon.coffeemon.types[0]}</Text>
                                 </View>
                                 <View style={styles.levelPill}>

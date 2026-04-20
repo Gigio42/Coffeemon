@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, Image, TouchableOpacity, StyleSheet, type ImageSourcePropType } from 'react-native';
+import { View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { PlayerCoffeemon } from '../../api/coffeemonService';
 import { getCoffeemonImage } from '../../../assets/coffeemons';
@@ -7,6 +7,7 @@ import { getVariantForStatusEffects } from '../../utils/statusEffects';
 import { getTypeColorScheme } from '../../theme/colors';
 import { useTheme } from '../../theme/ThemeContext';
 import { theme as staticTheme } from '../../theme/theme';
+import TypeIcon from '../TypeIcon';
 
 interface CoffeemonCardProps {
   coffeemon: PlayerCoffeemon;
@@ -19,19 +20,6 @@ interface CoffeemonCardProps {
   showStats?: boolean;
   showPartyIndicator?: boolean;
 }
-
-const getTypeIcon = (type?: string): ImageSourcePropType => {
-  const icons: Record<string, ImageSourcePropType> = {
-    roasted: require('../../../assets/iconsv2/notes/roasted.png'),
-    sweet: require('../../../assets/iconsv2/notes/sweet.png'),
-    fruity: require('../../../assets/iconsv2/notes/fruity.png'),
-    nutty: require('../../../assets/iconsv2/notes/nutty.png'),
-    sour: require('../../../assets/iconsv2/notes/sour.png'),
-    floral: require('../../../assets/iconsv2/notes/floral.png'),
-    spicy: require('../../../assets/iconsv2/notes/roasted.png'),
-  };
-  return icons[type || 'roasted'] || icons.roasted;
-};
 
 export default function CoffeemonCard({
   coffeemon,
@@ -110,7 +98,12 @@ export default function CoffeemonCard({
         {/* Header: Minimalist Type & Level */}
         <View style={[styles.header, isSmall && styles.headerSmall]}>
           <View style={[styles.typePill, isSmall && styles.typePillSmall]}>
-            <Image source={getTypeIcon(primaryType)} style={[styles.typeIcon, isSmall && styles.typeIconSmall]} resizeMode="contain" />
+            <TypeIcon
+              type={primaryType}
+              size={isSmall ? 15 : 15}
+              strokeWidth={2}
+              style={[styles.typeIcon, isSmall && styles.typeIconSmall]}
+            />
             {!isSmall && (
               <Text style={[styles.typeName, { color: typeColors.dark }]}>
                 {primaryType.charAt(0).toUpperCase() + primaryType.slice(1)}
@@ -237,28 +230,29 @@ const styles = StyleSheet.create({
   typePill: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 2,
-    paddingVertical: 0,
-    borderRadius: 0,
-    gap: 6,
-    minHeight: 34,
+    paddingHorizontal: 7,
+    paddingVertical: 2,
+    borderRadius: 12,
+    gap: 5,
+    minHeight: 30,
+    backgroundColor: 'rgba(118,126,138,0.18)',
   },
   typePillSmall: {
-    paddingHorizontal: 0,
-    paddingVertical: 0,
-    borderRadius: 0,
-    minHeight: 28,
+    paddingHorizontal: 6,
+    paddingVertical: 1,
+    borderRadius: 10,
+    minHeight: 26,
     gap: 0,
   },
   typeIcon: {
-    width: 32,
-    height: 32,
-    marginTop: 6,
+    width: 22,
+    height: 22,
+    marginTop: 3,
   },
   typeIconSmall: {
-    width: 28,
-    height: 28,
-    marginTop: 5,
+    width: 20,
+    height: 20,
+    marginTop: 2,
   },
   typeName: {
     fontSize: 10,
