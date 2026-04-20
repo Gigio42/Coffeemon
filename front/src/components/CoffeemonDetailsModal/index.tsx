@@ -175,15 +175,6 @@ export default function CoffeemonDetailsModal({
       case 'sobre':
         return (
           <View style={[styles.section, { flex: 1 }]}>
-            <View style={styles.aboutHeader}>
-              <Text style={[styles.sectionTitle, { color: typeColors.primary }]}>
-                {coffeemon.coffeemon.name}
-              </Text>
-              <View style={[styles.typeBadge, { backgroundColor: typeColors.primary }]}>
-                 <Text style={styles.typeBadgeText}>{coffeemon.coffeemon.types.join(' / ')}</Text>
-              </View>
-            </View>
-            
             {/* Description Section */}
             {coffeemon.coffeemon.description && (
               <View style={styles.descriptionSection}>
@@ -257,27 +248,6 @@ export default function CoffeemonDetailsModal({
               </View>
             </View>
             
-            {onToggleParty && (
-              <View style={{ marginTop: 'auto', paddingTop: 20 }}>
-                <TouchableOpacity
-                  style={[styles.actionButton, { backgroundColor: typeColors.primary, shadowColor: typeColors.primary }]}
-                  onPress={async () => {
-                    if (onToggleParty) {
-                      const result = await onToggleParty(coffeemon);
-                      if (result === false && !coffeemon.isInParty) {
-                        setShowSwapSelection(true);
-                      } else {
-                        onClose();
-                      }
-                    }
-                  }}
-                >
-                  <Text style={styles.actionButtonText}>
-                    {coffeemon.isInParty ? 'REMOVER DO TIME' : 'ADICIONAR AO TIME'}
-                  </Text>
-                </TouchableOpacity>
-              </View>
-            )}
           </View>
         );
     }
@@ -442,16 +412,6 @@ export default function CoffeemonDetailsModal({
                             </View>
                         </View>
                         
-                        <LinearGradient
-                            colors={[
-                                typeColors.accentGradient[1] + '00',
-                                typeColors.gradient[0] + '80',
-                                typeColors.gradient[1] + 'CC'
-                            ]}
-                            locations={[0, 0.5, 1]}
-                            style={styles.transitionGradient}
-                        />
-
                         <View style={styles.contentArea}>
                             <LinearGradient
                                 colors={typeColors.gradient as any}
@@ -473,8 +433,6 @@ export default function CoffeemonDetailsModal({
                                 start={{ x: 1, y: 0 }}
                                 end={{ x: 0, y: 1 }}
                             />
-                            
-                            <View style={styles.contentInnerGlow} />
                             
                             {/* Tabs */}
                             <View style={styles.tabsContainer}>

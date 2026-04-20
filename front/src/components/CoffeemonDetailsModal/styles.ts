@@ -92,7 +92,7 @@ export const styles = StyleSheet.create({
     justifyContent: 'center',
     minHeight: 320,
     paddingTop: 60,
-    paddingBottom: 20,
+    paddingBottom: 0,
     position: 'relative',
   },
   heroVignette: {
@@ -103,15 +103,6 @@ export const styles = StyleSheet.create({
     bottom: 0,
     backgroundColor: 'rgba(0, 0, 0, 0.08)',
     opacity: 0.6,
-  },
-  transitionGradient: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    height: 150,
-    zIndex: 100,
-    pointerEvents: 'none',
   },
   backgroundImage: {
     position: 'absolute',
@@ -132,8 +123,8 @@ export const styles = StyleSheet.create({
   nameSection: {
     width: '100%',
     paddingHorizontal: 24,
-    paddingTop: 20,
-    paddingBottom: 12,
+    paddingTop: 0,
+    paddingBottom: 20,
     zIndex: 6,
   },
   nameContainer: {
@@ -151,7 +142,7 @@ export const styles = StyleSheet.create({
   },
   contentArea: {
     flex: 1,
-    paddingTop: 24,
+    paddingTop: 10,
     paddingHorizontal: 24,
   },
   contentGradientTop: {
@@ -169,18 +160,6 @@ export const styles = StyleSheet.create({
     width: 200,
     height: 200,
     opacity: 0.2,
-  },
-  contentInnerGlow: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    height: 4,
-    backgroundColor: 'rgba(255, 255, 255, 0.6)',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
   },
   tabsContainer: {
     flexDirection: 'row',
@@ -398,18 +377,6 @@ export const styles = StyleSheet.create({
   physicalValue: {
     fontSize: 16,
     fontWeight: '700',
-  },
-  actionButton: {
-    width: '100%',
-    paddingVertical: 16,
-    borderRadius: 16,
-    alignItems: 'center',
-  },
-  actionButtonText: {
-    color: '#FFF',
-    fontSize: 14,
-    fontWeight: '700',
-    letterSpacing: 0.5,
   },
   statRow: {
     flexDirection: 'row',
