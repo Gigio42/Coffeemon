@@ -381,10 +381,14 @@ export const styles = StyleSheet.create({
   statRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 16,
+    marginBottom: 12,
+    borderRadius: 12,
+    borderWidth: 1,
+    paddingVertical: 10,
+    paddingHorizontal: 10,
   },
   statLabel: {
-    width: 45,
+    width: 40,
     fontSize: 11,
     fontWeight: '700',
     textTransform: 'uppercase',
@@ -392,15 +396,16 @@ export const styles = StyleSheet.create({
   },
   statBarContainer: {
     flex: 1,
-    height: 8,
-    borderRadius: 4,
-    marginHorizontal: 12,
+    height: 10,
+    borderRadius: 999,
+    marginHorizontal: 10,
     overflow: 'hidden',
     backgroundColor: 'rgba(0,0,0,0.06)',
   },
   statBar: {
     height: '100%',
-    borderRadius: 4,
+    borderRadius: 999,
+    overflow: 'hidden',
   },
   statValue: {
     width: 35,
@@ -415,6 +420,40 @@ export const styles = StyleSheet.create({
     paddingTop: 16,
     borderTopWidth: 1,
     borderTopColor: 'rgba(0,0,0,0.06)',
+  },
+  statsCard: {
+    borderRadius: 16,
+    borderWidth: 1,
+    padding: 12,
+    marginBottom: 14,
+  },
+  xpCard: {
+    borderRadius: 16,
+    borderWidth: 1,
+    padding: 12,
+  },
+  xpHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  xpBarContainer: {
+    width: '100%',
+    height: 10,
+    borderRadius: 999,
+    overflow: 'hidden',
+  },
+  xpBarFill: {
+    height: '100%',
+    borderRadius: 999,
+    overflow: 'hidden',
+  },
+  xpSubtext: {
+    marginTop: 8,
+    fontSize: 12,
+    fontWeight: '600',
+    textAlign: 'right',
   },
   xpLabel: {
     fontSize: 14,

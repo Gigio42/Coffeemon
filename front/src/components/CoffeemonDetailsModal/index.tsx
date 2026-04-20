@@ -3,6 +3,8 @@ import {
   Modal,
   View,
   Text,
+  Animated,
+  Easing,
   TouchableWithoutFeedback,
   Platform,
   useWindowDimensions,
@@ -68,6 +70,7 @@ export default function CoffeemonDetailsModal({
   const [activeTab, setActiveTab] = useState<'sobre' | 'stats' | 'golpes'>('stats');
   const [showSwapSelection, setShowSwapSelection] = useState(false);
   const [showMoveCustomizer, setShowMoveCustomizer] = useState(false);
+  const statsAnim = React.useRef(new Animated.Value(0)).current;
 
   React.useEffect(() => {
     if (visible) {
@@ -76,6 +79,18 @@ export default function CoffeemonDetailsModal({
       setActiveTab('sobre');
     }
   }, [visible, coffeemon]);
+
+  React.useEffect(() => {
+    if (visible && activeTab === 'stats' && !showMoveCustomizer && !showSwapSelection) {
+      statsAnim.setValue(0);
+      Animated.timing(statsAnim, {
+        toValue: 1,
+        duration: 700,
+        easing: Easing.out(Easing.cubic),
+        useNativeDriver: false,
+      }).start();
+    }
+  }, [activeTab, showMoveCustomizer, showSwapSelection, statsAnim, visible]);
 
   if (!coffeemon) return null;
 
@@ -92,51 +107,89 @@ export default function CoffeemonDetailsModal({
   const modalWidth = Math.min(viewportWidth * 0.9, 380);
   const modalHeight = Math.min(viewportHeight * 0.85, 680);
 
+  const toPositiveNumber = (value: unknown, fallback: number) => {
+    const parsed = Number(value);
+    return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
+  };
+
   const stats = {
-    hp: coffeemon.hp || coffeemon.coffeemon.baseHp || 100,
-    attack: coffeemon.attack || coffeemon.coffeemon.baseAttack || 50,
-    defense: coffeemon.defense || coffeemon.coffeemon.baseDefense || 50,
-    speed: coffeemon.coffeemon.baseSpeed || 50,
+    hp: toPositiveNumber(coffeemon.hp, toPositiveNumber(coffeemon.coffeemon.baseHp, 100)),
+    attack: toPositiveNumber(coffeemon.attack, toPositiveNumber(coffeemon.coffeemon.baseAttack, 50)),
+    defense: toPositiveNumber(coffeemon.defense, toPositiveNumber(coffeemon.coffeemon.baseDefense, 50)),
+    speed: toPositiveNumber(coffeemon.coffeemon.baseSpeed, 50),
   };
 
   const maxStat = Math.max(
-    coffeemon.coffeemon.baseHp || 100,
-    coffeemon.coffeemon.baseAttack || 50,
-    coffeemon.coffeemon.baseDefense || 50,
-    coffeemon.coffeemon.baseSpeed || 50
+    stats.hp,
+    stats.attack,
+    stats.defense,
+    stats.speed,
+    100
   );
 
-  const renderStatBar = (label: string, value: number, color: string) => (
-    <View style={styles.statRow}>
-      <Text style={[styles.statLabel, textSecondary]}>{label}</Text>
-      <View style={[styles.statBarContainer, { backgroundColor: 'rgba(0,0,0,0.05)' }]}>
-        <View 
-          style={[
-            styles.statBar, 
-            { 
-              width: `${Math.min((value / maxStat) * 100, 100)}%`, 
-              backgroundColor: color 
-            }
-          ]} 
-        />
+  const currentLevel = Math.max(1, Math.floor(toPositiveNumber(coffeemon.level, 1)));
+  const totalXp = Math.max(0, Math.floor(Number(coffeemon.experience) || 0));
+  const xpInLevel = totalXp % 100;
+  const xpPercent = Math.max(0, Math.min(100, (xpInLevel / 100) * 100));
+
+  const renderStatBar = (label: string, value: number, colorStart: string, colorEnd: string) => {
+    const basePercent = Math.min((value / maxStat) * 100, 100);
+    const finalPercent = value > 0 ? Math.max(8, basePercent) : 0;
+    const animatedWidth = statsAnim.interpolate({
+      inputRange: [0, 1],
+      outputRange: ['0%', `${finalPercent}%`],
+    });
+
+    return (
+      <View style={[styles.statRow, { backgroundColor: 'rgba(255,255,255,0.55)', borderColor: 'rgba(0,0,0,0.06)' }]}>
+        <Text style={[styles.statLabel, textSecondary]}>{label}</Text>
+        <View style={[styles.statBarContainer, { backgroundColor: 'rgba(0,0,0,0.08)' }]}>
+          <Animated.View style={[styles.statBar, { width: animatedWidth }]}>
+            <LinearGradient
+              colors={[colorStart, colorEnd]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              style={StyleSheet.absoluteFillObject}
+            />
+          </Animated.View>
+        </View>
+        <Text style={[styles.statValue, textPrimary]}>{Math.round(value)}</Text>
       </View>
-      <Text style={[styles.statValue, textPrimary]}>{value}</Text>
-    </View>
-  );
+    );
+  };
 
   const renderTabContent = () => {
     switch (activeTab) {
       case 'stats':
+        const xpAnimatedWidth = statsAnim.interpolate({
+          inputRange: [0, 1],
+          outputRange: ['0%', `${xpPercent}%`],
+        });
         return (
           <View style={styles.section}>
-            {renderStatBar('HP', stats.hp, '#FF5959')}
-            {renderStatBar('ATQ', stats.attack, '#F5AC78')}
-            {renderStatBar('DEF', stats.defense, '#FAE078')}
-            {renderStatBar('VEL', stats.speed, '#9DB7F5')}
+            <View style={[styles.statsCard, { backgroundColor: 'rgba(255,255,255,0.35)', borderColor: 'rgba(0,0,0,0.06)' }]}>
+              {renderStatBar('HP', stats.hp, '#FF6B6B', '#FF8E53')}
+              {renderStatBar('ATQ', stats.attack, '#F6AD55', '#FBD38D')}
+              {renderStatBar('DEF', stats.defense, '#4FD1C5', '#81E6D9')}
+              {renderStatBar('VEL', stats.speed, '#6B8CFF', '#9F7AEA')}
+            </View>
             
-            <View style={[styles.xpContainer, { borderTopColor: 'rgba(0,0,0,0.05)' }]}>
-              <Text style={[styles.xpLabel, textSecondary]}>Experiência</Text>
-              <Text style={[styles.xpValue, textPrimary]}>{coffeemon.experience} XP</Text>
+            <View style={[styles.xpCard, { backgroundColor: 'rgba(255,255,255,0.55)', borderColor: 'rgba(0,0,0,0.06)' }]}>
+              <View style={styles.xpHeader}>
+                <Text style={[styles.xpLabel, textSecondary]}>Experiência</Text>
+                <Text style={[styles.xpValue, textPrimary]}>{xpInLevel}/100 (Lv {currentLevel})</Text>
+              </View>
+              <View style={[styles.xpBarContainer, { backgroundColor: 'rgba(0,0,0,0.08)' }]}>
+                <Animated.View style={[styles.xpBarFill, { width: xpAnimatedWidth }]}>
+                  <LinearGradient
+                    colors={['#22C55E', '#16A34A']}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 0 }}
+                    style={StyleSheet.absoluteFillObject}
+                  />
+                </Animated.View>
+              </View>
+              <Text style={[styles.xpSubtext, textTertiary]}>{totalXp} XP total</Text>
             </View>
           </View>
         );
