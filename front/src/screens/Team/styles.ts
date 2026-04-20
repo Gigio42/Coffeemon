@@ -45,11 +45,11 @@ export const styles = StyleSheet.create({
   
   // Deck Section - Premium Look
   deckSection: {
-    paddingTop: theme.spacing.md,
-    paddingBottom: theme.spacing.lg,
+    paddingTop: theme.spacing.sm,
+    paddingBottom: theme.spacing.md,
     paddingHorizontal: HORIZONTAL_PADDING,
     backgroundColor: theme.colors.surface.base,
-    marginBottom: theme.spacing.md,
+    marginBottom: theme.spacing.sm,
     ...theme.shadows.sm,
     zIndex: 10,
     overflow: 'hidden',
@@ -63,8 +63,8 @@ export const styles = StyleSheet.create({
   deckSlotContainer: {
     flex: 1,
     maxWidth: (width - (HORIZONTAL_PADDING * 2) - (GRID_GAP * 2)) / 3,
-    minHeight: 172,
-    maxHeight: 172,
+    minHeight: 158,
+    maxHeight: 158,
     justifyContent: 'flex-start',
     overflow: 'hidden',
     borderRadius: theme.radius.lg,

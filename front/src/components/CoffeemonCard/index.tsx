@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, Image, TouchableOpacity, StyleSheet, type ImageSourcePropType } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { PlayerCoffeemon } from '../../api/coffeemonService';
 import { getCoffeemonImage } from '../../../assets/coffeemons';
@@ -20,20 +20,17 @@ interface CoffeemonCardProps {
   showPartyIndicator?: boolean;
 }
 
-const getTypeIcon = (type?: string): string => {
-  const icons: Record<string, string> = {
-    roasted: '🔥',
-    sweet: '🍬',
-    bitter: '☕',
-    milky: '🥛',
-    iced: '❄️',
-    nutty: '🌰',
-    fruity: '🍎',
-    spicy: '🌶️',
-    sour: '🍋',
-    floral: '🌸',
+const getTypeIcon = (type?: string): ImageSourcePropType => {
+  const icons: Record<string, ImageSourcePropType> = {
+    roasted: require('../../../assets/iconsv2/notes/roasted.png'),
+    sweet: require('../../../assets/iconsv2/notes/sweet.png'),
+    fruity: require('../../../assets/iconsv2/notes/fruity.png'),
+    nutty: require('../../../assets/iconsv2/notes/nutty.png'),
+    sour: require('../../../assets/iconsv2/notes/sour.png'),
+    floral: require('../../../assets/iconsv2/notes/floral.png'),
+    spicy: require('../../../assets/iconsv2/notes/roasted.png'),
   };
-  return icons[type || 'roasted'] || '☕';
+  return icons[type || 'roasted'] || icons.roasted;
 };
 
 export default function CoffeemonCard({
@@ -111,9 +108,9 @@ export default function CoffeemonCard({
 
       <View style={[styles.content, isSmall && styles.contentSmall]}>
         {/* Header: Minimalist Type & Level */}
-        <View style={styles.header}>
-          <View style={[styles.typePill, { backgroundColor: 'rgba(255,255,255,0.6)' }]}>
-            <Text style={styles.typeIcon}>{getTypeIcon(primaryType)}</Text>
+        <View style={[styles.header, isSmall && styles.headerSmall]}>
+          <View style={[styles.typePill, isSmall && styles.typePillSmall]}>
+            <Image source={getTypeIcon(primaryType)} style={[styles.typeIcon, isSmall && styles.typeIconSmall]} resizeMode="contain" />
             {!isSmall && (
               <Text style={[styles.typeName, { color: typeColors.dark }]}>
                 {primaryType.charAt(0).toUpperCase() + primaryType.slice(1)}
@@ -121,9 +118,9 @@ export default function CoffeemonCard({
             )}
           </View>
           
-          <View style={styles.levelContainer}>
-            <Text style={[styles.levelLabel, { color: colors.text.tertiary }]}>LV</Text>
-            <Text style={[styles.levelValue, { color: colors.text.primary }]}>{coffeemon.level}</Text>
+          <View style={[styles.levelContainer, isSmall && styles.levelContainerSmall]}>
+            <Text style={[styles.levelLabel, isSmall && styles.levelLabelSmall, { color: colors.text.tertiary }]}>LV</Text>
+            <Text style={[styles.levelValue, isSmall && styles.levelValueSmall, { color: colors.text.primary }]}>{coffeemon.level}</Text>
           </View>
         </View>
 
@@ -142,7 +139,7 @@ export default function CoffeemonCard({
         </View>
 
         {/* Info Area */}
-        <View style={styles.infoSection}>
+        <View style={[styles.infoSection, isSmall && styles.infoSectionSmall]}>
           <Text style={[styles.name, { color: colors.text.primary }, isSmall && styles.nameSmall]} numberOfLines={1}>
             {coffeemon.coffeemon.name}
           </Text>
@@ -234,16 +231,34 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 8,
   },
+  headerSmall: {
+    marginBottom: 4,
+  },
   typePill: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 12,
-    gap: 4,
+    paddingHorizontal: 2,
+    paddingVertical: 0,
+    borderRadius: 0,
+    gap: 6,
+    minHeight: 34,
+  },
+  typePillSmall: {
+    paddingHorizontal: 0,
+    paddingVertical: 0,
+    borderRadius: 0,
+    minHeight: 28,
+    gap: 0,
   },
   typeIcon: {
-    fontSize: 12,
+    width: 32,
+    height: 32,
+    marginTop: 6,
+  },
+  typeIconSmall: {
+    width: 28,
+    height: 28,
+    marginTop: 5,
   },
   typeName: {
     fontSize: 10,
@@ -255,13 +270,22 @@ const styles = StyleSheet.create({
     alignItems: 'baseline',
     gap: 2,
   },
+  levelContainerSmall: {
+    marginTop: 1,
+  },
   levelLabel: {
     fontSize: 9,
     fontWeight: '700',
   },
+  levelLabelSmall: {
+    fontSize: 8,
+  },
   levelValue: {
     fontSize: 14,
     fontWeight: '800',
+  },
+  levelValueSmall: {
+    fontSize: 12,
   },
   partyBadge: {
     position: 'absolute',
@@ -291,8 +315,8 @@ const styles = StyleSheet.create({
     marginVertical: 4,
   },
   imageContainerSmall: {
-    height: 70,
-    marginVertical: 2,
+    height: 62,
+    marginVertical: 0,
   },
   glowEffect: {
     shadowOffset: { width: 0, height: 10 },
@@ -310,6 +334,9 @@ const styles = StyleSheet.create({
   },
   infoSection: {
     gap: 6,
+  },
+  infoSectionSmall: {
+    gap: 3,
   },
   name: {
     fontSize: 16,
@@ -331,9 +358,9 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   addButtonSmall: {
-    paddingVertical: 5,
+    paddingVertical: 4,
     paddingHorizontal: 8,
-    marginTop: 2,
+    marginTop: 0,
     borderRadius: 10,
   },
   addButtonText: {

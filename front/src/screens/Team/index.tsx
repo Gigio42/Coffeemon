@@ -25,7 +25,18 @@ interface TeamScreenProps {
   token: string | null;
 }
 
-const COFFEEMON_TYPES = ['all', 'roasted', 'sweet', 'bitter', 'milky', 'iced', 'nutty'];
+const COFFEEMON_TYPES = ['all', 'roasted', 'sweet', 'fruity', 'nutty', 'sour', 'floral', 'spicy'] as const;
+
+const TYPE_LABELS: Record<(typeof COFFEEMON_TYPES)[number], string> = {
+  all: 'Todos',
+  roasted: 'Roasted',
+  sweet: 'Sweet',
+  fruity: 'Fruity',
+  nutty: 'Nutty',
+  sour: 'Sour',
+  floral: 'Floral',
+  spicy: 'Spicy',
+};
 
 export const TeamScreen: React.FC<TeamScreenProps> = ({ token }) => {
   const { colors } = useTheme();
@@ -216,12 +227,10 @@ export const TeamScreen: React.FC<TeamScreenProps> = ({ token }) => {
                       { color: isActive ? '#FFF' : colors.text.secondary },
                     ]}
                   >
-                    {type === 'all'
-                      ? 'Todos'
-                      : type.charAt(0).toUpperCase() + type.slice(1)}
-                  </Text>
-                </TouchableOpacity>
-              );
+                     {TYPE_LABELS[type]}
+                   </Text>
+                 </TouchableOpacity>
+               );
             })}
           </ScrollView>
         </View>

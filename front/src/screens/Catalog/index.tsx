@@ -13,16 +13,17 @@ interface CatalogScreenProps {
 }
 
 type TabType = 'coffeemons' | 'items';
-type CoffeemonType = 'roasted' | 'sweet' | 'bitter' | 'milky' | 'iced' | 'nutty';
+type CoffeemonType = 'roasted' | 'sweet' | 'fruity' | 'nutty' | 'sour' | 'floral' | 'spicy';
 
 const TYPE_FILTERS: { label: string; value: CoffeemonType | 'all'; emoji: string }[] = [
   { label: 'Todos', value: 'all', emoji: '⭐' },
-  { label: 'Torrado', value: 'roasted', emoji: '🔥' },
-  { label: 'Doce', value: 'sweet', emoji: '🍬' },
-  { label: 'Amargo', value: 'bitter', emoji: '☕' },
-  { label: 'Cremoso', value: 'milky', emoji: '🥛' },
-  { label: 'Gelado', value: 'iced', emoji: '❄️' },
-  { label: 'Noz', value: 'nutty', emoji: '🌰' },
+  { label: 'Roasted', value: 'roasted', emoji: '🔥' },
+  { label: 'Sweet', value: 'sweet', emoji: '🍬' },
+  { label: 'Fruity', value: 'fruity', emoji: '🍎' },
+  { label: 'Nutty', value: 'nutty', emoji: '🌰' },
+  { label: 'Sour', value: 'sour', emoji: '🍋' },
+  { label: 'Floral', value: 'floral', emoji: '🌸' },
+  { label: 'Spicy', value: 'spicy', emoji: '🌶️' },
 ];
 
 export const CatalogScreen: React.FC<CatalogScreenProps> = ({ token }) => {
