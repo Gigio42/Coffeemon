@@ -5,6 +5,7 @@ import { PlayerCoffeemon } from '../api/coffeemonService';
 
 interface UseCoffeemonsProps {
   token: string;
+  playerId?: number;
   onLog?: (message: string) => void;
 }
 
@@ -24,12 +25,13 @@ interface UseCoffeemonsResult {
 
 export function useCoffeemons({
   token,
+  playerId: initialPlayerId,
   onLog,
 }: UseCoffeemonsProps): UseCoffeemonsResult {
   const [coffeemons, setCoffeemons] = useState<PlayerCoffeemon[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [partyLoading, setPartyLoading] = useState<number | null>(null);
-  const [playerId, setPlayerId] = useState<number | null>(null);
+  const [playerId, setPlayerId] = useState<number | null>(initialPlayerId ?? null);
   const [initialized, setInitialized] = useState<boolean>(false);
 
   useEffect(() => {
@@ -38,9 +40,14 @@ export function useCoffeemons({
 
   async function initializePlayer() {
     try {
-      const playerData = await coffeemonService.fetchPlayerData(token);
-      setPlayerId(playerData.id);
-      await fetchCoffeemons(playerData.id);
+      // Se playerId já foi fornecido, pula o fetchPlayerData
+      let id = initialPlayerId;
+      if (!id) {
+        const playerData = await coffeemonService.fetchPlayerData(token);
+        id = playerData.id;
+      }
+      setPlayerId(id);
+      await fetchCoffeemons(id);
     } catch (error: any) {
       console.error('Error initializing player:', error);
       if (onLog) {

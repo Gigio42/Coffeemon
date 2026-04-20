@@ -231,6 +231,7 @@ export default function MatchmakingScreen({
     initialized: coffeemonsInitialized,
   } = useCoffeemons({
     token,
+    playerId,
   });
 
   // Efeito para controlar a animação de carregamento
@@ -240,8 +241,8 @@ export default function MatchmakingScreen({
       return;
     }
 
-    // Só inicia a animação quando tudo estiver carregado
-    if (introLoading || !coffeemonsInitialized || !palettesReady) {
+    // Inicia a animação assim que os coffeemons carregarem — palettes ficam em background
+    if (introLoading || !coffeemonsInitialized) {
       return;
     }
 

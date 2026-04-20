@@ -217,7 +217,7 @@ export default function CoffeemonDetailsModal({
                   style={[styles.customizeMovesButton, { backgroundColor: typeColors.primary }]}
                   onPress={() => setShowMoveCustomizer(true)}
                 >
-                  <Text style={styles.customizeMovesButtonText}>⚙️ Customizar Moves</Text>
+                  <Text style={styles.customizeMovesButtonText}>Customizar Moves</Text>
                 </TouchableOpacity>
               </>
             ) : (
