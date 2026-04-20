@@ -73,8 +73,8 @@ export default function CoffeemonCard({
   // Minimalist Glass Container
   const containerStyle = {
     backgroundColor: 'rgba(255, 255, 255, 0.85)',
-    borderColor: 'rgba(255, 255, 255, 0.9)',
-    borderWidth: 1,
+    borderColor: isSmall ? 'transparent' : 'rgba(255, 255, 255, 0.9)',
+    borderWidth: isSmall ? 0 : 1,
     shadowColor: typeColors.primary,
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.15,
@@ -86,6 +86,7 @@ export default function CoffeemonCard({
     <TouchableOpacity
       style={[
         styles.container,
+        isSmall && styles.containerSmall,
         containerStyle,
         disabled && styles.containerDisabled,
       ]}
@@ -98,8 +99,7 @@ export default function CoffeemonCard({
         colors={typeColors.gradient as any}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
-        style={StyleSheet.absoluteFillObject}
-        opacity={0.6}
+        style={[StyleSheet.absoluteFillObject, { opacity: 0.6 }]}
       />
 
       {/* Party Indicator - Floating Badge */}
@@ -148,10 +148,11 @@ export default function CoffeemonCard({
           </Text>
 
           {/* Botão de Adicionar/Remover do Time */}
-          {showPartyIndicator && onToggleParty && (
+          {onToggleParty && (
             <TouchableOpacity
               style={[
                 styles.addButton,
+                isSmall && styles.addButtonSmall,
                 {
                   backgroundColor: coffeemon.isInParty ? typeColors.primary : 'rgba(0,0,0,0.1)',
                 }
@@ -162,9 +163,10 @@ export default function CoffeemonCard({
             >
               <Text style={[
                 styles.addButtonText,
+                isSmall && styles.addButtonTextSmall,
                 { color: coffeemon.isInParty ? '#FFF' : colors.text.secondary }
               ]}>
-                {isLoading ? '...' : coffeemon.isInParty ? '★ No Time' : '+ Adicionar'}
+                {isLoading ? '...' : coffeemon.isInParty ? 'Remover' : '+ Adicionar'}
               </Text>
             </TouchableOpacity>
           )}
@@ -212,6 +214,10 @@ const styles = StyleSheet.create({
     borderRadius: 24, // More rounded corners
     overflow: 'hidden',
     marginBottom: 4,
+  },
+  containerSmall: {
+    borderRadius: 18,
+    marginBottom: 0,
   },
   containerDisabled: {
     opacity: 0.6,
@@ -324,10 +330,20 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginTop: 4,
   },
+  addButtonSmall: {
+    paddingVertical: 5,
+    paddingHorizontal: 8,
+    marginTop: 2,
+    borderRadius: 10,
+  },
   addButtonText: {
     fontSize: 10,
     fontWeight: '700',
     letterSpacing: 0.5,
+  },
+  addButtonTextSmall: {
+    fontSize: 9,
+    letterSpacing: 0.2,
   },
   hpContainer: {
     width: '100%',

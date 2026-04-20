@@ -3,10 +3,10 @@ import { theme } from '../../theme/theme';
 
 const { width } = Dimensions.get('window');
 const COLUMN_COUNT = 3;
-const GRID_PADDING = theme.spacing.lg;
-const ITEM_MARGIN = theme.spacing.sm;
-const AVAILABLE_WIDTH = width - (GRID_PADDING * 2) - (ITEM_MARGIN * (COLUMN_COUNT - 1));
-const CARD_WIDTH = AVAILABLE_WIDTH / COLUMN_COUNT;
+const HORIZONTAL_PADDING = theme.spacing.lg;
+const GRID_GAP = theme.spacing.sm;
+const AVAILABLE_WIDTH = width - (HORIZONTAL_PADDING * 2) - (GRID_GAP * (COLUMN_COUNT - 1));
+const CARD_WIDTH = Math.floor(AVAILABLE_WIDTH / COLUMN_COUNT);
 
 export const styles = StyleSheet.create({
   container: {
@@ -19,8 +19,9 @@ export const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: theme.spacing.lg,
-    paddingVertical: theme.spacing.lg,
+    paddingHorizontal: HORIZONTAL_PADDING,
+    paddingTop: theme.spacing.lg,
+    paddingBottom: theme.spacing.md,
     backgroundColor: theme.colors.background.primary,
   },
   headerTitle: {
@@ -44,34 +45,39 @@ export const styles = StyleSheet.create({
   
   // Deck Section - Premium Look
   deckSection: {
-    paddingVertical: theme.spacing.lg,
-    backgroundColor: '#FFFFFF', // White background for contrast
+    paddingTop: theme.spacing.md,
+    paddingBottom: theme.spacing.lg,
+    paddingHorizontal: HORIZONTAL_PADDING,
+    backgroundColor: theme.colors.surface.base,
     marginBottom: theme.spacing.md,
-    borderBottomLeftRadius: theme.radius.xxl,
-    borderBottomRightRadius: theme.radius.xxl,
     ...theme.shadows.sm,
     zIndex: 10,
+    overflow: 'hidden',
   },
   deckContainer: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingHorizontal: theme.spacing.lg,
-    gap: 12,
+    justifyContent: 'center',
+    alignItems: 'flex-start',
+    gap: GRID_GAP,
   },
   deckSlotContainer: {
     flex: 1,
-    maxWidth: (width - theme.spacing.lg * 2 - 24) / 3,
-    aspectRatio: 0.8,
+    maxWidth: (width - (HORIZONTAL_PADDING * 2) - (GRID_GAP * 2)) / 3,
+    minHeight: 172,
+    maxHeight: 172,
+    justifyContent: 'flex-start',
+    overflow: 'hidden',
+    borderRadius: theme.radius.lg,
   },
   emptySlot: {
     flex: 1,
-    borderWidth: 2,
-    borderColor: theme.colors.border.medium,
+    borderWidth: 1.5,
+    borderColor: theme.colors.border.default,
     borderStyle: 'dashed',
-    borderRadius: theme.radius.xl,
+    borderRadius: theme.radius.lg,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: theme.colors.background.tertiary,
+    backgroundColor: 'transparent',
   },
   emptySlotText: {
     color: theme.colors.text.tertiary,
@@ -88,13 +94,13 @@ export const styles = StyleSheet.create({
 
   // Search & Filters - Consistent with Catalog
   filterSection: {
-    marginBottom: theme.spacing.sm,
+    marginBottom: theme.spacing.md,
   },
   searchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#FFFFFF',
-    marginHorizontal: theme.spacing.lg,
+    marginHorizontal: HORIZONTAL_PADDING,
     marginTop: theme.spacing.md,
     paddingHorizontal: theme.spacing.md,
     borderRadius: theme.radius.xl,
@@ -123,21 +129,26 @@ export const styles = StyleSheet.create({
   
   typeFilterContainer: {
     marginTop: theme.spacing.md,
+    paddingBottom: theme.spacing.xs,
+    overflow: 'visible',
   },
   typeFilterContent: {
-    paddingHorizontal: theme.spacing.lg,
+    paddingHorizontal: HORIZONTAL_PADDING,
+    paddingTop: 2,
+    paddingBottom: 8,
     gap: 8,
+    alignItems: 'center',
+    overflow: 'visible',
   },
   typeChip: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 14,
-    paddingVertical: 8,
+    paddingVertical: 9,
     borderRadius: theme.radius.full,
     backgroundColor: '#FFFFFF',
     borderWidth: 1,
     borderColor: 'rgba(0,0,0,0.05)',
-    marginRight: 8,
     ...theme.shadows.sm,
   },
   typeChipInactive: {
@@ -158,12 +169,13 @@ export const styles = StyleSheet.create({
   
   // Collection Grid
   collectionList: {
-    padding: GRID_PADDING,
+    paddingHorizontal: HORIZONTAL_PADDING,
+    paddingTop: theme.spacing.sm,
     paddingBottom: 100,
   },
   columnWrapper: {
     justifyContent: 'flex-start',
-    gap: ITEM_MARGIN,
+    gap: GRID_GAP,
   },
   collectionItem: {
     width: CARD_WIDTH,

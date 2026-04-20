@@ -121,21 +121,21 @@ export const TeamScreen: React.FC<TeamScreenProps> = ({ token }) => {
       </View>
 
       {/* Party slots */}
-      <View style={[styles.deckSection, { backgroundColor: '#FFFFFF' }]}>
+      <View style={[styles.deckSection, { backgroundColor: colors.surface.base }]}>
         <View style={styles.deckContainer}>
           {deck.map((member, index) => (
             <View key={index} style={styles.deckSlotContainer}>
               {member ? (
                 <CoffeemonCard
                   coffeemon={member}
-                  onToggleParty={() => {}}
+                  onToggleParty={toggleParty}
                   onPress={() => {
                     setSelectedCoffeemon(member);
                     setDetailsVisible(true);
                   }}
                   variant="small"
                   isLoading={partyLoading === member.id}
-                  showHp={true}
+                  showHp={false}
                   showStats={false}
                   showPartyIndicator={false}
                 />
@@ -145,7 +145,7 @@ export const TeamScreen: React.FC<TeamScreenProps> = ({ token }) => {
                     styles.emptySlot,
                     {
                       borderColor: colors.border.medium,
-                      backgroundColor: 'rgba(0,0,0,0.02)',
+                      backgroundColor: 'transparent',
                     },
                   ]}
                 >
@@ -194,7 +194,7 @@ export const TeamScreen: React.FC<TeamScreenProps> = ({ token }) => {
                   key={type}
                   style={[
                     styles.typeChip,
-                    { backgroundColor: '#FFFFFF', borderColor: 'rgba(0,0,0,0.05)' },
+                    { backgroundColor: colors.surface.base, borderColor: colors.border.light },
                     isActive && {
                       backgroundColor: typeColor.primary,
                       borderColor: typeColor.primary,
