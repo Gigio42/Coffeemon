@@ -24,6 +24,33 @@ export const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
+  cardShadowLayerOuter: {
+    position: 'absolute',
+    width: '96%',
+    height: '96%',
+    borderRadius: 30,
+    backgroundColor: 'rgba(2,6,23,0.58)',
+    transform: [{ translateY: 22 }, { scaleX: 0.93 }],
+    ...Platform.select({
+      ios: {
+        shadowColor: '#020617',
+        shadowOffset: { width: 0, height: 30 },
+        shadowOpacity: 0.66,
+        shadowRadius: 24,
+      },
+      android: {
+        elevation: 16,
+      },
+    }),
+  },
+  cardShadowLayerInner: {
+    position: 'absolute',
+    width: '92%',
+    height: '93%',
+    borderRadius: 28,
+    backgroundColor: 'rgba(30,41,59,0.44)',
+    transform: [{ translateY: 13 }, { scaleX: 0.96 }],
+  },
   card: {
     position: 'absolute',
     width: '100%',
@@ -50,6 +77,20 @@ export const styles = StyleSheet.create({
   },
   cardFront: {
     zIndex: 1,
+  },
+  cardDepthTop: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: '34%',
+  },
+  cardDepthBottom: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: '38%',
   },
   cardBackGradient: {
     flex: 1,
@@ -154,6 +195,35 @@ export const styles = StyleSheet.create({
   },
   frontTextureShape: {
     position: 'absolute',
+    borderWidth: 1,
+  },
+  textureDash: {
+    borderRadius: 3,
+  },
+  textureDot: {
+    borderWidth: 0,
+  },
+  textureLine: {
+    height: 2,
+    borderWidth: 0,
+    borderRadius: 1,
+  },
+  textureChip: {
+    borderRadius: 6,
+  },
+  frontMaterialOverlay: {
+    ...StyleSheet.absoluteFillObject,
+  },
+  frontMaterialOverlaySecondary: {
+    ...StyleSheet.absoluteFillObject,
+  },
+  cardSheen: {
+    position: 'absolute',
+    top: -40,
+    bottom: -40,
+    width: 90,
+    backgroundColor: 'rgba(255,255,255,0.75)',
+    borderRadius: 45,
   },
   ray: {
     position: 'absolute',
@@ -184,6 +254,12 @@ export const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 16,
     zIndex: 10,
+  },
+  imageContent: {
+    width: '100%',
+    height: '100%',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   coffeemonImage: {
     width: '100%',
