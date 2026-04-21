@@ -10,10 +10,12 @@ import LoginScreen from './src/screens/Login';
 import EcommerceScreen from './src/screens/Ecommerce';
 import MatchmakingScreen from './src/screens/Matchmaking';
 import BattleScreen from './src/screens/Battle';
+import { clearActiveBattleStorage } from './src/hooks/useMatchmaking';
 import ErrorBoundary from './src/components/ErrorBoundary';
 import { Screen, BattleState } from './src/types';
 import { MainNavScreen } from './src/screens/MainNav';
 import { ThemeProvider } from './src/theme/ThemeContext';
+import { clearAuthData } from './src/api/authService';
 
 export default function App() {
   const [fontsLoaded, fontError] = useFonts({
@@ -49,6 +51,13 @@ export default function App() {
     socket: Socket
   } | null>(null);
 
+  const handleLogout = async () => {
+    await clearAuthData();
+    setAuthData(null);
+    setBattleData(null);
+    setCurrentScreen(Screen.ECOMMERCE);
+  };
+
   const getStatusBarConfig = () => ({ style: "light" as const, backgroundColor: "#0F1419" });
   const statusBarConfig = getStatusBarConfig();
 
@@ -74,9 +83,7 @@ export default function App() {
           }}
 
           onLogout={() => {
-            setAuthData(null);
-            setBattleData(null);
-            // Volta à loja sem login (não redireciona para login)
+            void handleLogout();
           }}
         />
       );
@@ -113,9 +120,10 @@ export default function App() {
           isGuest={authData.isGuest}
 
           onNavigateToLogin={() => {
-            setAuthData(null);
-            setBattleData(null);
-            setCurrentScreen(Screen.ECOMMERCE);
+            void handleLogout();
+          }}
+          onNavigateToLoginScreen={() => {
+            setCurrentScreen(Screen.LOGIN);
           }}
 
           onNavigateToBattle={(battleId, battleState, socket) => {
@@ -145,6 +153,7 @@ export default function App() {
             console.error('Battle screen crashed:', error, errorInfo);
           }}
           onReset={() => {
+            battleData.socket.disconnect();
             setBattleData(null);
             setCurrentScreen(Screen.MATCHMAKING);
           }}
@@ -156,7 +165,9 @@ export default function App() {
             token={authData.token}
             socket={battleData.socket}
 
-            onNavigateToMatchmaking={() => {
+            onNavigateToMatchmaking={(keepActiveBattle) => {
+              if (!keepActiveBattle) void clearActiveBattleStorage();
+              battleData.socket.disconnect();
               setBattleData(null);
               setCurrentScreen(Screen.MATCHMAKING);
             }}

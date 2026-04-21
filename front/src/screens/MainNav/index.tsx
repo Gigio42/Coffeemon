@@ -14,6 +14,7 @@ interface MainNavProps {
   userId?: number;
   isGuest?: boolean;
   onNavigateToLogin: () => void;
+  onNavigateToLoginScreen: () => void;
   onNavigateToBattle: (
     battleId: string,
     battleState: BattleState,
@@ -42,6 +43,7 @@ export const MainNavScreen: React.FC<MainNavProps> = ({
   userId,
   isGuest,
   onNavigateToLogin,
+  onNavigateToLoginScreen,
   onNavigateToBattle,
   onNavigateToEcommerce,
   MatchmakingScreen,
@@ -75,6 +77,7 @@ export const MainNavScreen: React.FC<MainNavProps> = ({
         <MatchmakingScreen
           token={token}
           playerId={playerId}
+          isActive={activeScreen === "battle"}
           onNavigateToLogin={onNavigateToLogin}
           onNavigateToBattle={onNavigateToBattle}
           skipIntro={introShown}
@@ -92,7 +95,7 @@ export const MainNavScreen: React.FC<MainNavProps> = ({
       {/* Equipe — monta na primeira visita */}
       {mounted.has("team") && (
         <View style={visible("team")}>
-          <TeamScreen token={token} />
+          <TeamScreen token={token} playerId={playerId} isActive={activeScreen === "team"} />
         </View>
       )}
 
@@ -104,7 +107,7 @@ export const MainNavScreen: React.FC<MainNavProps> = ({
             playerId={playerId}
             userId={userId}
             isGuest={isGuest}
-            onLogout={onNavigateToLogin}
+            onCreateAccount={onNavigateToLoginScreen}
           />
         </View>
       )}

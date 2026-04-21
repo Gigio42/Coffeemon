@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { View, Text, Image, TouchableOpacity, Alert, Modal, Pressable } from 'react-native';
+import { View, Text, Image, TouchableOpacity, Alert, Modal, Pressable, ActivityIndicator } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { usePlayer } from '../../hooks/usePlayer';
+import { giveAllCoffeemons } from '../../api/coffeemonService';
 import { styles } from './styles';
 
 const COINS_ICON = require('../../../assets/icons/icone_moedas.png');
@@ -20,6 +21,7 @@ export default function PlayerStatus({
 }: PlayerStatusProps) {
   const { player, loading, error } = usePlayer(token);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [giveLoading, setGiveLoading] = useState(false);
 
   if (loading) {
     return (
@@ -185,6 +187,32 @@ export default function PlayerStatus({
                 <Text style={styles.menuItemArrow}>›</Text>
               </TouchableOpacity>
             )}
+
+            <View style={styles.menuDivider} />
+
+            <TouchableOpacity
+              style={styles.menuItem}
+              onPress={async () => {
+                setGiveLoading(true);
+                try {
+                  const result = await giveAllCoffeemons(token);
+                  Alert.alert('Debug', result.message || `${result.count} Coffeemons adicionados!`);
+                } catch {
+                  Alert.alert('Erro', 'Falha ao dar Coffeemons.');
+                } finally {
+                  setGiveLoading(false);
+                }
+              }}
+              activeOpacity={0.7}
+              disabled={giveLoading}
+            >
+              <Text style={styles.menuItemEmoji}>🧪</Text>
+              <View style={styles.menuItemBody}>
+                <Text style={styles.menuItemTitle}>Dar todos Coffeemons</Text>
+                <Text style={styles.menuItemSub}>Debug: adiciona todos ao inventário</Text>
+              </View>
+              {giveLoading && <ActivityIndicator size="small" color="#C8A26B" />}
+            </TouchableOpacity>
 
             <View style={styles.menuDivider} />
 

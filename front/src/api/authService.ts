@@ -195,5 +195,12 @@ export async function getIsGuest(): Promise<boolean> {
  * Limpa dados de autenticação
  */
 export async function clearAuthData(): Promise<void> {
-  await AsyncStorage.clear();
+  const keysToRemove = [
+    'jwt_token',
+    'user_id',
+    'player_id',
+    'is_guest',
+    'matchmaking:status',
+  ];
+  await AsyncStorage.multiRemove(keysToRemove);
 }

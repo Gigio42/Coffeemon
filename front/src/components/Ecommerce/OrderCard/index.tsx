@@ -28,8 +28,10 @@ export default function OrderCard({ order, isExpanded, onToggle }: OrderCardProp
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'completed':
+      case 'finalizado':
         return '#4CAF50';
       case 'pending':
+      case 'carrinho':
         return '#FF9800';
       case 'cancelled':
         return '#F44336';
@@ -41,8 +43,10 @@ export default function OrderCard({ order, isExpanded, onToggle }: OrderCardProp
   const getStatusText = (status: string) => {
     switch (status) {
       case 'completed':
+      case 'finalizado':
         return '✅ Concluído';
       case 'pending':
+      case 'carrinho':
         return '⏳ Pendente';
       case 'cancelled':
         return '❌ Cancelado';

@@ -49,15 +49,25 @@ export class RoomCacheService {
     const roomData = await this.getRoomData(roomId);
     if (!roomData) return null;
 
+    const leavingMember = roomData.members.find((m) => m.playerId === playerId);
+    const socketKey = leavingMember?.socketId ? `socket:${leavingMember.socketId}:room` : null;
+
     roomData.members = roomData.members.filter((m) => m.playerId !== playerId);
 
     if (roomData.members.length === 0) {
-      await this.redis.del(roomKey);
-      await this.redis.del(playerKey);
+      const keysToDelete = [roomKey, playerKey];
+      if (socketKey) keysToDelete.push(socketKey);
+      await Promise.all(keysToDelete.map((key) => this.redis.del(key)));
       return null;
     } else {
-      await this.redis.set(roomKey, JSON.stringify(roomData), 3600); //TODO 1 hora pra poder reentrar, ajustar dps
-      await this.redis.del(playerKey);
+      const ops: Promise<unknown>[] = [
+        this.redis.set(roomKey, JSON.stringify(roomData), 3600), //TODO 1 hora pra poder reentrar, ajustar dps
+        this.redis.del(playerKey),
+      ];
+      if (socketKey) {
+        ops.push(this.redis.del(socketKey));
+      }
+      await Promise.all(ops);
       return roomData;
     }
   }

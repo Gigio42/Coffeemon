@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -23,6 +23,8 @@ const { width } = Dimensions.get('window');
 
 interface TeamScreenProps {
   token: string | null;
+  playerId?: number;
+  isActive?: boolean;
 }
 
 const COFFEEMON_TYPES = ['all', 'roasted', 'sweet', 'fruity', 'nutty', 'sour', 'floral', 'spicy'] as const;
@@ -38,7 +40,11 @@ const TYPE_LABELS: Record<(typeof COFFEEMON_TYPES)[number], string> = {
   spicy: 'Spicy',
 };
 
-export const TeamScreen: React.FC<TeamScreenProps> = ({ token }) => {
+export const TeamScreen: React.FC<TeamScreenProps> = ({
+  token,
+  playerId,
+  isActive = false,
+}) => {
   const { colors } = useTheme();
 
   const {
@@ -49,12 +55,18 @@ export const TeamScreen: React.FC<TeamScreenProps> = ({ token }) => {
     swapPartyMembers,
     partyLoading,
     fetchCoffeemons,
-  } = useCoffeemons({ token: token || '' });
+  } = useCoffeemons({ token: token || '', playerId });
 
   const [selectedCoffeemon, setSelectedCoffeemon] = useState<PlayerCoffeemon | null>(null);
   const [detailsVisible, setDetailsVisible] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedType, setSelectedType] = useState('all');
+
+  useEffect(() => {
+    if (isActive) {
+      fetchCoffeemons();
+    }
+  }, [isActive]);
 
   const cardStyle = {
     backgroundColor: 'rgba(255, 255, 255, 0.85)',

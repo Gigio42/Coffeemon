@@ -105,7 +105,7 @@ export interface Order {
   id: number;
   total_amount: number;
   total_quantity: number;
-  status: 'pending' | 'completed' | 'cancelled';
+  status: 'pending' | 'completed' | 'cancelled' | 'finalizado' | 'carrinho';
   updated_at: string;
   orderItem: OrderItem[];
 }

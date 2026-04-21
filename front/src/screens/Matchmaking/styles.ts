@@ -575,4 +575,400 @@ export const styles = StyleSheet.create({
     fontWeight: typography.weight.medium,
     marginTop: 2,
   },
+
+  // Bottom bar with labels
+  bottomBarLabel: {
+    fontSize: 10,
+    color: '#6B7280',
+    fontWeight: '600',
+    marginTop: 3,
+    letterSpacing: 0.3,
+  },
+
+  bottomBarPillSm: {
+    width: 52,
+    height: 52,
+  },
+
+  // Format selector
+  formatSelector: {
+    flexDirection: 'row',
+    gap: spacing.sm,
+    marginBottom: spacing.lg,
+    width: '100%',
+  },
+
+  formatPill: {
+    flex: 1,
+    paddingVertical: spacing.sm + 2,
+    alignItems: 'center',
+    borderRadius: radius.full,
+    borderWidth: 1.5,
+    borderColor: '#E5E7EB',
+    backgroundColor: '#FAFAFA',
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: 4,
+  },
+
+  formatPillActive: {
+    backgroundColor: '#EFF6FF',
+  },
+
+  formatPillText: {
+    fontSize: typography.size.sm,
+    fontWeight: '600',
+    color: '#6B7280',
+  },
+
+  formatPillDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: '#EF4444',
+  },
+
+  // Sheet action buttons
+  sheetActionButton: {
+    width: '100%',
+    backgroundColor: '#111827',
+    borderRadius: radius.xl,
+    paddingVertical: spacing.lg,
+    paddingHorizontal: spacing.xl,
+    alignItems: 'center',
+    marginBottom: spacing.lg,
+  },
+
+  sheetActionButtonDisabled: {
+    backgroundColor: '#F3F4F6',
+  },
+
+  sheetActionButtonText: {
+    fontSize: typography.size.base,
+    fontWeight: typography.weight.bold,
+    color: '#FFFFFF',
+  },
+
+  sheetActionButtonSub: {
+    fontSize: typography.size.xs,
+    color: '#9CA3AF',
+    marginTop: 3,
+  },
+
+  // Divider
+  sheetDividerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    width: '100%',
+    marginBottom: spacing.lg,
+    gap: spacing.sm,
+  },
+
+  sheetDivider: {
+    flex: 1,
+    height: 1,
+    backgroundColor: '#E5E7EB',
+  },
+
+  sheetDividerText: {
+    fontSize: typography.size.xs,
+    color: '#9CA3AF',
+    fontWeight: '500',
+    flexShrink: 0,
+  },
+
+  // Join code
+  joinCodeRow: {
+    flexDirection: 'row',
+    gap: spacing.sm,
+    width: '100%',
+  },
+
+  joinCodeInput: {
+    flex: 1,
+    height: 52,
+    backgroundColor: '#F3F4F6',
+    borderRadius: radius.lg,
+    paddingHorizontal: spacing.lg,
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#111827',
+    letterSpacing: 4,
+    textAlign: 'center',
+    borderWidth: 1.5,
+    borderColor: '#E5E7EB',
+  },
+
+  joinCodeButton: {
+    height: 52,
+    paddingHorizontal: spacing.xl,
+    backgroundColor: '#3B82F6',
+    borderRadius: radius.lg,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+
+  joinCodeButtonDisabled: {
+    backgroundColor: '#E5E7EB',
+  },
+
+  joinCodeButtonText: {
+    fontSize: typography.size.base,
+    fontWeight: typography.weight.bold,
+    color: '#FFFFFF',
+  },
+});
+
+// ─── Lobby overlay styles ─────────────────────────────────────────────────────
+
+export const lobbyOverlayStyles = StyleSheet.create({
+  backdrop: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0,0,0,0.75)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 999,
+  },
+  card: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 24,
+    paddingVertical: 28,
+    paddingHorizontal: 24,
+    alignItems: 'center',
+    width: screenWidth * 0.88,
+    gap: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.15,
+    shadowRadius: 24,
+    elevation: 12,
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    width: '100%',
+  },
+  title: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#111827',
+  },
+  subtitle: {
+    fontSize: 14,
+    color: '#9CA3AF',
+    textAlign: 'center',
+  },
+  formatBadge: {
+    borderRadius: 20,
+    paddingHorizontal: 14,
+    paddingVertical: 5,
+  },
+  formatText: {
+    color: '#fff',
+    fontSize: 13,
+    fontWeight: '700',
+  },
+  codeBox: {
+    width: '100%',
+    backgroundColor: '#F3F4F6',
+    borderRadius: 16,
+    paddingVertical: 14,
+    paddingHorizontal: 20,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+  },
+  codeLabel: {
+    fontSize: 11,
+    color: '#9CA3AF',
+    fontWeight: '600',
+    letterSpacing: 0.5,
+    textTransform: 'uppercase',
+    marginBottom: 4,
+  },
+  codeValue: {
+    fontSize: 28,
+    fontWeight: '800',
+    color: '#111827',
+    letterSpacing: 6,
+  },
+  players: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    width: '100%',
+    paddingHorizontal: 8,
+  },
+  vsLabel: {
+    fontSize: 14,
+    fontWeight: '800',
+    color: '#9CA3AF',
+    letterSpacing: 1,
+  },
+  playerSlot: {
+    alignItems: 'center',
+    gap: 6,
+    flex: 1,
+  },
+  playerAvatar: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  playerAvatarText: {
+    fontSize: 22,
+    fontWeight: '700',
+  },
+  playerAvatarEmpty: {
+    fontSize: 22,
+    color: '#D1D5DB',
+    fontWeight: '700',
+  },
+  playerName: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#111827',
+    textAlign: 'center',
+  },
+  playerLabel: {
+    fontSize: 11,
+    color: '#9CA3AF',
+    fontWeight: '500',
+    textTransform: 'uppercase',
+    letterSpacing: 0.3,
+  },
+  actions: {
+    flexDirection: 'row',
+    gap: 10,
+    width: '100%',
+  },
+  leaveBtn: {
+    flex: 1,
+    paddingVertical: 14,
+    borderRadius: 14,
+    backgroundColor: '#F3F4F6',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+  },
+  leaveBtnText: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#6B7280',
+  },
+  startBtn: {
+    flex: 2,
+    paddingVertical: 14,
+    borderRadius: 14,
+    backgroundColor: '#111827',
+    alignItems: 'center',
+  },
+  startBtnDisabled: {
+    backgroundColor: '#E5E7EB',
+  },
+  startBtnText: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: '#FFFFFF',
+  },
+  waitingBox: {
+    flex: 2,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    paddingVertical: 14,
+    borderRadius: 14,
+    backgroundColor: '#FEF3C7',
+  },
+  waitingText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#92400E',
+  },
+  searchIcon: {
+    fontSize: 48,
+  },
+  cancelBtn: {
+    marginTop: 4,
+    paddingVertical: 10,
+    paddingHorizontal: 28,
+    backgroundColor: '#F3F4F6',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+  },
+  cancelText: {
+    color: '#374151',
+    fontSize: 15,
+    fontWeight: '600',
+  },
+});
+
+// ─── Toast styles ─────────────────────────────────────────────────────────────
+
+export const toastStyles = StyleSheet.create({
+  toast: {
+    position: 'absolute',
+    top: statusBarHeight + 60,
+    left: 16,
+    right: 16,
+    zIndex: 9999,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#111827',
+    borderRadius: 16,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 12,
+    elevation: 10,
+  },
+  toastLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    flex: 1,
+  },
+  toastAvatar: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#3B82F6',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  toastAvatarText: {
+    color: '#fff',
+    fontWeight: '700',
+    fontSize: 16,
+  },
+  toastTitle: {
+    color: '#F9FAFB',
+    fontWeight: '600',
+    fontSize: 13,
+  },
+  toastSub: {
+    color: '#9CA3AF',
+    fontSize: 11,
+    marginTop: 1,
+  },
+  toastBtn: {
+    backgroundColor: '#3B82F6',
+    borderRadius: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    marginLeft: 10,
+  },
+  toastBtnText: {
+    color: '#fff',
+    fontWeight: '700',
+    fontSize: 13,
+  },
 });

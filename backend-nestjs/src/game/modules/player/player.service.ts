@@ -109,8 +109,26 @@ export class PlayerService {
     return player;
   }
 
+  async findBasicByUserId(userId: number): Promise<Player> {
+    const player = await this.playerRepository.findOne({
+      where: { user: { id: userId } },
+      relations: ['user'],
+    });
+
+    if (!player) {
+      throw new NotFoundException(`Player with user ID ${userId} not found`);
+    }
+
+    return player;
+  }
+
   async getPlayerCoffeemons(playerId: number): Promise<PlayerCoffeemons[]> {
-    await this.findOne(playerId);
+    const playerExists = await this.playerRepository.exists({
+      where: { id: playerId },
+    });
+    if (!playerExists) {
+      throw new NotFoundException(`Player with ID ${playerId} not found`);
+    }
 
     const coffeemons = await this.playerCoffeemonRepository
       .createQueryBuilder('pc')
@@ -216,9 +234,7 @@ export class PlayerService {
     }
 
     if (playerCoffeemon.isInParty) {
-      throw new BadRequestException(
-        `Player Coffeemon with ID ${playerCoffeemonId} is already in the party.`
-      );
+      return playerCoffeemon;
     }
 
     const partyCount = await this.playerCoffeemonRepository.count({
@@ -241,20 +257,28 @@ export class PlayerService {
     playerId: number,
     playerCoffeemonId: number
   ): Promise<PlayerCoffeemons> {
-    await this.findOne(playerId);
+    const playerExists = await this.playerRepository.exists({
+      where: { id: playerId },
+    });
+    if (!playerExists) {
+      throw new NotFoundException(`Player with ID ${playerId} not found`);
+    }
 
     const playerCoffeemon = await this.playerCoffeemonRepository.findOne({
       where: {
         id: playerCoffeemonId,
         player: { id: playerId },
-        isInParty: true,
       },
     });
 
     if (!playerCoffeemon) {
       throw new NotFoundException(
-        `Player Coffeemon with ID ${playerCoffeemonId} not found in the party for player with ID ${playerId}`
+        `Player Coffeemon with ID ${playerCoffeemonId} not found for player with ID ${playerId}`
       );
+    }
+
+    if (!playerCoffeemon.isInParty) {
+      return playerCoffeemon;
     }
 
     playerCoffeemon.isInParty = false;

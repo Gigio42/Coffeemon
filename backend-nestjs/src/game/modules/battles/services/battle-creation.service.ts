@@ -5,9 +5,11 @@ import { Repository } from 'typeorm';
 import { BattleCacheService } from '../../../shared/cache/services/battle-cache.service';
 import {
   BattleCreatedEvent,
+  BattleCreationFailedEvent,
   MatchPairFoundEvent,
   PlayerWantsToBattleBotCommand,
 } from '../../../shared/events/game.events';
+import { BATTLE_FORMAT_SIZES } from '../../matchmaking/types/lobby.types';
 import { BotPlayerService } from '../../bot/services/bot-player.service';
 import { StatsCalculatorService } from '../../coffeemon/services/stats-calculator.service';
 import { Player } from '../../player/entities/player.entity';
@@ -30,79 +32,118 @@ export class BattleCreationService {
 
   @OnEvent('match.pair.found')
   async createPvpBattle(event: MatchPairFoundEvent): Promise<void> {
-    const battle = this.repo.create({
-      player1Id: event.player1Id,
-      player2Id: event.player2Id,
-      player1SocketId: event.player1SocketId,
-      player2SocketId: event.player2SocketId,
-      status: 'ACTIVE',
-    });
-    const savedBattle = await this.repo.save(battle);
+    const format = event.format ?? '3v3';
+    const formatSize = BATTLE_FORMAT_SIZES[format] ?? 3;
 
-    const [player1, player2] = await Promise.all([
-      this.playerService.findOne(event.player1Id),
-      this.playerService.findOne(event.player2Id),
-    ]);
+    try {
+      const [player1, player2, rawTeam1, rawTeam2] = await Promise.all([
+        this.playerService.findOne(event.player1Id),
+        this.playerService.findOne(event.player2Id),
+        this.playerService.getPlayerParty(event.player1Id),
+        this.playerService.getPlayerParty(event.player2Id),
+      ]);
 
-    const [team1, team2] = await Promise.all([
-      this.playerService.getPlayerParty(event.player1Id),
-      this.playerService.getPlayerParty(event.player2Id),
-    ]);
+      if (rawTeam1.length < formatSize || rawTeam2.length < formatSize) {
+        this.eventEmitter.emit(
+          'battle.creation.failed',
+          new BattleCreationFailedEvent(
+            event.player1SocketId,
+            event.player2SocketId,
+            `Time insuficiente para o formato ${format}. Verifique sua equipe.`
+          )
+        );
+        return;
+      }
 
-    const initialState: BattleState = {
-      player1Id: event.player1Id,
-      player2Id: event.player2Id,
-      player1SocketId: event.player1SocketId,
-      player2SocketId: event.player2SocketId,
-      player1: this.mapTeamToState(team1, player1),
-      player2: this.mapTeamToState(team2, player2),
-      turn: 1,
-      battleStatus: BattleStatus.ACTIVE,
-      events: [],
-      turnPhase: TurnPhase.SELECTION,
-      pendingActions: { [event.player1Id]: null, [event.player2Id]: null },
-    };
+      const battle = this.repo.create({
+        player1Id: event.player1Id,
+        player2Id: event.player2Id,
+        player1SocketId: event.player1SocketId,
+        player2SocketId: event.player2SocketId,
+        status: 'ACTIVE',
+      });
+      const savedBattle = await this.repo.save(battle);
 
-    await this.battleCache.set(savedBattle.id, initialState);
-    this.eventEmitter.emit('battle.created', new BattleCreatedEvent(savedBattle.id, initialState));
+      const team1 = rawTeam1.slice(0, formatSize);
+      const team2 = rawTeam2.slice(0, formatSize);
+
+      const initialState: BattleState = {
+        player1Id: event.player1Id,
+        player2Id: event.player2Id,
+        player1SocketId: event.player1SocketId,
+        player2SocketId: event.player2SocketId,
+        player1: this.mapTeamToState(team1, player1),
+        player2: this.mapTeamToState(team2, player2),
+        turn: 1,
+        battleStatus: BattleStatus.ACTIVE,
+        events: [],
+        turnPhase: TurnPhase.SELECTION,
+        pendingActions: { [event.player1Id]: null, [event.player2Id]: null },
+      };
+
+      await this.battleCache.set(savedBattle.id, initialState);
+      this.eventEmitter.emit('battle.created', new BattleCreatedEvent(savedBattle.id, initialState));
+    } catch (err) {
+      console.error('[BattleCreation] Failed to create PvP battle:', err);
+    }
   }
 
   @OnEvent('bot.match.join.command')
   async createPveBattle(command: PlayerWantsToBattleBotCommand): Promise<void> {
-    const botId = -Math.floor(Date.now() / 1000);
-    const { state: botPlayerState, profile: botProfile } =
-      await this.botPlayerService.createBotPlayerStateFromProfile(command.botProfileId);
+    const format = command.format ?? '3v3';
+    const formatSize = BATTLE_FORMAT_SIZES[format] ?? 3;
 
-    const battle = this.repo.create({
-      player1Id: command.playerId,
-      player2Id: botId,
-      player1SocketId: command.socketId,
-      player2SocketId: 'bot',
-      status: 'ACTIVE',
-    });
-    const savedBattle = await this.repo.save(battle);
+    try {
+      const botId = -Math.floor(Date.now() / 1000);
+      const [{ state: botPlayerState, profile: botProfile }, player1, rawTeam] = await Promise.all([
+        this.botPlayerService.createBotPlayerStateFromProfile(command.botProfileId),
+        this.playerService.findOne(command.playerId),
+        this.playerService.getPlayerParty(command.playerId),
+      ]);
 
-    const player1 = await this.playerService.findOne(command.playerId);
-    const player1Team = await this.playerService.getPlayerParty(command.playerId);
+      if (rawTeam.length < formatSize) {
+        this.eventEmitter.emit(
+          'battle.creation.failed',
+          new BattleCreationFailedEvent(
+            command.socketId,
+            'bot',
+            `Time insuficiente para o formato ${format}. Adicione mais Coffeemons à equipe.`
+          )
+        );
+        return;
+      }
 
-    const initialState: BattleState = {
-      player1Id: command.playerId,
-      player2Id: botId,
-      player1SocketId: command.socketId,
-      player2SocketId: 'bot',
-      player1: this.mapTeamToState(player1Team, player1),
-      player2: botPlayerState,
-      turn: 1,
-      battleStatus: BattleStatus.ACTIVE,
-      events: [],
-      isBotBattle: true,
-      botStrategy: botProfile.strategy,
-      turnPhase: TurnPhase.SELECTION,
-      pendingActions: { [command.playerId]: null, [botId]: null },
-    };
+      const battle = this.repo.create({
+        player1Id: command.playerId,
+        player2Id: botId,
+        player1SocketId: command.socketId,
+        player2SocketId: 'bot',
+        status: 'ACTIVE',
+      });
+      const savedBattle = await this.repo.save(battle);
+      const team = rawTeam.slice(0, formatSize);
 
-    await this.battleCache.set(savedBattle.id, initialState);
-    this.eventEmitter.emit('battle.created', new BattleCreatedEvent(savedBattle.id, initialState));
+      const initialState: BattleState = {
+        player1Id: command.playerId,
+        player2Id: botId,
+        player1SocketId: command.socketId,
+        player2SocketId: 'bot',
+        player1: this.mapTeamToState(team, player1),
+        player2: botPlayerState,
+        turn: 1,
+        battleStatus: BattleStatus.ACTIVE,
+        events: [],
+        isBotBattle: true,
+        botStrategy: botProfile.strategy,
+        turnPhase: TurnPhase.SELECTION,
+        pendingActions: { [command.playerId]: null, [botId]: null },
+      };
+
+      await this.battleCache.set(savedBattle.id, initialState);
+      this.eventEmitter.emit('battle.created', new BattleCreatedEvent(savedBattle.id, initialState));
+    } catch (err) {
+      console.error('[BattleCreation] Failed to create PvE battle:', err);
+    }
   }
 
   private mapTeamToState(team: PlayerCoffeemons[], player: Player): PlayerBattleState {

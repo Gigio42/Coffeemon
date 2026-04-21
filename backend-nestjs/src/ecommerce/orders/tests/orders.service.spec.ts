@@ -1,4 +1,4 @@
-import { NotFoundException } from '@nestjs/common';
+import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { OrderStatus } from 'src/Shared/enums/order_status';
@@ -16,10 +16,17 @@ describe('OrdersService', () => {
     find: jest.fn(),
     findOne: jest.fn(),
     update: jest.fn(),
+    save: jest.fn(),
+    create: jest.fn(),
   };
 
-  const mockOrderItemsRepository = {};
-  const mockProductsRepository = {};
+  const mockOrderItemsRepository = {
+    save: jest.fn(),
+    create: jest.fn(),
+  };
+  const mockProductsRepository = {
+    findOne: jest.fn(),
+  };
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -107,6 +114,45 @@ describe('OrdersService', () => {
       const result = await service.checkout(userId);
 
       expect(result).toContain('Erro ao tentar atualizar o status do pedido.');
+    });
+  });
+
+  describe('checkoutWithItems', () => {
+    it('should throw BadRequestException when items are empty', async () => {
+      await expect(service.checkoutWithItems([])).rejects.toThrow(
+        BadRequestException,
+      );
+    });
+
+    it('should create a finished order for anonymous checkout', async () => {
+      const items = [{ productId: 1, quantity: 2 }];
+      const savedOrder = { id: 99 };
+      const product = { id: 1, price: 12.5 };
+
+      mockOrdersRepository.create.mockReturnValue({
+        status: OrderStatus.FINISHED,
+      });
+      mockOrdersRepository.save.mockResolvedValue(savedOrder);
+      mockProductsRepository.findOne.mockResolvedValue(product);
+      mockOrderItemsRepository.create.mockImplementation((data) => data);
+      mockOrderItemsRepository.save.mockResolvedValue({});
+      mockOrdersRepository.update.mockResolvedValue({ affected: 1 });
+
+      const result = await service.checkoutWithItems(items);
+
+      expect(mockOrdersRepository.save).toHaveBeenCalled();
+      expect(mockProductsRepository.findOne).toHaveBeenCalledWith({
+        where: { id: 1 },
+      });
+      expect(mockOrderItemsRepository.save).toHaveBeenCalled();
+      expect(mockOrdersRepository.update).toHaveBeenCalledWith(savedOrder.id, {
+        total_amount: 25,
+        total_quantity: 2,
+      });
+      expect(result).toEqual({
+        message: 'Pedido realizado com sucesso!',
+        orderId: savedOrder.id,
+      });
     });
   });
 });

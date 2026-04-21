@@ -11,127 +11,108 @@ const { width: SCREEN_WIDTH } = Dimensions.get('window');
 interface TeamFormationProps {
   partyMembers: PlayerCoffeemon[];
   onCoffeemonPress: (coffeemon: PlayerCoffeemon) => void;
-  onAddPress: () => void;
   activeCoffeemonId?: number;
 }
 
 export default function TeamFormation({
   partyMembers,
   onCoffeemonPress,
-  onAddPress,
   activeCoffeemonId,
 }: TeamFormationProps) {
-  // Posições em formação triangular responsiva
+  const memberCount = partyMembers.length;
+  const arenaWidth = SCREEN_WIDTH - theme.spacing.lg * 2;
+  const centerX = arenaWidth / 2;
+
   const getPositions = () => {
-    const slotSize = Math.min((SCREEN_WIDTH - theme.spacing.lg * 2) / 3.5, 120);
-    const spacing = slotSize * 0.3;
-    
-    const centerX = SCREEN_WIDTH / 2;
-    const topY = theme.spacing.md;
-    const bottomY = topY + slotSize + spacing;
-    
+    if (memberCount === 1) {
+      return [{ x: centerX, y: 40, scale: 1.4, z: 10, isLeader: true }];
+    }
+    if (memberCount === 2) {
+      return [
+        { x: centerX - 60, y: 50, scale: 1.1, z: 5, isLeader: false },
+        { x: centerX + 60, y: 50, scale: 1.1, z: 5, isLeader: false },
+      ];
+    }
     return [
-      { x: centerX, y: topY, scale: 1.1 },  // Líder (centro-topo)
-      { x: centerX - slotSize - spacing / 2, y: bottomY, scale: 1.0 },   // Esquerda
-      { x: centerX + slotSize + spacing / 2, y: bottomY, scale: 1.0 },   // Direita
+      { x: centerX - 85, y: 65, scale: 0.95, z: 5, isLeader: false },
+      { x: centerX + 85, y: 65, scale: 0.95, z: 5, isLeader: false },
+      { x: centerX, y: 30, scale: 1.35, z: 10, isLeader: true },
     ];
   };
 
-  const renderCoffeemon = (coffeemon: PlayerCoffeemon | undefined, index: number) => {
-    const positions = getPositions();
-    const position = positions[index];
-    const isEmpty = !coffeemon;
-    const isActive = coffeemon?.id === activeCoffeemonId;
-    const slotSize = Math.min((SCREEN_WIDTH - theme.spacing.lg * 2) / 3.5, 120);
+  const renderCoffeemon = (coffeemon: PlayerCoffeemon, index: number) => {
+    const position = getPositions()[index];
+    const baseSize = 130;
+    const size = baseSize * position.scale;
+    const isActive = coffeemon.id === activeCoffeemonId;
 
     return (
       <TouchableOpacity
-        key={index}
+        key={coffeemon.id}
         style={[
           styles.coffeemonPosition,
           {
-            left: position.x - (slotSize * position.scale) / 2,
+            left: position.x - size / 2,
             top: position.y,
-            width: slotSize * position.scale,
-            height: slotSize * position.scale,
+            width: size,
+            zIndex: position.z,
           },
         ]}
-        onPress={() => {
-          if (isEmpty) {
-            onAddPress();
-          } else {
-            onCoffeemonPress(coffeemon);
-          }
-        }}
-        activeOpacity={0.8}
+        onPress={() => onCoffeemonPress(coffeemon)}
+        activeOpacity={0.9}
       >
-        {isEmpty ? (
-          <View style={styles.emptySlot}>
-            <View style={styles.emptySlotInner}>
-              <Text style={styles.emptySlotIcon}>+</Text>
-              <Text style={styles.emptySlotText}>Adicionar</Text>
-            </View>
+        {/* Stage/Podium Base */}
+        <View style={styles.podiumWrapper}>
+          <LinearGradient
+            colors={isActive ? ['#FFD700', '#FFA500'] : ['#E0E0E0', '#BDBDBD']}
+            style={[styles.podiumBase, { width: size * 0.8, height: 35 }]}
+          />
+          <View style={[styles.podiumShadow, { width: size * 0.7 }]} />
+        </View>
+
+        {/* Coffeemon Sprite - No overflow clipping */}
+        <Image
+          source={getCoffeemonImage(
+            coffeemon.coffeemon.name,
+            getVariantForStatusEffects(coffeemon.statusEffects, 'default'),
+          )}
+          style={{ 
+            width: size, 
+            height: size, 
+            marginBottom: -20, // Sit on the podium
+            zIndex: 3 
+          }}
+          resizeMode="contain"
+        />
+
+        {/* Minimalist Info Floating Badge */}
+        <View style={[styles.infoFloating, isActive && styles.infoFloatingActive]}>
+          <Text style={styles.nameText} numberOfLines={1}>
+            {coffeemon.coffeemon.name}
+          </Text>
+          <View style={styles.statsRow}>
+             <Text style={styles.levelText}>Lv.{coffeemon.level}</Text>
+             <View style={styles.typeDot} />
+             <Text style={styles.typeText}>
+               {coffeemon.coffeemon.types?.[0] || 'roasted'}
+             </Text>
           </View>
-        ) : (
-          <View style={styles.coffeemonContainer}>
-            {/* Círculo de fundo */}
-            <View style={[styles.coffeemonCircle, isActive && styles.coffeemonCircleActive]}>
-              <LinearGradient
-                colors={['#FAFBFC', '#FFFFFF']}
-                style={StyleSheet.absoluteFillObject}
-              />
-            </View>
-
-            {/* Imagem do Coffeemon */}
-            <Image
-              source={getCoffeemonImage(
-                coffeemon.coffeemon.name,
-                getVariantForStatusEffects(coffeemon.statusEffects, 'default')
-              )}
-              style={[styles.coffeemonImage, { width: slotSize * position.scale * 0.75, height: slotSize * position.scale * 0.75 }]}
-              resizeMode="contain"
-            />
-
-            {/* Badge de nível */}
-            <View style={styles.levelBadge}>
-              <Text style={styles.levelText}>{coffeemon.level}</Text>
-            </View>
-
-            {/* Barra de HP */}
-            <View style={[styles.hpBarContainer, { width: slotSize * position.scale * 0.8 }]}>
-              <View style={styles.hpBarBackground}>
-                <LinearGradient
-                  colors={['#10B981', '#059669']}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 0 }}
-                  style={[
-                    styles.hpBarFill,
-                    {
-                      width: `${Math.max(0, Math.min(100, (coffeemon.hp / ((coffeemon.coffeemon.baseHp || 50) + coffeemon.level * 2)) * 100))}%`,
-                    },
-                  ]}
-                />
-              </View>
-            </View>
-
-            {/* Nome */}
-            <Text style={[styles.coffeemonName, { maxWidth: slotSize * position.scale }]} numberOfLines={1}>
-              {coffeemon.coffeemon.name}
-            </Text>
-          </View>
-        )}
+        </View>
       </TouchableOpacity>
     );
   };
 
-  const slotSize = Math.min((SCREEN_WIDTH - theme.spacing.lg * 2) / 3.5, 120);
-  const formationHeight = slotSize * 2.5 + theme.spacing.xl;
-
   return (
-    <View style={[styles.container, { height: formationHeight }]}>
+    <View style={styles.container}>
       <View style={styles.formationArea}>
-        {/* Coffeemons em formação */}
-        {[0, 1, 2].map((index) => renderCoffeemon(partyMembers[index], index))}
+        {memberCount === 0 ? (
+          <View style={styles.emptyState}>
+            <Text style={styles.emptyIcon}>☕</Text>
+            <Text style={styles.emptyTitle}>Sua equipe está vazia</Text>
+          </View>
+        ) : (
+          partyMembers.slice(0, 3).map((member, index) => renderCoffeemon(member, index))
+        )}
       </View>
     </View>
   );
@@ -140,125 +121,112 @@ export default function TeamFormation({
 const styles = StyleSheet.create({
   container: {
     width: '100%',
-    paddingVertical: theme.spacing.md,
+    height: 380,
+    paddingHorizontal: theme.spacing.lg,
+    justifyContent: 'center',
   },
 
   formationArea: {
     flex: 1,
     position: 'relative',
+    marginTop: 20,
   },
 
   coffeemonPosition: {
     position: 'absolute',
-  },
-
-  emptySlot: {
-    width: '100%',
-    height: '100%',
     alignItems: 'center',
-    justifyContent: 'center',
   },
 
-  emptySlotInner: {
-    width: '100%',
-    height: '100%',
-    borderRadius: theme.radius.full,
-    borderWidth: 2,
-    borderStyle: 'dashed',
-    borderColor: theme.colors.border.medium,
-    backgroundColor: theme.colors.background.tertiary,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-
-  emptySlotIcon: {
-    fontSize: 28,
-    color: theme.colors.text.tertiary,
-    fontWeight: theme.typography.weight.bold,
-  },
-
-  emptySlotText: {
-    fontSize: 10,
-    color: theme.colors.text.tertiary,
-    fontWeight: theme.typography.weight.medium,
-    marginTop: 2,
-  },
-
-  coffeemonContainer: {
-    width: '100%',
-    height: '100%',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-
-  coffeemonCircle: {
+  podiumWrapper: {
     position: 'absolute',
-    width: '100%',
-    height: '100%',
-    borderRadius: theme.radius.full,
-    borderWidth: 2,
-    borderColor: theme.colors.border.default,
-    overflow: 'hidden',
-    ...theme.shadows.md,
-  },
-
-  coffeemonCircleActive: {
-    borderColor: theme.colors.accent.primary,
-    borderWidth: 3,
-    ...theme.shadows.xl,
-  },
-
-  coffeemonImage: {
+    bottom: 20,
+    alignItems: 'center',
     zIndex: 1,
   },
 
-  levelBadge: {
-    position: 'absolute',
-    top: -4,
-    right: -4,
-    backgroundColor: theme.colors.accent.primary,
-    borderRadius: theme.radius.full,
-    minWidth: 24,
-    height: 24,
-    paddingHorizontal: 6,
+  podiumBase: {
+    borderRadius: 50,
+    opacity: 0.6,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.5)',
+  },
+
+  podiumShadow: {
+    height: 10,
+    backgroundColor: 'rgba(0,0,0,0.1)',
+    borderRadius: 50,
+    marginTop: 2,
+    filter: 'blur(5px)',
+  },
+
+  infoFloating: {
+    marginTop: 5,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 15,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#F0F0F0',
     alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 2,
-    borderColor: theme.colors.surface.base,
-    ...theme.shadows.sm,
+    ...theme.shadows.md,
+    zIndex: 10,
+  },
+
+  infoFloatingActive: {
+    borderColor: '#FFA500',
+    backgroundColor: '#FFFBEB',
+  },
+
+  nameText: {
+    fontSize: 13,
+    fontWeight: '900',
+    color: '#2D3436',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+
+  statsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 2,
   },
 
   levelText: {
-    fontSize: 11,
-    fontWeight: theme.typography.weight.black,
-    color: theme.colors.text.inverse,
+    fontSize: 10,
+    fontWeight: '700',
+    color: '#636E72',
   },
 
-  hpBarContainer: {
-    position: 'absolute',
-    bottom: -8,
+  typeDot: {
+    width: 3,
+    height: 3,
+    borderRadius: 2,
+    backgroundColor: '#B2BEC3',
+    marginHorizontal: 5,
   },
 
-  hpBarBackground: {
-    height: 5,
-    backgroundColor: theme.colors.border.light,
-    borderRadius: theme.radius.full,
-    overflow: 'hidden',
-    borderWidth: 1,
-    borderColor: theme.colors.border.default,
+  typeText: {
+    fontSize: 10,
+    fontWeight: '600',
+    color: '#808E9B',
+    textTransform: 'capitalize',
   },
 
-  hpBarFill: {
-    height: '100%',
-    borderRadius: theme.radius.full,
+  emptyState: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 
-  coffeemonName: {
-    position: 'absolute',
-    bottom: -24,
-    fontSize: 11,
-    fontWeight: theme.typography.weight.bold,
-    color: theme.colors.text.primary,
-    textAlign: 'center',
+  emptyIcon: {
+    fontSize: 40,
+    opacity: 0.3,
+  },
+
+  emptyTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#B2BEC3',
+    marginTop: 10,
   },
 });

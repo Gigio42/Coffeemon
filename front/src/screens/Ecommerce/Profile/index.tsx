@@ -10,8 +10,8 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useUser } from '../../../hooks/useUser';
+import { clearAuthData } from '../../../api/authService';
 import { styles } from './styles';
 import { pixelArt } from '../../../theme';
 
@@ -39,7 +39,7 @@ export default function ProfileScreen({
 
   const handleLogout = async () => {
     console.log('🚪 Fazendo logout...');
-    await AsyncStorage.clear();
+    await clearAuthData();
     console.log('✅ AsyncStorage limpo, redirecionando...');
     onLogout();
   };

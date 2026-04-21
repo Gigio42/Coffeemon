@@ -11,6 +11,7 @@ import { getCoffeemonImage } from '../../../assets/coffeemons';
 import { getVariantForStatusEffects } from '../../utils/statusEffects';
 import { prefetchPalette } from '../../utils/colorPalette';
 import { checkoutWithItems } from '../../api/cartService';
+import { saveLocalOrder } from '../../api/localOrderService';
 
 enum EcommerceTab {
   PRODUCTS = 'PRODUCTS',
@@ -47,21 +48,24 @@ export default function EcommerceScreen({
         if (!playerId) return;
 
         const coffeemons = await fetchPlayerCoffeemons(token, playerId);
-        await Promise.allSettled(
-          coffeemons.map(async (coffeemon) => {
-            if (cancelled) return;
-            const variant = getVariantForStatusEffects(coffeemon.statusEffects, 'default');
-            const assetModule = getCoffeemonImage(coffeemon.coffeemon.name, variant);
-            await prefetchPalette(assetModule);
-          })
-        );
+        for (const coffeemon of coffeemons.slice(0, 2)) {
+          if (cancelled) return;
+          const variant = getVariantForStatusEffects(coffeemon.statusEffects, 'default');
+          const assetModule = getCoffeemonImage(coffeemon.coffeemon.name, variant);
+          await prefetchPalette(assetModule);
+        }
       } catch {
         // silencioso — prefetch é opcional
       }
     };
 
-    preloadCoffeemonPalettes();
-    return () => { cancelled = true; };
+    const timer = setTimeout(() => {
+      preloadCoffeemonPalettes();
+    }, 1200);
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
   }, [token]);
 
   // ─── Carrinho local ──────────────────────────
@@ -92,8 +96,12 @@ export default function EcommerceScreen({
   };
 
   const handleCheckout = async () => {
+    const checkoutCart = [...localCart];
     const items = localCart.map((i) => ({ productId: i.product.id, quantity: i.quantity }));
-    await checkoutWithItems(items, token);
+    const orderResult = await checkoutWithItems(items, token);
+    if (!token) {
+      await saveLocalOrder(orderResult.orderId, checkoutCart);
+    }
     setLocalCart([]);
   };
 

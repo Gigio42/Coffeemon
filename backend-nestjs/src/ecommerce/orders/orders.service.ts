@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { OrderStatus } from 'src/Shared/enums/order_status';
 import { Repository } from 'typeorm';
@@ -80,6 +80,10 @@ export class OrdersService {
     items: { productId: number; quantity: number }[],
     userId?: number,
   ): Promise<{ message: string; orderId: number }> {
+    if (!items?.length) {
+      throw new BadRequestException('Pedido sem itens');
+    }
+
     const orderData: Partial<Order> = {
       status: OrderStatus.FINISHED,
       total_amount: 0,
@@ -98,6 +102,10 @@ export class OrdersService {
     let totalQuantity = 0;
 
     for (const item of items) {
+      if (item.quantity <= 0) {
+        throw new BadRequestException('Quantidade inválida no pedido');
+      }
+
       const product = await this.productsRepository.findOne({
         where: { id: item.productId },
       });

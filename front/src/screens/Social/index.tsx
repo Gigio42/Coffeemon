@@ -30,7 +30,7 @@ interface SocialScreenProps {
   playerId: number;
   userId?: number;
   isGuest?: boolean;
-  onLogout?: () => void;
+  onCreateAccount?: () => void;
 }
 
 type SocialTab = 'friends' | 'chat';
@@ -383,7 +383,7 @@ export const SocialScreen: React.FC<SocialScreenProps> = ({
   playerId,
   userId,
   isGuest,
-  onLogout,
+  onCreateAccount,
 }) => {
   const [activeTab, setActiveTab] = useState<SocialTab>('friends');
   const [qrModalVisible, setQrModalVisible] = useState(false);
@@ -487,7 +487,7 @@ export const SocialScreen: React.FC<SocialScreenProps> = ({
           isGuest={isGuest}
           onOpenChat={handleOpenChatFromFriend}
           onOpenQR={() => setQrModalVisible(true)}
-          onCreateAccount={onLogout ?? (() => {})}
+          onCreateAccount={onCreateAccount ?? (() => {})}
         />
       )}
       {activeTab === 'chat' && <ChatTab chat={chat} />}

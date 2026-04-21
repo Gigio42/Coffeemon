@@ -295,7 +295,7 @@ interface BattleScreenProps {
   playerId: number;
   token: string;
   socket: Socket;
-  onNavigateToMatchmaking: () => void;
+  onNavigateToMatchmaking: (keepActiveBattle?: boolean) => void;
 }
 
 interface SwitchCandidate {
@@ -329,7 +329,7 @@ export default function BattleScreen({
         <View style={styles.errorContainer}>
           <Text style={styles.errorText}>Erro ao iniciar batalha</Text>
           <TouchableOpacity
-            onPress={onNavigateToMatchmaking}
+            onPress={() => onNavigateToMatchmaking()}
             style={styles.returnButton}
           >
             <Text style={styles.returnButtonText}>Voltar</Text>
@@ -399,6 +399,7 @@ export default function BattleScreen({
     opponentDisconnected,
     disconnectCountdown,
     isReconnecting,
+    reconnectCountdown,
   } = battle;
 
   // Estado local para controle de modo de ação
@@ -1236,7 +1237,7 @@ export default function BattleScreen({
               styles.fleeActionButton,
               battleEnded && styles.actionButtonDisabled,
             ]}
-            onPress={onNavigateToMatchmaking}
+            onPress={() => onNavigateToMatchmaking()}
             disabled={battleEnded}
           >
             <Image
@@ -1783,11 +1784,28 @@ export default function BattleScreen({
       {isReconnecting && (
         <View style={battleOverlayStyles.backdrop}>
           <View style={battleOverlayStyles.card}>
-            <Text style={battleOverlayStyles.icon}>🔄</Text>
+            {reconnectCountdown != null && reconnectCountdown > 0 ? (
+              <View style={battleOverlayStyles.countdownRing}>
+                <Text style={battleOverlayStyles.countdownNumber}>{reconnectCountdown}</Text>
+              </View>
+            ) : (
+              <Text style={battleOverlayStyles.icon}>🔄</Text>
+            )}
             <Text style={battleOverlayStyles.title}>Reconectando...</Text>
             <Text style={battleOverlayStyles.subtitle}>
-              Tentando voltar para a batalha
+              {reconnectCountdown != null && reconnectCountdown > 0
+                ? `Você tem ${reconnectCountdown}s para voltar`
+                : 'Tentando reconectar...'}
             </Text>
+            {reconnectCountdown != null && reconnectCountdown <= 15 && (
+              <TouchableOpacity
+                style={battleOverlayStyles.exitBtn}
+                onPress={() => onNavigateToMatchmaking(true)}
+                activeOpacity={0.8}
+              >
+                <Text style={battleOverlayStyles.exitBtnText}>Ir para o lobby</Text>
+              </TouchableOpacity>
+            )}
           </View>
         </View>
       )}
@@ -1828,6 +1846,30 @@ const battleOverlayStyles = StyleSheet.create({
     fontSize: 13,
     textAlign: 'center',
   },
+  countdownRing: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    borderWidth: 3,
+    borderColor: '#C8A26B',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 4,
+  },
+  exitBtn: {
+    marginTop: 12,
+    backgroundColor: 'rgba(200,162,107,0.15)',
+    borderWidth: 1,
+    borderColor: '#C8A26B',
+    borderRadius: 12,
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+  },
+  exitBtnText: {
+    color: '#C8A26B',
+    fontSize: 14,
+    fontWeight: '700',
+  },
   countdownRow: {
     marginTop: 8,
     alignItems: 'center',
@@ -1838,8 +1880,8 @@ const battleOverlayStyles = StyleSheet.create({
     fontSize: 12,
   },
   countdownNumber: {
-    color: '#FF6B6B',
-    fontSize: 36,
-    fontWeight: 'bold',
+    color: '#F5E6C8',
+    fontSize: 26,
+    fontWeight: '800',
   },
 });
