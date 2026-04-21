@@ -10,14 +10,14 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useUser } from '../../../hooks/useUser';
+import { clearAuthData } from '../../../api/authService';
 import { styles } from './styles';
 import { pixelArt } from '../../../theme';
 
 interface ProfileScreenProps {
-  token: string;
-  userId: number;
+  token?: string;
+  userId?: number;
   onLogout: () => void;
   onNavigateToGame: () => void;
   onBack: () => void;
@@ -35,11 +35,11 @@ export default function ProfileScreen({
   const [isLoginPressed, setIsLoginPressed] = useState(false);
   const [isGamePressed, setIsGamePressed] = useState(false);
   const [isLogoutPressed, setIsLogoutPressed] = useState(false);
-  const { user, loading, error, refetch } = useUser(token);
+  const { user, loading, error, refetch } = useUser(token || '');
 
   const handleLogout = async () => {
     console.log('🚪 Fazendo logout...');
-    await AsyncStorage.clear();
+    await clearAuthData();
     console.log('✅ AsyncStorage limpo, redirecionando...');
     onLogout();
   };
@@ -53,60 +53,50 @@ export default function ProfileScreen({
     );
   }
 
-  if (!user || error) {
+  if (!token || !user || error) {
     return (
       <SafeAreaView style={styles.container}>
+        <View style={styles.header}>
+          <TouchableOpacity style={[styles.backButton, isBackPressed && pixelArt.buttons.actionPressed]}
+            onPressIn={() => setIsBackPressed(true)} onPressOut={() => setIsBackPressed(false)}
+            onPress={onBack} activeOpacity={1}>
+            <Text style={styles.backButtonText}>←</Text>
+          </TouchableOpacity>
+          <View style={styles.headerTitleContainer}>
+            <Image source={require('../../../../assets/icons/icone_perfil_usuario_generico.png')} style={styles.headerIcon} resizeMode="contain" />
+            <Text style={styles.headerTitle}>Perfil</Text>
+          </View>
+          <View style={{ width: 80 }} />
+        </View>
         <View style={styles.centerContainer}>
-          <Image
-            source={require('../../../../assets/icons/help_ajuda.png')}
-            style={styles.helpIcon}
-            resizeMode="contain"
-          />
-          <Text style={styles.errorText}>Erro ao carregar perfil</Text>
-          <Text style={styles.errorSubtext}>Não foi possível carregar seus dados</Text>
-
-          <TouchableOpacity 
-            style={[
-              styles.retryButton,
-              isRetryPressed && pixelArt.buttons.actionPressed
-            ]}
-            onPressIn={() => setIsRetryPressed(true)}
-            onPressOut={() => setIsRetryPressed(false)}
-            onPress={refetch}
-            activeOpacity={1}
-          >
-            <View style={styles.retryButtonContent}>
-              <Image
-                source={require('../../../../assets/icons/icone_engrenagem_ajustes.png')}
-                style={styles.settingsIcon}
-                resizeMode="contain"
-              />
-              <Text style={styles.retryButtonText}>Tentar Novamente</Text>
-            </View>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={[
-              styles.loginButton,
-              isLoginPressed && pixelArt.buttons.primaryPressed
-            ]}
-            onPressIn={() => setIsLoginPressed(true)}
-            onPressOut={() => setIsLoginPressed(false)}
-            onPress={async () => {
-              await AsyncStorage.clear();
-              onLogout();
-            }}
-            activeOpacity={1}
-          >
-            <View style={styles.loginButtonContent}>
-              <Image
-                source={require('../../../../assets/icons/icone_perfil_usuario_generico.png')}
-                style={styles.profileIcon}
-                resizeMode="contain"
-              />
-              <Text style={styles.loginButtonText}>Voltar ao Login</Text>
-            </View>
-          </TouchableOpacity>
+          <Image source={require('../../../../assets/icons/icone_perfil_usuario_generico.png')} style={styles.helpIcon} resizeMode="contain" />
+          {!token ? (
+            <>
+              <Text style={styles.errorText}>Você não está logado</Text>
+              <Text style={styles.errorSubtext}>Faça login para acessar o jogo e ver seu perfil</Text>
+              <TouchableOpacity style={[styles.loginButton, isLoginPressed && pixelArt.buttons.primaryPressed]}
+                onPressIn={() => setIsLoginPressed(true)} onPressOut={() => setIsLoginPressed(false)}
+                onPress={onNavigateToGame} activeOpacity={1}>
+                <View style={styles.loginButtonContent}>
+                  <Image source={require('../../../../assets/icons/estrela.png')} style={styles.profileIcon} resizeMode="contain" />
+                  <Text style={styles.loginButtonText}>Entrar / Jogar</Text>
+                </View>
+              </TouchableOpacity>
+            </>
+          ) : (
+            <>
+              <Text style={styles.errorText}>Erro ao carregar perfil</Text>
+              <Text style={styles.errorSubtext}>Não foi possível carregar seus dados</Text>
+              <TouchableOpacity style={[styles.retryButton, isRetryPressed && pixelArt.buttons.actionPressed]}
+                onPressIn={() => setIsRetryPressed(true)} onPressOut={() => setIsRetryPressed(false)}
+                onPress={refetch} activeOpacity={1}>
+                <View style={styles.retryButtonContent}>
+                  <Image source={require('../../../../assets/icons/icone_engrenagem_ajustes.png')} style={styles.settingsIcon} resizeMode="contain" />
+                  <Text style={styles.retryButtonText}>Tentar Novamente</Text>
+                </View>
+              </TouchableOpacity>
+            </>
+          )}
         </View>
       </SafeAreaView>
     );

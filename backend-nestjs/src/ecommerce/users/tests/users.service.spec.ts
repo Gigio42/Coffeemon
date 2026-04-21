@@ -8,6 +8,14 @@ import { UpdateUserDto } from '../dto/update-user.dto';
 import { User, UserRole } from '../entities/user.entity';
 import { UsersService } from '../users.service';
 
+const auditFields = {
+  isGuest: false,
+  createdAt: new Date('2024-01-01'),
+  updatedAt: new Date('2024-01-01'),
+  deletedAt: null,
+  lastLoginAt: null,
+};
+
 describe('UsersService', () => {
   let service: UsersService;
   let repository: Repository<User>;
@@ -18,7 +26,10 @@ describe('UsersService', () => {
     find: jest.fn(),
     findOneBy: jest.fn(),
     merge: jest.fn(),
-    remove: jest.fn(),
+    softRemove: jest.fn(),
+    update: jest.fn(),
+    delete: jest.fn(),
+    createQueryBuilder: jest.fn(),
   };
 
   beforeEach(async () => {
@@ -83,6 +94,7 @@ describe('UsersService', () => {
           role: UserRole.USER,
           orders: [],
           player: null,
+          ...auditFields,
         },
       ];
       mockRepository.find.mockResolvedValue(users);
@@ -120,6 +132,7 @@ describe('UsersService', () => {
         role: UserRole.USER,
         orders: [],
         player: null,
+        ...auditFields,
       };
       const expectedUpdatedUser = { ...existingUser, ...updateUserDto };
 
@@ -142,7 +155,7 @@ describe('UsersService', () => {
   });
 
   describe('remove', () => {
-    it('should remove a user and return it', async () => {
+    it('should soft-delete a user and return it', async () => {
       const user: User = {
         id: 1,
         email: 'test@test.com',
@@ -151,14 +164,15 @@ describe('UsersService', () => {
         role: UserRole.USER,
         orders: [],
         player: null,
+        ...auditFields,
       };
       mockRepository.findOneBy.mockResolvedValue(user);
-      mockRepository.remove.mockResolvedValue(user);
+      mockRepository.softRemove.mockResolvedValue({ ...user, deletedAt: new Date() });
 
       const result = await service.remove(1);
       expect(mockRepository.findOneBy).toHaveBeenCalledWith({ id: 1 });
-      expect(mockRepository.remove).toHaveBeenCalledWith(user);
-      expect(result).toEqual(user);
+      expect(mockRepository.softRemove).toHaveBeenCalledWith(user);
+      expect(result).toHaveProperty('deletedAt');
     });
 
     it('should throw NotFoundException if user to remove is not found', async () => {

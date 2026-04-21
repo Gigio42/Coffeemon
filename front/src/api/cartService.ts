@@ -156,7 +156,36 @@ export async function removeFromCart(token: string, productId: number): Promise<
 }
 
 /**
- * Finaliza a compra (checkout)
+ * Finaliza pedido enviando os itens diretamente (anônimo ou autenticado)
+ */
+export async function checkoutWithItems(
+  items: { productId: number; quantity: number }[],
+  token?: string,
+): Promise<{ message: string; orderId: number }> {
+  try {
+    const serverUrl = await getServerUrl();
+    const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+
+    const response = await fetch(`${serverUrl}/orders/checkout-items`, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({ items }),
+    });
+
+    if (!response.ok) {
+      throw new Error('Erro ao finalizar pedido');
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error('Erro ao finalizar pedido:', error);
+    throw error;
+  }
+}
+
+/**
+ * Finaliza a compra (checkout) — legado, mantido para compatibilidade
  */
 export async function checkout(token: string): Promise<void> {
   try {

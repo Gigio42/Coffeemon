@@ -16,7 +16,6 @@ import { SocketManagerService } from './shared/socket-manager/socket-manager.ser
 @WebSocketGateway({
   cors: {
     origin: '*',
-    credentials: true,
   },
 })
 export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {

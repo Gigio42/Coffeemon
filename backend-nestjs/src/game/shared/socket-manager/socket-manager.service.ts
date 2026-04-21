@@ -7,6 +7,10 @@ export class SocketManagerService {
   private readonly socketPlayerMap = new Map<string, number>();
 
   register(playerId: number, socket: Socket): void {
+    const previousSocketId = this.playerSocketMap.get(playerId);
+    if (previousSocketId && previousSocketId !== socket.id) {
+      this.socketPlayerMap.delete(previousSocketId);
+    }
     this.playerSocketMap.set(playerId, socket.id);
     this.socketPlayerMap.set(socket.id, playerId);
     console.log(`[SocketManager] Socket ${socket.id} registrado para Player ${playerId}`);
@@ -14,8 +18,11 @@ export class SocketManagerService {
 
   unregister(socket: Socket): void {
     const playerId = this.socketPlayerMap.get(socket.id);
-    if (playerId) {
-      this.playerSocketMap.delete(playerId);
+    if (playerId !== undefined) {
+      const currentSocketId = this.playerSocketMap.get(playerId);
+      if (currentSocketId === socket.id) {
+        this.playerSocketMap.delete(playerId);
+      }
       this.socketPlayerMap.delete(socket.id);
       console.log(`[SocketManager] Socket ${socket.id} (Player ${playerId}) desregistrado.`);
     }

@@ -1,10 +1,17 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Alert } from 'react-native';
 import * as coffeemonService from '../api/coffeemonService';
 import { PlayerCoffeemon } from '../api/coffeemonService';
 
+type PartySyncEvent =
+  | { type: 'toggle'; coffeemonId: number; isInParty: boolean }
+  | { type: 'swap'; addId: number; removeId: number };
+
+const partySyncListeners = new Set<(event: PartySyncEvent) => void>();
+
 interface UseCoffeemonsProps {
   token: string;
+  playerId?: number;
   onLog?: (message: string) => void;
 }
 
@@ -14,7 +21,7 @@ interface UseCoffeemonsResult {
   partyLoading: number | null;
   partyMembers: PlayerCoffeemon[];
   availableCoffeemons: PlayerCoffeemon[];
-  fetchCoffeemons: () => Promise<void>;
+  fetchCoffeemons: (force?: boolean) => Promise<void>;
   toggleParty: (coffeemon: PlayerCoffeemon) => Promise<boolean | void>;
   swapPartyMembers: (newMember: PlayerCoffeemon, oldMember: PlayerCoffeemon) => Promise<boolean>;
   giveAllCoffeemons: () => Promise<void>;
@@ -24,13 +31,38 @@ interface UseCoffeemonsResult {
 
 export function useCoffeemons({
   token,
+  playerId: initialPlayerId,
   onLog,
 }: UseCoffeemonsProps): UseCoffeemonsResult {
   const [coffeemons, setCoffeemons] = useState<PlayerCoffeemon[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [partyLoading, setPartyLoading] = useState<number | null>(null);
-  const [playerId, setPlayerId] = useState<number | null>(null);
+  const [playerId, setPlayerId] = useState<number | null>(initialPlayerId ?? null);
   const [initialized, setInitialized] = useState<boolean>(false);
+  const lastFetchAt = useRef<number>(0);
+  const FETCH_THROTTLE_MS = 30_000;
+
+  useEffect(() => {
+    const listener = (event: PartySyncEvent) => {
+      setCoffeemons((prev) =>
+        prev.map((coffeemon) => {
+          if (event.type === 'toggle' && coffeemon.id === event.coffeemonId) {
+            return { ...coffeemon, isInParty: event.isInParty };
+          }
+          if (event.type === 'swap') {
+            if (coffeemon.id === event.addId) return { ...coffeemon, isInParty: true };
+            if (coffeemon.id === event.removeId) return { ...coffeemon, isInParty: false };
+          }
+          return coffeemon;
+        })
+      );
+    };
+
+    partySyncListeners.add(listener);
+    return () => {
+      partySyncListeners.delete(listener);
+    };
+  }, []);
 
   useEffect(() => {
     initializePlayer();
@@ -38,9 +70,17 @@ export function useCoffeemons({
 
   async function initializePlayer() {
     try {
-      const playerData = await coffeemonService.fetchPlayerData(token);
-      setPlayerId(playerData.id);
-      await fetchCoffeemons(playerData.id);
+      // Se playerId já foi fornecido, pula o fetchPlayerData
+      let id = initialPlayerId;
+      if (!id) {
+        const playerData = await coffeemonService.fetchPlayerData(token);
+        id = playerData.id;
+      }
+      if (!id) {
+        throw new Error('Player ID inválido');
+      }
+      setPlayerId(id);
+      await fetchCoffeemons(id);
     } catch (error: any) {
       console.error('Error initializing player:', error);
       if (onLog) {
@@ -50,12 +90,14 @@ export function useCoffeemons({
     }
   }
 
-  async function fetchCoffeemons(playerIdParam?: number) {
+  async function fetchCoffeemons(playerIdParam?: number, force = false) {
     const idToUse = playerIdParam || playerId;
     if (!idToUse) {
       console.error('No player ID available');
       return;
     }
+
+    if (!force && Date.now() - lastFetchAt.current < FETCH_THROTTLE_MS) return;
 
     setLoading(true);
     try {
@@ -79,6 +121,7 @@ export function useCoffeemons({
       }
     } finally {
       setLoading(false);
+      lastFetchAt.current = Date.now();
       setInitialized(true);
     }
   }
@@ -108,6 +151,10 @@ export function useCoffeemons({
         prev.map((c) =>
           c.id === coffeemon.id ? { ...c, isInParty: !c.isInParty } : c
         )
+      );
+      lastFetchAt.current = 0; // invalida cache para forçar próximo fetch
+      partySyncListeners.forEach((listener) =>
+        listener({ type: 'toggle', coffeemonId: coffeemon.id, isInParty: !coffeemon.isInParty })
       );
 
       if (onLog) {
@@ -144,6 +191,10 @@ export function useCoffeemons({
           return c;
         })
       );
+      lastFetchAt.current = 0;
+      partySyncListeners.forEach((listener) =>
+        listener({ type: 'swap', addId: newMember.id, removeId: oldMember.id })
+      );
 
       if (onLog) {
         onLog(`Trocou ${oldMember.coffeemon.name} por ${newMember.coffeemon.name}`);
@@ -153,7 +204,7 @@ export function useCoffeemons({
       console.error('Error swapping party members:', error);
       Alert.alert('Erro', 'Falha ao trocar membros do time.');
       // Refresh to ensure consistency
-      if (playerId) await fetchCoffeemons(playerId);
+      if (playerId) await fetchCoffeemons(playerId, true);
       return false;
     } finally {
       setPartyLoading(null);
@@ -182,7 +233,7 @@ export function useCoffeemons({
       }
       
       // Recarregar coffeemons com o playerId
-      await fetchCoffeemons(playerId);
+      await fetchCoffeemons(playerId, true);
     } catch (error: any) {
       console.error('Error giving all coffeemons:', error);
       const errorMessage = error.message || 'Erro ao capturar Coffeemons';
@@ -213,7 +264,7 @@ export function useCoffeemons({
       Alert.alert('Sucesso!', result.message || `${result.fixed} Coffeemons tiveram moves adicionados!`);
       
       // Recarregar coffeemons
-      await fetchCoffeemons(playerId);
+      await fetchCoffeemons(playerId, true);
     } catch (error: any) {
       console.error('Error adding missing moves:', error);
       const errorMessage = error.message || 'Erro ao adicionar moves';
@@ -235,7 +286,7 @@ export function useCoffeemons({
     partyLoading,
     partyMembers,
     availableCoffeemons,
-    fetchCoffeemons: () => fetchCoffeemons(),
+    fetchCoffeemons: (force = false) => fetchCoffeemons(undefined, force),
     toggleParty,
     swapPartyMembers,
     giveAllCoffeemons,

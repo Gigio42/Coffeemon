@@ -4,6 +4,7 @@ import { UsersModule } from '../ecommerce/users/users.module';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { AuthGuard } from './guards/auth.guard';
+import { OptionalAuthGuard } from './guards/optional-auth.guard';
 import { RolesGuard } from './guards/roles.guard';
 
 @Module({
@@ -14,8 +15,8 @@ import { RolesGuard } from './guards/roles.guard';
       signOptions: { expiresIn: '7d' },
     }),
   ],
-  providers: [AuthService, AuthGuard, RolesGuard],
+  providers: [AuthService, AuthGuard, OptionalAuthGuard, RolesGuard],
   controllers: [AuthController],
-  exports: [AuthGuard, AuthService, RolesGuard, JwtModule],
+  exports: [AuthGuard, OptionalAuthGuard, AuthService, RolesGuard, JwtModule],
 })
 export class AuthModule {}

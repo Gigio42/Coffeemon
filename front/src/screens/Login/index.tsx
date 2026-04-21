@@ -4,6 +4,7 @@ import {
   View,
   TouchableOpacity,
   TextInput,
+  Image,
   Platform,
   KeyboardAvoidingView,
   ScrollView,
@@ -22,13 +23,16 @@ interface LoginScreenProps {
     playerId: number,
     userId: number
   ) => void;
+  onBackToStore?: () => void;
 }
 
 export default function LoginScreen({
   onNavigateToMatchmaking,
+  onBackToStore,
 }: LoginScreenProps) {
   const [configVisible, setConfigVisible] = useState(false);
   const [isPressed, setIsPressed] = useState(false);
+  const [isGuestPressed, setIsGuestPressed] = useState(false);
 
   const {
     email,
@@ -42,6 +46,7 @@ export default function LoginScreen({
     setIsRegistering,
     handleLogin,
     handleRegister,
+    handleGuest,
     clearCache,
   } = useAuth({ onSuccess: onNavigateToMatchmaking });
 
@@ -57,22 +62,28 @@ export default function LoginScreen({
   return (
     <View style={{ flex: 1 }}>
       <StatusBar barStyle="dark-content" />
-      
+
       {/* Background Gradient */}
       <LinearGradient
         colors={['#fdfbf7', '#f5f2e8', '#e6dec5']}
         style={[styles.safeArea, { position: 'absolute', width: '100%', height: '100%' }]}
       />
 
-      <SafeAreaView style={styles.safeArea}>
-        {/* Botão de Configuração (Engrenagem) */}
-        <View style={styles.configButtonContainer}>
-          <TouchableOpacity
-            style={styles.configButton}
-            onPress={() => setConfigVisible(true)}
-            activeOpacity={0.7}
-          >
-            <Text style={styles.configIcon}>⚙️</Text>
+      <SafeAreaView style={styles.safeArea} edges={['top']}>
+        {/* Barra superior — padrão espresso */}
+        <View style={styles.topBar}>
+          {onBackToStore ? (
+            <TouchableOpacity style={styles.topBarButton} onPress={onBackToStore} activeOpacity={0.75}>
+              <Image source={require('../../../assets/iconsv2/back.png')} style={styles.topBarIcon} resizeMode="contain" />
+              <Text style={styles.topBarButtonText}>Loja</Text>
+            </TouchableOpacity>
+          ) : (
+            <View style={styles.topBarPlaceholder} />
+          )}
+
+          <TouchableOpacity style={styles.topBarButton} onPress={() => setConfigVisible(true)} activeOpacity={0.75}>
+            <Image source={require('../../../assets/iconsv2/global-network.png')} style={styles.topBarIcon} resizeMode="contain" />
+            <Text style={styles.topBarButtonText}>Servidor</Text>
           </TouchableOpacity>
         </View>
 
@@ -151,7 +162,7 @@ export default function LoginScreen({
                 <TouchableOpacity
                   style={[
                     styles.loginButton,
-                    isPressed && pixelArt.buttons.primaryPressed
+                    isPressed && { opacity: 0.85, transform: [{ scale: 0.98 }] }
                   ]}
                   onPressIn={() => setIsPressed(true)}
                   onPressOut={() => setIsPressed(false)}
@@ -163,6 +174,23 @@ export default function LoginScreen({
                   </Text>
                 </TouchableOpacity>
               </View>
+
+              {/* Botão Guest */}
+              {!isRegistering && (
+                <TouchableOpacity
+                  style={[
+                    styles.loginButton,
+                    isGuestPressed && { opacity: 0.85, transform: [{ scale: 0.98 }] },
+                    { marginTop: 8, backgroundColor: '#5D4037' }
+                  ]}
+                  onPressIn={() => setIsGuestPressed(true)}
+                  onPressOut={() => setIsGuestPressed(false)}
+                  onPress={handleGuest}
+                  activeOpacity={1}
+                >
+                  <Text style={styles.loginButtonText}>☕ JOGAR SEM CONTA</Text>
+                </TouchableOpacity>
+              )}
 
               {/* Toggle Login/Register */}
               <TouchableOpacity

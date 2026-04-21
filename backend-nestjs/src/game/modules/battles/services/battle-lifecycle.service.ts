@@ -4,6 +4,7 @@ import { BattleCacheService } from '../../../shared/cache/services/battle-cache.
 import { RoomCacheService } from '../../../shared/cache/services/room-cache.service';
 import {
   BattleCancelledEvent,
+  BattleRejoinFailedEvent,
   OpponentDisconnectedEvent,
   PlayerDisconnectedCommand,
   PlayerLeftBattleEvent,
@@ -28,24 +29,30 @@ export class BattleLifecycleService {
     await this.roomCache.joinRoom(battleRoomId, command.playerId, command.socketId, 'battle');
     const battleState = await this.battleCache.get(command.battleId);
 
-    if (battleState) {
-      if (battleState.player1Id === command.playerId)
-        battleState.player1SocketId = command.socketId;
-      if (battleState.player2Id === command.playerId)
-        battleState.player2SocketId = command.socketId;
-      await this.battleCache.set(command.battleId, battleState);
-
-      const timeoutKey = `${command.battleId}:${command.playerId}`;
-      if (this.disconnectionTimeouts.has(timeoutKey)) {
-        clearTimeout(this.disconnectionTimeouts.get(timeoutKey));
-        this.disconnectionTimeouts.delete(timeoutKey);
-      }
-
+    if (!battleState) {
       this.eventEmitter.emit(
-        'player.reconnected',
-        new PlayerReconnectedEvent(command.battleId, command.playerId, battleState)
+        'battle.rejoin.failed',
+        new BattleRejoinFailedEvent(command.socketId, command.battleId)
       );
+      return;
     }
+
+    if (battleState.player1Id === command.playerId)
+      battleState.player1SocketId = command.socketId;
+    if (battleState.player2Id === command.playerId)
+      battleState.player2SocketId = command.socketId;
+    await this.battleCache.set(command.battleId, battleState);
+
+    const timeoutKey = `${command.battleId}:${command.playerId}`;
+    if (this.disconnectionTimeouts.has(timeoutKey)) {
+      clearTimeout(this.disconnectionTimeouts.get(timeoutKey));
+      this.disconnectionTimeouts.delete(timeoutKey);
+    }
+
+    this.eventEmitter.emit(
+      'player.reconnected',
+      new PlayerReconnectedEvent(command.battleId, command.playerId, battleState)
+    );
   }
 
   @OnEvent('player.leave.command')
@@ -96,6 +103,25 @@ export class BattleLifecycleService {
         }
       }
       await this.battleCache.delete(battleId);
+    }
+  }
+
+  @OnEvent('battle.ended')
+  handleBattleEnded({ battleId }: { battleId: string }): void {
+    this.clearBattleTimeouts(battleId);
+  }
+
+  @OnEvent('battle.cancelled')
+  handleBattleCancelled({ battleId }: { battleId: string }): void {
+    this.clearBattleTimeouts(battleId);
+  }
+
+  private clearBattleTimeouts(battleId: string): void {
+    for (const [key, timeout] of this.disconnectionTimeouts) {
+      if (key.startsWith(`${battleId}:`)) {
+        clearTimeout(timeout);
+        this.disconnectionTimeouts.delete(key);
+      }
     }
   }
 }

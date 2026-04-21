@@ -1,6 +1,9 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Socket } from 'socket.io-client';
 import { BattleState, BattleStatus, PlayerState } from '../types';
+
+export const BATTLE_DISCONNECT_TIME_KEY = 'battleDisconnectTime';
 import { CoffeemonVariant } from '../../assets/coffeemons';
 import { getBaseName } from '../utils/battleUtils';
 import { getEventMessage } from '../utils/battleMessages';
@@ -18,7 +21,7 @@ interface UseBattleProps {
   initialBattleState: any;
   playerId: number;
   socket: Socket;
-  onNavigateToMatchmaking: () => void;
+  onNavigateToMatchmaking: (keepActiveBattle?: boolean) => void;
   imageSourceGetter: (name: string, variant: CoffeemonVariant) => any;
   animationHandlers: {
     playLunge: (isPlayer: boolean) => Promise<unknown>;
@@ -46,10 +49,9 @@ export function useBattle({
     try {
       // console.log('useBattle - Processing initial battle state:', initialBattleState);
       
-      // O initialBattleState pode vir de duas formas:
-      // 1. { battleState: {...} } - quando vem do matchFound
-      // 2. { battleId: "..." } - quando só tem o ID
-      const state = initialBattleState?.battleState;
+      // initialBattleState pode vir como { battleState: {...} } (matchFound/battleRejoined)
+      // ou diretamente como o state object — aceita os dois
+      const state = initialBattleState?.battleState ?? initialBattleState;
       
       // Se não tiver battleState, criar um estado inicial mínimo
       if (!state || !state.player1 || !state.player2) {
@@ -99,7 +101,9 @@ export function useBattle({
   const [winnerId, setWinnerId] = useState<number | null>(null);
   const [showSelectionModal, setShowSelectionModal] = useState<boolean>(false);
   const [isProcessing, setIsProcessing] = useState<boolean>(false);
-  const [isBattleReady, setIsBattleReady] = useState<boolean>(false);
+  const [isBattleReady, setIsBattleReady] = useState<boolean>(
+    !!(extractedBattleState?.player1?.coffeemons?.length && extractedBattleState?.player2?.coffeemons?.length)
+  );
   const [recentDamageMap, setRecentDamageMap] = useState<Record<string, boolean>>({});
   const [battleRewards, setBattleRewards] = useState<BattleReward | null>({
     playerId,
@@ -111,6 +115,8 @@ export function useBattle({
   const [opponentDisconnected, setOpponentDisconnected] = useState<boolean>(false);
   const [disconnectCountdown, setDisconnectCountdown] = useState<number | null>(null);
   const [isReconnecting, setIsReconnecting] = useState<boolean>(false);
+  const [reconnectCountdown, setReconnectCountdown] = useState<number | null>(null);
+  const reconnectCountdownRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const battleRewardsRef = useRef<BattleReward | null>(null);
   const countdownIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const isReconnectingRef = useRef<boolean>(false);
@@ -646,36 +652,63 @@ export function useBattle({
       }
     });
 
-    // Batalha cancelada por desconexão prolongada
+    // Batalha cancelada por desconexão prolongada — navega de volta sem preservar rejoin
     socket.on('battleCancelled', () => {
       if (countdownIntervalRef.current) {
         clearInterval(countdownIntervalRef.current);
         countdownIntervalRef.current = null;
       }
-      onNavigateToMatchmaking();
+      if (reconnectCountdownRef.current) {
+        clearInterval(reconnectCountdownRef.current);
+        reconnectCountdownRef.current = null;
+      }
+      setReconnectCountdown(null);
+      onNavigateToMatchmaking(false);
     });
 
-    // Próprio socket desconectou — mostra overlay de reconectando
+    // Próprio socket desconectou — inicia countdown de 25s (5s antes do servidor cancelar)
     socket.on('disconnect', () => {
       isReconnectingRef.current = true;
       setIsReconnecting(true);
+      AsyncStorage.setItem(BATTLE_DISCONNECT_TIME_KEY, Date.now().toString());
+
+      let remaining = 25;
+      setReconnectCountdown(remaining);
+      if (reconnectCountdownRef.current) clearInterval(reconnectCountdownRef.current);
+      reconnectCountdownRef.current = setInterval(() => {
+        remaining -= 1;
+        setReconnectCountdown(remaining);
+        if (remaining <= 0) {
+          if (reconnectCountdownRef.current) clearInterval(reconnectCountdownRef.current);
+          reconnectCountdownRef.current = null;
+        }
+      }, 1000);
     });
 
-    // Próprio socket reconectou — re-entra na batalha
+    // Próprio socket reconectou — pede estado atual via rejoinBattle
     socket.on('connect', () => {
       if (isReconnectingRef.current) {
-        isReconnectingRef.current = false;
-        setIsReconnecting(false);
-        socket.emit('joinBattle', { battleId });
+        socket.emit('rejoinBattle', { battleId });
       }
     });
 
-    // Log initial connection status
-    // console.log('[Battle] Socket connected:', socket.connected);
-    if (socket.connected) {
-      // console.log('[Battle] Requesting initial battle state...');
-      socket.emit('get_battle_state', { battleId });
-    }
+    // Backend confirmou o rejoin — restaura estado e limpa overlay
+    socket.on('battleRejoined', (data: { battleId: string; battleState: any }) => {
+      if (!isReconnectingRef.current) return;
+      isReconnectingRef.current = false;
+      setIsReconnecting(false);
+      setReconnectCountdown(null);
+      if (reconnectCountdownRef.current) {
+        clearInterval(reconnectCountdownRef.current);
+        reconnectCountdownRef.current = null;
+      }
+      AsyncStorage.removeItem(BATTLE_DISCONNECT_TIME_KEY);
+      const freshState = data.battleState?.battleState ?? data.battleState;
+      if (freshState?.player1 && freshState?.player2) {
+        setBattleState(freshState);
+        setIsBattleReady(true);
+      }
+    });
   };
 
   const sendAction = (actionType: string, payload: any) => {
@@ -711,8 +744,13 @@ export function useBattle({
       socket.off('opponentDisconnected');
       socket.off('playerReconnected');
       socket.off('battleCancelled');
+      socket.off('battleRejoined');
       socket.off('disconnect');
       socket.off('connect');
+      if (reconnectCountdownRef.current) {
+        clearInterval(reconnectCountdownRef.current);
+        reconnectCountdownRef.current = null;
+      }
       socket.off('playerLevelUp');
       socket.off('coffeemonLevelUp');
       socket.off('coffeemonLearnedMove');
@@ -789,5 +827,6 @@ export function useBattle({
     opponentDisconnected,
     disconnectCountdown,
     isReconnecting,
+    reconnectCountdown,
   };
 }

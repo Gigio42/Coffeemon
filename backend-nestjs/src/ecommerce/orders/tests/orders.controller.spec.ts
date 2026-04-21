@@ -1,5 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { AuthGuard } from '../../../auth/guards/auth.guard';
+import { OptionalAuthGuard } from '../../../auth/guards/optional-auth.guard';
 import { OrdersController } from '../orders.controller';
 import { OrdersService } from '../orders.service';
 
@@ -10,6 +11,7 @@ describe('OrdersController', () => {
     findAll: jest.fn(),
     findOne: jest.fn(),
     checkout: jest.fn(),
+    checkoutWithItems: jest.fn(),
   };
 
   beforeEach(async () => {
@@ -18,6 +20,8 @@ describe('OrdersController', () => {
       providers: [{ provide: OrdersService, useValue: mockOrdersService }],
     })
       .overrideGuard(AuthGuard)
+      .useValue({ canActivate: () => true })
+      .overrideGuard(OptionalAuthGuard)
       .useValue({ canActivate: () => true })
       .compile();
 
@@ -51,6 +55,20 @@ describe('OrdersController', () => {
       const mockUserId = 1;
       await controller.checkout(mockUserId);
       expect(mockOrdersService.checkout).toHaveBeenCalledWith(mockUserId);
+    });
+  });
+
+  describe('checkoutWithItems', () => {
+    it('should call checkoutWithItems service with items and optional userId', async () => {
+      const dto = { items: [{ productId: 1, quantity: 2 }] };
+      const mockUserId = 42;
+
+      await controller.checkoutWithItems(dto, mockUserId);
+
+      expect(mockOrdersService.checkoutWithItems).toHaveBeenCalledWith(
+        dto.items,
+        mockUserId,
+      );
     });
   });
 });

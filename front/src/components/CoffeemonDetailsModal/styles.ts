@@ -92,7 +92,7 @@ export const styles = StyleSheet.create({
     justifyContent: 'center',
     minHeight: 320,
     paddingTop: 60,
-    paddingBottom: 20,
+    paddingBottom: 0,
     position: 'relative',
   },
   heroVignette: {
@@ -103,15 +103,6 @@ export const styles = StyleSheet.create({
     bottom: 0,
     backgroundColor: 'rgba(0, 0, 0, 0.08)',
     opacity: 0.6,
-  },
-  transitionGradient: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    height: 150,
-    zIndex: 100,
-    pointerEvents: 'none',
   },
   backgroundImage: {
     position: 'absolute',
@@ -132,8 +123,8 @@ export const styles = StyleSheet.create({
   nameSection: {
     width: '100%',
     paddingHorizontal: 24,
-    paddingTop: 20,
-    paddingBottom: 12,
+    paddingTop: 0,
+    paddingBottom: 20,
     zIndex: 6,
   },
   nameContainer: {
@@ -151,7 +142,7 @@ export const styles = StyleSheet.create({
   },
   contentArea: {
     flex: 1,
-    paddingTop: 24,
+    paddingTop: 10,
     paddingHorizontal: 24,
   },
   contentGradientTop: {
@@ -169,18 +160,6 @@ export const styles = StyleSheet.create({
     width: 200,
     height: 200,
     opacity: 0.2,
-  },
-  contentInnerGlow: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    height: 4,
-    backgroundColor: 'rgba(255, 255, 255, 0.6)',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
   },
   tabsContainer: {
     flexDirection: 'row',
@@ -399,25 +378,17 @@ export const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '700',
   },
-  actionButton: {
-    width: '100%',
-    paddingVertical: 16,
-    borderRadius: 16,
-    alignItems: 'center',
-  },
-  actionButtonText: {
-    color: '#FFF',
-    fontSize: 14,
-    fontWeight: '700',
-    letterSpacing: 0.5,
-  },
   statRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 16,
+    marginBottom: 12,
+    borderRadius: 12,
+    borderWidth: 1,
+    paddingVertical: 10,
+    paddingHorizontal: 10,
   },
   statLabel: {
-    width: 45,
+    width: 40,
     fontSize: 11,
     fontWeight: '700',
     textTransform: 'uppercase',
@@ -425,15 +396,16 @@ export const styles = StyleSheet.create({
   },
   statBarContainer: {
     flex: 1,
-    height: 8,
-    borderRadius: 4,
-    marginHorizontal: 12,
+    height: 10,
+    borderRadius: 999,
+    marginHorizontal: 10,
     overflow: 'hidden',
     backgroundColor: 'rgba(0,0,0,0.06)',
   },
   statBar: {
     height: '100%',
-    borderRadius: 4,
+    borderRadius: 999,
+    overflow: 'hidden',
   },
   statValue: {
     width: 35,
@@ -448,6 +420,40 @@ export const styles = StyleSheet.create({
     paddingTop: 16,
     borderTopWidth: 1,
     borderTopColor: 'rgba(0,0,0,0.06)',
+  },
+  statsCard: {
+    borderRadius: 16,
+    borderWidth: 1,
+    padding: 12,
+    marginBottom: 14,
+  },
+  xpCard: {
+    borderRadius: 16,
+    borderWidth: 1,
+    padding: 12,
+  },
+  xpHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  xpBarContainer: {
+    width: '100%',
+    height: 10,
+    borderRadius: 999,
+    overflow: 'hidden',
+  },
+  xpBarFill: {
+    height: '100%',
+    borderRadius: 999,
+    overflow: 'hidden',
+  },
+  xpSubtext: {
+    marginTop: 8,
+    fontSize: 12,
+    fontWeight: '600',
+    textAlign: 'right',
   },
   xpLabel: {
     fontSize: 14,

@@ -1,4 +1,13 @@
-import { Column, Entity, OneToMany, OneToOne, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  Column,
+  CreateDateColumn,
+  DeleteDateColumn,
+  Entity,
+  OneToMany,
+  OneToOne,
+  PrimaryGeneratedColumn,
+  UpdateDateColumn,
+} from 'typeorm';
 import { Order } from '../../orders/entities/order.entity';
 import { Player } from 'src/game/modules/player/entities/player.entity';
 
@@ -28,6 +37,23 @@ export class User {
   })
   role: UserRole;
 
+  @Column({ default: false })
+  isGuest: boolean;
+
+  // ── Auditoria ──────────────────────────────
+  @CreateDateColumn()
+  createdAt: Date;
+
+  @UpdateDateColumn()
+  updatedAt: Date;
+
+  @DeleteDateColumn()
+  deletedAt: Date | null;
+
+  @Column({ type: 'datetime', nullable: true, default: null })
+  lastLoginAt: Date | null;
+
+  // ── Relações ───────────────────────────────
   @OneToMany(() => Order, (order) => order.user)
   orders: Order[];
 

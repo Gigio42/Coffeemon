@@ -399,4 +399,47 @@ export const styles = StyleSheet.create({
     fontWeight: '700',
     lineHeight: 20,
   },
+
+  // ── Guest banner (aba Amigos) ─────────────────────────────────────────────────
+  guestBanner: {
+    alignItems: 'center',
+    backgroundColor: colors.surface.base,
+    borderRadius: radius.xl,
+    borderWidth: 1,
+    borderColor: colors.border.light,
+    padding: spacing.xl,
+    gap: spacing.md,
+    marginTop: spacing.lg,
+    ...theme.shadows.sm,
+  },
+  guestBannerIcon: {
+    width: 52,
+    height: 52,
+    tintColor: colors.accent.primary,
+    opacity: 0.9,
+  },
+  guestBannerTitle: {
+    fontSize: typography.size.lg,
+    fontWeight: '700',
+    color: colors.text.primary,
+    textAlign: 'center',
+  },
+  guestBannerSubtitle: {
+    fontSize: typography.size.sm,
+    color: colors.text.secondary,
+    textAlign: 'center',
+    lineHeight: 20,
+  },
+  guestBannerButton: {
+    marginTop: spacing.xs,
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.xl,
+    backgroundColor: colors.accent.primary,
+    borderRadius: radius.lg,
+  },
+  guestBannerButtonText: {
+    color: colors.text.inverse,
+    fontWeight: '700',
+    fontSize: typography.size.base,
+  },
 });

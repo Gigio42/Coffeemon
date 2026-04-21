@@ -19,16 +19,14 @@ export class MatchmakingService {
 
   @OnEvent('queue.join.command')
   async handlePlayerJoinQueue(command: PlayerWantsToJoinQueueCommand): Promise<void> {
-    const matchmakingRoom = 'matchmaking:default';
-    await this.roomCache.joinRoom(
-      matchmakingRoom,
-      command.playerId,
-      command.socketId,
-      'matchmaking'
-    );
+    const format = command.format ?? '3v3';
+    const matchmakingRoom = `matchmaking:${format}`;
+
+    await this.roomCache.joinRoom(matchmakingRoom, command.playerId, command.socketId, 'matchmaking');
+
     this.eventEmitter.emit(
       'queue.player.joined',
-      new PlayerJoinedQueueEvent(command.playerId, command.socketId)
+      new PlayerJoinedQueueEvent(command.playerId, command.socketId, format)
     );
 
     const opponent = await this.roomCache.findAndClaimOpponent(
@@ -36,16 +34,12 @@ export class MatchmakingService {
       command.playerId,
       command.socketId
     );
+
     if (!opponent) return;
 
     this.eventEmitter.emit(
       'match.pair.found',
-      new MatchPairFoundEvent(
-        command.playerId,
-        command.socketId,
-        opponent.playerId,
-        opponent.socketId
-      )
+      new MatchPairFoundEvent(command.playerId, command.socketId, opponent.playerId, opponent.socketId, format)
     );
   }
 

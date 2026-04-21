@@ -17,6 +17,11 @@ export class AuthController {
     return { message: 'Invalid email or password' };
   }
 
+  @Post('guest')
+  async guest() {
+    return this.authService.guest();
+  }
+
   @Post('register')
   async register(@Body() body: { username: string; email: string; password: string }) {
     if (!body.username || !body.email || !body.password) {

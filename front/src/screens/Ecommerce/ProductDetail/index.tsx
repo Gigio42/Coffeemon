@@ -13,26 +13,24 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Product } from '../../../types';
-import { addToCart } from '../../../api/cartService';
 import { styles } from './styles';
 import CustomAlert from '../../../components/Ecommerce/CustomAlert';
 import { useCustomAlert } from '../../../hooks/useCustomAlert';
 
 interface ProductDetailScreenProps {
-  token: string;
   product: Product;
   onBack: () => void;
   onAddedToCart: () => void;
+  onAddToCart: (product: Product, quantity: number) => void;
 }
 
 export default function ProductDetailScreen({
-  token,
   product,
   onBack,
   onAddedToCart,
+  onAddToCart,
 }: ProductDetailScreenProps) {
   const [quantity, setQuantity] = useState('1');
-  const [loading, setLoading] = useState(false);
   const insets = useSafeAreaInsets();
   const { alertState, hideAlert, showError, showAlert } = useCustomAlert();
 
@@ -40,32 +38,24 @@ export default function ProductDetailScreen({
     return `R$ ${price.toFixed(2).replace('.', ',')}`;
   };
 
-  const handleAddToCart = async () => {
+  const handleAddToCart = () => {
     const qty = parseInt(quantity);
     if (isNaN(qty) || qty < 1) {
       showError('Erro', 'Quantidade inválida');
       return;
     }
 
-    try {
-      setLoading(true);
-      await addToCart(token, product.id, qty);
+    onAddToCart(product, qty);
 
-      showAlert({
-        type: 'success',
-        title: 'Sucesso! 🎉',
-        message: `${qty}x ${product.name} adicionado ao carrinho`,
-        showCancel: true,
-        confirmText: 'Ir para carrinho',
-        cancelText: 'Continuar comprando',
-        onConfirm: onAddedToCart,
-      });
-    } catch (err) {
-      console.error('Erro ao adicionar ao carrinho:', err);
-      showError('Erro', err instanceof Error ? err.message : 'Erro desconhecido');
-    } finally {
-      setLoading(false);
-    }
+    showAlert({
+      type: 'success',
+      title: 'Sucesso! 🎉',
+      message: `${qty}x ${product.name} adicionado ao carrinho`,
+      showCancel: true,
+      confirmText: 'Ir para carrinho',
+      cancelText: 'Continuar comprando',
+      onConfirm: onAddedToCart,
+    });
   };
 
   return (
@@ -164,23 +154,16 @@ export default function ProductDetailScreen({
           </View>
 
           <TouchableOpacity
-            style={[styles.addButton, loading && styles.addButtonDisabled]}
+            style={styles.addButton}
             onPress={handleAddToCart}
-            disabled={loading}
           >
             <View style={styles.addButtonContent}>
-              {loading ? (
-                <Text style={styles.addButtonText}>Adicionando...</Text>
-              ) : (
-                <>
-                  <Image
-                    source={require('../../../../assets/icons/icone_carrinho_compra.png')}
-                    style={styles.addButtonIcon}
-                    resizeMode="contain"
-                  />
-                  <Text style={styles.addButtonText}>Adicionar</Text>
-                </>
-              )}
+              <Image
+                source={require('../../../../assets/icons/icone_carrinho_compra.png')}
+                style={styles.addButtonIcon}
+                resizeMode="contain"
+              />
+              <Text style={styles.addButtonText}>Adicionar</Text>
             </View>
           </TouchableOpacity>
         </View>

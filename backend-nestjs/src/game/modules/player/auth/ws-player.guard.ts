@@ -16,7 +16,11 @@ export class WsPlayerGuard implements CanActivate {
         throw new WsException('User not authenticated');
       }
 
-      const player = await this.playerService.findByUserId(userId);
+      if (socket.data.playerId && socket.data.username !== undefined) {
+        return true;
+      }
+
+      const player = await this.playerService.findBasicByUserId(userId);
       if (!player) {
         throw new WsException('Player not found');
       }

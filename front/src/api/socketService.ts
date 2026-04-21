@@ -1,5 +1,4 @@
 import { io, Socket } from 'socket.io-client';
-import { Platform } from 'react-native';
 import { getServerUrl } from '../utils/config';
 
 export interface SocketCallbacks {
@@ -21,23 +20,28 @@ export async function createSocket(
     const url = await getServerUrl();
     console.log('Creating socket connection to:', url);
 
+    let consecutiveConnectErrors = 0;
+    let switchedToPollingFirst = false;
+
     // Conecta ao servidor Socket.IO com autenticação JWT e configurações otimizadas
     const socket = io(url, {
       auth: { token },
-      ...(Platform.OS === 'web'
-        ? {}
-        : { extraHeaders: { Authorization: `Bearer ${token}` } }),
-      transports: ['websocket', 'polling'], // Tenta websocket primeiro
+      transports: ['polling', 'websocket'],
+      tryAllTransports: true,
+      upgrade: true,
+      rememberUpgrade: false,
       reconnection: true,
-      reconnectionAttempts: 5,
+      reconnectionAttempts: Infinity,
       reconnectionDelay: 1000,
+      reconnectionDelayMax: 5000,
       timeout: 20000,
-      forceNew: true, // Força nova conexão
+      forceNew: false,
     });
 
     // Evento: Socket conectado com sucesso
     socket.on('connect', () => {
       console.log('Socket connected:', socket.id);
+      consecutiveConnectErrors = 0;
       
       // Register session with backend if playerId is provided
       if (callbacks.playerId) {
@@ -65,8 +69,18 @@ export async function createSocket(
 
     // Evento: Erro de conexão
     socket.on('connect_error', (err: Error) => {
-      console.error('Socket connection error:', err.message, err.stack);
-      if (callbacks.onConnectError) {
+      consecutiveConnectErrors += 1;
+      const msg = (err.message || '').toLowerCase();
+
+      if (!switchedToPollingFirst && msg.includes('websocket')) {
+        switchedToPollingFirst = true;
+        socket.io.opts.transports = ['polling', 'websocket'];
+      }
+
+      console.warn(
+        `Socket connect_error (${consecutiveConnectErrors}): ${err.message}`
+      );
+      if (callbacks.onConnectError && consecutiveConnectErrors >= 3) {
         try {
           callbacks.onConnectError(err);
         } catch (callbackErr) {
@@ -116,30 +130,52 @@ export async function createSocket(
   }
 }
 
-/**
- * Emite evento para procurar partida PvP
- */
-export function findPvPMatch(socket: Socket): void {
-  socket.emit('findMatch');
+// ─── Queue ────────────────────────────────────────────────────────────────────
+
+export function findPvPMatch(socket: Socket, format = '3v3'): void {
+  socket.emit('findMatch', { format });
 }
 
-/**
- * Emite evento para procurar partida contra Bot
- */
-export function findBotMatch(socket: Socket, botProfileId: string): void {
-  socket.emit('findBotMatch', { botProfileId });
+export function findBotMatch(socket: Socket, botProfileId: string, format = '3v3'): void {
+  socket.emit('findBotMatch', { botProfileId, format });
 }
 
-/**
- * Cancela a busca por partida
- */
 export function leaveQueue(socket: Socket): void {
   socket.emit('leaveQueue');
 }
 
-/**
- * Desconecta o socket
- */
+// ─── Lobbies ─────────────────────────────────────────────────────────────────
+
+export function createLobby(socket: Socket, format: string, type: 'public' | 'private'): void {
+  socket.emit('createLobby', { format, type });
+}
+
+export function joinLobby(socket: Socket, lobbyId: string): void {
+  socket.emit('joinLobby', { lobbyId });
+}
+
+export function leaveLobby(socket: Socket): void {
+  socket.emit('leaveLobby');
+}
+
+export function startLobby(socket: Socket, lobbyId: string): void {
+  socket.emit('startLobby', { lobbyId });
+}
+
+export function rejoinBattle(socket: Socket, battleId: string): void {
+  socket.emit('rejoinBattle', { battleId });
+}
+
+export function watchLobbies(socket: Socket): void {
+  socket.emit('watchLobbies');
+}
+
+export function unwatchLobbies(socket: Socket): void {
+  socket.emit('unwatchLobbies');
+}
+
+// ─── Utils ────────────────────────────────────────────────────────────────────
+
 export function disconnectSocket(socket: Socket): void {
   socket.disconnect();
 }

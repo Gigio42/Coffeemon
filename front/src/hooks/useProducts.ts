@@ -29,7 +29,7 @@ export function useProducts(): UseProductsReturn {
         setLoading(true);
       }
       
-      const data = await fetchProducts();
+      const data = await fetchProducts(isRefreshing);
 
       setProducts(data);
     } catch (err) {

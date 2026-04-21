@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import {
   Text,
   View,
-  ScrollView,
   TouchableOpacity,
   ActivityIndicator,
   RefreshControl,
@@ -17,71 +16,86 @@ import { useProducts } from '../../../hooks/useProducts';
 import ProductCard from '../../../components/Ecommerce/ProductCard';
 import EmptyState from '../../../components/Ecommerce/EmptyState';
 import { styles } from './styles';
-import { pixelArt } from '../../../theme';
-import { addToCart } from '../../../api/cartService';
 import CustomAlert from '../../../components/Ecommerce/CustomAlert';
 import { useCustomAlert } from '../../../hooks/useCustomAlert';
 
 interface ProductListScreenProps {
-  token: string;
   onViewProduct: (product: Product) => void;
   onNavigateToCart: () => void;
-  onNavigateToMatchmaking: () => void;
   cartCount: number;
+  onAddToCart: (product: Product, quantity: number) => void;
 }
 
 export default function ProductListScreen({
-  token,
   onViewProduct,
   onNavigateToCart,
-  onNavigateToMatchmaking,
   cartCount,
+  onAddToCart,
 }: ProductListScreenProps) {
   const { products, loading, refreshing, error, refetch, onRefresh } = useProducts();
-  const [isRetryPressed, setIsRetryPressed] = useState(false);
   const [searchText, setSearchText] = useState('');
-  const [addingToCart, setAddingToCart] = useState<number | null>(null);
-  const { alertState, hideAlert, showError, showAlert } = useCustomAlert();
+  const { alertState, hideAlert, showAlert } = useCustomAlert();
 
-  // Filtrar produtos baseado na pesquisa
-  const filteredProducts = products.filter(product =>
-    product.name.toLowerCase().includes(searchText.toLowerCase()) ||
-    product.description?.toLowerCase().includes(searchText.toLowerCase())
+  const filteredProducts = products.filter((p) =>
+    p.name.toLowerCase().includes(searchText.toLowerCase()) ||
+    p.description?.toLowerCase().includes(searchText.toLowerCase())
   );
 
-  const handleAddToCart = async (product: Product) => {
-    setAddingToCart(product.id);
-    try {
-      await addToCart(token, product.id, 1);
-      showAlert({
-        type: 'success',
-        title: 'Adicionado! 🛍️',
-        message: `${product.name} foi adicionado ao carrinho`,
-        showCancel: true,
-        confirmText: 'Ver Carrinho',
-        cancelText: 'Continuar Comprando',
-        onConfirm: onNavigateToCart,
-      });
-    } catch (err) {
-      console.error('Erro ao adicionar ao carrinho:', err);
-      showError('Erro', err instanceof Error ? err.message : 'Não foi possível adicionar ao carrinho');
-    } finally {
-      setAddingToCart(null);
-    }
+  const handleAddToCart = (product: Product) => {
+    onAddToCart(product, 1);
+    showAlert({
+      type: 'success',
+      title: 'Adicionado! 🛍️',
+      message: `${product.name} foi adicionado ao carrinho`,
+      showCancel: true,
+      confirmText: 'Ver Carrinho',
+      cancelText: 'Continuar',
+      onConfirm: onNavigateToCart,
+    });
   };
 
   if (loading) {
     return (
       <View style={styles.centerContainer}>
         <ActivityIndicator size="large" color="#8B4513" />
-        <Text style={styles.loadingText}>Carregando produtos...</Text>
+        <Text style={styles.loadingText}>Carregando cardápio...</Text>
       </View>
     );
   }
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.container} edges={['top']}>
+
+      {/* ── Header espresso ── */}
       <View style={styles.header}>
+        <View style={styles.headerTop}>
+          {/* Branding */}
+          <View>
+            <View style={styles.brandRow}>
+              <Text style={styles.brandIcon}>☕</Text>
+              <Text style={styles.brandTitle}>Coffeemon</Text>
+            </View>
+            <Text style={styles.brandSubtitle}>Café & Loja</Text>
+          </View>
+
+          {/* Chip do carrinho */}
+          <TouchableOpacity style={styles.cartChip} onPress={onNavigateToCart} activeOpacity={0.75}>
+            <Image
+              source={require('../../../../assets/icons/icone_carrinho_compra.png')}
+              style={styles.cartChipIcon}
+              resizeMode="contain"
+            />
+            {cartCount > 0 ? (
+              <View style={styles.cartChipBadge}>
+                <Text style={styles.cartChipBadgeText}>{cartCount > 9 ? '9+' : cartCount}</Text>
+              </View>
+            ) : (
+              <Text style={styles.cartChipCount}>0</Text>
+            )}
+          </TouchableOpacity>
+        </View>
+
+        {/* Barra de busca */}
         <View style={styles.searchContainer}>
           <Image
             source={require('../../../../assets/icons/icone_lupa_busca.png')}
@@ -90,99 +104,92 @@ export default function ProductListScreen({
           />
           <TextInput
             style={styles.searchInput}
-            placeholder="Pesquisar produtos..."
-            placeholderTextColor="#666666"
+            placeholder="Pesquisar no cardápio..."
+            placeholderTextColor="rgba(255,255,255,0.38)"
             value={searchText}
             onChangeText={setSearchText}
             autoCorrect={false}
             autoCapitalize="none"
           />
+          {searchText.length > 0 && (
+            <TouchableOpacity style={styles.searchClear} onPress={() => setSearchText('')}>
+              <Text style={styles.searchClearText}>✕</Text>
+            </TouchableOpacity>
+          )}
         </View>
       </View>
 
-      {/* Gradiente de fundo para o conteúdo */}
-      <LinearGradient 
-        colors={['#e0f0ff', '#f0d0e0']} 
-        style={styles.gradientContainer}
-      >
+      {/* ── Conteúdo ── */}
+      <LinearGradient colors={['#F0EBE3', '#FAF7F2']} style={styles.gradientContainer}>
         {error ? (
           <View style={styles.errorContainer}>
             <Text style={styles.errorText}>❌ {error}</Text>
-            <TouchableOpacity 
-              style={[
-                styles.retryButton,
-                isRetryPressed && pixelArt.buttons.actionPressed
-              ]}
-              onPressIn={() => setIsRetryPressed(true)}
-              onPressOut={() => setIsRetryPressed(false)}
-              onPress={refetch}
-              activeOpacity={1}
-            >
+            <TouchableOpacity style={styles.retryButton} onPress={refetch}>
               <View style={styles.retryButtonContent}>
-              <Image
-                source={require('../../../../assets/icons/icone_engrenagem_ajustes.png')}
-                style={styles.retryIcon}
-                resizeMode="contain"
-              />
-              <Text style={styles.retryButtonText}>Tentar Novamente</Text>
-            </View>
-          </TouchableOpacity>
-        </View>
-      ) : (
-        <View style={styles.content}>
-          {/* Contador de resultados */}
-          {searchText && (
-            <View style={styles.resultsCounter}>
-              <Text style={styles.resultsText}>
-                {filteredProducts.length} produto{filteredProducts.length !== 1 ? 's' : ''} encontrado{filteredProducts.length !== 1 ? 's' : ''}
-                {searchText && ` para "${searchText}"`}
-              </Text>
-            </View>
-          )}
-
-          <FlatList
-            style={styles.productList}
-            data={filteredProducts}
-            numColumns={2}
-            key={2} // Força re-render com 2 colunas
-            columnWrapperStyle={styles.productRow}
-            contentContainerStyle={styles.productsGrid}
-            showsVerticalScrollIndicator={false}
-            refreshControl={
-              <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-            }
-            renderItem={({ item: product }) => (
-              <ProductCard
-                key={product.id}
-                product={product}
-                onPress={() => onViewProduct(product)}
-                onAddToCart={() => handleAddToCart(product)}
-              />
-            )}
-            keyExtractor={(item) => item.id.toString()}
-            ListEmptyComponent={() => (
-              filteredProducts.length === 0 && !loading ? (
-                <EmptyState 
-                  message={searchText ? `Nenhum produto encontrado para "${searchText}"` : "Nenhum produto disponível"} 
+                <Image
+                  source={require('../../../../assets/icons/icone_engrenagem_ajustes.png')}
+                  style={styles.retryIcon}
+                  resizeMode="contain"
                 />
-              ) : null
+                <Text style={styles.retryButtonText}>Tentar novamente</Text>
+              </View>
+            </TouchableOpacity>
+          </View>
+        ) : (
+          <View style={styles.content}>
+            {searchText.length > 0 && (
+              <View style={styles.resultsCounter}>
+                <Text style={styles.resultsText}>
+                  {filteredProducts.length} resultado{filteredProducts.length !== 1 ? 's' : ''} para "{searchText}"
+                </Text>
+              </View>
             )}
-          />
-        </View>
-      )}
-    </LinearGradient>
 
-    <CustomAlert
-      visible={alertState.visible}
-      type={alertState.type}
-      title={alertState.title}
-      message={alertState.message}
-      onClose={hideAlert}
-      showCancel={alertState.showCancel}
-      onConfirm={alertState.onConfirm}
-      confirmText={alertState.confirmText}
-      cancelText={alertState.cancelText}
-    />
-  </SafeAreaView>
-);
+            <FlatList
+              style={styles.productList}
+              data={filteredProducts}
+              numColumns={2}
+              key={2}
+              columnWrapperStyle={styles.productRow}
+              contentContainerStyle={styles.productsGrid}
+              showsVerticalScrollIndicator={false}
+              refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#8B4513" />}
+              renderItem={({ item: product }) => (
+                <ProductCard
+                  key={product.id}
+                  product={product}
+                  onPress={() => onViewProduct(product)}
+                  onAddToCart={() => handleAddToCart(product)}
+                />
+              )}
+              keyExtractor={(item) => item.id.toString()}
+              ListEmptyComponent={() =>
+                !loading ? (
+                  <EmptyState
+                    message={
+                      searchText
+                        ? `Nenhum produto encontrado para "${searchText}"`
+                        : 'Nenhum produto disponível'
+                    }
+                  />
+                ) : null
+              }
+            />
+          </View>
+        )}
+      </LinearGradient>
+
+      <CustomAlert
+        visible={alertState.visible}
+        type={alertState.type}
+        title={alertState.title}
+        message={alertState.message}
+        onClose={hideAlert}
+        showCancel={alertState.showCancel}
+        onConfirm={alertState.onConfirm}
+        confirmText={alertState.confirmText}
+        cancelText={alertState.cancelText}
+      />
+    </SafeAreaView>
+  );
 }

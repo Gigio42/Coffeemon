@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { OrderStatus } from 'src/Shared/enums/order_status';
 import { Repository } from 'typeorm';
@@ -76,5 +76,65 @@ export class OrdersService {
     }
   }
 
-  /* ### Funções Auxiliares ### */
+  async checkoutWithItems(
+    items: { productId: number; quantity: number }[],
+    userId?: number,
+  ): Promise<{ message: string; orderId: number }> {
+    if (!items?.length) {
+      throw new BadRequestException('Pedido sem itens');
+    }
+
+    const orderData: Partial<Order> = {
+      status: OrderStatus.FINISHED,
+      total_amount: 0,
+      total_quantity: 0,
+    };
+
+    if (userId) {
+      orderData.user = { id: userId } as any;
+    }
+
+    const savedOrder = await this.ordersRepository.save(
+      this.ordersRepository.create(orderData),
+    );
+
+    let totalAmount = 0;
+    let totalQuantity = 0;
+
+    for (const item of items) {
+      if (item.quantity <= 0) {
+        throw new BadRequestException('Quantidade inválida no pedido');
+      }
+
+      const product = await this.productsRepository.findOne({
+        where: { id: item.productId },
+      });
+      if (!product) throw new NotFoundException(`Produto ${item.productId} não encontrado`);
+
+      const unitPrice = product.price;
+      const total = unitPrice * item.quantity;
+      totalAmount += total;
+      totalQuantity += item.quantity;
+
+      await this.orderItemsRepository.save(
+        this.orderItemsRepository.create({
+          order: savedOrder,
+          product,
+          quantity: item.quantity,
+          unit_price: unitPrice,
+          price: unitPrice,
+          total,
+          orderId: savedOrder.id,
+          productId: product.id,
+        }),
+      );
+    }
+
+    await this.ordersRepository.update(savedOrder.id, {
+      total_amount: totalAmount,
+      total_quantity: totalQuantity,
+    });
+
+    return { message: 'Pedido realizado com sucesso!', orderId: savedOrder.id };
+  }
 }

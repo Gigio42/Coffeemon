@@ -12,30 +12,18 @@ interface ProductCardProps {
 export default function ProductCard({ product, onPress, onAddToCart }: ProductCardProps) {
   const [isPressed, setIsPressed] = useState(false);
 
-  const formatPrice = (price: number) => {
-    return `R$ ${price.toFixed(2).replace('.', ',')}`;
-  };
-
-  const handleButtonPress = (e: any) => {
-    e?.stopPropagation?.();
-    onAddToCart();
-  };
+  const formatPrice = (price: number) =>
+    `R$ ${price.toFixed(2).replace('.', ',')}`;
 
   return (
-    <TouchableOpacity 
+    <TouchableOpacity
       style={styles.cardContainer}
       onPress={onPress}
-      activeOpacity={0.9}
+      activeOpacity={0.92}
     >
       <View style={styles.productCard}>
-        {/* Header apenas com nome do produto */}
-        <View style={styles.cardHeader} testID={`product-card-header-${product.id}`}>
-          <Text style={styles.productName} numberOfLines={2} testID={`product-name-${product.id}`}>
-            {product.name.toUpperCase()}
-          </Text>
-        </View>
 
-        {/* Imagem do produto com sparkles */}
+        {/* Imagem */}
         <View style={styles.imageContainer}>
           {product.image ? (
             <Image
@@ -44,10 +32,8 @@ export default function ProductCard({ product, onPress, onAddToCart }: ProductCa
               resizeMode="cover"
             />
           ) : (
-            <Text style={styles.placeholderText}>Latte</Text>
+            <Text style={styles.placeholderText}>☕</Text>
           )}
-          
-          {/* Sparkles decorativos */}
           <View style={styles.sparklesContainer}>
             <View style={[styles.sparkle, styles.sparkle1]} />
             <View style={[styles.sparkle, styles.sparkle2]} />
@@ -57,21 +43,29 @@ export default function ProductCard({ product, onPress, onAddToCart }: ProductCa
           </View>
         </View>
 
-        {/* Preço do produto */}
+        {/* Nome */}
+        <View style={styles.cardHeader}>
+          <Text style={styles.productName} numberOfLines={2}>
+            {product.name}
+          </Text>
+        </View>
+
+        {/* Preço */}
         <Text style={styles.productPrice}>
           {formatPrice(product.price)}
         </Text>
 
-        {/* Botão de comprar - Adiciona ao carrinho */}
+        {/* Botão */}
         <TouchableOpacity
           style={[styles.addButton, isPressed && styles.addButtonPressed]}
           onPressIn={() => setIsPressed(true)}
           onPressOut={() => setIsPressed(false)}
-          onPress={handleButtonPress}
+          onPress={(e) => { e.stopPropagation?.(); onAddToCart(); }}
           activeOpacity={1}
         >
-          <Text style={styles.addButtonText}>COMPRAR</Text>
+          <Text style={styles.addButtonText}>Adicionar</Text>
         </TouchableOpacity>
+
       </View>
     </TouchableOpacity>
   );

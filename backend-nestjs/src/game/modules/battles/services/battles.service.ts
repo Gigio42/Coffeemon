@@ -5,7 +5,9 @@ import { Repository } from 'typeorm';
 import { BattleCacheService } from '../../../shared/cache/services/battle-cache.service';
 import {
   BattleActionCommand,
+  BattleCancelledEvent,
   BattleCreatedEvent,
+  BattleCreationFailedEvent,
   BattleEndedEvent,
   BattleStateUpdatedEvent,
   ExecuteBotTurnCommand,
@@ -48,6 +50,14 @@ export class BattleService implements OnModuleInit {
           console.error(
             `[BattleService] Failed to handle bot initial selection for battle ${battleId}:`,
             err
+          );
+          this.eventEmitter.emit(
+            'battle.creation.failed',
+            new BattleCreationFailedEvent(
+              battleState.player1SocketId,
+              'bot',
+              'Falha ao inicializar batalha contra bot.'
+            )
           );
         });
       }
@@ -100,10 +110,12 @@ export class BattleService implements OnModuleInit {
 
   public emitStateUpdate(battleId: string, state: BattleState): void {
     if (state.battleStatus === BattleStatus.FINISHED) {
-      this.eventEmitter.emit(
-        'battle.ended',
-        new BattleEndedEvent(battleId, state.winnerId!, state)
-      );
+      if (state.winnerId == null) {
+        console.error(`[BattleService] Battle ${battleId} finished with no winnerId — cancelling`);
+        this.eventEmitter.emit('battle.cancelled', new BattleCancelledEvent(battleId, 0));
+        return;
+      }
+      this.eventEmitter.emit('battle.ended', new BattleEndedEvent(battleId, state.winnerId, state));
     } else {
       this.eventEmitter.emit('battle.state.updated', new BattleStateUpdatedEvent(battleId, state));
     }
@@ -170,10 +182,11 @@ export class BattleService implements OnModuleInit {
   }
 
   private async finalizeBattleInDb(battleId: string, state: BattleState): Promise<void> {
+    if (state.winnerId == null) return;
     const battle = await this.repo.findOneBy({ id: battleId });
     if (!battle) return;
     battle.status = 'FINISHED';
-    battle.winnerId = state.winnerId!;
+    battle.winnerId = state.winnerId;
     battle.endedAt = new Date();
     await this.repo.save(battle);
     await this.battleCache.delete(battleId);

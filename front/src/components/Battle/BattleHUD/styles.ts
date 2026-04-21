@@ -98,12 +98,9 @@ export const hudStyles = StyleSheet.create({
     gap: 6,
   },
   typeIconImage: {
-    width: 40,
-    height: 40,
-    marginLeft: -10,
-    marginRight: -10,
-    marginTop: -10,
-    marginBottom: -10,
+    width: 20,
+    height: 20,
+    marginRight: 4,
   },
   typeIcon: {
     fontSize: 14,

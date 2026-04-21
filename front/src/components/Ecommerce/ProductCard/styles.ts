@@ -1,187 +1,161 @@
 import { StyleSheet, Dimensions } from 'react-native';
-import { pixelArt } from '../../../theme';
 
 const screenWidth = Dimensions.get('window').width;
-const padding = 32; // 16px de cada lado
-const spacing = 16; // Espaço entre os cards (aumentado)
-const cardWidth = (screenWidth - padding - spacing) / 2; // Exatamente 2 cards por linha
+const CARD_WIDTH = (screenWidth - 14 * 2 - 12) / 2; // 14px padding each side, 12px gap
+
+const C = {
+  white:       '#FFFFFF',
+  cream:       '#FAF7F2',
+  coffee:      '#8B4513',
+  coffeeDark:  '#6B3410',
+  caramel:     '#C8793A',
+  gold:        '#F5D080',
+  espresso:    '#1C1007',
+  textTitle:   '#2C1810',
+  textPrice:   '#8B4513',
+  textMuted:   '#9A8070',
+  border:      'rgba(196, 165, 120, 0.22)',
+  shadow:      '#6B3410',
+  btnBg:       '#8B4513',
+  btnLight:    '#A0522D',
+  btnDark:     '#6B3410',
+};
 
 export const styles = StyleSheet.create({
-  // ========================================
-  // CARD CONTAINER (Borda Externa 3D) - Exatamente como no HTML
-  // ========================================
   cardContainer: {
-    width: cardWidth,
-    minWidth: cardWidth, // Força a largura exata
-    maxWidth: cardWidth, // Força a largura exata
-    padding: 8,
-    backgroundColor: '#f5f2e8',
-    borderRadius: 4,
-    marginBottom: 16,
-    marginLeft: 0,
-    marginRight: 0,
-    shadowColor: '#d4c5a0',
-    shadowOffset: { width: 2, height: 2 },
-    shadowOpacity: 1,
-    shadowRadius: 0,
+    width: CARD_WIDTH,
+    backgroundColor: C.white,
+    borderRadius: 18,
+    marginBottom: 14,
+    overflow: 'hidden',
+    shadowColor: C.shadow,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.14,
+    shadowRadius: 12,
     elevation: 6,
-    borderTopWidth: 1,
-    borderLeftWidth: 1,
-    borderTopColor: '#faf8f0',
-    borderLeftColor: '#faf8f0',
-    borderBottomWidth: 1,
-    borderRightWidth: 1,
-    borderBottomColor: '#d4c5a0',
-    borderRightColor: '#d4c5a0',
+    borderWidth: 1,
+    borderColor: C.border,
   },
 
-  // ========================================
-  // CARD INTERNO - Exatamente como no HTML
-  // ========================================
+  // Card interno
   productCard: {
-    backgroundColor: '#ffffff', // --card-inner-bg mantém branco
-    borderRadius: 2, // border-radius: 2px
-    padding: 8, // Reduzido para mobile em 2 colunas
+    flex: 1,
+    backgroundColor: C.white,
     alignItems: 'center',
-    // Simulação do inset box-shadow com bordas mais finas em tons creme
-    borderTopWidth: 1,
-    borderLeftWidth: 1,
-    borderTopColor: '#faf8f0', // Borda creme clara (simula inset light)
-    borderLeftColor: '#faf8f0',
-    borderBottomWidth: 1,
-    borderRightWidth: 1,
-    borderBottomColor: '#f0e6d2', // Borda creme mais escura (simula inset shadow)
-    borderRightColor: '#f0e6d2',
+    paddingBottom: 12,
   },
 
-  // ========================================
-  // HEADER DO CARD - Sem ícone, apenas nome do produto
-  // ========================================
-  cardHeader: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 6,
-    backgroundColor: '#faf8f0', // Header com tom creme claro
-    paddingVertical: 6,
-    paddingHorizontal: 8,
-    borderRadius: 2,
-    width: '100%',
-    // Borda 3D do header mais fina com tons creme
-    borderTopWidth: 1,
-    borderLeftWidth: 1,
-    borderTopColor: '#ffffff', // Borda mais clara (cima/esquerda)
-    borderLeftColor: '#ffffff',
-    borderBottomWidth: 1,
-    borderRightWidth: 1,
-    borderBottomColor: '#f0e6d2', // Borda creme mais escura (baixo/direita)
-    borderRightColor: '#f0e6d2',
-  },
-
-  // ========================================
-  // IMAGEM DO PRODUTO COM SPARKLES - Otimizado para mobile
-  // ========================================
+  // Imagem ocupa topo sem padding
   imageContainer: {
-    position: 'relative',
     width: '100%',
-    aspectRatio: 1, // Proporção quadrada
-    maxWidth: 140,
-    height: 120,
-    marginBottom: 8,
-    alignSelf: 'center',
+    aspectRatio: 1,
+    backgroundColor: '#F4EEE6',
+    borderTopLeftRadius: 18,
+    borderTopRightRadius: 18,
+    overflow: 'hidden',
     justifyContent: 'center',
     alignItems: 'center',
+    marginBottom: 10,
   },
 
   productImage: {
     width: '100%',
     height: '100%',
-    borderRadius: 2,
   },
 
   placeholderText: {
-    color: '#777777',
-    fontSize: 12,
-    textAlign: 'center',
-    fontFamily: 'monospace',
+    color: C.textMuted,
+    fontSize: 28,
   },
 
+  // Sparkles (mantidos sutis)
   sparklesContainer: {
     position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
+    top: 0, left: 0, right: 0, bottom: 0,
     pointerEvents: 'none',
   },
 
   sparkle: {
     position: 'absolute',
-    width: 4, // Menor para mobile
-    height: 4,
-    backgroundColor: 'orange', // --sparkle-color: orange
+    width: 3,
+    height: 3,
+    backgroundColor: C.caramel,
     transform: [{ rotate: '45deg' }],
-    opacity: 0.8,
+    opacity: 0.45,
     borderRadius: 1,
   },
+  sparkle1: { top: '18%', left: '18%' },
+  sparkle2: { top: '72%', left: '14%' },
+  sparkle3: { top: '38%', right: '22%' },
+  sparkle4: { top: '12%', right: '38%' },
+  sparkle5: { top: '82%', right: '18%' },
 
-  // Posições dos sparkles - Ajustadas para mobile
-  sparkle1: { top: '20%', left: '20%' },
-  sparkle2: { top: '70%', left: '15%' },
-  sparkle3: { top: '40%', right: '25%' },
-  sparkle4: { top: '15%', right: '40%' },
-  sparkle5: { top: '80%', right: '20%' },
+  // Conteúdo abaixo da imagem
+  cardHeader: {
+    paddingHorizontal: 10,
+    marginBottom: 4,
+    width: '100%',
+  },
 
-  // ========================================
-  // INFO DO PRODUTO - Otimizado para mobile
-  // ========================================
   productName: {
-    ...pixelArt.typography.pixelTitle,
-    fontSize: 11, // Reduzido para mobile em 2 colunas
-    color: '#333333', // --text-dark
-    textAlign: 'center' as const,
-    width: '100%', // Ocupar toda a largura disponível
+    fontFamily: 'monospace',
+    fontSize: 11,
+    fontWeight: '900',
+    color: C.textTitle,
+    textAlign: 'center',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+    lineHeight: 16,
   },
 
   productDescription: {
-    ...pixelArt.typography.pixelBody,
-    fontSize: 9, // Reduzido para mobile em 2 colunas
-    color: '#555555', // --text-light
-    marginBottom: 6,
+    fontFamily: 'monospace',
+    fontSize: 9,
+    color: C.textMuted,
+    textAlign: 'center',
     lineHeight: 12,
-    textAlign: 'center' as const,
-    paddingHorizontal: 2,
+    paddingHorizontal: 4,
+    marginBottom: 6,
   },
 
   productPrice: {
-    ...pixelArt.typography.pixelPrice,
-    fontSize: 12, // Reduzido para mobile em 2 colunas
-    color: '#333333', // --text-dark
-    marginBottom: 8,
-    textAlign: 'center' as const,
+    fontFamily: 'monospace',
+    fontSize: 14,
+    fontWeight: '900',
+    color: C.coffee,
+    marginBottom: 10,
+    textAlign: 'center',
+    letterSpacing: 0.5,
   },
 
-  // ========================================
-  // BOTÃO PIXEL ART - Exatamente como no HTML anexado (adaptado para mobile)
-  // ========================================
+  // Botão "Adicionar"
   addButton: {
-    ...pixelArt.buttons.primary,
-    width: '100%',
-    // Adaptações para mobile em 2 colunas
-    paddingVertical: 8, // Menor para mobile em 2 colunas
-    paddingHorizontal: 12, // Menor para mobile em 2 colunas
-    // Bordas mais finas
-    borderTopWidth: 2,
-    borderLeftWidth: 2,
-    borderBottomWidth: 2,
-    borderRightWidth: 2,
+    marginHorizontal: 10,
+    width: 'auto' as any,
+    alignSelf: 'stretch',
+    backgroundColor: C.btnBg,
+    paddingVertical: 9,
+    borderRadius: 10,
+    alignItems: 'center',
+    shadowColor: C.btnDark,
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.35,
+    shadowRadius: 6,
+    elevation: 4,
   },
 
   addButtonPressed: {
-    ...pixelArt.buttons.primaryPressed,
+    backgroundColor: C.coffeeDark,
+    transform: [{ scale: 0.97 }],
+    shadowOpacity: 0.15,
   },
 
   addButtonText: {
-    ...pixelArt.buttons.text,
-    fontSize: 9, // Tamanho adequado para mobile em 2 colunas
+    fontFamily: 'monospace',
+    fontSize: 10,
+    fontWeight: '900',
+    color: C.white,
+    letterSpacing: 1.2,
+    textTransform: 'uppercase',
   },
 });

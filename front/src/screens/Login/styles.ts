@@ -16,25 +16,58 @@ export const styles = StyleSheet.create({
   },
   
   // ========================================
-  // BOTÃO DE CONFIGURAÇÃO (Posicionado)
+  // BARRA TOPO — padrão espresso da loja
   // ========================================
-  configButtonContainer: {
-    position: 'absolute',
-    top: Platform.OS === 'android' ? 20 : 10, // Ajuste para não colar na status bar
-    right: 20,
-    zIndex: 20,
+  topBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#1C1007',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    shadowColor: '#1C1007',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 10,
+    elevation: 10,
   },
-  configButton: {
-    backgroundColor: '#fff',
-    borderRadius: 8,
-    padding: 10,
-    borderWidth: 2,
-    borderColor: '#d4c5a0',
-    ...pixelArt.shadows.small,
+
+  topBarButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: 'rgba(255,255,255,0.10)',
+    borderRadius: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 9,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.18)',
+    minWidth: 80,
+    justifyContent: 'center',
   },
-  configIcon: {
-    fontSize: 20,
+
+  topBarButtonText: {
+    fontFamily: 'monospace',
+    fontSize: 11,
+    fontWeight: '700',
+    color: 'rgba(255,255,255,0.85)',
+    letterSpacing: 0.3,
   },
+
+  topBarIcon: {
+    width: 18,
+    height: 18,
+    tintColor: 'rgba(255,255,255,0.85)',
+  },
+
+  topBarPlaceholder: {
+    minWidth: 80,
+  },
+
+  // mantido para compatibilidade interna (ConfigModal)
+  configButtonContainer: {},
+  configButton: {},
+  configIcon: { fontSize: 20 },
 
   // ========================================
   // CARD DE LOGIN
@@ -42,19 +75,16 @@ export const styles = StyleSheet.create({
   loginCard: {
     width: '100%',
     maxWidth: 400,
-    backgroundColor: '#ffffff',
+    backgroundColor: '#fdfbf5',
     padding: pixelArt.spacing.xl,
-    borderRadius: pixelArt.borders.radiusMedium,
-    // Borda 3D estilo Pixel Art
-    borderTopWidth: 4,
-    borderLeftWidth: 4,
-    borderTopColor: '#faf8f0',
-    borderLeftColor: '#faf8f0',
-    borderBottomWidth: 4,
-    borderRightWidth: 4,
-    borderBottomColor: '#d4c5a0',
-    borderRightColor: '#d4c5a0',
-    ...pixelArt.shadows.card,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(196, 165, 120, 0.30)',
+    shadowColor: '#1C1007',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.12,
+    shadowRadius: 24,
+    elevation: 10,
     alignItems: 'center',
   },
 
@@ -104,13 +134,13 @@ export const styles = StyleSheet.create({
   input: {
     width: '100%',
     height: 50,
-    backgroundColor: '#f9f9f9',
-    borderWidth: 2,
-    borderColor: '#e0e0e0',
+    backgroundColor: '#faf7f0',
+    borderWidth: 1.5,
+    borderColor: 'rgba(196, 165, 120, 0.45)',
     borderRadius: pixelArt.borders.radiusSmall,
     paddingHorizontal: pixelArt.spacing.md,
     fontSize: 16,
-    color: pixelArt.colors.textDark,
+    color: '#1C1007',
     fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace',
   },
   inputError: {
@@ -122,13 +152,26 @@ export const styles = StyleSheet.create({
   // BOTÕES
   // ========================================
   loginButton: {
-    ...pixelArt.buttons.primary,
     width: '100%',
     marginTop: pixelArt.spacing.md,
+    backgroundColor: '#8B4513',
+    paddingVertical: 15,
+    paddingHorizontal: 25,
+    borderRadius: 12,
+    alignItems: 'center' as const,
+    shadowColor: '#1C1007',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.35,
+    shadowRadius: 10,
+    elevation: 6,
   },
   loginButtonText: {
-    ...pixelArt.buttons.text,
+    fontFamily: 'monospace',
     fontSize: 14,
+    fontWeight: '900',
+    color: '#FFFFFF',
+    letterSpacing: 1.5,
+    textTransform: 'uppercase' as const,
   },
   
   toggleButton: {

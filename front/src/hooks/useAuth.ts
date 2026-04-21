@@ -14,6 +14,7 @@ interface UseAuthResult {
   setIsRegistering: (value: boolean) => void;
   handleLogin: () => Promise<void>;
   handleRegister: () => Promise<void>;
+  handleGuest: () => Promise<void>;
   checkAuthStatus: () => Promise<void>;
   clearCache: () => Promise<void>;
 }
@@ -73,8 +74,13 @@ export function useAuth({ onSuccess }: UseAuthProps): UseAuthResult {
 
       setMessage('Buscando dados do jogador...');
 
-      // ETAPA 3: Buscar dados do jogador (Player ID)
-      const playerData = await authService.fetchPlayerData(token);
+      // ETAPA 3: Buscar dados do jogador (Player ID) — cria perfil se não existir
+      let playerData;
+      try {
+        playerData = await authService.fetchPlayerData(token);
+      } catch {
+        playerData = await authService.createPlayerProfile(token);
+      }
       await authService.savePlayerId(playerData.id);
 
       // ETAPA 4: Login bem-sucedido!
@@ -129,6 +135,35 @@ export function useAuth({ onSuccess }: UseAuthProps): UseAuthResult {
     }
   }
 
+  async function handleGuest() {
+    try {
+      setMessage('Criando conta temporária...');
+
+      const loginData = await authService.loginGuest();
+      const token = loginData.access_token;
+      await authService.saveToken(token);
+      await authService.saveIsGuest(true);
+
+      const userData = await authService.fetchUserData(token);
+      await authService.saveUserId(userData.id);
+
+      let playerData;
+      try {
+        playerData = await authService.fetchPlayerData(token);
+      } catch {
+        playerData = await authService.createPlayerProfile(token);
+      }
+      await authService.savePlayerId(playerData.id);
+
+      setMessage('Pronto! Conta temporária criada (válida por 7 dias)');
+      setTimeout(() => onSuccess(token, playerData.id, userData.id), 800);
+    } catch (error: any) {
+      console.error('Erro ao criar conta guest:', error);
+      setMessage(`Erro: ${error.message || 'Falha ao criar conta temporária'}`);
+      await authService.clearAuthData();
+    }
+  }
+
   async function clearCache() {
     await authService.clearAuthData();
     setMessage('Cache limpo! Faça login novamente.');
@@ -146,6 +181,7 @@ export function useAuth({ onSuccess }: UseAuthProps): UseAuthResult {
     setIsRegistering,
     handleLogin,
     handleRegister,
+    handleGuest,
     checkAuthStatus,
     clearCache,
   };

@@ -1,21 +1,10 @@
-import React, { useEffect, useRef, useState } from 'react';
-import {
-  View,
-  Text,
-  Modal,
-  TouchableOpacity,
-  Animated,
-  Dimensions,
-  Image,
-  Vibration,
-  Easing,
-} from 'react-native';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { View, Text, Modal, TouchableOpacity, Animated, Image, Vibration, Easing, Dimensions } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { styles } from './styles';
 import { getCoffeemonImage } from '../../../assets/coffeemons';
 import { getTypeColorScheme } from '../../theme/colors';
-
-const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
+import { getBattleIcon } from '../../../assets/iconsv2';
 
 interface GachaRevealModalProps {
   visible: boolean;
@@ -23,6 +12,53 @@ interface GachaRevealModalProps {
   coffeemonTypes: string[];
   onClose: () => void;
 }
+
+function hashString(value: string): number {
+  let hash = 0;
+  for (let i = 0; i < value.length; i += 1) {
+    hash = (hash * 31 + value.charCodeAt(i)) | 0;
+  }
+  return Math.abs(hash);
+}
+
+function hexToRgb(hex: string): { r: number; g: number; b: number } | null {
+  const raw = hex.replace('#', '');
+  const normalized = raw.length === 3 ? raw.split('').map((char) => char + char).join('') : raw;
+  if (normalized.length !== 6) return null;
+  const value = Number.parseInt(normalized, 16);
+  if (Number.isNaN(value)) return null;
+  return {
+    r: (value >> 16) & 255,
+    g: (value >> 8) & 255,
+    b: value & 255,
+  };
+}
+
+function rgbToHex(r: number, g: number, b: number): string {
+  const toHex = (v: number) => Math.max(0, Math.min(255, Math.round(v))).toString(16).padStart(2, '0');
+  return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
+}
+
+function mixHex(a: string, b: string, ratio: number): string {
+  const rgbA = hexToRgb(a);
+  const rgbB = hexToRgb(b);
+  if (!rgbA || !rgbB) return a;
+  return rgbToHex(
+    rgbA.r + (rgbB.r - rgbA.r) * ratio,
+    rgbA.g + (rgbB.g - rgbA.g) * ratio,
+    rgbA.b + (rgbB.b - rgbA.b) * ratio
+  );
+}
+
+function withAlpha(hex: string, alpha: number): string {
+  const rgb = hexToRgb(hex);
+  if (!rgb) return `rgba(255,255,255,${alpha})`;
+  return `rgba(${rgb.r},${rgb.g},${rgb.b},${alpha})`;
+}
+
+const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
+const cardWidth = Math.min(screenWidth * 0.85, 360);
+const cardHeight = Math.min(screenHeight * 0.65, 520);
 
 export default function GachaRevealModal({
   visible,
@@ -41,6 +77,14 @@ export default function GachaRevealModal({
   const raysRotation = useRef(new Animated.Value(0)).current;
   const bounceAnim = useRef(new Animated.Value(0)).current;
   const nameScaleAnim = useRef(new Animated.Value(0)).current;
+  const orbitAnim = useRef(new Animated.Value(0)).current;
+  const revealPulseAnim = useRef(new Animated.Value(0)).current;
+
+  const glowLoopRef = useRef<Animated.CompositeAnimation | null>(null);
+  const raysLoopRef = useRef<Animated.CompositeAnimation | null>(null);
+  const orbitLoopRef = useRef<Animated.CompositeAnimation | null>(null);
+  const pulseLoopRef = useRef<Animated.CompositeAnimation | null>(null);
+  const bounceLoopRef = useRef<Animated.CompositeAnimation | null>(null);
   
   const sparkleAnims = useRef(
     Array.from({ length: 20 }, () => ({
@@ -70,6 +114,20 @@ export default function GachaRevealModal({
     raysRotation.setValue(0);
     bounceAnim.setValue(0);
     nameScaleAnim.setValue(0);
+    orbitAnim.setValue(0);
+    revealPulseAnim.setValue(0);
+
+    glowLoopRef.current?.stop();
+    raysLoopRef.current?.stop();
+    orbitLoopRef.current?.stop();
+    pulseLoopRef.current?.stop();
+    bounceLoopRef.current?.stop();
+    glowLoopRef.current = null;
+    raysLoopRef.current = null;
+    orbitLoopRef.current = null;
+    pulseLoopRef.current = null;
+    bounceLoopRef.current = null;
+
     sparkleAnims.forEach(anim => {
       anim.opacity.setValue(0);
       anim.translateX.setValue(0);
@@ -94,10 +152,10 @@ export default function GachaRevealModal({
 
     // Card flip animation with better easing
     Animated.sequence([
-      Animated.delay(500),
+      Animated.delay(360),
       Animated.timing(cardFlipAnim, {
         toValue: 1,
-        duration: 1000,
+        duration: 860,
         easing: Easing.out(Easing.cubic),
         useNativeDriver: true,
       }),
@@ -108,7 +166,7 @@ export default function GachaRevealModal({
     });
 
     // Glow pulse with smoother animation
-    Animated.loop(
+    glowLoopRef.current = Animated.loop(
       Animated.sequence([
         Animated.timing(glowAnim, {
           toValue: 1,
@@ -123,17 +181,30 @@ export default function GachaRevealModal({
           useNativeDriver: true,
         }),
       ])
-    ).start();
+    );
+    glowLoopRef.current.start();
 
     // Rotating rays animation
-    Animated.loop(
+    raysLoopRef.current = Animated.loop(
       Animated.timing(raysRotation, {
         toValue: 1,
         duration: 8000,
         easing: Easing.linear,
         useNativeDriver: true,
       })
-    ).start();
+    );
+    raysLoopRef.current.start();
+
+    // Single orbital motion loop for smooth parallax/tilt (no center snap)
+    orbitLoopRef.current = Animated.loop(
+      Animated.timing(orbitAnim, {
+        toValue: 1,
+        duration: 7600,
+        easing: Easing.linear,
+        useNativeDriver: true,
+      })
+    );
+    orbitLoopRef.current.start();
   };
 
   const startRevealedAnimations = () => {
@@ -154,7 +225,7 @@ export default function GachaRevealModal({
     ]).start();
 
     // Continuous gentle bounce
-    Animated.loop(
+    bounceLoopRef.current = Animated.loop(
       Animated.sequence([
         Animated.timing(bounceAnim, {
           toValue: 1,
@@ -169,7 +240,26 @@ export default function GachaRevealModal({
           useNativeDriver: true,
         }),
       ])
-    ).start();
+    );
+    bounceLoopRef.current.start();
+
+    pulseLoopRef.current = Animated.loop(
+      Animated.sequence([
+        Animated.timing(revealPulseAnim, {
+          toValue: 1,
+          duration: 1000,
+          easing: Easing.inOut(Easing.ease),
+          useNativeDriver: true,
+        }),
+        Animated.timing(revealPulseAnim, {
+          toValue: 0,
+          duration: 1000,
+          easing: Easing.inOut(Easing.ease),
+          useNativeDriver: true,
+        }),
+      ])
+    );
+    pulseLoopRef.current.start();
 
     // Slide up text with bounce
     Animated.spring(slideUpAnim, {
@@ -235,23 +325,74 @@ export default function GachaRevealModal({
           duration: 400,
           useNativeDriver: true,
         }),
-      ]).start(() => {
-        // Loop sparkles
-        if (stage === 'revealed') {
-          anim.opacity.setValue(0);
-          anim.translateX.setValue(0);
-          anim.translateY.setValue(0);
-          anim.scale.setValue(0);
-          anim.rotation.setValue(0);
-        }
-      });
+      ]).start();
     });
   };
 
   if (!visible) return null;
 
   const imageSource = getCoffeemonImage(coffeemonName, 'default');
-  const typeColors = getTypeColorScheme(coffeemonTypes[0] || 'roasted');
+  const primaryType = coffeemonTypes[0] || 'roasted';
+  const typeColors = getTypeColorScheme(primaryType);
+  const visualSeed = hashString(`${coffeemonName}-${coffeemonTypes.join('|')}`);
+  const raysCount = 10 + (visualSeed % 7);
+  const backPatternCount = 8 + (visualSeed % 5);
+  const frontPatternCount = 14 + (visualSeed % 9);
+  const backPatternVariant = visualSeed % 3;
+  const frontTextureVariant = visualSeed % 4;
+  const materialBase = typeColors.dark;
+  const materialMid = mixHex(typeColors.secondary, typeColors.dark, 0.45);
+  const materialSoft = mixHex(typeColors.light, typeColors.secondary, 0.38);
+  const materialHighlight = mixHex(typeColors.light, '#ffffff', 0.45);
+
+  const frontGradient = useMemo(
+    () => [materialBase, materialMid, materialSoft] as const,
+    [materialBase, materialMid, materialSoft]
+  );
+
+  const backGradient = useMemo(
+    () => [mixHex(materialMid, '#0b1220', 0.42), materialBase, mixHex(materialBase, '#020617', 0.35)] as const,
+    [materialMid, materialBase]
+  );
+
+  const overlayGradient = useMemo(
+    () => ['rgba(4,8,18,0.82)', 'rgba(9,14,25,0.93)', 'rgba(4,8,18,0.88)'] as const,
+    []
+  );
+
+  const backPatternItems = useMemo(
+    () =>
+      Array.from({ length: backPatternCount }).map((_, i) => {
+        const localSeed = hashString(`${visualSeed}-back-${i}`);
+        const size = 26 + (localSeed % 36);
+        return {
+          key: `back-${i}`,
+          size,
+          top: 14 + ((localSeed >> 3) % Math.max(20, Math.floor(cardHeight - size - 28))),
+          left: 12 + ((localSeed >> 5) % Math.max(20, Math.floor(cardWidth - size - 24))),
+          rotate: `${localSeed % 360}deg`,
+        };
+      }),
+    [backPatternCount, visualSeed]
+  );
+
+  const frontPatternItems = useMemo(
+    () =>
+      Array.from({ length: frontPatternCount }).map((_, i) => {
+        const localSeed = hashString(`${visualSeed}-front-${i}`);
+        return {
+          key: `front-${i}`,
+          width: 10 + (localSeed % 38),
+          height: 6 + ((localSeed >> 2) % 22),
+          opacity: 0.06 + ((localSeed % 12) / 100),
+          top: 12 + ((localSeed >> 4) % Math.max(20, Math.floor(cardHeight - 28))),
+          left: 12 + ((localSeed >> 7) % Math.max(20, Math.floor(cardWidth - 28))),
+          rotate: `${localSeed % 360}deg`,
+          radius: 2 + ((localSeed >> 1) % 9),
+        };
+      }),
+    [frontPatternCount, visualSeed]
+  );
 
   const cardRotateY = cardFlipAnim.interpolate({
     inputRange: [0, 1],
@@ -283,6 +424,46 @@ export default function GachaRevealModal({
     outputRange: [0, -10],
   });
 
+  const cardFloatTranslateY = orbitAnim.interpolate({
+    inputRange: [0, 0.25, 0.5, 0.75, 1],
+    outputRange: [0, -6, 0, 6, 0],
+  });
+
+  const pulseScale = revealPulseAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [1, 1.05],
+  });
+
+  const cardTiltX = orbitAnim.interpolate({
+    inputRange: [0, 0.25, 0.5, 0.75, 1],
+    outputRange: ['0deg', '-3deg', '0deg', '3deg', '0deg'],
+  });
+
+  const cardTiltY = orbitAnim.interpolate({
+    inputRange: [0, 0.25, 0.5, 0.75, 1],
+    outputRange: ['0deg', '4deg', '0deg', '-4deg', '0deg'],
+  });
+
+  const parallaxX = orbitAnim.interpolate({
+    inputRange: [0, 0.25, 0.5, 0.75, 1],
+    outputRange: [0, 10, 0, -10, 0],
+  });
+
+  const parallaxY = orbitAnim.interpolate({
+    inputRange: [0, 0.25, 0.5, 0.75, 1],
+    outputRange: [0, -7, 0, 7, 0],
+  });
+
+  const sheenTranslateX = orbitAnim.interpolate({
+    inputRange: [0, 0.22, 0.45, 0.68, 1],
+    outputRange: [-cardWidth * 1.35, -cardWidth * 0.7, cardWidth * 0.15, cardWidth * 1.35, -cardWidth * 1.35],
+  });
+
+  const sheenOpacity = orbitAnim.interpolate({
+    inputRange: [0, 0.15, 0.34, 0.55, 0.8, 1],
+    outputRange: [0, 0.03, 0.18, 0.08, 0.01, 0],
+  });
+
   return (
     <Modal
       transparent
@@ -291,30 +472,85 @@ export default function GachaRevealModal({
       onRequestClose={onClose}
     >
       <Animated.View style={[styles.overlay, { opacity: fadeAnim }]}>
+        <LinearGradient
+          colors={overlayGradient}
+          style={styles.overlayGradient}
+        />
         <View style={styles.container}>
           {/* Card Container with Flip */}
-          <View style={styles.cardContainer}>
+          <Animated.View
+            style={[
+              styles.cardContainer,
+              {
+                transform: [
+                  { translateY: cardFloatTranslateY },
+                  { perspective: 1600 },
+                  { rotateX: cardTiltX },
+                  { rotateY: cardTiltY },
+                ],
+              },
+            ]}
+          >
+            <View style={styles.cardShadowLayerOuter} />
+            <View style={styles.cardShadowLayerInner} />
+
             {/* Back of Card (before flip) */}
             <Animated.View
               style={[
                 styles.card,
                 styles.cardBack,
                 {
-                  transform: [{ rotateY: backfaceRotateY }],
+                  transform: [{ perspective: 1200 }, { rotateY: backfaceRotateY }],
                 },
               ]}
             >
               <LinearGradient
-                colors={['#FFD700', '#FFA500', '#FF8C00']}
+                colors={backGradient}
                 style={styles.cardBackGradient}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
               >
-                <Text style={styles.cardBackIcon}>✨</Text>
+                <LinearGradient
+                  colors={['rgba(255,255,255,0.18)', 'transparent']}
+                  start={{ x: 0.5, y: 0 }}
+                  end={{ x: 0.5, y: 1 }}
+                  style={styles.cardDepthTop}
+                />
+                <LinearGradient
+                  colors={['transparent', 'rgba(2,6,23,0.3)']}
+                  start={{ x: 0.5, y: 0 }}
+                  end={{ x: 0.5, y: 1 }}
+                  style={styles.cardDepthBottom}
+                />
+                <View style={styles.cardBackFrameOuter} />
+                <View style={styles.cardBackFrameInner} />
+                <View style={styles.cardBackBadge}>
+                  <Image source={getBattleIcon('card')} style={styles.cardBackIcon} />
+                </View>
                 <Text style={styles.cardBackText}>Gacha Pull</Text>
+                <Text style={styles.cardBackSubText}>Revelando recompensa...</Text>
                 <View style={styles.cardBackPattern}>
-                  {Array.from({ length: 6 }).map((_, i) => (
-                    <View key={i} style={styles.patternCircle} />
+                  {backPatternItems.map((item, i) => (
+                    <View
+                      key={item.key}
+                      style={[
+                        styles.patternCircle,
+                        backPatternVariant === 0
+                          ? styles.backPatternRing
+                          : backPatternVariant === 1
+                            ? styles.backPatternSquare
+                            : styles.backPatternLine,
+                        {
+                          width: item.size,
+                          height: backPatternVariant === 2 ? 4 : item.size,
+                          borderRadius: backPatternVariant === 1 ? 8 : backPatternVariant === 2 ? 2 : item.size / 2,
+                          top: item.top,
+                          left: item.left,
+                          transform: [{ rotate: item.rotate }],
+                          opacity: 0.1 + ((i % 4) * 0.03),
+                        },
+                      ]}
+                    />
                   ))}
                 </View>
               </LinearGradient>
@@ -326,38 +562,113 @@ export default function GachaRevealModal({
                 styles.card,
                 styles.cardFront,
                 {
-                  transform: [{ rotateY: cardRotateY }],
+                  transform: [{ perspective: 1200 }, { rotateY: cardRotateY }],
                 },
               ]}
             >
               <LinearGradient
-                colors={typeColors.gradient as any}
+                colors={frontGradient as any}
                 style={styles.cardFrontGradient}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
               >
+                <LinearGradient
+                  colors={['rgba(255,255,255,0.24)', 'transparent']}
+                  start={{ x: 0.5, y: 0 }}
+                  end={{ x: 0.5, y: 1 }}
+                  style={styles.cardDepthTop}
+                />
+                <LinearGradient
+                  colors={['transparent', 'rgba(2,6,23,0.32)']}
+                  start={{ x: 0.5, y: 0 }}
+                  end={{ x: 0.5, y: 1 }}
+                  style={styles.cardDepthBottom}
+                />
                 {/* Rotating Rays Background */}
                 <Animated.View
                   style={[
                     styles.raysContainer,
                     {
-                      transform: [{ rotate: raysRotate }],
+                      transform: [{ rotate: raysRotate }, { translateX: Animated.multiply(parallaxX, -0.4) }],
                     },
                   ]}
                 >
-                  {Array.from({ length: 12 }).map((_, i) => (
+                  {Array.from({ length: raysCount }).map((_, i) => (
                     <View
-                      key={i}
+                      key={`ray-${i}`}
                       style={[
                         styles.ray,
                         {
-                          transform: [{ rotate: `${(i * 360) / 12}deg` }],
+                          transform: [{ rotate: `${(i * 360) / raysCount}deg` }],
                           backgroundColor: typeColors.light,
                         },
                       ]}
                     />
                   ))}
                 </Animated.View>
+
+                <Animated.View
+                  style={[
+                    styles.frontTextureLayer,
+                    {
+                      transform: [
+                        { translateX: Animated.multiply(parallaxX, -0.55) },
+                        { translateY: Animated.multiply(parallaxY, -0.45) },
+                      ],
+                    },
+                  ]}
+                >
+                  {frontPatternItems.map((item) => (
+                    <View
+                      key={item.key}
+                      style={[
+                        styles.frontTextureShape,
+                        frontTextureVariant === 0
+                          ? styles.textureDash
+                          : frontTextureVariant === 1
+                            ? styles.textureDot
+                            : frontTextureVariant === 2
+                              ? styles.textureLine
+                              : styles.textureChip,
+                        {
+                          width: frontTextureVariant === 1 ? Math.max(4, item.height) : item.width,
+                          height: frontTextureVariant === 1 ? Math.max(4, item.height) : item.height,
+                          top: item.top,
+                          left: item.left,
+                          borderRadius: frontTextureVariant === 1 ? 999 : item.radius,
+                          opacity: item.opacity,
+                          backgroundColor: withAlpha(materialHighlight, frontTextureVariant === 2 ? 0.18 : 0.13),
+                          borderColor: withAlpha(materialHighlight, 0.16),
+                          transform: [{ rotate: item.rotate }],
+                        },
+                      ]}
+                    />
+                  ))}
+                </Animated.View>
+
+                <LinearGradient
+                  colors={[withAlpha(materialHighlight, 0.16), 'transparent', withAlpha(materialSoft, 0.1)]}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                  style={styles.frontMaterialOverlay}
+                />
+                <LinearGradient
+                  colors={['transparent', withAlpha(materialBase, 0.2)]}
+                  start={{ x: 0.2, y: 0.2 }}
+                  end={{ x: 0.8, y: 1 }}
+                  style={styles.frontMaterialOverlaySecondary}
+                />
+
+                <Animated.View
+                  pointerEvents="none"
+                  style={[
+                    styles.cardSheen,
+                    {
+                      opacity: sheenOpacity,
+                      transform: [{ translateX: sheenTranslateX }, { rotate: '-18deg' }],
+                    },
+                  ]}
+                />
 
                 {/* Glow Effect */}
                 <Animated.View
@@ -388,13 +699,17 @@ export default function GachaRevealModal({
                     styles.imageContainer,
                     {
                       transform: [
-                        { scale: scaleAnim },
+                        { scale: Animated.multiply(scaleAnim, pulseScale) },
                         { translateY: bounceTranslateY },
+                        { translateX: parallaxX },
+                        { translateY: parallaxY },
                       ],
                     },
                   ]}
                 >
-                  <Image source={imageSource} style={styles.coffeemonImage} />
+                  <View style={styles.imageContent}>
+                    <Image source={imageSource} style={styles.coffeemonImage} />
+                  </View>
                 </Animated.View>
 
                 {/* Enhanced Sparkles */}
@@ -403,10 +718,9 @@ export default function GachaRevealModal({
                     inputRange: [-360, 360],
                     outputRange: ['-360deg', '360deg'],
                   });
-                  
-                  // Vary sparkle icons
-                  const sparkleIcon = index % 4 === 0 ? '✨' : index % 4 === 1 ? '⭐' : index % 4 === 2 ? '💫' : '🌟';
-                  
+                  const isRing = index % 3 === 0;
+                  const isDot = !isRing && index % 2 === 0;
+
                   return (
                     <Animated.View
                       key={index}
@@ -423,7 +737,18 @@ export default function GachaRevealModal({
                         },
                       ]}
                     >
-                      <Text style={styles.sparkleIcon}>{sparkleIcon}</Text>
+                      <View
+                        style={[
+                          styles.sparkleGlyph,
+                          isRing
+                            ? styles.sparkleGlyphRing
+                            : isDot
+                              ? styles.sparkleGlyphDot
+                              : styles.sparkleGlyphDiamond,
+                          { borderColor: typeColors.light },
+                          !isRing && { backgroundColor: typeColors.light },
+                        ]}
+                      />
                     </Animated.View>
                   );
                 })}
@@ -431,31 +756,44 @@ export default function GachaRevealModal({
                 {/* Coffeemon Info */}
                 <Animated.View
                   style={[
-                    styles.infoContainer,
+                    styles.infoShell,
                     {
-                      transform: [{ translateY: slideUpAnim }],
+                      transform: [
+                        { translateY: slideUpAnim },
+                        { translateX: Animated.multiply(parallaxX, -0.35) },
+                        { translateY: Animated.multiply(parallaxY, -0.2) },
+                      ],
                       opacity: cardFlipAnim,
                     },
                   ]}
                 >
-                  <View style={styles.typePill}>
-                    <Text style={styles.typePillText}>
-                      {coffeemonTypes[0]?.toUpperCase()}
-                    </Text>
-                  </View>
-                  <Animated.View
-                    style={{
-                      transform: [{ scale: nameScaleAnim }],
-                    }}
+                  <LinearGradient
+                    colors={['#f8fafc', '#eef2f7', '#dbe3ee']}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                    style={styles.infoContainer}
                   >
-                    <Text style={styles.coffeemonName}>{coffeemonName}</Text>
-                  </Animated.View>
-                  <Text style={styles.congratsText}>🎉 Novo Coffeemon! 🎉</Text>
-                  <Text style={styles.rarityText}>★★★★★</Text>
+                    <View style={styles.infoInner}>
+                      <View style={styles.typePill}>
+                        <Text style={styles.typePillText}>
+                          {coffeemonTypes[0]?.toUpperCase()}
+                        </Text>
+                      </View>
+                      <Animated.View
+                        style={{
+                          transform: [{ scale: nameScaleAnim }],
+                        }}
+                      >
+                        <Text style={styles.coffeemonName}>{coffeemonName}</Text>
+                      </Animated.View>
+                      <Text style={styles.congratsText}>Uma presença rara surgiu na sua coleção</Text>
+                      <Text style={styles.rarityText}>★★★★★</Text>
+                    </View>
+                  </LinearGradient>
                 </Animated.View>
               </LinearGradient>
             </Animated.View>
-          </View>
+          </Animated.View>
 
           {/* Close Button */}
           {stage === 'revealed' && (

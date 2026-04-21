@@ -1,21 +1,3 @@
-/**
- * ========================================
- * APP.TSX - GERENCIADOR DE NAVEGAÇÃO
- * ========================================
- * 
- * Este arquivo é APENAS responsável por:
- * 1. Gerenciar qual tela está sendo exibida (LOGIN, ECOMMERCE, MATCHMAKING ou BATTLE)
- * 2. Armazenar dados compartilhados entre telas (authData, battleData)
- * 3. Fornecer callbacks para navegação entre telas
- * 
- * IMPORTANTE: Este arquivo NÃO contém lógica de negócio!
- * Toda a lógica está nas respectivas páginas:
- * - LoginScreen.tsx: Login, autenticação, verificação de auth
- * - EcommerceScreen.tsx: Loja, carrinho, pedidos, perfil
- * - MatchmakingScreen.tsx: Socket, procurar partida, logout
- * - BattleScreen.tsx: Batalha, ataques, troca de pokémon
- */
-
 import React, { useState, useEffect } from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { ActivityIndicator, View } from 'react-native';
@@ -28,165 +10,141 @@ import LoginScreen from './src/screens/Login';
 import EcommerceScreen from './src/screens/Ecommerce';
 import MatchmakingScreen from './src/screens/Matchmaking';
 import BattleScreen from './src/screens/Battle';
+import { clearActiveBattleStorage } from './src/hooks/useMatchmaking';
 import ErrorBoundary from './src/components/ErrorBoundary';
 import { Screen, BattleState } from './src/types';
 import { MainNavScreen } from './src/screens/MainNav';
 import { ThemeProvider } from './src/theme/ThemeContext';
+import { clearAuthData } from './src/api/authService';
 
 export default function App() {
-  // ========================================
-  // ESTADOS GLOBAIS (compartilhados entre telas)
-  // ========================================
-
   const [fontsLoaded, fontError] = useFonts({
     PressStart2P_400Regular,
   });
 
-  // Configuração da barra de navegação (Immersive Mode)
   useEffect(() => {
     const configureImmersiveMode = async () => {
       try {
-        // Oculta a barra de navegação (botões virtuais)
         await NavigationBar.setVisibilityAsync("hidden");
-        // Note: setBehaviorAsync and setBackgroundColorAsync are not supported with edge-to-edge
       } catch (e) {
         console.log("Erro ao configurar modo imersivo:", e);
       }
     };
-
     configureImmersiveMode();
   }, []);
 
-  // Controla qual tela está sendo exibida
-  const [currentScreen, setCurrentScreen] = useState<Screen>(Screen.LOGIN);
-  
-  // Dados de autenticação (token JWT e ID do usuário)
-  // Usado por: EcommerceScreen, MatchmakingScreen e BattleScreen
-  const [authData, setAuthData] = useState<{ token: string; playerId: number; userId: number } | null>(null);
-  
-  // Dados da batalha (ID da batalha, estado e socket)
-  // Usado por: BattleScreen
-  const [battleData, setBattleData] = useState<{ 
-    battleId: string; 
-    battleState: BattleState; 
-    socket: Socket 
-  } | null>(null);
+  // App começa no ecommerce — login só é necessário para o jogo
+  const [currentScreen, setCurrentScreen] = useState<Screen>(Screen.ECOMMERCE);
 
-  // ========================================
-  // RENDERIZAÇÃO BASEADA NA TELA ATUAL
-  // ========================================
-  
-  // Configuração do StatusBar baseada na tela atual
-  const getStatusBarConfig = () => {
-    // All screens now use dark theme
-    return { style: "light" as const, backgroundColor: "#0F1419" };
+  const [authData, setAuthData] = useState<{ token: string; playerId: number; userId: number; isGuest?: boolean } | null>(null);
+
+  const decodeIsGuest = (token: string): boolean => {
+    try {
+      const b64 = token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
+      return JSON.parse(atob(b64))?.isGuest === true;
+    } catch { return false; }
   };
 
+  const [battleData, setBattleData] = useState<{
+    battleId: string;
+    battleState: BattleState;
+    socket: Socket
+  } | null>(null);
+
+  const handleLogout = async () => {
+    await clearAuthData();
+    setAuthData(null);
+    setBattleData(null);
+    setCurrentScreen(Screen.ECOMMERCE);
+  };
+
+  const getStatusBarConfig = () => ({ style: "light" as const, backgroundColor: "#0F1419" });
   const statusBarConfig = getStatusBarConfig();
 
   const renderScreen = () => {
     switch (currentScreen) {
+
     // ====================================
-    // TELA DE LOGIN
+    // TELA DE E-COMMERCE (Loja) — pública, não requer login
+    // ====================================
+    case Screen.ECOMMERCE:
+      return (
+        <EcommerceScreen
+          token={authData?.token}
+          userId={authData?.userId}
+
+          // Botão central "Jogar": se logado vai direto ao jogo, se não vai ao login
+          onNavigateToGame={() => {
+            if (authData) {
+              setCurrentScreen(Screen.MATCHMAKING);
+            } else {
+              setCurrentScreen(Screen.LOGIN);
+            }
+          }}
+
+          onLogout={() => {
+            void handleLogout();
+          }}
+        />
+      );
+
+    // ====================================
+    // TELA DE LOGIN — apenas para entrar no jogo
     // ====================================
     case Screen.LOGIN:
       return (
-        <LoginScreen 
-          // Callback chamado quando o LOGIN é bem-sucedido
-          // A LoginScreen faz TODA a lógica de login internamente:
-          // - Validação de campos
-          // - Requisição HTTP para /auth/login
-          // - Busca dados do jogador em /game/players/me
-          // - Salva token e playerId no AsyncStorage
-          // - Verifica se já está logado (checkAuthStatus)
+        <LoginScreen
+          // Após login/registro/demo → vai direto ao jogo
           onNavigateToMatchmaking={(token, playerId, userId) => {
-            setAuthData({ token, playerId, userId });
-            setCurrentScreen(Screen.ECOMMERCE);
-          }}
-        />
-      );
-      
-    // ====================================
-    // TELA DE E-COMMERCE (Loja)
-    // ====================================
-    case Screen.ECOMMERCE:
-      // Validação: Se não tem authData, volta pro login
-      if (!authData) {
-        setCurrentScreen(Screen.LOGIN);
-        return null;
-      }
-      return (
-        <EcommerceScreen 
-          // Passa dados de autenticação para a tela
-          token={authData.token}
-          userId={authData.userId}
-          
-          // Callback para navegar para o jogo
-          onNavigateToMatchmaking={() => {
+            setAuthData({ token, playerId, userId, isGuest: decodeIsGuest(token) });
             setCurrentScreen(Screen.MATCHMAKING);
           }}
-          
-          // Callback para logout
-          onLogout={() => {
-            setAuthData(null);
-            setBattleData(null);
-            setCurrentScreen(Screen.LOGIN);
-          }}
+          // Botão "← Loja" para voltar sem fazer login
+          onBackToStore={() => setCurrentScreen(Screen.ECOMMERCE)}
         />
       );
-      
+
     // ====================================
-    // TELA DE MATCHMAKING (Procurar Partida)
+    // TELA DE MATCHMAKING (Jogo) — requer login
     // ====================================
     case Screen.MATCHMAKING:
-      // Validação: Se não tem authData, volta pro login
       if (!authData) {
         setCurrentScreen(Screen.LOGIN);
         return null;
       }
       return (
         <MainNavScreen
-          // Passa dados de autenticação para a tela
           token={authData.token}
           playerId={authData.playerId}
-          
-          // Callback chamado quando o usuário faz LOGOUT
-          // A MatchmakingScreen faz TODA a lógica de logout:
-          // - Limpa AsyncStorage
-          // - Desconecta socket
+          userId={authData.userId}
+          isGuest={authData.isGuest}
+
           onNavigateToLogin={() => {
-            setAuthData(null);
-            setBattleData(null);
+            void handleLogout();
+          }}
+          onNavigateToLoginScreen={() => {
             setCurrentScreen(Screen.LOGIN);
           }}
-          
-          // Callback chamado quando uma PARTIDA É ENCONTRADA
-          // A MatchmakingScreen faz TODA a lógica de matchmaking:
-          // - Conecta ao socket.io
-          // - Envia evento "findMatch"
-          // - Escuta evento "matchFound"
+
           onNavigateToBattle={(battleId, battleState, socket) => {
             setBattleData({ battleId, battleState, socket });
             setCurrentScreen(Screen.BATTLE);
           }}
-          
-          // Callback chamado quando o usuário clica em "Café"
+
           onNavigateToEcommerce={() => {
             setCurrentScreen(Screen.ECOMMERCE);
           }}
-          
-          // Passa o componente MatchmakingScreen como prop
+
           MatchmakingScreen={MatchmakingScreen}
         />
       );
-      
+
     // ====================================
-    // TELA DE BATALHA
+    // TELA DE BATALHA — requer login + batalha ativa
     // ====================================
     case Screen.BATTLE:
-      // Validação: Se não tem battleData ou authData, volta pro login
       if (!battleData || !authData) {
-        setCurrentScreen(Screen.LOGIN);
+        setCurrentScreen(Screen.MATCHMAKING);
         return null;
       }
       return (
@@ -195,45 +153,30 @@ export default function App() {
             console.error('Battle screen crashed:', error, errorInfo);
           }}
           onReset={() => {
+            battleData.socket.disconnect();
             setBattleData(null);
             setCurrentScreen(Screen.MATCHMAKING);
           }}
         >
-          <BattleScreen 
-            // Passa dados da batalha e autenticação para a tela
+          <BattleScreen
             battleId={battleData.battleId}
             battleState={battleData.battleState}
             playerId={authData.playerId}
             token={authData.token}
             socket={battleData.socket}
-            
-            // Callback chamado quando a BATALHA TERMINA ou usuário FOGE
-            // A BattleScreen faz TODA a lógica da batalha:
-            // - Escuta eventos "battleUpdate" e "battleEnd"
-            // - Renderiza Coffeemon dos jogadores
-            // - Gerencia ataques e trocas
-            // - Mostra animações
-            // - Exibe alerta quando batalha acaba
-            onNavigateToMatchmaking={() => {
+
+            onNavigateToMatchmaking={(keepActiveBattle) => {
+              if (!keepActiveBattle) void clearActiveBattleStorage();
+              battleData.socket.disconnect();
               setBattleData(null);
               setCurrentScreen(Screen.MATCHMAKING);
             }}
           />
         </ErrorBoundary>
       );
-      
-    // ====================================
-    // FALLBACK (caso padrão)
-    // ====================================
+
     default:
-      return (
-        <LoginScreen 
-          onNavigateToMatchmaking={(token: string, playerId: number, userId: number) => {
-            setAuthData({ token, playerId, userId });
-            setCurrentScreen(Screen.ECOMMERCE);
-          }}
-        />
-      );
+      return null;
     }
   };
 
@@ -258,10 +201,10 @@ export default function App() {
       <ThemeProvider>
         <SafeAreaProvider>
           <View style={{ flex: 1 }}>
-            <StatusBar 
-              style={statusBarConfig.style} 
-              backgroundColor={statusBarConfig.backgroundColor} 
-              translucent={false} 
+            <StatusBar
+              style={statusBarConfig.style}
+              backgroundColor={statusBarConfig.backgroundColor}
+              translucent={false}
             />
             {renderScreen()}
           </View>

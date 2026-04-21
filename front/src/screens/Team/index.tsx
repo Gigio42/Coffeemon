@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -23,11 +23,28 @@ const { width } = Dimensions.get('window');
 
 interface TeamScreenProps {
   token: string | null;
+  playerId?: number;
+  isActive?: boolean;
 }
 
-const COFFEEMON_TYPES = ['all', 'roasted', 'sweet', 'bitter', 'milky', 'iced', 'nutty'];
+const COFFEEMON_TYPES = ['all', 'roasted', 'sweet', 'fruity', 'nutty', 'sour', 'floral', 'spicy'] as const;
 
-export const TeamScreen: React.FC<TeamScreenProps> = ({ token }) => {
+const TYPE_LABELS: Record<(typeof COFFEEMON_TYPES)[number], string> = {
+  all: 'Todos',
+  roasted: 'Roasted',
+  sweet: 'Sweet',
+  fruity: 'Fruity',
+  nutty: 'Nutty',
+  sour: 'Sour',
+  floral: 'Floral',
+  spicy: 'Spicy',
+};
+
+export const TeamScreen: React.FC<TeamScreenProps> = ({
+  token,
+  playerId,
+  isActive = false,
+}) => {
   const { colors } = useTheme();
 
   const {
@@ -38,12 +55,18 @@ export const TeamScreen: React.FC<TeamScreenProps> = ({ token }) => {
     swapPartyMembers,
     partyLoading,
     fetchCoffeemons,
-  } = useCoffeemons({ token: token || '' });
+  } = useCoffeemons({ token: token || '', playerId });
 
   const [selectedCoffeemon, setSelectedCoffeemon] = useState<PlayerCoffeemon | null>(null);
   const [detailsVisible, setDetailsVisible] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedType, setSelectedType] = useState('all');
+
+  useEffect(() => {
+    if (isActive) {
+      fetchCoffeemons();
+    }
+  }, [isActive]);
 
   const cardStyle = {
     backgroundColor: 'rgba(255, 255, 255, 0.85)',
@@ -121,21 +144,21 @@ export const TeamScreen: React.FC<TeamScreenProps> = ({ token }) => {
       </View>
 
       {/* Party slots */}
-      <View style={[styles.deckSection, { backgroundColor: '#FFFFFF' }]}>
+      <View style={[styles.deckSection, { backgroundColor: colors.surface.base }]}>
         <View style={styles.deckContainer}>
           {deck.map((member, index) => (
             <View key={index} style={styles.deckSlotContainer}>
               {member ? (
                 <CoffeemonCard
                   coffeemon={member}
-                  onToggleParty={() => {}}
+                  onToggleParty={toggleParty}
                   onPress={() => {
                     setSelectedCoffeemon(member);
                     setDetailsVisible(true);
                   }}
                   variant="small"
                   isLoading={partyLoading === member.id}
-                  showHp={true}
+                  showHp={false}
                   showStats={false}
                   showPartyIndicator={false}
                 />
@@ -145,7 +168,7 @@ export const TeamScreen: React.FC<TeamScreenProps> = ({ token }) => {
                     styles.emptySlot,
                     {
                       borderColor: colors.border.medium,
-                      backgroundColor: 'rgba(0,0,0,0.02)',
+                      backgroundColor: 'transparent',
                     },
                   ]}
                 >
@@ -194,7 +217,7 @@ export const TeamScreen: React.FC<TeamScreenProps> = ({ token }) => {
                   key={type}
                   style={[
                     styles.typeChip,
-                    { backgroundColor: '#FFFFFF', borderColor: 'rgba(0,0,0,0.05)' },
+                    { backgroundColor: colors.surface.base, borderColor: colors.border.light },
                     isActive && {
                       backgroundColor: typeColor.primary,
                       borderColor: typeColor.primary,
@@ -216,12 +239,10 @@ export const TeamScreen: React.FC<TeamScreenProps> = ({ token }) => {
                       { color: isActive ? '#FFF' : colors.text.secondary },
                     ]}
                   >
-                    {type === 'all'
-                      ? 'Todos'
-                      : type.charAt(0).toUpperCase() + type.slice(1)}
-                  </Text>
-                </TouchableOpacity>
-              );
+                     {TYPE_LABELS[type]}
+                   </Text>
+                 </TouchableOpacity>
+               );
             })}
           </ScrollView>
         </View>

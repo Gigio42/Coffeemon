@@ -1,8 +1,9 @@
-import { Controller, Get, Post, Body, Param, Delete, UseGuards, Patch } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, UseGuards, Patch, Req } from '@nestjs/common';
 import { OrdersService } from './orders.service';
-import { CreateOrderDto } from './dto/create-order.dto';
 import { AuthGuard } from '../../auth/guards/auth.guard';
+import { OptionalAuthGuard } from '../../auth/guards/optional-auth.guard';
 import { GetUser } from 'src/auth/decorators/get-user.decorator';
+import { CheckoutItemsDto } from './dto/checkout-items.dto';
 
 @Controller('orders')
 export class OrdersController {
@@ -24,5 +25,14 @@ export class OrdersController {
   @UseGuards(AuthGuard)
   checkout(@GetUser('id') userId: number) {
     return this.ordersService.checkout(userId);
+  }
+
+  @Post('checkout-items')
+  @UseGuards(OptionalAuthGuard)
+  checkoutWithItems(
+    @Body() dto: CheckoutItemsDto,
+    @GetUser('id') userId: number | undefined,
+  ) {
+    return this.ordersService.checkoutWithItems(dto.items, userId);
   }
 }

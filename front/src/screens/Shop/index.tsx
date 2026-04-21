@@ -19,6 +19,7 @@ import { styles } from './styles';
 import { fetchGachaPacks, buyGachaPack, GachaPack } from '../../api/shopService';
 import { getItems, Item, buyItem, getItemIcon } from '../../api/itemsService';
 import { fetchPlayerData, fetchAllCoffeemons, Coffeemon } from '../../api/coffeemonService';
+import { notifyPlayerCoinsUpdate } from '../../hooks/usePlayer';
 import { getTypeColorScheme } from '../../theme/colors';
 import { getCoffeemonImage } from '../../../assets/coffeemons';
 import CoffeemonDetailsModal from '../../components/CoffeemonDetailsModal';
@@ -111,10 +112,8 @@ export const ShopScreen: React.FC<ShopScreenProps> = ({ token }) => {
           onPress: async () => {
             try {
               const result = await buyGachaPack(token, pack.id);
-              setPlayerCoins(prev => prev - pack.cost);
-              
+
               if (result.coffeemon) {
-                // Show gacha reveal modal with animation
                 setRevealedCoffeemon({
                   name: result.coffeemon.name,
                   types: result.coffeemon.types || ['roasted'],
@@ -123,7 +122,14 @@ export const ShopScreen: React.FC<ShopScreenProps> = ({ token }) => {
               } else {
                 Alert.alert('Sucesso', 'Pacote comprado com sucesso!');
               }
-              loadShopData();
+
+              // Atualiza moedas do servidor sem resetar o FlatList
+              fetchPlayerData(token).then((p) => {
+                if (p?.coins != null) {
+                  setPlayerCoins(p.coins);
+                  notifyPlayerCoinsUpdate(p.coins);
+                }
+              }).catch(() => {});
             } catch (err: any) {
               Alert.alert('Erro', err.message || 'Falha ao comprar pacote.');
             }
@@ -151,9 +157,14 @@ export const ShopScreen: React.FC<ShopScreenProps> = ({ token }) => {
           onPress: async () => {
             try {
               await buyItem(token, item.id);
-              setPlayerCoins(prev => prev - item.cost);
               Alert.alert('Sucesso', `${item.name} adicionado ao inventário!`);
-              loadShopData();
+
+              fetchPlayerData(token).then((p) => {
+                if (p?.coins != null) {
+                  setPlayerCoins(p.coins);
+                  notifyPlayerCoinsUpdate(p.coins);
+                }
+              }).catch(() => {});
             } catch (err: any) {
               Alert.alert('Erro', err.message || 'Falha ao comprar item.');
             }

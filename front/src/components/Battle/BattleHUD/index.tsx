@@ -5,17 +5,7 @@ import { PlayerState } from '../../../types';
 import { CoffeemonVariant, getCoffeemonImage } from '../../../../assets/coffeemons';
 import { styles } from '../../../screens/Battle/styles';
 import { hudStyles } from './styles';
-
-// Ícones de tipos elementais
-const typeIcons = {
-  floral: require('../../../../assets/iconsv2/notes/floral.png'),
-  sweet: require('../../../../assets/iconsv2/notes/sweet.png'),
-  fruity: require('../../../../assets/iconsv2/notes/fruity.png'),
-  nutty: require('../../../../assets/iconsv2/notes/nutty.png'),
-  roasted: require('../../../../assets/iconsv2/notes/roasted.png'),
-  spicy: require('../../../../assets/iconsv2/notes/roasted.png'), // usando roasted como fallback
-  sour: require('../../../../assets/iconsv2/notes/sour.png'),
-};
+import TypeIcon from '../../TypeIcon';
 
 interface BattleHUDProps {
   playerState: PlayerState | null;
@@ -25,11 +15,6 @@ interface BattleHUDProps {
   imageSourceGetter?: (name: string, variant?: CoffeemonVariant) => ImageSourcePropType;
   playerName?: string;
 }
-
-const getTypeIcon = (type: string): ImageSourcePropType => {
-  const normalizedType = type?.toLowerCase() as keyof typeof typeIcons;
-  return typeIcons[normalizedType] || typeIcons.roasted;
-};
 
 const getTypeColor = (type: string) => {
   const colors: { [key: string]: string } = {
@@ -111,7 +96,6 @@ export default function BattleHUD({
   const imageSource = resolveImage(activeMon.name, spriteVariant);
   // Tenta obter o tipo da propriedade 'types' (array) ou 'type' (string)
   const monType = (activeMon as any)?.types?.[0] || (activeMon as any)?.type;
-  const typeIconSource = getTypeIcon(monType);
   const typeColor = getTypeColor(monType);
   const level = activeMon.level;
   
@@ -137,7 +121,7 @@ export default function BattleHUD({
           <View style={[hudStyles.typePattern, { backgroundColor: typeColor }]} />
           
           <View style={hudStyles.nameGroup}>
-            <Image source={typeIconSource} style={hudStyles.typeIconImage} resizeMode="contain" />
+            <TypeIcon type={monType} size={16} strokeWidth={2.35} style={hudStyles.typeIconImage} />
             <Text style={hudStyles.name}>{activeMon.name.toUpperCase()}</Text>
           </View>
           <View style={hudStyles.levelGroup}>

@@ -6,6 +6,14 @@ import { User, UserRole } from '../entities/user.entity';
 import { UsersController } from '../users.controller';
 import { UsersService } from '../users.service';
 
+const auditFields = {
+  isGuest: false,
+  createdAt: new Date('2024-01-01'),
+  updatedAt: new Date('2024-01-01'),
+  deletedAt: null,
+  lastLoginAt: null,
+};
+
 describe('UsersController', () => {
   let controller: UsersController;
 
@@ -62,6 +70,7 @@ describe('UsersController', () => {
           role: UserRole.USER,
           orders: [],
           player: undefined as any,
+          ...auditFields,
         },
       ];
       mockUsersService.findAll.mockResolvedValue(users);
@@ -84,6 +93,7 @@ describe('UsersController', () => {
         role: UserRole.USER,
         orders: [],
         player: undefined as any,
+        ...auditFields,
       };
       mockUsersService.findOne.mockResolvedValue(user);
 
@@ -105,6 +115,7 @@ describe('UsersController', () => {
         role: UserRole.USER,
         orders: [],
         player: undefined as any,
+        ...auditFields,
       };
       mockUsersService.findOne.mockResolvedValue(user);
 
@@ -127,6 +138,7 @@ describe('UsersController', () => {
         role: UserRole.USER,
         orders: [],
         player: undefined as any,
+        ...auditFields,
       };
       mockUsersService.update.mockResolvedValue(updatedUser);
 

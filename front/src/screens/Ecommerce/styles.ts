@@ -1,124 +1,174 @@
 import { StyleSheet, Platform } from 'react-native';
-import { pixelArt } from '../../theme';
 
-// Para Android, adiciona padding para navigation bar
 const navigationBarHeight = Platform.OS === 'android' ? 20 : 0;
+
+// Paleta de cores do tema café premium
+const C = {
+  espresso:    '#1C1007',
+  coffee:      '#8B4513',
+  coffeeDeep:  '#6B3410',
+  coffeeMid:   '#A0522D',
+  caramel:     '#C8793A',
+  cream:       '#FAF7F2',
+  creamWarm:   '#FDF8EE',
+  creamBorder: 'rgba(196, 165, 120, 0.25)',
+  textMuted:   '#A89070',
+  textActive:  '#5C2E0A',
+  white:       '#FFFFFF',
+  badge:       '#D93025',
+};
 
 export const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f2e8', // Cor creme clara - mesma do header
+    backgroundColor: C.cream,
   },
-  
-  // ========================================
-  // BARRA DE NAVEGAÇÃO INFERIOR
-  // ========================================
+
+  // ─────────────────────────────────────────────
+  // TAB BAR — floating warm card
+  // ─────────────────────────────────────────────
   tabBar: {
     flexDirection: 'row',
-    backgroundColor: '#f5f2e8', // Cor creme clara
-    borderTopWidth: 3,
-    borderTopColor: '#d4c5a0', // Borda creme mais escura
-    paddingBottom: 20 + navigationBarHeight, // Padding adicional na parte de baixo
-    paddingTop: 6, // Reduzido
-    // Borda 3D sutil
-    borderBottomWidth: 2,
-    borderBottomColor: '#faf8f0', // Borda creme mais clara
-    ...pixelArt.shadows.innerBorder,
+    alignItems: 'flex-end',
+    backgroundColor: C.creamWarm,
+    paddingBottom: 12 + navigationBarHeight,
+    paddingTop: 10,
+    paddingHorizontal: 4,
+    borderTopLeftRadius: 28,
+    borderTopRightRadius: 28,
+    borderTopWidth: 1,
+    borderTopColor: C.creamBorder,
+    shadowColor: C.espresso,
+    shadowOffset: { width: 0, height: -6 },
+    shadowOpacity: 0.1,
+    shadowRadius: 20,
+    elevation: 24,
   },
-  
+
+  // Tab normal
   tabButton: {
     flex: 1,
     alignItems: 'center',
-    paddingVertical: 4, // Reduzido
+    paddingVertical: 4,
     position: 'relative',
   },
 
-  tabGroup: {
-    flexDirection: 'row',
-    flex: 1,
-    justifyContent: 'space-evenly',
-    alignItems: 'center',
-  },
-  
-  centerButtonWrapper: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginHorizontal: 12,
-  },
-  
-  centerButton: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    backgroundColor: pixelArt.colors.coffeePrimary,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 6,
-    borderWidth: 3,
-    borderColor: '#fdf8ec',
-    ...pixelArt.shadows.button,
-  },
-  
-  centerButtonIcon: {
-    width: 36,
-    height: 36,
-  },
-  
-  centerButtonLabel: {
-    ...pixelArt.typography.pixelButton,
-    fontSize: 9,
-    color: pixelArt.colors.coffeePrimary,
-  },
-  
-  tabIcon: {
-    fontSize: 24,
-    marginBottom: 4,
-    opacity: 0.6,
-  },
-  
   tabIconImage: {
-    width: 28,
-    height: 28,
-    marginBottom: 2,
-    opacity: 0.6,
+    width: 26,
+    height: 26,
+    marginBottom: 3,
+    opacity: 0.35,
   },
-  
+
   tabIconActive: {
     opacity: 1,
-    transform: [{ scale: 1.15 }],
+    tintColor: C.coffee,
   },
-  
+
   tabLabel: {
-    ...pixelArt.typography.pixelButton,
+    fontFamily: 'monospace',
     fontSize: 9,
-    color: pixelArt.colors.textLight,
+    color: C.textMuted,
+    textTransform: 'uppercase',
+    letterSpacing: 0.4,
   },
-  
+
   tabLabelActive: {
-    color: pixelArt.colors.coffeePrimary,
+    color: C.coffee,
     fontWeight: '900',
   },
-  
+
+  // Dot ativo
+  tabDot: {
+    width: 4,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: C.coffee,
+    marginTop: 4,
+  },
+
+  tabDotHidden: {
+    width: 4,
+    height: 4,
+    marginTop: 4,
+    backgroundColor: 'transparent',
+  },
+
+  // ─────────────────────────────────────────────
+  // GAME BUTTON — destaque central
+  // ─────────────────────────────────────────────
+  gameTabButton: {
+    flex: 1.4,
+    alignItems: 'center',
+    paddingVertical: 0,
+    paddingRight: 4,
+    marginTop: -10, // sobe levemente acima da barra
+  },
+
+  gameButtonInner: {
+    backgroundColor: C.coffee,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    borderRadius: 22,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: C.coffee,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.45,
+    shadowRadius: 14,
+    elevation: 12,
+    borderWidth: 2,
+    borderColor: C.caramel,
+    minWidth: 70,
+  },
+
+  gameButtonInnerActive: {
+    backgroundColor: C.coffeeDeep,
+    borderColor: C.coffee,
+  },
+
+  gameButtonIcon: {
+    width: 22,
+    height: 22,
+    tintColor: C.white,
+    marginBottom: 3,
+  },
+
+  gameButtonLabel: {
+    fontFamily: 'monospace',
+    fontSize: 9,
+    color: C.white,
+    fontWeight: '900',
+    letterSpacing: 1.2,
+    textTransform: 'uppercase',
+  },
+
+  // ─────────────────────────────────────────────
+  // BADGE DE CARRINHO
+  // ─────────────────────────────────────────────
+  badgeWrapper: {
+    position: 'relative',
+  },
+
   badge: {
     position: 'absolute',
-    top: -4,
-    right: '25%',
-    backgroundColor: pixelArt.colors.error,
-    borderRadius: 10,
-    minWidth: 20,
-    height: 20,
+    top: -5,
+    right: -8,
+    backgroundColor: C.badge,
+    borderRadius: 9,
+    minWidth: 18,
+    height: 18,
     justifyContent: 'center',
     alignItems: 'center',
-    paddingHorizontal: 4,
-    // Borda do badge
+    paddingHorizontal: 3,
     borderWidth: 2,
-    borderColor: '#ffffff',
-    ...pixelArt.shadows.button,
+    borderColor: C.creamWarm,
   },
-  
+
   badgeText: {
-    ...pixelArt.typography.pixelButton,
-    color: '#ffffff',
-    fontSize: 10,
+    fontFamily: 'monospace',
+    color: C.white,
+    fontSize: 9,
+    fontWeight: '900',
   },
 });

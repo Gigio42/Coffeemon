@@ -7,6 +7,7 @@ import { getVariantForStatusEffects } from '../../utils/statusEffects';
 import { getTypeColorScheme } from '../../theme/colors';
 import { useTheme } from '../../theme/ThemeContext';
 import { theme as staticTheme } from '../../theme/theme';
+import TypeIcon from '../TypeIcon';
 
 interface CoffeemonCardProps {
   coffeemon: PlayerCoffeemon;
@@ -19,22 +20,6 @@ interface CoffeemonCardProps {
   showStats?: boolean;
   showPartyIndicator?: boolean;
 }
-
-const getTypeIcon = (type?: string): string => {
-  const icons: Record<string, string> = {
-    roasted: '🔥',
-    sweet: '🍬',
-    bitter: '☕',
-    milky: '🥛',
-    iced: '❄️',
-    nutty: '🌰',
-    fruity: '🍎',
-    spicy: '🌶️',
-    sour: '🍋',
-    floral: '🌸',
-  };
-  return icons[type || 'roasted'] || '☕';
-};
 
 export default function CoffeemonCard({
   coffeemon,
@@ -73,8 +58,8 @@ export default function CoffeemonCard({
   // Minimalist Glass Container
   const containerStyle = {
     backgroundColor: 'rgba(255, 255, 255, 0.85)',
-    borderColor: 'rgba(255, 255, 255, 0.9)',
-    borderWidth: 1,
+    borderColor: isSmall ? 'transparent' : 'rgba(255, 255, 255, 0.9)',
+    borderWidth: isSmall ? 0 : 1,
     shadowColor: typeColors.primary,
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.15,
@@ -86,6 +71,7 @@ export default function CoffeemonCard({
     <TouchableOpacity
       style={[
         styles.container,
+        isSmall && styles.containerSmall,
         containerStyle,
         disabled && styles.containerDisabled,
       ]}
@@ -98,8 +84,7 @@ export default function CoffeemonCard({
         colors={typeColors.gradient as any}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
-        style={StyleSheet.absoluteFillObject}
-        opacity={0.6}
+        style={[StyleSheet.absoluteFillObject, { opacity: 0.6 }]}
       />
 
       {/* Party Indicator - Floating Badge */}
@@ -111,9 +96,14 @@ export default function CoffeemonCard({
 
       <View style={[styles.content, isSmall && styles.contentSmall]}>
         {/* Header: Minimalist Type & Level */}
-        <View style={styles.header}>
-          <View style={[styles.typePill, { backgroundColor: 'rgba(255,255,255,0.6)' }]}>
-            <Text style={styles.typeIcon}>{getTypeIcon(primaryType)}</Text>
+        <View style={[styles.header, isSmall && styles.headerSmall]}>
+          <View style={[styles.typePill, isSmall && styles.typePillSmall]}>
+            <TypeIcon
+              type={primaryType}
+              size={isSmall ? 15 : 15}
+              strokeWidth={2}
+              style={[styles.typeIcon, isSmall && styles.typeIconSmall]}
+            />
             {!isSmall && (
               <Text style={[styles.typeName, { color: typeColors.dark }]}>
                 {primaryType.charAt(0).toUpperCase() + primaryType.slice(1)}
@@ -121,9 +111,9 @@ export default function CoffeemonCard({
             )}
           </View>
           
-          <View style={styles.levelContainer}>
-            <Text style={[styles.levelLabel, { color: colors.text.tertiary }]}>LV</Text>
-            <Text style={[styles.levelValue, { color: colors.text.primary }]}>{coffeemon.level}</Text>
+          <View style={[styles.levelContainer, isSmall && styles.levelContainerSmall]}>
+            <Text style={[styles.levelLabel, isSmall && styles.levelLabelSmall, { color: colors.text.tertiary }]}>LV</Text>
+            <Text style={[styles.levelValue, isSmall && styles.levelValueSmall, { color: colors.text.primary }]}>{coffeemon.level}</Text>
           </View>
         </View>
 
@@ -142,16 +132,17 @@ export default function CoffeemonCard({
         </View>
 
         {/* Info Area */}
-        <View style={styles.infoSection}>
+        <View style={[styles.infoSection, isSmall && styles.infoSectionSmall]}>
           <Text style={[styles.name, { color: colors.text.primary }, isSmall && styles.nameSmall]} numberOfLines={1}>
             {coffeemon.coffeemon.name}
           </Text>
 
           {/* Botão de Adicionar/Remover do Time */}
-          {showPartyIndicator && onToggleParty && (
+          {onToggleParty && (
             <TouchableOpacity
               style={[
                 styles.addButton,
+                isSmall && styles.addButtonSmall,
                 {
                   backgroundColor: coffeemon.isInParty ? typeColors.primary : 'rgba(0,0,0,0.1)',
                 }
@@ -162,9 +153,10 @@ export default function CoffeemonCard({
             >
               <Text style={[
                 styles.addButtonText,
+                isSmall && styles.addButtonTextSmall,
                 { color: coffeemon.isInParty ? '#FFF' : colors.text.secondary }
               ]}>
-                {isLoading ? '...' : coffeemon.isInParty ? '★ No Time' : '+ Adicionar'}
+                {isLoading ? '...' : coffeemon.isInParty ? 'Remover' : '+ Adicionar'}
               </Text>
             </TouchableOpacity>
           )}
@@ -213,6 +205,10 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     marginBottom: 4,
   },
+  containerSmall: {
+    borderRadius: 18,
+    marginBottom: 0,
+  },
   containerDisabled: {
     opacity: 0.6,
   },
@@ -228,16 +224,35 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 8,
   },
+  headerSmall: {
+    marginBottom: 4,
+  },
   typePill: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
+    paddingHorizontal: 7,
+    paddingVertical: 2,
     borderRadius: 12,
-    gap: 4,
+    gap: 5,
+    minHeight: 30,
+    backgroundColor: 'rgba(118,126,138,0.18)',
+  },
+  typePillSmall: {
+    paddingHorizontal: 6,
+    paddingVertical: 1,
+    borderRadius: 10,
+    minHeight: 26,
+    gap: 0,
   },
   typeIcon: {
-    fontSize: 12,
+    width: 22,
+    height: 22,
+    marginTop: 3,
+  },
+  typeIconSmall: {
+    width: 20,
+    height: 20,
+    marginTop: 2,
   },
   typeName: {
     fontSize: 10,
@@ -249,13 +264,22 @@ const styles = StyleSheet.create({
     alignItems: 'baseline',
     gap: 2,
   },
+  levelContainerSmall: {
+    marginTop: 1,
+  },
   levelLabel: {
     fontSize: 9,
     fontWeight: '700',
   },
+  levelLabelSmall: {
+    fontSize: 8,
+  },
   levelValue: {
     fontSize: 14,
     fontWeight: '800',
+  },
+  levelValueSmall: {
+    fontSize: 12,
   },
   partyBadge: {
     position: 'absolute',
@@ -285,8 +309,8 @@ const styles = StyleSheet.create({
     marginVertical: 4,
   },
   imageContainerSmall: {
-    height: 70,
-    marginVertical: 2,
+    height: 62,
+    marginVertical: 0,
   },
   glowEffect: {
     shadowOffset: { width: 0, height: 10 },
@@ -304,6 +328,9 @@ const styles = StyleSheet.create({
   },
   infoSection: {
     gap: 6,
+  },
+  infoSectionSmall: {
+    gap: 3,
   },
   name: {
     fontSize: 16,
@@ -324,10 +351,20 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginTop: 4,
   },
+  addButtonSmall: {
+    paddingVertical: 4,
+    paddingHorizontal: 8,
+    marginTop: 0,
+    borderRadius: 10,
+  },
   addButtonText: {
     fontSize: 10,
     fontWeight: '700',
     letterSpacing: 0.5,
+  },
+  addButtonTextSmall: {
+    fontSize: 9,
+    letterSpacing: 0.2,
   },
   hpContainer: {
     width: '100%',
