@@ -79,7 +79,10 @@
       border-bottom: 2px solid var(--coffee-dark);
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     }
-    .letterhead .lh-brand { font-size: 1.15rem; font-weight: 700; color: var(--coffee-dark); }
+    .letterhead .lh-brand {
+      font-size: 1.05rem; font-weight: 700; letter-spacing: 3px;
+      text-transform: uppercase; color: var(--coffee-dark);
+    }
     .letterhead .lh-type {
       font-size: .72rem; letter-spacing: 2px; text-transform: uppercase;
       color: var(--muted);
@@ -156,7 +159,7 @@
     </div>
     <article>
       <div class="letterhead">
-        <span class="lh-brand">☕ Coffeemon</span>
+        <span class="lh-brand">Coffeemon</span>
         <span class="lh-type">Documento oficial</span>
       </div>
       {{ content }}

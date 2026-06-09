@@ -83,10 +83,9 @@ decorrentes de informações manifestamente incorretas.
 
 5.3. **Pagamento e entrega:** o aplicativo registra o pedido, seus itens, valores e
 status (por exemplo: pendente, pago, enviado, concluído ou cancelado). O aplicativo,
-em sua versão atual, **não processa pagamentos online nem dados de cartão dentro do
-app**. A combinação de pagamento e entrega ocorre fora da plataforma, conforme
-condições informadas no momento da compra. *(Atualize esta cláusula caso um meio de
-pagamento integrado seja adicionado.)*
+em sua versão atual, não processa pagamentos online nem dados de cartão dentro do
+aplicativo. A combinação de pagamento e entrega ocorre fora da plataforma, conforme
+condições informadas no momento da compra.
 
 5.4. O usuário é responsável por conferir os itens e valores antes de finalizar o
 pedido.

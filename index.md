@@ -4,13 +4,13 @@ title: Documentos legais
 permalink: /
 ---
 
-# ☕ Coffeemon — Documentos legais
+# Coffeemon — Documentos legais
 
-Bem-vindo(a). Aqui ficam os documentos oficiais que regem o uso do aplicativo
-**Coffeemon** (e-commerce de cafés especiais + jogo de criaturas colecionáveis).
+Esta página reúne os documentos oficiais que regem o uso do aplicativo **Coffeemon**
+(e-commerce de cafés especiais e jogo de criaturas colecionáveis).
 
-- 📄 [**Termos de Uso**]({{ '/termos/' | relative_url }})
-- 🔒 [**Política de Privacidade**]({{ '/privacidade/' | relative_url }})
+- [Termos de Uso]({{ '/termos/' | relative_url }})
+- [Política de Privacidade]({{ '/privacidade/' | relative_url }})
 
 O código-fonte do projeto está disponível em
 [github.com/Gigio42/Coffeemon](https://github.com/Gigio42/Coffeemon) sob a licença

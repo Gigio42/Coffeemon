@@ -38,11 +38,11 @@ Coletamos apenas os dados necessários para o funcionamento do aplicativo:
 - **Data de aceite dos Termos de Uso**
 
 ### 2.2. Dados de pedidos (e-commerce)
-- Itens do pedido, quantidades, valores e **status do pedido**
-- Vínculo com a conta (quando o pedido não é anônimo)
+- Itens do pedido, quantidades, valores e status do pedido;
+- Vínculo com a conta, quando o pedido não é anônimo.
 
-> O aplicativo, em sua versão atual, **não coleta nem armazena dados de cartão de
-> crédito ou de pagamento online** dentro do app.
+O aplicativo, em sua versão atual, não coleta nem armazena dados de cartão de crédito
+ou de pagamento online.
 
 ### 2.3. Dados da parte de jogo
 - Perfil de jogador, Coffeemons, itens, golpes e histórico de batalhas
@@ -60,19 +60,33 @@ O aplicativo pode solicitar permissão de **câmera** para leitura de QR codes l
 à captura de Coffeemons. **As imagens da câmera não são armazenadas nem enviadas a
 servidores** — o uso ocorre localmente, apenas para interpretar o QR code.
 
-## 3. Para que usamos os dados (finalidades e bases legais)
+## 3. Para que usamos os dados
 
-| Finalidade | Dados | Base legal (LGPD) |
-|---|---|---|
-| Criar e autenticar contas | Cadastro, login | Execução de contrato |
-| Processar e exibir pedidos | Pedidos | Execução de contrato |
-| Operar a parte de jogo e recursos sociais | Dados de jogo, chat, amizades | Execução de contrato |
-| Segurança, auditoria e prevenção a fraudes | IP, logs de auditoria | Legítimo interesse / obrigação legal |
-| Moderação de conteúdo | Mensagens de chat | Legítimo interesse |
-| Comprovação de aceite dos Termos | Data de aceite | Cumprimento de obrigação |
-| Comunicações sobre o serviço | E-mail | Execução de contrato |
+Tratamos os dados pessoais estritamente para as finalidades a seguir, observadas as
+respectivas bases legais previstas no art. 7º da LGPD:
 
-Não utilizamos seus dados para publicidade de terceiros nem os vendemos.
+a) criar, manter e autenticar sua conta, com base na execução do contrato firmado
+entre você e a plataforma;
+
+b) processar, registrar e exibir seus pedidos de produtos, com base na execução do
+contrato;
+
+c) operar a parte de jogo e os recursos sociais (amizades e chat), com base na
+execução do contrato;
+
+d) garantir a segurança, prevenir fraudes e manter registros de auditoria, com base
+no legítimo interesse e no cumprimento de obrigação legal;
+
+e) moderar conteúdo gerado por usuários, com base no legítimo interesse na segurança
+da comunidade;
+
+f) comprovar o aceite destes Termos e desta Política, com base no cumprimento de
+obrigação legal e regulatória;
+
+g) enviar comunicações relativas ao funcionamento do serviço, com base na execução
+do contrato.
+
+Não utilizamos seus dados para publicidade de terceiros nem os comercializamos.
 
 ## 4. Compartilhamento de dados
 
