@@ -5,6 +5,7 @@ import { Repository } from 'typeorm';
 import { Product } from '../products/entities/product.entity';
 import { Order } from './entities/order.entity';
 import { OrderItem } from './entities/order_item.entity';
+import { OrderStatusUpdateDto } from './dto/order-status-update.dto';
 
 @Injectable()
 export class OrdersService {
@@ -24,6 +25,24 @@ export class OrdersService {
         user: { id: userId },
       },
     });
+  }
+
+  findAllAdmin(status?: OrderStatus) {
+    return this.ordersRepository.find({
+      where: status ? { status } : undefined,
+      relations: ['user', 'orderItem', 'orderItem.product'],
+      order: { updated_at: 'DESC' },
+    });
+  }
+
+  async updateStatus(orderId: number, dto: OrderStatusUpdateDto): Promise<Order> {
+    const order = await this.ordersRepository.findOne({
+      where: { id: orderId },
+      relations: ['user'],
+    });
+    if (!order) throw new NotFoundException(`Pedido ${orderId} não encontrado`);
+    await this.ordersRepository.update(orderId, { status: dto.status });
+    return { ...order, status: dto.status };
   }
 
   findOne(userId: number, orderId: number) {

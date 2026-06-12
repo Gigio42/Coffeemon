@@ -14,6 +14,7 @@ const auditFields = {
   updatedAt: new Date('2024-01-01'),
   deletedAt: null,
   lastLoginAt: null,
+  termsAcceptedAt: null,
 };
 
 describe('UsersService', () => {

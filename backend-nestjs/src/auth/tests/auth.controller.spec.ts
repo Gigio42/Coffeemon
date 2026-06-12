@@ -1,6 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { AuthController } from '../auth.controller';
 import { AuthService } from '../auth.service';
+import { AuditService } from '../../ecommerce/audit/audit.service';
 import { UserRole } from '../../ecommerce/users/entities/user.entity';
 
 describe('AuthController', () => {
@@ -11,16 +12,17 @@ describe('AuthController', () => {
     login: jest.fn(),
   };
 
+  const mockAuditService = { log: jest.fn().mockResolvedValue(undefined) };
+  const mockReq = { ip: '127.0.0.1' } as any;
+
   beforeEach(async () => {
     jest.clearAllMocks();
 
     const module: TestingModule = await Test.createTestingModule({
       controllers: [AuthController],
       providers: [
-        {
-          provide: AuthService,
-          useValue: mockAuthService,
-        },
+        { provide: AuthService, useValue: mockAuthService },
+        { provide: AuditService, useValue: mockAuditService },
       ],
     }).compile();
 
@@ -35,7 +37,7 @@ describe('AuthController', () => {
     it('should return error message when email is missing', async () => {
       const loginDto = { email: '', password: 'password123' };
 
-      const result = await controller.login(loginDto);
+      const result = await controller.login(loginDto, mockReq);
 
       expect(mockAuthService.validateUser).not.toHaveBeenCalled();
       expect(result).toEqual({ message: 'Email and password are required' });
@@ -43,7 +45,7 @@ describe('AuthController', () => {
 
     it('should return error message when password is missing', async () => {
       const loginDto = { email: 'test@example.com', password: '' };
-      const result = await controller.login(loginDto);
+      const result = await controller.login(loginDto, mockReq);
       expect(mockAuthService.validateUser).not.toHaveBeenCalled();
       expect(result).toEqual({ message: 'Email and password are required' });
     });
@@ -51,7 +53,7 @@ describe('AuthController', () => {
     it('should return error message when credentials are invalid', async () => {
       const loginDto = { email: 'test@example.com', password: 'wrong' };
       mockAuthService.validateUser.mockResolvedValue(null);
-      const result = await controller.login(loginDto);
+      const result = await controller.login(loginDto, mockReq);
       expect(mockAuthService.validateUser).toHaveBeenCalledWith(loginDto.email, loginDto.password);
       expect(result).toEqual({ message: 'Invalid email or password' });
     });
@@ -64,7 +66,7 @@ describe('AuthController', () => {
       mockAuthService.validateUser.mockResolvedValue(user);
       mockAuthService.login.mockReturnValue(token);
 
-      const result = await controller.login(loginDto);
+      const result = await controller.login(loginDto, mockReq);
 
       expect(mockAuthService.validateUser).toHaveBeenCalledWith(loginDto.email, loginDto.password);
       expect(mockAuthService.login).toHaveBeenCalledWith(user);

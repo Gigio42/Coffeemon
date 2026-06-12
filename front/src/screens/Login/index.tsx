@@ -9,6 +9,8 @@ import {
   KeyboardAvoidingView,
   ScrollView,
   StatusBar,
+  Linking,
+  StyleSheet,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -41,6 +43,8 @@ export default function LoginScreen({
     setPassword,
     username,
     setUsername,
+    termsAccepted,
+    setTermsAccepted,
     message,
     isRegistering,
     setIsRegistering,
@@ -55,6 +59,7 @@ export default function LoginScreen({
     setUsername('');
     setEmail('');
     setPassword('');
+    setTermsAccepted(false);
   };
 
   const isError = message.toLowerCase().includes('erro') || message.toLowerCase().includes('falha');
@@ -159,6 +164,40 @@ export default function LoginScreen({
                   />
                 </View>
 
+                {isRegistering && (
+                  <TouchableOpacity
+                    style={loginStyles.termsRow}
+                    onPress={() => setTermsAccepted(!termsAccepted)}
+                    activeOpacity={0.8}
+                  >
+                    <View style={[loginStyles.checkbox, termsAccepted && loginStyles.checkboxChecked]}>
+                      {termsAccepted && <Text style={loginStyles.checkmark}>✓</Text>}
+                    </View>
+                    <Text style={loginStyles.termsText}>
+                      Li e aceito os{' '}
+                      <Text
+                        style={loginStyles.termsLink}
+                        onPress={(e) => {
+                          e.stopPropagation();
+                          Linking.openURL('https://gigio42.github.io/Coffeemon/termos/');
+                        }}
+                      >
+                        Termos de Uso
+                      </Text>
+                      {' '}e a{' '}
+                      <Text
+                        style={loginStyles.termsLink}
+                        onPress={(e) => {
+                          e.stopPropagation();
+                          Linking.openURL('https://gigio42.github.io/Coffeemon/privacidade/');
+                        }}
+                      >
+                        Política de Privacidade
+                      </Text>
+                    </Text>
+                  </TouchableOpacity>
+                )}
+
                 <TouchableOpacity
                   style={[
                     styles.loginButton,
@@ -222,6 +261,7 @@ export default function LoginScreen({
 
             <View style={styles.footer}>
               <Text style={styles.footerText}>v1.0.0 Alpha • Coffeemon Studio</Text>
+
               {Platform.OS === 'web' && (
                 <TouchableOpacity
                   style={styles.clearCacheButton}
@@ -240,3 +280,42 @@ export default function LoginScreen({
     </View>
   );
 }
+
+const loginStyles = StyleSheet.create({
+  termsRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    marginBottom: 12,
+    gap: 10,
+  },
+  checkbox: {
+    width: 20,
+    height: 20,
+    borderRadius: 4,
+    borderWidth: 2,
+    borderColor: '#8B4513',
+    marginTop: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    flexShrink: 0,
+  },
+  checkboxChecked: {
+    backgroundColor: '#8B4513',
+  },
+  checkmark: {
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: '900',
+  },
+  termsText: {
+    flex: 1,
+    fontSize: 11,
+    color: '#5C2E0A',
+    lineHeight: 17,
+  },
+  termsLink: {
+    color: '#8B4513',
+    textDecorationLine: 'underline',
+    fontWeight: '700',
+  },
+});

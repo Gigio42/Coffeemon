@@ -1,4 +1,6 @@
 export enum OrderStatus {
     SHOPPING_CART = "carrinho",
-    FINISHED = "finalizado"
+    FINISHED = "finalizado",
+    DELIVERED = "entregue",
+    CANCELLED = "cancelado",
 }

@@ -9,6 +9,8 @@ interface UseAuthResult {
   setPassword: (value: string) => void;
   username: string;
   setUsername: (value: string) => void;
+  termsAccepted: boolean;
+  setTermsAccepted: (value: boolean) => void;
   message: string;
   isRegistering: boolean;
   setIsRegistering: (value: boolean) => void;
@@ -27,6 +29,7 @@ export function useAuth({ onSuccess }: UseAuthProps): UseAuthResult {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [username, setUsername] = useState('');
+  const [termsAccepted, setTermsAccepted] = useState(false);
   const [message, setMessage] = useState('');
   const [isRegistering, setIsRegistering] = useState(false);
 
@@ -105,11 +108,16 @@ export function useAuth({ onSuccess }: UseAuthProps): UseAuthResult {
       return;
     }
 
+    if (!termsAccepted) {
+      setMessage('Erro: Aceite os Termos de Uso para continuar');
+      return;
+    }
+
     try {
       setMessage('Criando conta...');
 
       // ETAPA 1: Registro
-      const registerData = await authService.register({ username, email, password });
+      const registerData = await authService.register({ username, email, password, termsAccepted });
       const token = registerData.access_token;
       await authService.saveToken(token);
 
@@ -176,6 +184,8 @@ export function useAuth({ onSuccess }: UseAuthProps): UseAuthResult {
     setPassword,
     username,
     setUsername,
+    termsAccepted,
+    setTermsAccepted,
     message,
     isRegistering,
     setIsRegistering,

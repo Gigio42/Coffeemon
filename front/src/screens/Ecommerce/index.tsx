@@ -1,9 +1,10 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { View, TouchableOpacity, Text, Image } from 'react-native';
 import ProductListScreen from './ProductList';
 import ProductDetailScreen from './ProductDetail';
 import CartScreen from './Cart';
 import OrderHistoryScreen from './Orders';
+import AdminScreen from './Admin';
 import { CartItem, Product } from '../../types';
 import { styles } from './styles';
 import { fetchPlayerCoffeemons, fetchPlayerData } from '../../api/coffeemonService';
@@ -18,6 +19,15 @@ enum EcommerceTab {
   PRODUCT_DETAIL = 'PRODUCT_DETAIL',
   CART = 'CART',
   ORDERS = 'ORDERS',
+  ADMIN = 'ADMIN',
+}
+
+function decodeRole(token?: string): string | null {
+  if (!token) return null;
+  try {
+    const b64 = token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
+    return JSON.parse(atob(b64))?.role ?? null;
+  } catch { return null; }
 }
 
 interface EcommerceScreenProps {
@@ -34,6 +44,7 @@ export default function EcommerceScreen({
   onLogout,
 }: EcommerceScreenProps) {
   const [currentTab, setCurrentTab] = useState<EcommerceTab>(EcommerceTab.PRODUCTS);
+  const isAdmin = useMemo(() => decodeRole(token) === 'admin', [token]);
   const [localCart, setLocalCart] = useState<CartItem[]>([]);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
 
@@ -152,6 +163,15 @@ export default function EcommerceScreen({
           />
         );
 
+      case EcommerceTab.ADMIN:
+        if (!token) return null;
+        return (
+          <AdminScreen
+            token={token}
+            onBack={() => setCurrentTab(EcommerceTab.PRODUCTS)}
+          />
+        );
+
       default:
         return null;
     }
@@ -242,6 +262,28 @@ export default function EcommerceScreen({
             </Text>
             <View style={currentTab === EcommerceTab.ORDERS ? styles.tabDot : styles.tabDotHidden} />
           </TouchableOpacity>
+
+          {/* ── Admin ── */}
+          {isAdmin && (
+            <TouchableOpacity
+              style={styles.tabButton}
+              onPress={() => setCurrentTab(EcommerceTab.ADMIN)}
+              activeOpacity={0.7}
+            >
+              <Text style={[
+                { fontSize: 18, marginBottom: 3, opacity: currentTab === EcommerceTab.ADMIN ? 1 : 0.35 },
+              ]}>
+                ⚙️
+              </Text>
+              <Text style={[
+                styles.tabLabel,
+                currentTab === EcommerceTab.ADMIN && styles.tabLabelActive,
+              ]}>
+                Admin
+              </Text>
+              <View style={currentTab === EcommerceTab.ADMIN ? styles.tabDot : styles.tabDotHidden} />
+            </TouchableOpacity>
+          )}
 
           {/* ── GAME (botão destaque — direita) ── */}
           <TouchableOpacity
