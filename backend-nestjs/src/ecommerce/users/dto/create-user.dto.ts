@@ -32,4 +32,6 @@ export class CreateUserDto {
     { message: 'Password must be strong' }
   )
   password: string;
+
+  termsAcceptedAt?: Date | null;
 }

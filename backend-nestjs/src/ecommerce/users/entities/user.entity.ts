@@ -53,6 +53,9 @@ export class User {
   @Column({ type: 'datetime', nullable: true, default: null })
   lastLoginAt: Date | null;
 
+  @Column({ type: 'datetime', nullable: true, default: null })
+  termsAcceptedAt: Date | null;
+
   // ── Relações ───────────────────────────────
   @OneToMany(() => Order, (order) => order.user)
   orders: Order[];

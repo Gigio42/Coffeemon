@@ -1,5 +1,7 @@
 import { Controller, Get, Post, Body, Param, UseGuards, Patch, Req } from '@nestjs/common';
+import { Request } from 'express';
 import { OrdersService } from './orders.service';
+import { AuditService } from '../audit/audit.service';
 import { AuthGuard } from '../../auth/guards/auth.guard';
 import { OptionalAuthGuard } from '../../auth/guards/optional-auth.guard';
 import { GetUser } from 'src/auth/decorators/get-user.decorator';
@@ -7,7 +9,10 @@ import { CheckoutItemsDto } from './dto/checkout-items.dto';
 
 @Controller('orders')
 export class OrdersController {
-  constructor(private readonly ordersService: OrdersService) {}
+  constructor(
+    private readonly ordersService: OrdersService,
+    private readonly auditService: AuditService,
+  ) {}
 
   @Get()
   @UseGuards(AuthGuard)
@@ -29,10 +34,20 @@ export class OrdersController {
 
   @Post('checkout-items')
   @UseGuards(OptionalAuthGuard)
-  checkoutWithItems(
+  async checkoutWithItems(
     @Body() dto: CheckoutItemsDto,
     @GetUser('id') userId: number | undefined,
+    @Req() req: Request,
   ) {
-    return this.ordersService.checkoutWithItems(dto.items, userId);
+    const result = await this.ordersService.checkoutWithItems(dto.items, userId);
+    void this.auditService.log({
+      action: 'order.created',
+      userId: userId ?? null,
+      targetId: result.orderId,
+      targetType: 'Order',
+      metadata: { itemCount: dto.items.length, orderId: result.orderId },
+      ipAddress: req.ip,
+    });
+    return result;
   }
 }

@@ -37,7 +37,7 @@ export class UsersService {
 
   async deleteExpiredGuests() {
     const cutoff = new Date(Date.now() - GUEST_TTL_DAYS * 24 * 60 * 60 * 1000);
-    await this.usersRepository.delete({ isGuest: true, createdAt: LessThan(cutoff) });
+    await this.usersRepository.softDelete({ isGuest: true, createdAt: LessThan(cutoff) });
   }
 
   async updateLastLogin(id: number) {
@@ -54,6 +54,29 @@ export class UsersService {
 
   findOneByEmail(email: string) {
     return this.usersRepository.findOneBy({ email });
+  }
+
+  findOneByLogin(identifier: string) {
+    const id = identifier.trim();
+    return this.usersRepository
+      .createQueryBuilder('user')
+      .where('LOWER(user.email) = LOWER(:id)', { id })
+      .orWhere('LOWER(user.username) = LOWER(:id)', { id })
+      .getOne();
+  }
+
+  findByEmailInsensitive(email: string) {
+    return this.usersRepository
+      .createQueryBuilder('user')
+      .where('LOWER(user.email) = LOWER(:email)', { email: email.trim() })
+      .getOne();
+  }
+
+  findByUsername(username: string) {
+    return this.usersRepository
+      .createQueryBuilder('user')
+      .where('LOWER(user.username) = LOWER(:username)', { username: username.trim() })
+      .getOne();
   }
 
   async update(id: number, updateUserDto: UpdateUserDto) {

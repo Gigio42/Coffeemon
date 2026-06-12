@@ -1,0 +1,8 @@
+title: Coffeemon
+description: Documentos legais do Coffeemon — Termos de Uso e Política de Privacidade
+url: "https://gigio42.github.io"
+baseurl: "/Coffeemon"
+
+# Não processar estes arquivos do repositório (estamos servindo só /docs)
+exclude:
+  - README.md

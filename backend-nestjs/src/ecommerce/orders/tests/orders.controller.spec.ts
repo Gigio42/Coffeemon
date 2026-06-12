@@ -3,6 +3,7 @@ import { AuthGuard } from '../../../auth/guards/auth.guard';
 import { OptionalAuthGuard } from '../../../auth/guards/optional-auth.guard';
 import { OrdersController } from '../orders.controller';
 import { OrdersService } from '../orders.service';
+import { AuditService } from '../../audit/audit.service';
 
 describe('OrdersController', () => {
   let controller: OrdersController;
@@ -14,10 +15,16 @@ describe('OrdersController', () => {
     checkoutWithItems: jest.fn(),
   };
 
+  const mockAuditService = { log: jest.fn().mockResolvedValue(undefined) };
+  const mockReq = { ip: '127.0.0.1' } as any;
+
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [OrdersController],
-      providers: [{ provide: OrdersService, useValue: mockOrdersService }],
+      providers: [
+        { provide: OrdersService, useValue: mockOrdersService },
+        { provide: AuditService, useValue: mockAuditService },
+      ],
     })
       .overrideGuard(AuthGuard)
       .useValue({ canActivate: () => true })
@@ -62,8 +69,9 @@ describe('OrdersController', () => {
     it('should call checkoutWithItems service with items and optional userId', async () => {
       const dto = { items: [{ productId: 1, quantity: 2 }] };
       const mockUserId = 42;
+      mockOrdersService.checkoutWithItems.mockResolvedValue({ orderId: 99 });
 
-      await controller.checkoutWithItems(dto, mockUserId);
+      await controller.checkoutWithItems(dto, mockUserId, mockReq);
 
       expect(mockOrdersService.checkoutWithItems).toHaveBeenCalledWith(
         dto.items,

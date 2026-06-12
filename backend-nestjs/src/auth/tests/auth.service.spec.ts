@@ -12,6 +12,10 @@ describe('AuthService', () => {
 
   const mockUsersService = {
     findOneByEmail: jest.fn(),
+    findOneByLogin: jest.fn(),
+    findByEmailInsensitive: jest.fn(),
+    findByUsername: jest.fn(),
+    updateLastLogin: jest.fn(),
   };
 
   const mockJwtService = {
@@ -56,12 +60,12 @@ describe('AuthService', () => {
         role: UserRole.USER,
       };
 
-      mockUsersService.findOneByEmail.mockResolvedValue(mockUser);
+      mockUsersService.findOneByLogin.mockResolvedValue(mockUser);
       (bcrypt.compareSync as jest.Mock).mockReturnValue(true);
 
       const result = await service.validateUser(email, password);
 
-      expect(mockUsersService.findOneByEmail).toHaveBeenCalledWith(email);
+      expect(mockUsersService.findOneByLogin).toHaveBeenCalledWith(email);
       expect(bcrypt.compareSync).toHaveBeenCalledWith(password, hashedPassword);
       expect(result).toEqual(mockUser);
     });
@@ -70,11 +74,11 @@ describe('AuthService', () => {
       const email = 'nonexistent@example.com';
       const password = 'password123';
 
-      mockUsersService.findOneByEmail.mockResolvedValue(null);
+      mockUsersService.findOneByLogin.mockResolvedValue(null);
 
       const result = await service.validateUser(email, password);
 
-      expect(mockUsersService.findOneByEmail).toHaveBeenCalledWith(email);
+      expect(mockUsersService.findOneByLogin).toHaveBeenCalledWith(email);
       expect(bcrypt.compareSync).not.toHaveBeenCalled();
       expect(result).toBeNull();
     });
@@ -92,19 +96,19 @@ describe('AuthService', () => {
         role: UserRole.USER,
       };
 
-      mockUsersService.findOneByEmail.mockResolvedValue(mockUser);
+      mockUsersService.findOneByLogin.mockResolvedValue(mockUser);
       (bcrypt.compareSync as jest.Mock).mockReturnValue(false);
 
       const result = await service.validateUser(email, password);
 
-      expect(mockUsersService.findOneByEmail).toHaveBeenCalledWith(email);
+      expect(mockUsersService.findOneByLogin).toHaveBeenCalledWith(email);
       expect(bcrypt.compareSync).toHaveBeenCalledWith(password, hashedPassword);
       expect(result).toBeNull();
     });
   });
 
   describe('login', () => {
-    it('should return an access token', () => {
+    it('should return an access token', async () => {
       const user = {
         id: 1,
         email: 'test@example.com',
@@ -114,7 +118,7 @@ describe('AuthService', () => {
       const token = 'generated_jwt_token';
       mockJwtService.sign.mockReturnValue(token);
 
-      const result = service.login(user);
+      const result = await service.login(user);
 
       expect(mockJwtService.sign).toHaveBeenCalledWith({
         email: user.email,
@@ -124,7 +128,7 @@ describe('AuthService', () => {
       expect(result).toEqual({ access_token: token });
     });
 
-    it('should include admin role in token payload when user is admin', () => {
+    it('should include admin role in token payload when user is admin', async () => {
       const adminUser = {
         id: 1,
         email: 'admin@example.com',
@@ -134,7 +138,7 @@ describe('AuthService', () => {
       const token = 'admin_jwt_token';
       mockJwtService.sign.mockReturnValue(token);
 
-      const result = service.login(adminUser);
+      const result = await service.login(adminUser);
 
       expect(mockJwtService.sign).toHaveBeenCalledWith({
         email: adminUser.email,

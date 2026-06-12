@@ -10,6 +10,7 @@ export interface RegisterCredentials {
   username: string;
   email: string;
   password: string;
+  termsAccepted?: boolean;
 }
 
 export interface AuthResponse {
